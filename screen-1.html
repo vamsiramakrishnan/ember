@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&amp;family=Crimson+Pro:ital,wght@0,400;0,600;1,400&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-tertiary": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "surface-container-highest": "#e7e2db",
+                        "surface-container": "#f2ede6",
+                        "surface": "#fef9f2",
+                        "on-surface": "#1d1b17",
+                        "inverse-primary": "#cdc5c0",
+                        "tertiary-container": "#0d2f18",
+                        "primary-fixed-dim": "#cdc5c0",
+                        "secondary-container": "#ff8e84",
+                        "on-tertiary-fixed": "#00210c",
+                        "on-secondary-fixed": "#410003",
+                        "on-background": "#1d1b17",
+                        "inverse-surface": "#32302c",
+                        "on-tertiary-container": "#74997a",
+                        "on-secondary-fixed-variant": "#7e2a26",
+                        "inverse-on-surface": "#f5f0e9",
+                        "surface-variant": "#e7e2db",
+                        "surface-bright": "#fef9f2",
+                        "background": "#fef9f2",
+                        "tertiary": "#001908",
+                        "surface-container-high": "#ece7e1",
+                        "error": "#ba1a1a",
+                        "outline": "#7e756f",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed": "#c5ecc9",
+                        "error-container": "#ffdad6",
+                        "surface-tint": "#635d5a",
+                        "surface-dim": "#ded9d3",
+                        "on-surface-variant": "#4d4540",
+                        "on-primary-container": "#958f8a",
+                        "secondary-fixed": "#ffdad6",
+                        "primary-fixed": "#e9e1dc",
+                        "on-error": "#ffffff",
+                        "surface-container-low": "#f8f3ec",
+                        "on-tertiary-fixed-variant": "#2c4e34",
+                        "tertiary-fixed-dim": "#aad0ae",
+                        "secondary-fixed-dim": "#ffb3ac",
+                        "outline-variant": "#cfc4bd",
+                        "on-secondary-container": "#772521",
+                        "on-secondary": "#ffffff",
+                        "on-primary-fixed": "#1e1b18",
+                        "primary": "#171411",
+                        "secondary": "#9d413b",
+                        "primary-container": "#2c2825",
+                        "on-primary-fixed-variant": "#4b4642"
+                    },
+                    fontFamily: {
+                        "headline": ["Cormorant Garamond", "serif"],
+                        "body": ["Crimson Pro", "serif"],
+                        "label": ["IBM Plex Mono", "monospace"]
+                    },
+                    borderRadius: { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" },
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Crimson Pro', serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .scholar-card {
+            transition: transform 0.3s ease;
+        }
+        .scholar-card:hover {
+            transform: translateY(-4px);
+        }
+        .book-spine {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface antialiased flex">
+<!-- SideNavBar (The Anchor) -->
+<nav class="fixed left-0 top-0 h-full w-64 bg-[#EDE6DB] flex flex-col p-8 space-y-8 z-50">
+<div class="mb-4">
+<h1 class="text-xl font-bold font-headline text-[#2C2825]">Paideia</h1>
+<p class="font-label text-[10px] uppercase tracking-widest text-[#2C2825] opacity-60">The Digital Scriptorium</p>
+</div>
+<div class="flex flex-col space-y-6">
+<a class="flex items-center space-x-3 text-[#2C2825] opacity-60 font-medium font-headline text-lg hover:opacity-100 hover:text-[#B8564F] transition-all group" href="#">
+<span class="material-symbols-outlined group-active:translate-x-1 transition-transform">edit_note</span>
+<span>Notebook</span>
+</a>
+<a class="flex items-center space-x-3 text-[#2C2825] opacity-60 font-medium font-headline text-lg hover:opacity-100 hover:text-[#B8564F] transition-all group" href="#">
+<span class="material-symbols-outlined group-active:translate-x-1 transition-transform">auto_awesome_motion</span>
+<span>Constellation</span>
+</a>
+<a class="flex items-center space-x-3 text-[#2C2825] opacity-60 font-medium font-headline text-lg hover:opacity-100 hover:text-[#B8564F] transition-all group" href="#">
+<span class="material-symbols-outlined group-active:translate-x-1 transition-transform">auto_stories</span>
+<span>Philosophy</span>
+</a>
+<a class="flex items-center space-x-3 text-[#2C2825] font-bold underline underline-offset-8 decoration-1.5 font-headline text-lg group" href="#">
+<span class="material-symbols-outlined group-active:translate-x-1 transition-transform">local_library</span>
+<span>Library</span>
+</a>
+<a class="flex items-center space-x-3 text-[#2C2825] opacity-60 font-medium font-headline text-lg hover:opacity-100 hover:text-[#B8564F] transition-all group" href="#">
+<span class="material-symbols-outlined group-active:translate-x-1 transition-transform">architecture</span>
+<span>Transmutations</span>
+</a>
+<a class="flex items-center space-x-3 text-[#2C2825] opacity-60 font-medium font-headline text-lg hover:opacity-100 hover:text-[#B8564F] transition-all group" href="#">
+<span class="material-symbols-outlined group-active:translate-x-1 transition-transform">menu_book</span>
+<span>Lexicon</span>
+</a>
+</div>
+<div class="mt-auto pt-8 border-t border-outline-variant/20 flex items-center space-x-3">
+<div class="w-10 h-10 bg-surface-container-highest rounded-sm flex items-center justify-center">
+<img alt="Scholar's Crest" class="w-6 h-6 opacity-40" data-alt="Minimalist scholarly crest icon" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBDVuDnZ5CBVvDCNnkqPrV0jWZEvZhcq3w0iFpbkodW2frH8j3MAI4ibGPqzhnm7pj36fwHorwBcWJJASAhVcfg74xnbGDfxWuxAPas4NbTog8Tku5Iwi3FGBK-ocVaQlP2BLm9Tn2z8qgrwbxlz84cbyc0x_NTuPYD32c27Kys4KiNajh9EjBrxCDAn88hrczv9hPF_DejNyv2FotWDX1STS3ieV2jtL3YXqhYTE_lV7Puq4w8JGviIJxX42O3pvaXCxNV4xooCfs"/>
+</div>
+<div>
+<p class="font-headline text-sm font-bold">Scholar #402</p>
+<p class="font-label text-[9px] opacity-60">Year II • Stoicism</p>
+</div>
+</div>
+</nav>
+<!-- Main Canvas -->
+<main class="ml-64 flex-1 min-h-screen relative flex flex-col">
+<!-- TopAppBar -->
+<header class="sticky top-0 z-40 bg-[#F6F1EA] flex justify-between items-center w-full px-12 py-6">
+<div class="flex items-center gap-8">
+<span class="text-2xl font-headline italic text-[#2C2825]">Paideia</span>
+<nav class="hidden md:flex space-x-8">
+<a class="font-headline text-sm text-[#B8564F] border-b-1.5 border-[#2C2825] pb-1" href="#">Catalog</a>
+<a class="font-headline text-sm text-[#2C2825] opacity-80 hover:text-[#B8564F] transition-colors" href="#">Manuscripts</a>
+<a class="font-headline text-sm text-[#2C2825] opacity-80 hover:text-[#B8564F] transition-colors" href="#">Thinkers</a>
+</nav>
+</div>
+<div class="flex items-center space-x-6">
+<div class="relative group">
+<span class="material-symbols-outlined text-[#2C2825] opacity-80 absolute left-3 top-1/2 -translate-y-1/2 text-lg">search</span>
+<input class="bg-surface-container-low border-none border-b border-outline-variant/40 focus:ring-0 focus:border-secondary font-body text-sm pl-10 pr-4 py-2 w-64 transition-all" placeholder="Search the scriptorium..." type="text"/>
+</div>
+<div class="flex items-center space-x-4">
+<button class="material-symbols-outlined text-[#2C2825] opacity-80 hover:text-[#B8564F]">menu_book</button>
+<button class="material-symbols-outlined text-[#2C2825] opacity-80 hover:text-[#B8564F]">settings</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant">
+<img alt="User's scholarly profile avatar" class="w-full h-full object-cover" data-alt="Portrait of a contemplative scholar in a study" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCB9Ff4EMEIx0-SbwV6uLLEb_RXxWWZ2cKqEsG1PEkOKjlLy3jh7wwK-LG5MwH5wh-WEMF1_XjyEdx2rMmLvtCgWCl-2IGcpmaVzEIs-caUjFl7qxGQq4Mcq5HtUBiUE0VWZps_FGrGzpthM1qN7OkZvlYCgDebZXIKk-AYWy5L5Ma6AmXdzxNS-2OFFlhHkBC9YDgQdirjQTh04RHlYprSizFCEvd51UYMhnffbGhU9eTfBNYqtLfbpY-RIAZNxw8pQ0RohxpGASA"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Library Content -->
+<div class="px-12 py-12 flex flex-col space-y-16 max-w-7xl">
+<!-- Section: Primary Text Focus -->
+<section>
+<div class="flex items-baseline justify-between mb-8">
+<h2 class="font-headline text-4xl font-bold tracking-tight text-primary">Primary Texts</h2>
+<span class="font-label text-xs text-secondary tracking-widest uppercase">Digitised Manuscripts (4)</span>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+<!-- Featured Manuscript -->
+<div class="bg-surface-container-low p-8 border-l-4 border-secondary flex gap-8">
+<div class="w-1/3 aspect-[3/4] bg-surface-container-highest flex flex-col justify-between p-4 border border-outline-variant/20">
+<div class="font-label text-[10px] opacity-40 uppercase">Vol. I</div>
+<div class="book-spine font-headline text-xl italic text-primary self-center">Meditations</div>
+<div class="font-label text-[10px] text-secondary text-right">Aurelius</div>
+</div>
+<div class="flex-1 flex flex-col justify-center">
+<span class="font-label text-[10px] text-secondary mb-2">CURRENT FOCUS</span>
+<h3 class="font-headline text-2xl font-bold mb-3 italic">Aurelius — Meditations</h3>
+<p class="font-body text-on-surface-variant leading-relaxed mb-6 italic">
+                                "The soul becomes dyed with the color of its thoughts. Chronicle yours with care."
+                            </p>
+<div class="flex items-center space-x-4">
+<button class="bg-primary text-on-primary px-6 py-2 text-sm font-headline tracking-wide hover:bg-opacity-90 transition-all">Resume Reading</button>
+<button class="font-label text-xs uppercase tracking-tighter border-b border-outline-variant hover:border-secondary transition-colors">Annotations (12)</button>
+</div>
+</div>
+</div>
+<!-- Side Scroll of Spines -->
+<div class="flex gap-4 overflow-x-auto pb-4 items-end">
+<div class="w-16 h-64 bg-[#3E3833] text-[#F6F1EA] flex flex-col justify-between p-3 border-r border-white/10 shrink-0">
+<div class="font-label text-[8px] opacity-60">Kant</div>
+<div class="book-spine font-headline text-sm font-bold self-center">Pure Reason</div>
+<div class="text-xs self-center">◈</div>
+</div>
+<div class="w-12 h-56 bg-secondary text-white flex flex-col justify-between p-3 shrink-0">
+<div class="font-label text-[8px] opacity-60">Plato</div>
+<div class="book-spine font-headline text-sm font-bold self-center">Republic</div>
+<div class="text-xs self-center">◎</div>
+</div>
+<div class="w-14 h-60 bg-tertiary-container text-[#AAD0AE] flex flex-col justify-between p-3 shrink-0">
+<div class="font-label text-[8px] opacity-60">Nietzsche</div>
+<div class="book-spine font-headline text-sm font-bold self-center">Zarathustra</div>
+<div class="text-xs self-center">◆</div>
+</div>
+<div class="w-20 h-72 bg-surface-container-highest border border-outline-variant flex flex-col justify-between p-3 shrink-0">
+<div class="font-label text-[8px] text-secondary">Woolf</div>
+<div class="book-spine font-headline text-sm font-bold text-primary self-center uppercase tracking-widest">A Room Of One's Own</div>
+<div class="text-xs self-center text-primary/40">⬡</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Section: Scholar Cards Bento -->
+<section>
+<div class="flex items-baseline justify-between mb-8">
+<h2 class="font-headline text-4xl font-bold tracking-tight text-primary">Thinkers &amp; Progenitors</h2>
+<span class="font-label text-xs text-secondary tracking-widest uppercase">The Mental Council (8)</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+<!-- Scholar Card: Kepler -->
+<div class="scholar-card bg-surface-container-low flex flex-col p-8 border-b-2 border-outline-variant/30 relative">
+<div class="absolute top-4 right-4 font-label text-[10px] text-secondary">1571 — 1630</div>
+<div class="mb-6">
+<h4 class="font-headline text-3xl font-bold text-primary mb-1">Johannes Kepler</h4>
+<p class="font-label text-[10px] uppercase tracking-widest opacity-60">Celestial Kinematics</p>
+</div>
+<div class="space-y-6 flex-1">
+<div>
+<span class="font-label text-[9px] text-secondary block mb-1">THE GIFT</span>
+<p class="font-body text-sm leading-relaxed italic">"The realization that geometric harmony is the silent language of the creator."</p>
+</div>
+<div class="pt-4 border-t border-outline-variant/20">
+<span class="font-label text-[9px] text-secondary block mb-1">THE BRIDGE</span>
+<p class="font-body text-sm leading-relaxed">Connecting your interest in <span class="text-secondary underline decoration-1">algorithmic beauty</span> to planetary motion.</p>
+</div>
+</div>
+<div class="mt-8 flex justify-between items-center">
+<div class="flex -space-x-2">
+<div class="w-6 h-6 rounded-full bg-surface-container border border-surface flex items-center justify-center text-[10px] font-label">AU</div>
+<div class="w-6 h-6 rounded-full bg-surface-container-highest border border-surface flex items-center justify-center text-[10px] font-label">PL</div>
+</div>
+<button class="material-symbols-outlined text-primary/40 hover:text-secondary transition-colors">arrow_forward</button>
+</div>
+</div>
+<!-- Scholar Card: Somerville -->
+<div class="scholar-card bg-surface-container-low flex flex-col p-8 border-b-2 border-outline-variant/30 relative">
+<div class="absolute top-4 right-4 font-label text-[10px] text-secondary">1780 — 1872</div>
+<div class="mb-6">
+<h4 class="font-headline text-3xl font-bold text-primary mb-1">Mary Somerville</h4>
+<p class="font-label text-[10px] uppercase tracking-widest opacity-60">Polymathy &amp; Unification</p>
+</div>
+<div class="space-y-6 flex-1">
+<div>
+<span class="font-label text-[9px] text-secondary block mb-1">THE GIFT</span>
+<p class="font-body text-sm leading-relaxed italic">"The concept of the 'Scientist' as a unified seeker across disparate disciplines."</p>
+</div>
+<div class="pt-4 border-t border-outline-variant/20">
+<span class="font-label text-[9px] text-secondary block mb-1">THE BRIDGE</span>
+<p class="font-body text-sm leading-relaxed">Validating your <span class="text-secondary underline decoration-1">transdisciplinary curriculum</span> through the lens of physical science.</p>
+</div>
+</div>
+<div class="mt-8 flex justify-between items-center">
+<div class="flex -space-x-2">
+<div class="w-6 h-6 rounded-full bg-[#B8564F] text-white flex items-center justify-center text-[10px] font-label">ADA</div>
+</div>
+<button class="material-symbols-outlined text-primary/40 hover:text-secondary transition-colors">arrow_forward</button>
+</div>
+</div>
+<!-- Scholar Card: Seneca -->
+<div class="scholar-card bg-surface-container-low flex flex-col p-8 border-b-2 border-outline-variant/30 relative">
+<div class="absolute top-4 right-4 font-label text-[10px] text-secondary">4 BC — 65 AD</div>
+<div class="mb-6">
+<h4 class="font-headline text-3xl font-bold text-primary mb-1">Lucius Seneca</h4>
+<p class="font-label text-[10px] uppercase tracking-widest opacity-60">Stoic Ethics</p>
+</div>
+<div class="space-y-6 flex-1">
+<div>
+<span class="font-label text-[9px] text-secondary block mb-1">THE GIFT</span>
+<p class="font-body text-sm leading-relaxed italic">"The mastery of time and the refusal to let life be 'spent' by others."</p>
+</div>
+<div class="pt-4 border-t border-outline-variant/20">
+<span class="font-label text-[9px] text-secondary block mb-1">THE BRIDGE</span>
+<p class="font-body text-sm leading-relaxed">Counter-weighting your <span class="text-secondary underline decoration-1">digital accelerationism</span> with intentional stillness.</p>
+</div>
+</div>
+<div class="mt-8 flex justify-between items-center">
+<div class="flex -space-x-2">
+<div class="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-[10px] font-label">MA</div>
+</div>
+<button class="material-symbols-outlined text-primary/40 hover:text-secondary transition-colors">arrow_forward</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Section: Marginalia / Recently Encountered -->
+<section class="grid grid-cols-3 gap-12 pt-8">
+<div class="col-span-2">
+<div class="flex items-center gap-4 mb-6">
+<div class="h-[1px] flex-1 bg-outline-variant/40"></div>
+<span class="font-label text-[10px] uppercase tracking-widest text-secondary">The Digital Scriptorium Log</span>
+<div class="h-[1px] flex-1 bg-outline-variant/40"></div>
+</div>
+<div class="space-y-8">
+<div class="flex gap-8 group cursor-pointer">
+<div class="font-label text-xs text-secondary py-2">08:14</div>
+<div class="flex-1 border-b border-outline-variant/20 pb-4">
+<h5 class="font-headline text-lg font-bold group-hover:text-secondary transition-colors">Annotated: "On the Shortness of Life"</h5>
+<p class="font-body text-sm text-on-surface-variant italic">Added 3 margin notes regarding focus-economy.</p>
+</div>
+</div>
+<div class="flex gap-8 group cursor-pointer">
+<div class="font-label text-xs text-secondary py-2">Yesterday</div>
+<div class="flex-1 border-b border-outline-variant/20 pb-4">
+<h5 class="font-headline text-lg font-bold group-hover:text-secondary transition-colors">Summoned: Mary Somerville</h5>
+<p class="font-body text-sm text-on-surface-variant italic">The AI Tutor mapped Somerville's 'On the Connexion of the Physical Sciences' to your chemistry notes.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Marginalia Sidebar -->
+<div class="bg-surface-container p-6 border-l border-outline-variant/20 h-fit">
+<span class="font-label text-[10px] text-secondary block mb-4">CURATOR'S NOTE</span>
+<p class="font-body text-sm italic leading-relaxed text-on-surface-variant mb-6">
+                        "Your library is currently weighted heavily toward Western Rationalism. The Scriptorium suggests exploring Eastern Non-Dualism to bridge your 'Sense of Self' inquiry."
+                    </p>
+<button class="w-full border border-primary py-3 font-headline text-sm tracking-widest hover:bg-primary hover:text-white transition-all">Expand Horizon</button>
+</div>
+</section>
+</div>
+<!-- Floating Annotation Indicator (Minimalist FAB) -->
+<div class="fixed bottom-12 right-12">
+<button class="bg-primary text-on-primary w-14 h-14 flex items-center justify-center shadow-none hover:bg-secondary transition-colors">
+<span class="material-symbols-outlined">edit</span>
+</button>
+</div>
+</main>
+</body></html>
