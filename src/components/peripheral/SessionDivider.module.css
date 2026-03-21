@@ -1,0 +1,7 @@
+.divider {
+  border: none;
+  height: 1px;
+  background-color: var(--rule);
+  width: 100%;
+  margin: var(--session-divider-margin) 0;
+}

@@ -1,12 +1,10 @@
 /**
  * Scratch Note (1.2)
  * Small, informal fragment. A half-formed idea.
- * Preceded by a · glyph in ink-ghost.
+ * Preceded by a · glyph in ink-ghost, set 8px to its left.
  * See: 06-component-inventory.md, Family 1.
  */
-import { colors } from '@/tokens/colors';
-import { fontFamily } from '@/tokens/typography';
-import { spacing } from '@/tokens/spacing';
+import styles from './ScratchNote.module.css';
 
 interface ScratchNoteProps {
   children: string;
@@ -14,29 +12,8 @@ interface ScratchNoteProps {
 
 export function ScratchNote({ children }: ScratchNoteProps) {
   return (
-    <p
-      style={{
-        fontFamily: fontFamily.student,
-        fontSize: '15px',
-        fontWeight: 300,
-        fontStyle: 'italic',
-        color: colors.inkSoft,
-        lineHeight: 1.60,
-        paddingLeft: spacing.textIndent,
-        marginBottom: spacing.scratchBottom,
-        marginTop: 0,
-        position: 'relative',
-      }}
-    >
-      <span
-        style={{
-          position: 'absolute',
-          left: spacing.textIndent - 12,
-          color: colors.inkGhost,
-        }}
-      >
-        ·
-      </span>
+    <p className={styles.note}>
+      <span className={styles.glyph}>·</span>
       {children}
     </p>
   );

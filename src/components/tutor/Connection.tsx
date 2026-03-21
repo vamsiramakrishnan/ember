@@ -4,9 +4,7 @@
  * Identical to Marginalia, but first sentence is Medium (500) weight.
  * See: 06-component-inventory.md, Family 2.
  */
-import { colors } from '@/tokens/colors';
-import { fontFamily } from '@/tokens/typography';
-import { spacing } from '@/tokens/spacing';
+import styles from './Connection.module.css';
 
 interface ConnectionProps {
   children: string;
@@ -19,33 +17,10 @@ export function Connection({ children, emphasisEnd }: ConnectionProps) {
   const rest = children.slice(emphasisEnd);
 
   return (
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: `${spacing.marginRuleWidth}px 1fr`,
-        gap: spacing.marginRuleGap,
-        marginBottom: spacing.entryGap,
-      }}
-    >
-      <div
-        style={{
-          width: spacing.marginRuleWidth,
-          backgroundColor: colors.margin,
-          opacity: 0.35,
-          borderRadius: 1,
-        }}
-      />
-      <p
-        style={{
-          fontFamily: fontFamily.tutor,
-          fontSize: '17.5px',
-          color: colors.margin,
-          lineHeight: 1.75,
-          margin: 0,
-          fontWeight: 400,
-        }}
-      >
-        <span style={{ fontWeight: 500 }}>{emphasized}</span>
+    <div className={styles.container}>
+      <div className={styles.rule} />
+      <p className={styles.text}>
+        <span className={styles.emphasis}>{emphasized}</span>
         {rest}
       </p>
     </div>

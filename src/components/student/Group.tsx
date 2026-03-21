@@ -1,38 +1,43 @@
 /**
  * Group (3.4)
  * Lightweight container bundling related elements.
- * No visible boundary — only a shared left margin indicator.
+ * Supports collapse to single line with count indicator.
  * See: 06-component-inventory.md, Family 3.
  */
-import React from 'react';
-import { colors } from '@/tokens/colors';
+import React, { useState } from 'react';
+import styles from './Group.module.css';
 
 interface GroupProps {
   children: React.ReactNode;
+  /** First element's text, shown when collapsed. */
+  previewText?: string;
 }
 
-export function Group({ children }: GroupProps) {
+export function Group({ children, previewText }: GroupProps) {
+  const [collapsed, setCollapsed] = useState(false);
+  const count = React.Children.count(children);
+
   return (
-    <div
-      style={{
-        position: 'relative',
-        paddingLeft: 16,
-        marginBottom: 28,
-      }}
-    >
-      <div
-        style={{
-          position: 'absolute',
-          left: 0,
-          top: 0,
-          bottom: 0,
-          width: 1,
-          backgroundColor: colors.ruleLight,
-        }}
-      />
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {children}
-      </div>
+    <div className={styles.group}>
+      <div className={styles.groupRule} />
+      {collapsed ? (
+        <div className={styles.collapsedLabel} onClick={() => setCollapsed(false)}>
+          <span>{previewText ?? 'Grouped items'}</span>
+          <span className={styles.countBadge}>+ {count - 1} more</span>
+        </div>
+      ) : (
+        <>
+          <div className={styles.items}>{children}</div>
+          {count > 1 && (
+            <button
+              className={styles.toggle}
+              onClick={() => setCollapsed(true)}
+            >
+              collapse
+            </button>
+          )}
+        </>
+      )}
     </div>
   );
 }

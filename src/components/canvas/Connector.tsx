@@ -5,6 +5,7 @@
  */
 import { colors } from '@/tokens/colors';
 import { fontFamily } from '@/tokens/typography';
+import styles from './Connector.module.css';
 
 interface ConnectorProps {
   x1: number;
@@ -26,36 +27,16 @@ export function Connector({
   const midX = (x1 + x2) / 2;
   const midY = (y1 + y2) / 2;
   const cpOffset = Math.abs(y2 - y1) * 0.3 + 20;
-
   const d = `M ${x1} ${y1} Q ${midX} ${midY - cpOffset} ${x2} ${y2}`;
 
   return (
-    <svg
-      style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        pointerEvents: 'none',
-        overflow: 'visible',
-      }}
-    >
-      <path
-        d={d}
-        stroke={colors.inkSoft}
-        strokeWidth={1}
-        fill="none"
-      />
+    <svg className={styles.svg}>
+      <path d={d} stroke={colors.inkSoft} strokeWidth={1} fill="none" />
       {showArrow && (
         <text
           x={x2 - 6}
           y={y2}
-          style={{
-            fontFamily: fontFamily.student,
-            fontSize: '8px',
-            fill: colors.inkSoft,
-          }}
+          style={{ fontFamily: fontFamily.student, fontSize: '8px', fill: colors.inkSoft }}
         >
           ›
         </text>

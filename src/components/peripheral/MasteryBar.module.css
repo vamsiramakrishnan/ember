@@ -1,0 +1,40 @@
+.container {
+  margin-bottom: 16px;
+}
+
+.concept {
+  font-family: var(--font-student);
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--ink-soft);
+  margin-bottom: 6px;
+}
+
+.barRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.track {
+  flex: 1;
+  height: 2px;
+  background-color: var(--rule-light);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.fill {
+  height: 100%;
+  border-radius: 1px;
+  transition: var(--mastery-transition);
+}
+
+.label {
+  font-family: var(--font-system);
+  font-size: 11px;
+  font-weight: 300;
+  color: var(--ink-faint);
+  min-width: 32px;
+  text-align: right;
+}

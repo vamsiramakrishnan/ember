@@ -1,11 +1,9 @@
 /**
  * Navigation — Three text labels: Notebook, Constellation, Philosophy.
- * Cormorant Garamond 14px, separated by 24px, on a thin ruled line.
+ * Cormorant Garamond 14px, on a thin ruled line.
  * See: 04-information-architecture.md, Navigation.
  */
-import { colors } from '@/tokens/colors';
-import { fontFamily } from '@/tokens/typography';
-import { motion } from '@/tokens/motion';
+import styles from './Navigation.module.css';
 
 export type Surface = 'notebook' | 'constellation' | 'philosophy';
 
@@ -22,40 +20,18 @@ const tabs: { id: Surface; label: string }[] = [
 
 export function Navigation({ active, onNavigate }: NavigationProps) {
   return (
-    <nav
-      style={{
-        display: 'flex',
-        gap: 24,
-        borderBottom: `1px solid ${colors.ruleLight}`,
-        paddingBottom: 12,
-      }}
-    >
-      {tabs.map((tab) => {
-        const isActive = tab.id === active;
-        return (
-          <button
-            key={tab.id}
-            onClick={() => onNavigate(tab.id)}
-            style={{
-              fontFamily: fontFamily.tutor,
-              fontSize: '14px',
-              fontWeight: 400,
-              color: isActive ? colors.ink : colors.inkFaint,
-              background: 'none',
-              border: 'none',
-              borderBottom: isActive
-                ? `1.5px solid ${colors.ink}`
-                : '1.5px solid transparent',
-              paddingBottom: 10,
-              cursor: 'pointer',
-              transition: `color ${motion.tabTransition}, border-color ${motion.tabTransition}`,
-              marginBottom: -13,
-            }}
-          >
-            {tab.label}
-          </button>
-        );
-      })}
+    <nav className={styles.nav}>
+      {tabs.map((tab) => (
+        <button
+          key={tab.id}
+          onClick={() => onNavigate(tab.id)}
+          className={
+            tab.id === active ? styles.tabActive : styles.tabInactive
+          }
+        >
+          {tab.label}
+        </button>
+      ))}
     </nav>
   );
 }

@@ -4,21 +4,13 @@
  * See: 04-information-architecture.md, Surface one.
  */
 import { Column } from '@/primitives/Column';
+import { MarginZone } from '@/primitives/MarginZone';
 import { SessionHeader } from '@/components/peripheral/SessionHeader';
+import { MarginalReference } from '@/components/ambient/MarginalReference';
 import { useSessionEntries } from '@/hooks/useSessionEntries';
 import { useRevealSequence } from '@/hooks/useRevealSequence';
 import { NotebookEntryRenderer } from './NotebookEntryRenderer';
-import { colors } from '@/tokens/colors';
-import { fontFamily } from '@/tokens/typography';
-import { spacing } from '@/tokens/spacing';
-import { motion } from '@/tokens/motion';
-
-const cursorKeyframes = `
-@keyframes notebookCursor {
-  0%, 100% { opacity: ${motion.cursorOpacityMax}; }
-  50% { opacity: ${motion.cursorOpacityMin}; }
-}
-`;
+import styles from './Notebook.module.css';
 
 export function Notebook() {
   const { entries, meta } = useSessionEntries();
@@ -32,7 +24,14 @@ export function Notebook() {
         timeOfDay={meta.timeOfDay}
         topic={meta.topic}
       />
-      <div>
+      <div className={styles.entryContainer}>
+        <MarginZone>
+          <MarginalReference>
+            Pythagoras also believed in the music of the
+            spheres — but he arrived at it through pure
+            number theory, not observation.
+          </MarginalReference>
+        </MarginZone>
         {entries.map((entry, i) => (
           <div key={i} style={getEntryStyle(i)}>
             <NotebookEntryRenderer entry={entry} />
@@ -40,33 +39,9 @@ export function Notebook() {
         ))}
       </div>
       {revealedCount >= entries.length && (
-        <div
-          style={{
-            paddingLeft: spacing.textIndent,
-            paddingTop: 24,
-            paddingBottom: 80,
-          }}
-        >
-          <style>{cursorKeyframes}</style>
-          <div
-            style={{
-              width: 1,
-              height: 22,
-              backgroundColor: colors.ink,
-              animation: 'notebookCursor 1.2s ease infinite',
-            }}
-          />
-          <p
-            style={{
-              fontFamily: fontFamily.student,
-              fontSize: '14px',
-              color: colors.inkGhost,
-              marginTop: 16,
-              fontStyle: 'italic',
-            }}
-          >
-            Continue writing...
-          </p>
+        <div className={styles.inputZone}>
+          <div className={styles.inputCursor} />
+          <p className={styles.inputHint}>Continue writing...</p>
         </div>
       )}
     </Column>

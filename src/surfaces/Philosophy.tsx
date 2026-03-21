@@ -6,9 +6,8 @@
 import { Column } from '@/primitives/Column';
 import { Text } from '@/primitives/Text';
 import { Rule } from '@/primitives/Rule';
-import { colors } from '@/tokens/colors';
-import { fontFamily } from '@/tokens/typography';
 import { spacing } from '@/tokens/spacing';
+import styles from './Philosophy.module.css';
 
 interface Principle {
   numeral: string;
@@ -58,49 +57,15 @@ const principles: Principle[] = [
 
 function PrincipleBlock({ principle }: { principle: Principle }) {
   return (
-    <div style={{ marginBottom: spacing.principleGap }}>
-      <div style={{ display: 'flex', gap: 12, alignItems: 'baseline' }}>
-        <span
-          style={{
-            fontFamily: fontFamily.tutor,
-            fontSize: '20px',
-            fontWeight: 300,
-            color: colors.inkFaint,
-          }}
-        >
-          {principle.numeral}.
-        </span>
+    <div className={styles.principleBlock}>
+      <div className={styles.numeralRow}>
+        <span className={styles.numeral}>{principle.numeral}.</span>
         <Text variant="sectionHeader" as="h3">
           {principle.title}
         </Text>
       </div>
-      <p
-        style={{
-          fontFamily: fontFamily.student,
-          fontSize: '16px',
-          fontWeight: 400,
-          color: colors.inkSoft,
-          lineHeight: 1.75,
-          paddingLeft: spacing.contentIndent,
-          marginTop: 12,
-          marginBottom: 8,
-        }}
-      >
-        {principle.body}
-      </p>
-      <p
-        style={{
-          fontFamily: fontFamily.system,
-          fontSize: '11px',
-          fontWeight: 300,
-          color: colors.inkGhost,
-          letterSpacing: '1px',
-          paddingLeft: spacing.contentIndent,
-          margin: 0,
-        }}
-      >
-        {principle.provenance}
-      </p>
+      <p className={styles.body}>{principle.body}</p>
+      <p className={styles.provenance}>{principle.provenance}</p>
       <Rule margin={16} variant="ruleLight" />
     </div>
   );
@@ -109,31 +74,22 @@ function PrincipleBlock({ principle }: { principle: Principle }) {
 export function Philosophy() {
   return (
     <Column>
-      <div style={{ marginTop: spacing.sessionHeaderTop }}>
+      <div className={styles.container}>
         <Text variant="pageTitle" as="h1" style={{ marginBottom: 16 }}>
           Philosophy
         </Text>
         <p
-          style={{
-            fontFamily: fontFamily.tutor,
-            fontSize: '18px',
-            fontWeight: 400,
-            fontStyle: 'italic',
-            color: colors.inkSoft,
-            lineHeight: 1.75,
-            marginBottom: spacing.headerToContent,
-          }}
+          className={styles.question}
+          style={{ marginBottom: spacing.headerToContent }}
         >
           What if every child had a tutor who followed their curiosity,
           knew them deeply, and never moved on until understanding was
           real?
         </p>
-
         {principles.map((p) => (
           <PrincipleBlock key={p.numeral} principle={p} />
         ))}
-
-        <div style={{ height: 80 }} />
+        <div className={styles.spacer} />
       </div>
     </Column>
   );

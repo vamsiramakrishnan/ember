@@ -12,13 +12,15 @@ import { ThinkerCard } from '@/components/tutor/ThinkerCard';
 import { PinnedThread } from '@/components/student/PinnedThread';
 import { useMasteryData } from '@/hooks/useMasteryData';
 import { spacing } from '@/tokens/spacing';
+import styles from './Constellation.module.css';
 
 export function Constellation() {
   const { concepts, threads, thinkers } = useMasteryData();
+  const hasMastered = concepts.some((c) => c.level === 'mastered');
 
   return (
     <Column>
-      <div style={{ marginTop: spacing.sessionHeaderTop }}>
+      <div className={styles.container}>
         <Text variant="pageTitle" as="h1" style={{ marginBottom: 8 }}>
           Constellation
         </Text>
@@ -34,10 +36,8 @@ export function Constellation() {
         <Text
           variant="sectionLabel"
           as="h2"
-          style={{
-            textTransform: 'uppercase',
-            marginBottom: spacing.labelToContent,
-          }}
+          className={styles.sectionLabel}
+          style={{ marginBottom: spacing.labelToContent }}
         >
           Active Threads
         </Text>
@@ -50,10 +50,8 @@ export function Constellation() {
         <Text
           variant="sectionLabel"
           as="h2"
-          style={{
-            textTransform: 'uppercase',
-            marginBottom: spacing.labelToContent,
-          }}
+          className={styles.sectionLabel}
+          style={{ marginBottom: spacing.labelToContent }}
         >
           Fluency
         </Text>
@@ -66,21 +64,22 @@ export function Constellation() {
           />
         ))}
 
-        <BridgeSuggestion>
-          Your understanding of harmonic ratios connects to Fourier's
-          discovery that any wave can be decomposed into simple harmonics
-          — the same mathematics, applied to heat, light, and sound.
-        </BridgeSuggestion>
+        {hasMastered && (
+          <BridgeSuggestion>
+            Your understanding of harmonic ratios connects to
+            Fourier's discovery that any wave can be decomposed
+            into simple harmonics — the same mathematics, applied
+            to heat, light, and sound.
+          </BridgeSuggestion>
+        )}
 
         <Rule margin={spacing.sectionGap} />
 
         <Text
           variant="sectionLabel"
           as="h2"
-          style={{
-            textTransform: 'uppercase',
-            marginBottom: spacing.labelToContent,
-          }}
+          className={styles.sectionLabel}
+          style={{ marginBottom: spacing.labelToContent }}
         >
           Thinkers in Orbit
         </Text>
@@ -92,7 +91,7 @@ export function Constellation() {
           />
         ))}
 
-        <div style={{ height: 80 }} />
+        <div className={styles.spacer} />
       </div>
     </Column>
   );

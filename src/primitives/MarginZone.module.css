@@ -1,0 +1,16 @@
+/* MarginZone — only visible on viewports > 800px (spec: 7.2) */
+.zone {
+  display: none;
+  position: absolute;
+  right: -192px; /* 160px width + 32px gap */
+  top: 0;
+  width: 160px;
+  border-left: 1px solid var(--rule-light);
+  padding-left: 12px;
+}
+
+@media (min-width: 800px) {
+  .zone {
+    display: block;
+  }
+}

@@ -4,7 +4,7 @@
  * See: 06-component-inventory.md, Family 3.
  */
 import { colors } from '@/tokens/colors';
-import { fontFamily } from '@/tokens/typography';
+import styles from './Card.module.css';
 
 type AccentColor = 'margin' | 'sage' | 'indigo' | 'amber';
 
@@ -15,7 +15,7 @@ interface CardProps {
   accent?: AccentColor;
 }
 
-const accentColors: Record<AccentColor, string> = {
+const accentMap: Record<AccentColor, string> = {
   margin: colors.margin,
   sage: colors.sage,
   indigo: colors.indigo,
@@ -23,57 +23,15 @@ const accentColors: Record<AccentColor, string> = {
 };
 
 export function Card({ title, body, source, accent }: CardProps) {
+  const borderTop = accent
+    ? `2px solid ${accentMap[accent]}`
+    : undefined;
+
   return (
-    <div
-      style={{
-        background: colors.paperDeep,
-        border: `1px solid ${colors.rule}`,
-        borderRadius: 2,
-        borderTop: accent
-          ? `2px solid ${accentColors[accent]}`
-          : `1px solid ${colors.rule}`,
-        padding: '14px 16px',
-        maxWidth: 280,
-        marginBottom: 16,
-      }}
-    >
-      {title && (
-        <div
-          style={{
-            fontFamily: fontFamily.tutor,
-            fontSize: '14px',
-            fontWeight: 500,
-            color: colors.ink,
-            marginBottom: 6,
-          }}
-        >
-          {title}
-        </div>
-      )}
-      <div
-        style={{
-          fontFamily: fontFamily.student,
-          fontSize: '14px',
-          fontWeight: 400,
-          color: colors.inkSoft,
-          lineHeight: 1.65,
-        }}
-      >
-        {body}
-      </div>
-      {source && (
-        <div
-          style={{
-            fontFamily: fontFamily.system,
-            fontSize: '10px',
-            fontWeight: 300,
-            color: colors.inkGhost,
-            marginTop: 8,
-          }}
-        >
-          {source}
-        </div>
-      )}
+    <div className={styles.card} style={borderTop ? { borderTop } : undefined}>
+      {title && <div className={styles.title}>{title}</div>}
+      <div className={styles.body}>{body}</div>
+      {source && <div className={styles.source}>{source}</div>}
     </div>
   );
 }

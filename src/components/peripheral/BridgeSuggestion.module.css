@@ -1,0 +1,16 @@
+.suggestion {
+  background: var(--sage-dim);
+  border-radius: 2px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+
+.text {
+  font-family: var(--font-student);
+  font-size: 14px;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--sage);
+  line-height: 1.70;
+  margin: 0;
+}

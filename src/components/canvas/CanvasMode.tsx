@@ -5,8 +5,7 @@
  * See: 06-component-inventory.md, Family 4.
  */
 import React from 'react';
-import { colors } from '@/tokens/colors';
-import { fontFamily } from '@/tokens/typography';
+import styles from './CanvasMode.module.css';
 
 interface CanvasModeProps {
   label?: string;
@@ -20,31 +19,9 @@ export function CanvasMode({
   minHeight = 300,
 }: CanvasModeProps) {
   return (
-    <div
-      style={{
-        border: `1px solid ${colors.rule}`,
-        borderRadius: 2,
-        background: colors.paperWarm,
-        minHeight,
-        position: 'relative',
-        padding: 24,
-        marginBottom: 24,
-        backgroundImage: `radial-gradient(${colors.ruleLight} 0.5px, transparent 0.5px)`,
-        backgroundSize: '24px 24px',
-      }}
-    >
-      <div
-        style={{
-          fontFamily: fontFamily.system,
-          fontSize: '11px',
-          fontWeight: 300,
-          color: colors.inkGhost,
-          marginBottom: 16,
-        }}
-      >
-        {label}
-      </div>
-      <div style={{ position: 'relative' }}>{children}</div>
+    <div className={styles.container} style={{ minHeight }}>
+      <div className={styles.label}>{label}</div>
+      <div className={styles.content}>{children}</div>
     </div>
   );
 }

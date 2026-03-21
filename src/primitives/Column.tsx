@@ -4,7 +4,7 @@
  * See: 02-visual-language.md, Spacing section.
  */
 import React from 'react';
-import { spacing } from '@/tokens/spacing';
+import styles from './Column.module.css';
 
 interface ColumnProps {
   children: React.ReactNode;
@@ -12,19 +12,9 @@ interface ColumnProps {
 }
 
 export function Column({ children, className }: ColumnProps) {
-  return (
-    <div
-      className={className}
-      style={{
-        maxWidth: spacing.columnWidth,
-        margin: '0 auto',
-        paddingLeft: spacing.columnPadding,
-        paddingRight: spacing.columnPadding,
-        width: '100%',
-        boxSizing: 'border-box',
-      }}
-    >
-      {children}
-    </div>
-  );
+  const cls = className
+    ? `${styles.column} ${className}`
+    : styles.column;
+
+  return <div className={cls}>{children}</div>;
 }

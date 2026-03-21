@@ -3,8 +3,7 @@
  * Name, duration, and session count. Present on every surface.
  * See: 06-component-inventory.md, Family 5.
  */
-import { colors } from '@/tokens/colors';
-import { fontFamily } from '@/tokens/typography';
+import styles from './StudentIdentity.module.css';
 
 interface StudentIdentityProps {
   name: string;
@@ -18,14 +17,7 @@ export function StudentIdentity({
   sessionNumber,
 }: StudentIdentityProps) {
   return (
-    <span
-      style={{
-        fontFamily: fontFamily.system,
-        fontSize: '11px',
-        fontWeight: 300,
-        color: colors.inkGhost,
-      }}
-    >
+    <span className={styles.identity}>
       {name} · {duration} · session {sessionNumber}
     </span>
   );

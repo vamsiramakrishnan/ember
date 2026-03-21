@@ -3,19 +3,8 @@
  * Boundary between two sessions in the continuous notebook.
  * See: 06-component-inventory.md, Family 5.
  */
-import { colors } from '@/tokens/colors';
-import { spacing } from '@/tokens/spacing';
+import styles from './SessionDivider.module.css';
 
 export function SessionDivider() {
-  return (
-    <hr
-      style={{
-        border: 'none',
-        height: 1,
-        backgroundColor: colors.rule,
-        width: '100%',
-        margin: `${spacing.sessionDividerMargin}px 0`,
-      }}
-    />
-  );
+  return <hr className={styles.divider} />;
 }

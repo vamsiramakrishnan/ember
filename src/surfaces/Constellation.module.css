@@ -1,0 +1,15 @@
+.container {
+  margin-top: var(--session-header-top);
+}
+
+.subtitle {
+  margin-bottom: var(--entry-gap);
+}
+
+.sectionLabel {
+  text-transform: uppercase;
+}
+
+.spacer {
+  height: 80px;
+}

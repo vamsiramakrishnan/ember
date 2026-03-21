@@ -1,0 +1,19 @@
+.header {
+  padding-top: 24px;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 20px;
+}
+
+.logo {
+  font-family: var(--font-tutor);
+  font-size: 20px;
+  font-weight: 300;
+  color: var(--ink);
+  letter-spacing: -0.3px;
+  margin: 0;
+}

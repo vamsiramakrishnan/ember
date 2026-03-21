@@ -1,0 +1,30 @@
+.nav {
+  display: flex;
+  gap: 24px;
+  border-bottom: 1px solid var(--rule-light);
+  padding-bottom: 12px;
+}
+
+.tab {
+  font-family: var(--font-tutor);
+  font-size: 14px;
+  font-weight: 400;
+  background: none;
+  border: none;
+  padding-bottom: 10px;
+  cursor: pointer;
+  transition: color var(--tab-transition), border-color var(--tab-transition);
+  margin-bottom: -13px;
+}
+
+.tabInactive {
+  composes: tab;
+  color: var(--ink-faint);
+  border-bottom: 1.5px solid transparent;
+}
+
+.tabActive {
+  composes: tab;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--ink);
+}

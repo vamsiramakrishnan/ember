@@ -1,0 +1,21 @@
+.bubble {
+  font-family: var(--font-student);
+  font-size: 17px;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--ink);
+  line-height: 1.70;
+  padding-left: var(--text-indent);
+  margin-bottom: var(--entry-gap);
+  margin-top: 0;
+  position: relative;
+}
+
+/* ? glyph positioned 6px to the left of text (spec: 1.5) */
+.glyph {
+  position: absolute;
+  left: 13px; /* textIndent(19) - 6 = 13px from container edge */
+  font-family: var(--font-tutor);
+  font-size: 14px;
+  color: var(--ink-faint);
+}
