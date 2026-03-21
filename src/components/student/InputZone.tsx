@@ -1,19 +1,31 @@
 /**
  * InputZone (7.4)
  * The student's writing area — continuous with the notebook above.
- * No border, no placeholder, just a blinking cursor that becomes a textarea on focus.
+ * Supports text writing and sketch mode.
+ * No border, no placeholder, just a blinking cursor.
  * See: 06-component-inventory.md, Family 7
  */
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { inferEntryType } from '@/hooks/useEntryInference';
+import { SketchInput } from './SketchInput';
 import styles from './InputZone.module.css';
+
+const typeLabels = {
+  prose: '',
+  question: 'question',
+  hypothesis: 'hypothesis',
+  scratch: 'note',
+} as const;
 
 interface InputZoneProps {
   onSubmit?: (content: string) => void;
+  onSketchSubmit?: (dataUrl: string) => void;
 }
 
-export function InputZone({ onSubmit }: InputZoneProps) {
+export function InputZone({ onSubmit, onSketchSubmit }: InputZoneProps) {
   const [value, setValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
+  const [sketchMode, setSketchMode] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const autoGrow = useCallback(() => {
@@ -36,6 +48,21 @@ export function InputZone({ onSubmit }: InputZoneProps) {
     [value, onSubmit],
   );
 
+  if (sketchMode) {
+    return (
+      <SketchInput
+        onSubmit={(dataUrl) => {
+          onSketchSubmit?.(dataUrl);
+          setSketchMode(false);
+        }}
+        onCancel={() => setSketchMode(false)}
+      />
+    );
+  }
+
+  const inferred = value.trim() ? inferEntryType(value.trim()) : null;
+  const label = inferred ? typeLabels[inferred] : '';
+
   return (
     <div
       className={styles.container}
@@ -57,6 +84,16 @@ export function InputZone({ onSubmit }: InputZoneProps) {
       {!isFocused && !value && (
         <div className={styles.cursor} aria-hidden="true" />
       )}
+      <div className={styles.bottomRow}>
+        {label && <span className={styles.typeIndicator}>{label}</span>}
+        <button
+          className={styles.sketchToggle}
+          onClick={(e) => { e.stopPropagation(); setSketchMode(true); }}
+          aria-label="Switch to sketch mode"
+        >
+          sketch
+        </button>
+      </div>
     </div>
   );
 }

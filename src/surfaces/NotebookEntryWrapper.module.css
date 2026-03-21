@@ -1,0 +1,82 @@
+/* NotebookEntryWrapper — quiet actions on hover */
+.wrapper {
+  position: relative;
+}
+
+/* Crossed-out entries: ink-ghost with single horizontal strike */
+.crossedOut {
+  opacity: 0.35;
+  text-decoration: line-through;
+  text-decoration-color: var(--ink-ghost);
+  text-decoration-thickness: 1px;
+}
+
+.bookmarkPos {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+/* Actions appear on hover — quiet until needed */
+.actions {
+  position: absolute;
+  top: 0;
+  right: -36px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.wrapper:hover .actions {
+  opacity: 1;
+}
+
+.action {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-system);
+  font-size: 11px;
+  color: var(--ink-ghost);
+  padding: 2px 4px;
+  line-height: 1;
+  transition: color 0.15s ease;
+}
+
+.action:hover {
+  color: var(--ink-faint);
+}
+
+.actionActive {
+  color: var(--amber);
+}
+
+.actionActive:hover {
+  color: var(--amber);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .actions {
+    transition: none;
+  }
+  .action {
+    transition: none;
+  }
+}
+
+/* On narrow screens, show actions inline below */
+@media (max-width: 800px) {
+  .actions {
+    position: static;
+    flex-direction: row;
+    opacity: 0.5;
+    margin-top: 4px;
+    margin-left: var(--text-indent);
+  }
+
+  .wrapper:hover .actions {
+    opacity: 1;
+  }
+}

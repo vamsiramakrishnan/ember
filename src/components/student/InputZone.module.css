@@ -35,9 +35,48 @@
   animation: emberCursorBlink var(--cursor-cycle) ease infinite;
 }
 
+.bottomRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 10px;
+  min-height: 18px;
+}
+
+.typeIndicator {
+  font-family: var(--font-system);
+  font-size: 9px;
+  font-weight: 300;
+  color: var(--ink-ghost);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.sketchToggle {
+  font-family: var(--font-system);
+  font-size: 9px;
+  font-weight: 300;
+  letter-spacing: 1.5px;
+  text-transform: lowercase;
+  color: var(--ink-ghost);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 0;
+  margin-left: auto;
+  transition: color 0.2s ease;
+}
+
+.sketchToggle:hover {
+  color: var(--ink-faint);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cursor {
     animation: none;
     opacity: 0.3;
+  }
+  .sketchToggle {
+    transition: none;
   }
 }
