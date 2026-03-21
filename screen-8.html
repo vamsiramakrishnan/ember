@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&amp;family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Newsreader:ital,wght@0,400;0,700;1,400&amp;family=Noto+Serif:wght@400;700&amp;family=Work+Sans:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-tertiary": "#ffffff",
+              "on-primary": "#ffffff",
+              "on-error-container": "#93000a",
+              "surface-container-highest": "#e7e2db",
+              "surface-container": "#f2ede6",
+              "surface": "#fef9f2",
+              "on-surface": "#1d1b17",
+              "inverse-primary": "#cdc5c0",
+              "tertiary-container": "#0d2f18",
+              "primary-fixed-dim": "#cdc5c0",
+              "secondary-container": "#ff8e84",
+              "on-tertiary-fixed": "#00210c",
+              "on-secondary-fixed": "#410003",
+              "on-background": "#1d1b17",
+              "inverse-surface": "#32302c",
+              "on-tertiary-container": "#74997a",
+              "on-secondary-fixed-variant": "#7e2a26",
+              "inverse-on-surface": "#f5f0e9",
+              "surface-variant": "#e7e2db",
+              "surface-bright": "#fef9f2",
+              "background": "#fef9f2",
+              "tertiary": "#001908",
+              "surface-container-high": "#ece7e1",
+              "error": "#ba1a1a",
+              "outline": "#7e756f",
+              "surface-container-lowest": "#ffffff",
+              "tertiary-fixed": "#c5ecc9",
+              "error-container": "#ffdad6",
+              "surface-tint": "#635d5a",
+              "surface-dim": "#ded9d3",
+              "on-surface-variant": "#4d4540",
+              "on-primary-container": "#958f8a",
+              "secondary-fixed": "#ffdad6",
+              "primary-fixed": "#e9e1dc",
+              "on-error": "#ffffff",
+              "surface-container-low": "#f8f3ec",
+              "on-tertiary-fixed-variant": "#2c4e34",
+              "tertiary-fixed-dim": "#aad0ae",
+              "secondary-fixed-dim": "#ffb3ac",
+              "outline-variant": "#cfc4bd",
+              "on-secondary-container": "#772521",
+              "on-secondary": "#ffffff",
+              "on-primary-fixed": "#1e1b18",
+              "primary": "#171411",
+              "secondary": "#9d413b",
+              "primary-container": "#2c2825",
+              "on-primary-fixed-variant": "#4b4642"
+            },
+            fontFamily: {
+              "serif": ["Cormorant Garamond", "serif"],
+              "body-serif": ["Crimson Pro", "serif"],
+              "mono": ["IBM Plex Mono", "monospace"],
+              "headline": ["Newsreader", "serif"],
+              "body": ["Noto Serif", "serif"],
+              "label": ["Work Sans", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>.material-symbols-outlined {
+    font-variation-settings: "FILL" 0, "wght" 300, "GRAD" 0, "opsz" 24
+    }
+.paper-texture {
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuBF8RqoAJlFZ55UBordGAHqiFYwaUAPP-1dQzj5nO4h0TjGVyaOx6oTnQY0L0KT8_jmmbFj6fHOzsZkMkQTVK4KLyGSlTc_3pD790pXL6y4L9l6VSaDTJ5QoS28avv8nlyW_Fz3xSvMCsp1XUO7nUwJVAik-GZkTx7pn487ldrz9fS7-l6LTDEPU7WyVn8EpQjn0itMnqz9eK_xJYqyHRq79AeO-ptHn1n_4BcgeP-eEjrEbzyj30xJFaPv4qSawVVCbmcTPebdN0w)
+    }
+.no-scrollbar::-webkit-scrollbar {
+    display: none
+    }
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none
+    }</style>
+</head>
+<body class="bg-surface text-on-surface font-body-serif selection:bg-secondary-container selection:text-on-secondary-container antialiased">
+<!-- SideNavBar -->
+<nav class="hidden md:flex fixed left-0 top-0 h-full w-64 bg-[#EDE6DB] dark:bg-[#24211F] flex-col p-8 space-y-8 z-50">
+<div class="flex flex-col space-y-1">
+<span class="text-xl font-bold font-serif text-[#2C2825]">Paideia</span>
+<span class="font-mono text-[10px] tracking-widest uppercase opacity-60">The Digital Scriptorium</span>
+</div>
+<div class="flex flex-col space-y-6 pt-8">
+<a class="flex items-center space-y-0 group text-[#2C2825] opacity-60 font-medium hover:opacity-100 hover:text-[#B8564F] transition-all" href="#">
+<span class="material-symbols-outlined mr-3 text-sm">edit_note</span>
+<span class="font-serif text-lg tracking-tight">Notebook</span>
+</a>
+<a class="flex items-center space-y-0 group text-[#2C2825] opacity-60 font-medium hover:opacity-100 hover:text-[#B8564F] transition-all" href="#">
+<span class="material-symbols-outlined mr-3 text-sm">auto_awesome_motion</span>
+<span class="font-serif text-lg tracking-tight">Constellation</span>
+</a>
+<a class="flex items-center space-y-0 group text-[#2C2825] opacity-60 font-medium hover:opacity-100 hover:text-[#B8564F] transition-all" href="#">
+<span class="material-symbols-outlined mr-3 text-sm">auto_stories</span>
+<span class="font-serif text-lg tracking-tight">Philosophy</span>
+</a>
+<a class="flex items-center space-y-0 group text-[#2C2825] opacity-60 font-medium hover:opacity-100 hover:text-[#B8564F] transition-all" href="#">
+<span class="material-symbols-outlined mr-3 text-sm">local_library</span>
+<span class="font-serif text-lg tracking-tight">Library</span>
+</a>
+<a class="flex items-center space-y-0 group text-[#2C2825] font-bold underline underline-offset-8 decoration-1.5 translate-x-1 transition-transform duration-300" href="#">
+<span class="material-symbols-outlined mr-3 text-sm">architecture</span>
+<span class="font-serif text-lg tracking-tight">Transmutations</span>
+</a>
+<a class="flex items-center space-y-0 group text-[#2C2825] opacity-60 font-medium hover:opacity-100 hover:text-[#B8564F] transition-all" href="#">
+<span class="material-symbols-outlined mr-3 text-sm">menu_book</span>
+<span class="font-serif text-lg tracking-tight">Lexicon</span>
+</a>
+</div>
+<div class="mt-auto pt-8 border-t border-outline-variant/20">
+<div class="flex items-center space-x-3">
+<div class="w-10 h-10 bg-surface-container-highest rounded-sm flex items-center justify-center">
+<span class="material-symbols-outlined text-primary/40">school</span>
+</div>
+<div class="flex flex-col">
+<span class="font-mono text-[10px] opacity-40">SCHOLAR ID</span>
+<span class="font-serif text-sm">A. Magnificat</span>
+</div>
+</div>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="md:ml-64 min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="sticky top-0 z-40 bg-[#F6F1EA] dark:bg-[#2C2825] flex justify-between items-center w-full px-8 py-6 max-w-none">
+<div class="flex items-center space-x-8">
+<span class="text-2xl font-serif italic text-[#2C2825] dark:text-[#F6F1EA]">Paideia</span>
+<nav class="hidden lg:flex space-x-6">
+<a class="text-[#B8564F] border-b-1.5 border-[#2C2825] pb-1 font-serif transition-colors duration-300" href="#">Synthesis</a>
+<a class="text-[#2C2825] opacity-80 font-serif hover:text-[#B8564F] transition-colors duration-300" href="#">Archive</a>
+<a class="text-[#2C2825] opacity-80 font-serif hover:text-[#B8564F] transition-colors duration-300" href="#">Methodology</a>
+</nav>
+</div>
+<div class="flex items-center space-x-6">
+<div class="flex items-center space-x-4">
+<span class="material-symbols-outlined text-[#2C2825] cursor-pointer hover:text-[#B8564F] transition-colors" data-icon="menu_book">menu_book</span>
+<span class="material-symbols-outlined text-[#2C2825] cursor-pointer hover:text-[#B8564F] transition-colors" data-icon="settings">settings</span>
+</div>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant/30">
+<img alt="User's scholarly profile avatar" class="w-full h-full object-cover grayscale opacity-80" data-alt="Bust of a Greek philosopher" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCGQDmNWh7zh451ezspNkotr7NPEvcO7BS-y-_Oo4fxA2ylvDzP8-i0N4ejt9SPEQ1sgQRzGHose--yvD2W38cxyaXUQXorTuy-Sq38wcif1WFGGkrbcTsVEjF2e-O6sXgczwmIn9NDAdgZBLdqfhJKXG_Pxu_4SvV7WtiUYMEEeZ25iUvnkzWcVmV4iVxTnPng1DWfR4JhVR9Z_Kr6a66-PJYiH4VeRBGfWN9mqVyVe7w8TjRxoiMnEdepyMD5_vKPmHQTtCMkufc"/>
+</div>
+</div>
+</header>
+<!-- Workspace Canvas -->
+<div class="flex-1 p-8 md:p-12 lg:p-16 flex flex-col lg:flex-row gap-16">
+<!-- Left Column: Syntheses in Progress -->
+<section class="flex-1 space-y-12">
+<header class="max-w-xl">
+<span class="font-mono text-[11px] text-secondary tracking-widest uppercase mb-4 block">Process Stage: Alchemical Fusion</span>
+<h1 class="font-headline text-5xl text-primary leading-tight mb-6">The Conceptual Forge</h1>
+<p class="text-on-surface-variant leading-relaxed text-lg">Where raw observations are hammered into structural truths. Maintain silence while the transition resolves.</p>
+</header>
+<div class="space-y-16">
+<!-- Synthesis Block 01 -->
+<div class="relative pl-12 border-l-2 border-outline-variant/10">
+<div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-secondary border-4 border-surface"></div>
+<div class="flex justify-between items-start mb-6">
+<div>
+<h3 class="font-serif text-2xl text-primary italic">Synthesis: The Stoic Will vs. Modern Determinism</h3>
+<span class="font-mono text-[10px] text-on-surface-variant opacity-60">ID: THESIS-0941 | TIMESTAMP: 04:12 AM</span>
+</div>
+</div>
+<!-- Forge: Rough Sketch to Structure -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
+<!-- Rough Sketch (Input/Pupil) -->
+<div class="bg-surface-container-low p-6 rounded-sm border border-outline-variant/20 relative overflow-hidden group">
+<span class="font-mono text-[9px] text-on-surface-variant/40 absolute top-4 right-4 uppercase tracking-tighter">Phase 01: Fragment</span>
+<p class="font-body-serif italic text-on-surface leading-loose opacity-70">
+                                    "Aurelius speaks of the inner citadel... but neurology says we are chemical reactions? If the reaction is the citadel, where does choice begin? The bridge is missing between biology and ethics..."
+                                </p>
+<div class="mt-8 flex gap-2">
+<span class="h-1 w-8 bg-secondary/30"></span>
+<span class="h-1 w-4 bg-secondary/30"></span>
+<span class="h-1 w-12 bg-secondary/30"></span>
+</div>
+</div>
+<!-- Forged Table (Output/Master) -->
+<div class="bg-surface-container-highest p-6 rounded-sm border border-outline-variant/10 flex flex-col justify-between">
+<span class="font-mono text-[9px] text-secondary absolute top-4 right-4 uppercase tracking-tighter">Phase 02: Forge</span>
+<table class="w-full text-left font-serif">
+<thead>
+<tr class="border-b border-outline-variant/30">
+<th class="py-2 font-mono text-[10px] opacity-40">DOMAIN</th>
+<th class="py-2 font-mono text-[10px] opacity-40">RESOLUTION</th>
+</tr>
+</thead>
+<tbody class="text-sm">
+<tr class="border-b border-outline-variant/10">
+<td class="py-3 pr-4 font-bold">Neural Basis</td>
+<td class="py-3 opacity-80">The substrate of agency.</td>
+</tr>
+<tr>
+<td class="py-3 pr-4 font-bold">The Citadel</td>
+<td class="py-3 opacity-80">Emergent mental hierarchy.</td>
+</tr>
+</tbody>
+</table>
+<button class="mt-4 text-secondary font-mono text-[11px] uppercase tracking-widest flex items-center group">
+                                    Validate Synthesis
+                                    <span class="material-symbols-outlined text-xs ml-2 group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Silence Marker -->
+<div class="mt-8 flex items-center space-x-4 opacity-40 hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-xs" style="font-variation-settings: 'FILL' 1;">pause</span>
+<span class="font-mono text-[10px] tracking-widest uppercase">Process Paused for Contemplation (3m 42s)</span>
+<div class="flex-1 border-t border-dashed border-outline-variant/40"></div>
+</div>
+</div>
+<!-- Synthesis Block 02 -->
+<div class="relative pl-12 border-l-2 border-outline-variant/10">
+<div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-outline-variant border-4 border-surface"></div>
+<div class="mb-6">
+<h3 class="font-serif text-2xl text-primary italic">Synthesis: Aesthetic Geometry in Gothic Spires</h3>
+<span class="font-mono text-[10px] text-on-surface-variant opacity-60">ID: THESIS-0942 | TIMESTAMP: 05:22 AM</span>
+</div>
+<!-- Ongoing Processing State -->
+<div class="bg-surface-container p-12 text-center rounded-sm border border-outline-variant/10 border-dashed">
+<div class="mb-6">
+<span class="material-symbols-outlined text-3xl text-secondary animate-pulse" style="font-variation-settings: 'FILL' 1;">texture</span>
+</div>
+<span class="font-headline italic text-xl opacity-60">Hammering the structural bridge...</span>
+<p class="font-mono text-[10px] uppercase tracking-widest mt-4 opacity-40">Wait for the Scholar's Spark</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Right Column: Marginalia / Side Workspace -->
+<aside class="w-full lg:w-80 space-y-12 shrink-0">
+<div class="bg-surface-container-low p-8 rounded-sm sticky top-32">
+<h4 class="font-mono text-[11px] text-secondary tracking-widest uppercase mb-6">Forge Metrics</h4>
+<div class="space-y-8">
+<div>
+<span class="font-mono text-[10px] opacity-40 block mb-1">INTENSITY LEVEL</span>
+<div class="flex space-x-1">
+<div class="h-1 w-full bg-secondary"></div>
+<div class="h-1 w-full bg-secondary"></div>
+<div class="h-1 w-full bg-secondary"></div>
+<div class="h-1 w-full bg-secondary/20"></div>
+<div class="h-1 w-full bg-secondary/20"></div>
+</div>
+<span class="font-serif italic text-sm mt-2 block">Cerebral Heat Rising</span>
+</div>
+<div class="pt-6 border-t border-outline-variant/20">
+<span class="font-mono text-[10px] opacity-40 block mb-3">MARGIALIA NOTES</span>
+<div class="space-y-4">
+<div class="relative pl-4 border-l border-secondary/30">
+<p class="font-body-serif text-sm italic opacity-80 leading-snug">"The pupil's hesitation here suggests a profound breakthrough in metaphysics."</p>
+<span class="font-mono text-[9px] text-secondary mt-1 block">— The Tutor</span>
+</div>
+<div class="relative pl-4 border-l border-outline-variant/30">
+<p class="font-body-serif text-sm opacity-60 leading-snug">"Review the Lexicon for 'Quiddity' before next synthesis."</p>
+</div>
+</div>
+</div>
+<div class="pt-8">
+<button class="w-full bg-primary text-on-primary py-4 font-mono text-[10px] tracking-widest uppercase hover:opacity-90 transition-opacity">
+                                Ignite New Synthesis
+                            </button>
+<button class="w-full mt-4 bg-transparent border border-outline-variant text-primary py-4 font-mono text-[10px] tracking-widest uppercase hover:bg-surface-container transition-colors">
+                                Export Scriptorium
+                            </button>
+</div>
+</div>
+</div>
+<!-- Abstract Art Piece (Scholarly Card) -->
+<div class="bg-surface-container-highest h-64 flex items-center justify-center p-4">
+<div class="w-full h-full border border-outline-variant/20 flex flex-col items-center justify-center space-y-4 grayscale opacity-40">
+<span class="material-symbols-outlined text-4xl">architecture</span>
+<span class="font-serif italic">Structural Perfection Is Only A Theory</span>
+</div>
+</div>
+</aside>
+</div>
+<!-- Footnote / Status -->
+<footer class="mt-auto px-8 py-4 border-t border-outline-variant/10 flex justify-between items-center opacity-60">
+<span class="font-mono text-[9px] uppercase tracking-widest">Ink remaining: 84%</span>
+<span class="font-mono text-[9px] uppercase tracking-widest">Paideia Scriptorium v2.4.0</span>
+</footer>
+</main>
+<!-- Mobile BottomNavBar (Hidden on desktop) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full bg-surface-container border-t border-outline-variant/10 flex justify-around py-4 z-50">
+<span class="material-symbols-outlined text-secondary">architecture</span>
+<span class="material-symbols-outlined opacity-40">edit_note</span>
+<span class="material-symbols-outlined opacity-40">menu_book</span>
+<span class="material-symbols-outlined opacity-40">person</span>
+</nav>
+</body></html>
