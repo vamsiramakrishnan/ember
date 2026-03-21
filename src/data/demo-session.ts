@@ -86,11 +86,6 @@ export const demoSession: NotebookEntry[] = [
       'You just derived the relationship that took Kepler ten years of calculation to prove. He did it with astronomical tables. You did it with a guitar.',
   },
   {
-    type: 'bridge-suggestion',
-    content:
-      'Your understanding of harmonic ratios connects to Fourier\'s discovery that any wave can be broken into simple harmonics — the same mathematics, applied to heat, light, and sound.',
-  },
-  {
     type: 'divider',
     label: 'reflection',
   },

@@ -2,6 +2,7 @@
  * Thinker Card (2.5)
  * Introduction to a thinker entering the student's intellectual orbit.
  * Not a biography — a personal introduction.
+ * Sections: THE GIFT (what they contribute) and THE BRIDGE (how they connect).
  * See: 06-component-inventory.md, Family 2.
  */
 import type { Thinker } from '@/types/entries';
@@ -19,7 +20,9 @@ export function ThinkerCard({ thinker, showBottomBorder }: ThinkerCardProps) {
         <span className={styles.name}>{thinker.name}</span>
         <span className={styles.dates}>{thinker.dates}</span>
       </div>
+      <div className={styles.sectionLabel}>The Gift</div>
       <p className={styles.gift}>{thinker.gift}</p>
+      <div className={styles.sectionLabel}>The Bridge</div>
       <p className={styles.bridge}>{thinker.bridge}</p>
     </div>
   );

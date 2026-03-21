@@ -20,11 +20,12 @@ const tabs: { id: Surface; label: string }[] = [
 
 export function Navigation({ active, onNavigate }: NavigationProps) {
   return (
-    <nav className={styles.nav}>
+    <nav className={styles.nav} aria-label="Ember surfaces">
       {tabs.map((tab) => (
         <button
           key={tab.id}
           onClick={() => onNavigate(tab.id)}
+          aria-current={tab.id === active ? 'page' : undefined}
           className={
             tab.id === active ? styles.tabActive : styles.tabInactive
           }

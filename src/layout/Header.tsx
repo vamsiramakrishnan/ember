@@ -17,7 +17,7 @@ export function Header({ activeSurface, onNavigate }: HeaderProps) {
     <header className={styles.header}>
       <Column>
         <div className={styles.row}>
-          <h1 className={styles.logo}>Ember</h1>
+          <span className={styles.logo} aria-label="Ember">Ember</span>
           <StudentIdentity
             name="Arjun"
             duration="4 months"

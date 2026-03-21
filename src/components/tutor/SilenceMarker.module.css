@@ -22,9 +22,11 @@
   background-color: var(--rule);
 }
 
+/* Cursor: ink at 30% max opacity, fading to 0. Animation handles the fade. */
 .cursor {
   width: 1px;
   height: 22px;
   background-color: var(--ink);
   animation: emberCursorBlink var(--cursor-cycle) ease infinite;
 }
+

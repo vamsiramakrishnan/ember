@@ -21,75 +21,72 @@ export function Constellation() {
   return (
     <Column>
       <div className={styles.container}>
-        <Text variant="pageTitle" as="h1" style={{ marginBottom: 8 }}>
+        <Text variant="pageTitle" as="h1" style={{ marginBottom: spacing.headerToContent }}>
           Constellation
         </Text>
-        <Text
-          variant="bodySecondary"
-          as="p"
-          style={{ marginBottom: spacing.headerToContent }}
-        >
-          Your intellectual map — the concepts explored, the questions
-          carried, and the thinkers in your orbit.
-        </Text>
 
-        <Text
-          variant="sectionLabel"
-          as="h2"
-          className={styles.sectionLabel}
-          style={{ marginBottom: spacing.labelToContent }}
-        >
-          Active Threads
-        </Text>
-        {threads.map((t, i) => (
-          <PinnedThread key={i}>{t.question}</PinnedThread>
-        ))}
+        <section aria-label="Active threads">
+          <Text
+            variant="sectionLabel"
+            as="h2"
+            className={styles.sectionLabel}
+            style={{ marginBottom: spacing.labelToContent }}
+          >
+            Active Threads
+          </Text>
+          {threads.map((t, i) => (
+            <PinnedThread key={i}>{t.question}</PinnedThread>
+          ))}
+        </section>
 
         <Rule margin={spacing.sectionGap} />
 
-        <Text
-          variant="sectionLabel"
-          as="h2"
-          className={styles.sectionLabel}
-          style={{ marginBottom: spacing.labelToContent }}
-        >
-          Fluency
-        </Text>
-        {concepts.map((c) => (
-          <MasteryBar
-            key={c.concept}
-            concept={c.concept}
-            level={c.level}
-            percentage={c.percentage}
-          />
-        ))}
-
-        {hasMastered && (
-          <BridgeSuggestion>
-            Your understanding of harmonic ratios connects to
-            Fourier's discovery that any wave can be decomposed
-            into simple harmonics — the same mathematics, applied
-            to heat, light, and sound.
-          </BridgeSuggestion>
-        )}
+        <section aria-label="Fluency">
+          <Text
+            variant="sectionLabel"
+            as="h2"
+            className={styles.sectionLabel}
+            style={{ marginBottom: spacing.labelToContent }}
+          >
+            Fluency
+          </Text>
+          {concepts.map((c) => (
+            <MasteryBar
+              key={c.concept}
+              concept={c.concept}
+              level={c.level}
+              percentage={c.percentage}
+            />
+          ))}
+          {hasMastered && (
+            <BridgeSuggestion>
+              Your understanding of harmonic ratios connects to
+              Fourier's discovery that any wave can be decomposed
+              into simple harmonics — the same mathematics, applied
+              to heat, light, and sound.
+            </BridgeSuggestion>
+          )}
+        </section>
 
         <Rule margin={spacing.sectionGap} />
 
-        <Text
-          variant="sectionLabel"
-          as="h2"
-          className={styles.sectionLabel}
-          style={{ marginBottom: spacing.labelToContent }}
-        >
-          Thinkers in Orbit
-        </Text>
-        {thinkers.map((t, i) => (
-          <ThinkerCard
-            key={t.name}
-            thinker={t}
-            showBottomBorder={i < thinkers.length - 1}
-          />
-        ))}
+        <section aria-label="Thinkers in orbit">
+          <Text
+            variant="sectionLabel"
+            as="h2"
+            className={styles.sectionLabel}
+            style={{ marginBottom: spacing.labelToContent }}
+          >
+            Thinkers in Orbit
+          </Text>
+          {thinkers.map((t, i) => (
+            <ThinkerCard
+              key={t.name}
+              thinker={t}
+              showBottomBorder={i < thinkers.length - 1}
+            />
+          ))}
+        </section>
 
         <div className={styles.spacer} />
       </div>

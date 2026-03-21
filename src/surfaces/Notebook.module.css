@@ -2,6 +2,12 @@
   position: relative;
 }
 
+/* Pin Zone (7.3) — between session header and first entry */
+.pinZone {
+  margin-bottom: var(--entry-gap);
+}
+
+/* Input Zone (7.4) — no border, no container, no placeholder text */
 .inputZone {
   padding-left: var(--text-indent);
   padding-top: 24px;
@@ -13,12 +19,4 @@
   height: 22px;
   background-color: var(--ink);
   animation: emberCursorBlink 1.2s ease infinite;
-}
-
-.inputHint {
-  font-family: var(--font-student);
-  font-size: 14px;
-  color: var(--ink-ghost);
-  margin-top: 16px;
-  font-style: italic;
 }

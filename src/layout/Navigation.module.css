@@ -15,6 +15,13 @@
   cursor: pointer;
   transition: color var(--tab-transition), border-color var(--tab-transition);
   margin-bottom: -13px;
+  outline: none;
+}
+
+.tab:focus-visible {
+  outline: 1.5px solid var(--ink-faint);
+  outline-offset: 4px;
+  border-radius: 2px;
 }
 
 .tabInactive {
