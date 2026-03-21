@@ -1,0 +1,9 @@
+.reference {
+  font-family: var(--font-student);
+  font-size: 13px;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--ink-ghost);
+  max-width: 160px;
+  line-height: 1.55;
+}

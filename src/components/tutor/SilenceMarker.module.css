@@ -1,0 +1,32 @@
+.container {
+  padding: var(--silence-gap) 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.text {
+  font-family: var(--font-tutor);
+  font-size: 15px;
+  font-style: italic;
+  color: var(--ink-ghost);
+  letter-spacing: 0.5px;
+  text-align: center;
+  margin: 0;
+}
+
+.verticalRule {
+  width: 1px;
+  height: 36px;
+  background-color: var(--rule);
+}
+
+/* Cursor: ink at 30% max opacity, fading to 0. Animation handles the fade. */
+.cursor {
+  width: 1px;
+  height: 22px;
+  background-color: var(--ink);
+  animation: emberCursorBlink var(--cursor-cycle) ease infinite;
+}
+

@@ -1,0 +1,11 @@
+.rule {
+  border: none;
+  height: 1px;
+  background-color: var(--rule);
+}
+
+.ruleLight {
+  border: none;
+  height: 1px;
+  background-color: var(--rule-light);
+}

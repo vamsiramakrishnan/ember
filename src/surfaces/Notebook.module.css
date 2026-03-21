@@ -1,0 +1,22 @@
+.entryContainer {
+  position: relative;
+}
+
+/* Pin Zone (7.3) — between session header and first entry */
+.pinZone {
+  margin-bottom: var(--entry-gap);
+}
+
+/* Input Zone (7.4) — no border, no container, no placeholder text */
+.inputZone {
+  padding-left: var(--text-indent);
+  padding-top: 24px;
+  padding-bottom: 80px;
+}
+
+.inputCursor {
+  width: 1px;
+  height: 22px;
+  background-color: var(--ink);
+  animation: emberCursorBlink 1.2s ease infinite;
+}

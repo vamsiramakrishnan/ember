@@ -1,0 +1,53 @@
+.container {
+  margin-top: var(--session-header-top);
+}
+
+.question {
+  font-family: var(--font-tutor);
+  font-size: 18px;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--ink-soft);
+  line-height: 1.75;
+}
+
+.principleBlock {
+  margin-bottom: 28px;
+}
+
+.numeralRow {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.numeral {
+  font-family: var(--font-tutor);
+  font-size: 20px;
+  font-weight: 300;
+  color: var(--ink-faint);
+}
+
+.body {
+  font-family: var(--font-student);
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--ink-soft);
+  line-height: 1.75;
+  padding-left: var(--content-indent);
+  margin-top: 12px;
+  margin-bottom: 8px;
+}
+
+.provenance {
+  font-family: var(--font-system);
+  font-size: 11px;
+  font-weight: 300;
+  color: var(--ink-ghost);
+  padding-left: var(--content-indent);
+  margin: 0;
+}
+
+.spacer {
+  height: 80px;
+}

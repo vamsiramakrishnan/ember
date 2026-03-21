@@ -1,0 +1,10 @@
+.canvas {
+  max-width: 560px;
+  background: var(--paper-warm);
+  border-top: 1px solid var(--rule-light);
+  border-bottom: 1px solid var(--rule-light);
+  margin: 0 0 20px 0;
+  position: relative;
+  cursor: crosshair;
+  touch-action: none;
+}

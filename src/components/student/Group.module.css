@@ -1,0 +1,48 @@
+.group {
+  position: relative;
+  padding-left: 16px;
+  margin-bottom: 28px;
+}
+
+.groupRule {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: var(--rule-light);
+}
+
+.items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.collapsedLabel {
+  font-family: var(--font-student);
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--ink-soft);
+  cursor: pointer;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.countBadge {
+  font-family: var(--font-system);
+  font-size: 11px;
+  font-weight: 300;
+  color: var(--ink-ghost);
+}
+
+.toggle {
+  background: none;
+  border: none;
+  font-family: var(--font-system);
+  font-size: 10px;
+  color: var(--ink-ghost);
+  cursor: pointer;
+  padding: 2px 0;
+}

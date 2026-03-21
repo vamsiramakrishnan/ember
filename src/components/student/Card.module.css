@@ -1,0 +1,32 @@
+.card {
+  background: var(--paper-deep);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 14px 16px;
+  max-width: 280px;
+  margin-bottom: 16px;
+}
+
+.title {
+  font-family: var(--font-tutor);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+
+.body {
+  font-family: var(--font-student);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--ink-soft);
+  line-height: 1.65;
+}
+
+.source {
+  font-family: var(--font-system);
+  font-size: 10px;
+  font-weight: 300;
+  color: var(--ink-ghost);
+  margin-top: 8px;
+}

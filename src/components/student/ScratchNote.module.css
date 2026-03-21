@@ -1,0 +1,19 @@
+.note {
+  font-family: var(--font-student);
+  font-size: 15px;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--ink-soft);
+  line-height: 1.60;
+  padding-left: var(--text-indent);
+  margin-bottom: var(--scratch-bottom);
+  margin-top: 0;
+  position: relative;
+}
+
+/* · glyph positioned 8px to the left of the note text (spec: 1.2) */
+.glyph {
+  position: absolute;
+  left: 11px; /* textIndent(19) - 8 = 11px from container edge */
+  color: var(--ink-ghost);
+}
