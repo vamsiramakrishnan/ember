@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&amp;family=Crimson+Pro:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Newsreader:opsz,wght@6-72,400;6-72,700&amp;family=Noto+Serif:wght@400;700&amp;family=Work+Sans:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-tertiary": "#ffffff",
+              "on-primary": "#ffffff",
+              "on-error-container": "#93000a",
+              "surface-container-highest": "#e7e2db",
+              "surface-container": "#f2ede6",
+              "surface": "#fef9f2",
+              "on-surface": "#1d1b17",
+              "inverse-primary": "#cdc5c0",
+              "tertiary-container": "#0d2f18",
+              "primary-fixed-dim": "#cdc5c0",
+              "secondary-container": "#ff8e84",
+              "on-tertiary-fixed": "#00210c",
+              "on-secondary-fixed": "#410003",
+              "on-background": "#1d1b17",
+              "inverse-surface": "#32302c",
+              "on-tertiary-container": "#74997a",
+              "on-secondary-fixed-variant": "#7e2a26",
+              "inverse-on-surface": "#f5f0e9",
+              "surface-variant": "#e7e2db",
+              "surface-bright": "#fef9f2",
+              "background": "#fef9f2",
+              "tertiary": "#001908",
+              "surface-container-high": "#ece7e1",
+              "error": "#ba1a1a",
+              "outline": "#7e756f",
+              "surface-container-lowest": "#ffffff",
+              "tertiary-fixed": "#c5ecc9",
+              "error-container": "#ffdad6",
+              "surface-tint": "#635d5a",
+              "surface-dim": "#ded9d3",
+              "on-surface-variant": "#4d4540",
+              "on-primary-container": "#958f8a",
+              "secondary-fixed": "#ffdad6",
+              "primary-fixed": "#e9e1dc",
+              "on-error": "#ffffff",
+              "surface-container-low": "#f8f3ec",
+              "on-tertiary-fixed-variant": "#2c4e34",
+              "tertiary-fixed-dim": "#aad0ae",
+              "secondary-fixed-dim": "#ffb3ac",
+              "outline-variant": "#cfc4bd",
+              "on-secondary-container": "#772521",
+              "on-secondary": "#ffffff",
+              "on-primary-fixed": "#1e1b18",
+              "primary": "#171411",
+              "secondary": "#9d413b",
+              "primary-container": "#2c2825",
+              "on-primary-fixed-variant": "#4b4642"
+            },
+            fontFamily: {
+              "headline": ["Cormorant Garamond", "serif"],
+              "body": ["Crimson Pro", "serif"],
+              "label": ["IBM Plex Mono", "monospace"],
+              "serif": ["Cormorant Garamond", "serif"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #fef9f2;
+            color: #171411;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .ledger-row:hover {
+            background-color: #f2ede6;
+        }
+    </style>
+</head>
+<body class="font-body selection:bg-secondary-container selection:text-on-secondary-container">
+<!-- SideNavBar -->
+<nav class="fixed left-0 top-0 h-full flex flex-col p-8 space-y-8 bg-[#EDE6DB] dark:bg-[#24211F] h-screen w-64 border-r-0 z-50">
+<div class="mb-10">
+<h1 class="text-xl font-bold font-serif text-[#2C2825]">Paideia</h1>
+<p class="font-label text-[0.6875rem] uppercase tracking-widest opacity-60 mt-1">The Digital Scriptorium</p>
+</div>
+<div class="flex flex-col space-y-6">
+<a class="flex items-center space-x-3 text-[#2C2825] opacity-60 font-medium font-serif text-lg tracking-tight hover:opacity-100 hover:text-[#B8564F] transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="edit_note">edit_note</span>
+<span>Notebook</span>
+</a>
+<a class="flex items-center space-x-3 text-[#2C2825] opacity-60 font-medium font-serif text-lg tracking-tight hover:opacity-100 hover:text-[#B8564F] transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="auto_awesome_motion">auto_awesome_motion</span>
+<span>Constellation</span>
+</a>
+<a class="flex items-center space-x-3 text-[#2C2825] opacity-60 font-medium font-serif text-lg tracking-tight hover:opacity-100 hover:text-[#B8564F] transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="auto_stories">auto_stories</span>
+<span>Philosophy</span>
+</a>
+<!-- Active State: Library -->
+<a class="flex items-center space-x-3 text-[#2C2825] font-bold underline underline-offset-8 decoration-1.5 font-serif text-lg tracking-tight translate-x-1 transition-transform duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="local_library">local_library</span>
+<span>Library</span>
+</a>
+<a class="flex items-center space-x-3 text-[#2C2825] opacity-60 font-medium font-serif text-lg tracking-tight hover:opacity-100 hover:text-[#B8564F] transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="architecture">architecture</span>
+<span>Transmutations</span>
+</a>
+<a class="flex items-center space-x-3 text-[#2C2825] opacity-60 font-medium font-serif text-lg tracking-tight hover:opacity-100 hover:text-[#B8564F] transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="menu_book">menu_book</span>
+<span>Lexicon</span>
+</a>
+</div>
+<div class="mt-auto pt-8 border-t border-outline-variant/20">
+<div class="flex items-center space-x-3">
+<div class="w-10 h-10 rounded-sm bg-surface-container-highest flex items-center justify-center overflow-hidden border border-outline-variant/30">
+<img alt="Scholar's Crest" class="w-full h-full object-cover" data-alt="Scholar's Crest avatar profile" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCYHl3t1S3mi0U23pz_D-0xtD7Q0Ua6jhiFaSY9iYB7pC3fGcGUIdP_3gi4jwhQSckL0V92TyFIwDndLywspZSsD2npyyVzOJnpb6u-RLnZEbNixlx5bEwCEIT11W9fJSWCFgEBu-aERJn-EU0ce73DE0HqC--vFtdL33rGQlxDNT4l0EYH6qmVAcg8Q_KcDitYyeIyDUjhToZi0eTo_Geph-d8L9fsIIgLvFzjjKvW0rd7i03SCFIGQ1hWxXcTkQ6yjLZNzxU4SKg"/>
+</div>
+<div>
+<p class="font-serif text-sm font-bold text-[#2C2825]">Erasmus</p>
+<p class="font-label text-[0.6rem] uppercase opacity-50">Lvl 4 Dialectician</p>
+</div>
+</div>
+</div>
+</nav>
+<!-- Main Canvas -->
+<main class="ml-64 min-h-screen bg-surface">
+<!-- TopAppBar -->
+<header class="flex justify-between items-center w-full px-8 py-6 max-w-none sticky top-0 bg-[#F6F1EA] dark:bg-[#2C2825] z-40 border-none font-serif text-[#2C2825] dark:text-[#F6F1EA] antialiased">
+<div class="flex items-center space-x-8">
+<span class="text-2xl font-serif italic text-[#2C2825] dark:text-[#F6F1EA]">Paideia</span>
+<nav class="hidden md:flex space-x-6 text-sm">
+<a class="text-[#B8564F] border-b-1.5 border-[#2C2825] pb-1 hover:text-[#B8564F] transition-colors duration-300" href="#">Archive</a>
+<a class="text-[#2C2825] opacity-80 hover:text-[#B8564F] transition-colors duration-300" href="#">Catalog</a>
+<a class="text-[#2C2825] opacity-80 hover:text-[#B8564F] transition-colors duration-300" href="#">Indices</a>
+</nav>
+</div>
+<div class="flex items-center space-x-6">
+<div class="relative group">
+<span class="material-symbols-outlined text-xl opacity-60 cursor-pointer hover:text-secondary transition-colors" data-icon="search">search</span>
+</div>
+<span class="material-symbols-outlined text-xl opacity-60 cursor-pointer hover:text-secondary transition-colors" data-icon="menu_book">menu_book</span>
+<span class="material-symbols-outlined text-xl opacity-60 cursor-pointer hover:text-secondary transition-colors" data-icon="settings">settings</span>
+</div>
+</header>
+<!-- Content Area: The Archive Ledger -->
+<section class="p-12 max-w-6xl">
+<div class="mb-12">
+<h2 class="font-headline text-5xl mb-4 text-primary italic">The Archive Ledger</h2>
+<div class="flex justify-between items-end border-b border-outline-variant/40 pb-4">
+<p class="font-body text-xl text-on-surface-variant max-w-2xl italic">An exhaustive inventory of intellectual encounters, filtered through the sieve of memory and recorded for eternity.</p>
+<div class="font-label text-[0.6875rem] text-secondary flex space-x-4">
+<span>ENTRIES: 142</span>
+<span>LAST SYNC: IX.XIV.MMXXIV</span>
+</div>
+</div>
+</div>
+<!-- Ledger Table (Brutalist Papyrus Aesthetic) -->
+<div class="w-full">
+<!-- Table Header -->
+<div class="grid grid-cols-12 gap-4 py-4 border-b-2 border-primary items-center bg-surface-container-low px-4">
+<div class="col-span-1 font-label text-[0.6875rem] uppercase tracking-tighter text-outline">REF</div>
+<div class="col-span-2 font-label text-[0.6875rem] uppercase tracking-tighter text-outline">THINKER</div>
+<div class="col-span-4 font-label text-[0.6875rem] uppercase tracking-tighter text-outline">CORE IDEA</div>
+<div class="col-span-2 font-label text-[0.6875rem] uppercase tracking-tighter text-outline">SESSION</div>
+<div class="col-span-1 font-label text-[0.6875rem] uppercase tracking-tighter text-outline text-center">SKETCH</div>
+<div class="col-span-2 font-label text-[0.6875rem] uppercase tracking-tighter text-outline text-right">BRIDGE STATUS</div>
+</div>
+<!-- Ledger Entries -->
+<div class="divide-y divide-outline-variant/30">
+<!-- Entry 1 -->
+<div class="grid grid-cols-12 gap-4 py-6 px-4 ledger-row transition-colors items-center group">
+<div class="col-span-1 font-label text-xs opacity-40">#001</div>
+<div class="col-span-2">
+<h4 class="font-headline text-lg font-bold">Heraclitus</h4>
+<span class="font-label text-[0.65rem] text-tertiary-container/60 bg-tertiary-fixed px-1 py-0.5">Pre-Socratic</span>
+</div>
+<div class="col-span-4 font-body text-base italic leading-relaxed text-on-surface-variant">
+                            "No man ever steps in the same river twice, for it's not the same river and he's not the same man."
+                        </div>
+<div class="col-span-2">
+<p class="font-label text-xs">Ontological Fluidity</p>
+<p class="font-label text-[0.6rem] text-outline">Nov 12, 11:45 AM</p>
+</div>
+<div class="col-span-1 flex justify-center">
+<div class="w-10 h-10 border border-outline-variant p-0.5 bg-white">
+<img alt="Sketch" class="w-full h-full object-cover grayscale opacity-80 group-hover:opacity-100 group-hover:grayscale-0 transition-all" data-alt="Sketch of a flowing river abstract" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQMgTum3yNSfkTeAnnZcDwBDmlUjgzotLl_g21TC81auXZ0a70g30ExECXaW4jIy5tRbJioo3RGpFuHgCP9_kcP9cKnB-IZnjn31bMu_clR4q3pGTP2RDvgD4TMNycSCNEzUoFT1BaWJ8yGVK4uxWUnOvjRL2vqXW84axGh26i9v8RIC09FbVhZvoFSVSsB1Zi9qCigoq-tpB2LhJtpsrZd9HF3xFjAT_yT7aAxqBymZKFdFrj2MIDTCfF3kgO3nYMIb5cT-oEVak"/>
+</div>
+</div>
+<div class="col-span-2 text-right">
+<span class="inline-block px-2 py-1 border border-secondary text-secondary font-label text-[0.65rem] uppercase">Synthesis Active</span>
+</div>
+</div>
+<!-- Entry 2 -->
+<div class="grid grid-cols-12 gap-4 py-6 px-4 ledger-row transition-colors items-center group">
+<div class="col-span-1 font-label text-xs opacity-40">#002</div>
+<div class="col-span-2">
+<h4 class="font-headline text-lg font-bold">Simone Weil</h4>
+<span class="font-label text-[0.65rem] text-secondary/60 bg-secondary-fixed px-1 py-0.5">Mystic</span>
+</div>
+<div class="col-span-4 font-body text-base italic leading-relaxed text-on-surface-variant">
+                            "Attention is the rarest and purest form of generosity."
+                        </div>
+<div class="col-span-2">
+<p class="font-label text-xs">The Ethics of Focus</p>
+<p class="font-label text-[0.6rem] text-outline">Nov 14, 09:20 PM</p>
+</div>
+<div class="col-span-1 flex justify-center">
+<div class="w-10 h-10 border border-outline-variant p-0.5 bg-white">
+<img alt="Sketch" class="w-full h-full object-cover grayscale opacity-80 group-hover:opacity-100 group-hover:grayscale-0 transition-all" data-alt="Minimalist abstract sketch of a light beam" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDfit3ZMnK403-ltVNoI7v9LqzrZ5NCs3qouF9xHc0kVJDGfrzKO_TX-IymsLDWGUq9JAv13jAj1I6AWMTH9hLbdLXXzmy2s_3ePTE7JRK0RX18qCtC4tNfg5Xm8Kw_W2iahiiy7K8hEfNWW5_X9YxxQ6azLjDJMpVmOuZhhfsl5i5byJT1S9w108ZAk0ItfqBMuFBnRfo4IVKMboDLIHwLEmFYyQlrLJpFITKvBi046GnjfSClocL0MyJ5Rn4XuUKXppGQ61kyDEI"/>
+</div>
+</div>
+<div class="col-span-2 text-right">
+<span class="inline-block px-2 py-1 border border-outline text-outline font-label text-[0.65rem] uppercase">Dormant</span>
+</div>
+</div>
+<!-- Entry 3 -->
+<div class="grid grid-cols-12 gap-4 py-6 px-4 ledger-row transition-colors items-center group">
+<div class="col-span-1 font-label text-xs opacity-40">#003</div>
+<div class="col-span-2">
+<h4 class="font-headline text-lg font-bold">Gilles Deleuze</h4>
+<span class="font-label text-[0.65rem] text-on-tertiary-fixed-variant bg-tertiary-fixed px-1 py-0.5">Rhizome</span>
+</div>
+<div class="col-span-4 font-body text-base italic leading-relaxed text-on-surface-variant">
+                            A Thousand Plateaus: The non-hierarchical entry and exit points in knowledge systems.
+                        </div>
+<div class="col-span-2">
+<p class="font-label text-xs">Networked Thought</p>
+<p class="font-label text-[0.6rem] text-outline">Nov 15, 03:12 PM</p>
+</div>
+<div class="col-span-1 flex justify-center">
+<div class="w-10 h-10 border border-outline-variant p-0.5 bg-white">
+<img alt="Sketch" class="w-full h-full object-cover grayscale opacity-80 group-hover:opacity-100 group-hover:grayscale-0 transition-all" data-alt="Sketch of interconnected root systems" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBiQvC17PfY8V547NQMxwBhAmMoQrLsckxRtmfM3gyr1TNvxrsk3WYiau359p7hKKg_r2iokZtqdPFC6cIsfhx6542eqOT7vNaFYUY9u_A99DdlsYDmFHwtsNuBIC1xQJrLeoV3TI32tqrHV5XM5YW16FlsXEltPYm4sKtx29zF_WbMZjbhXUdRJQJ-j9jz7cjnB8CsdVKEH4ylv_ReXXSnImWl4n9GVmBq86SnzC5Fxot6u7mfTDiyNm9gXaHfJ3eTH9GrWot_LU0"/>
+</div>
+</div>
+<div class="col-span-2 text-right">
+<span class="inline-block px-2 py-1 border border-primary text-primary font-label text-[0.65rem] uppercase">Bridged to Hegel</span>
+</div>
+</div>
+<!-- Entry 4 -->
+<div class="grid grid-cols-12 gap-4 py-6 px-4 ledger-row transition-colors items-center group">
+<div class="col-span-1 font-label text-xs opacity-40">#004</div>
+<div class="col-span-2">
+<h4 class="font-headline text-lg font-bold">Walter Benjamin</h4>
+<span class="font-label text-[0.65rem] text-on-secondary-fixed-variant bg-secondary-fixed px-1 py-0.5">Flâneur</span>
+</div>
+<div class="col-span-4 font-body text-base italic leading-relaxed text-on-surface-variant">
+                            The aura of the work of art in the age of its mechanical reproducibility.
+                        </div>
+<div class="col-span-2">
+<p class="font-label text-xs">Media Aesthetics</p>
+<p class="font-label text-[0.6rem] text-outline">Nov 16, 10:00 AM</p>
+</div>
+<div class="col-span-1 flex justify-center">
+<div class="w-10 h-10 border border-outline-variant p-0.5 bg-white">
+<img alt="Sketch" class="w-full h-full object-cover grayscale opacity-80 group-hover:opacity-100 group-hover:grayscale-0 transition-all" data-alt="Abstract sketch of repeating mechanical patterns" src="https://lh3.googleusercontent.com/aida-public/AB6AXuChHrRXzDa5YdIK33sPufVixx6QzP0Hs31SqLNDWH9-sV15B08wB08dWXxyocAEgTbXtIoizns0O1fAWtEbYz27qJ2hCZ7UJapDKbLLHJktCziHPTWM765Bjh3fsi8wYLLvqhRRd2Jhc809L6DVMdkG9TC6QfTw4I7Sw_lVd_YZwfE9V9zSO_s6yyM5JYMCKKeiST9Q5BYO8d-U6wYvMnQpQMCzPzMFg3TBkUdPh7FUfHpeJ1xJPtdSZPfX_LwMk3nFl41UrRz5emA"/>
+</div>
+</div>
+<div class="col-span-2 text-right">
+<span class="inline-block px-2 py-1 border border-secondary text-secondary font-label text-[0.65rem] uppercase">Pending Review</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Marginalia Sidebar/Overlay for details -->
+<aside class="fixed right-0 top-24 w-80 h-[calc(100vh-6rem)] bg-surface-container p-8 border-l border-outline-variant/30 hidden lg:block overflow-y-auto">
+<div class="space-y-8">
+<div>
+<span class="font-label text-[0.6875rem] text-secondary uppercase tracking-[0.2em] block mb-4">Marginalia</span>
+<h3 class="font-headline text-2xl border-b border-primary/20 pb-2 mb-4">Observation</h3>
+<p class="font-body text-sm text-on-surface-variant leading-relaxed">
+                            The student's preference for Heraclitean fluidity suggests a growing discomfort with rigid binary structures. Suggest introducing <span class="text-secondary italic">Nietzsche's Eternal Recurrence</span> in the next dialogue to test the limits of this 'river' metaphor.
+                        </p>
+</div>
+<div class="bg-surface p-4 border border-outline-variant/40">
+<span class="font-label text-[0.6rem] text-outline uppercase block mb-2">Bridge Prophecy</span>
+<div class="flex items-center space-x-3">
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<p class="font-serif text-sm italic">"The digital river flows only one way, yet memory allows us to swim against the current."</p>
+</div>
+</div>
+<div>
+<h4 class="font-label text-[0.6875rem] uppercase border-b border-outline-variant/20 pb-2 mb-4">Topological Map</h4>
+<div class="grid grid-cols-2 gap-2">
+<div class="h-24 bg-surface-container-highest border border-outline-variant/20 relative overflow-hidden">
+<img alt="Map" class="w-full h-full object-cover opacity-50 sepia" data-alt="Abstract constellation map sketch" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9JsnY-EKK2yxGDXfZWjLi2GJM8ob4W1NeIQLsSv-nuHYpYtHdMt_12kuDNb8RgobaTHwvw1mxjdYoUaxnTTE4b8aY3T6GIJF2sX3nOcj2pydx31Oe__fQeOUeLkHsAb5oCaAsxxQh6uRz8LV7Efr0zrvNj4ZZZZeZA4eUmkwshENNFay9WEO1wANPOm-qao9Tc9jkb6XzR_obUBmvMXrjKLzUtVdD4S8vdeQC4J9Kadywj4rpmtW9IYH8yWNE72IPuymGrzdpsAE"/>
+</div>
+<div class="h-24 bg-surface-container-highest border border-outline-variant/20 flex flex-col items-center justify-center p-2">
+<span class="font-label text-[0.6rem] text-center">New Node Discovered:</span>
+<span class="font-serif text-xs font-bold text-secondary">Dialectics</span>
+</div>
+</div>
+</div>
+</div>
+</aside>
+</section>
+<!-- Subtle Footer Detail -->
+<footer class="p-12 mt-12 border-t border-outline-variant/10">
+<div class="max-w-2xl">
+<p class="font-label text-[0.6875rem] text-outline leading-loose">
+                    This ledger is an immutable record of intellectual progress. All deletions are stored in the <span class="italic">Lethe Reservoir</span> for possible retrieval. Paideia Scriptorium Revision 4.2.0.
+                </p>
+</div>
+</footer>
+</main>
+</body></html>
