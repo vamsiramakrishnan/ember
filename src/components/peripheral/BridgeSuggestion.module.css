@@ -1,8 +1,10 @@
 .suggestion {
   background: var(--sage-dim);
   border-radius: 2px;
-  padding: 14px 16px;
-  margin-bottom: 16px;
+  padding: 16px 20px;
+  margin-top: 8px;
+  margin-bottom: 20px;
+  border-left: 2px solid var(--sage);
 }
 
 .text {
@@ -11,6 +13,7 @@
   font-weight: 400;
   font-style: italic;
   color: var(--sage);
-  line-height: 1.70;
+  line-height: 1.72;
   margin: 0;
+  letter-spacing: 0.01em;
 }

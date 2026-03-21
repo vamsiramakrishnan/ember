@@ -1,6 +1,7 @@
 /* ConstellationLexicon — ledger-style vocabulary entries */
 .entry {
-  margin-bottom: 8px;
+  margin-bottom: 12px;
+  padding: 16px 0;
 }
 
 .entryHeader {
@@ -37,9 +38,11 @@
 .definition {
   font-family: var(--font-student);
   font-size: 16px;
-  color: var(--ink);
-  line-height: 1.75;
-  margin-bottom: 12px;
+  color: var(--ink-soft);
+  line-height: 1.78;
+  letter-spacing: 0.005em;
+  margin-bottom: 16px;
+  max-width: 520px;
 }
 
 .meta {

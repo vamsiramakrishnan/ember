@@ -9,6 +9,8 @@
 html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'kern' 1, 'liga' 1;
 }
 
 body {
@@ -16,11 +18,26 @@ body {
   padding: 0;
   background-color: var(--paper);
   color: var(--ink);
+  font-family: 'Crimson Pro', serif;
   min-height: 100vh;
+  line-height: 1.80;
 }
 
 ::selection {
-  background-color: rgba(184, 86, 79, 0.15);
+  background-color: rgba(184, 86, 79, 0.12);
+  color: var(--ink);
+}
+
+:focus-visible {
+  outline: 1.5px solid var(--ink-ghost);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -36,4 +53,9 @@ body {
 @keyframes emberCursorBlink {
   0%, 100% { opacity: var(--cursor-opacity-max); }
   50% { opacity: 0; }
+}
+
+@keyframes emberFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }

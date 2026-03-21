@@ -1,8 +1,10 @@
 /**
  * NotebookCanvas — Canvas mode view within the Notebook surface.
  * Spatial arrangement of the student's key concepts from the session.
- * Drawn from prototype Screen 2 (Transmutations Canvas).
+ * Cards are draggable. Connectors update as cards move.
+ * See: 06-component-inventory.md, Family 4.
  */
+import { useCallback } from 'react';
 import { CanvasMode } from '@/components/canvas/CanvasMode';
 import { Connector } from '@/components/canvas/Connector';
 import { useCanvasPositions } from '@/hooks/useCanvasPositions';
@@ -10,10 +12,10 @@ import type { CanvasPosition, CanvasConnection } from '@/types/canvas';
 import styles from './NotebookCanvas.module.css';
 
 const initialPositions: CanvasPosition[] = [
-  { id: 'guitar', x: 60, y: 40, width: 200 },
-  { id: 'kepler', x: 320, y: 30, width: 200 },
-  { id: 'harmony', x: 180, y: 180, width: 220 },
-  { id: 'orbit', x: 420, y: 190, width: 180 },
+  { id: 'guitar', x: 40, y: 30, width: 200 },
+  { id: 'kepler', x: 300, y: 20, width: 200 },
+  { id: 'harmony', x: 160, y: 180, width: 220 },
+  { id: 'orbit', x: 400, y: 200, width: 180 },
 ];
 
 const connections: CanvasConnection[] = [
@@ -25,11 +27,11 @@ const connections: CanvasConnection[] = [
 const cardContent: Record<string, { label: string; body: string }> = {
   guitar: {
     label: 'Guitar String',
-    body: 'Harmonics are all about ratios — octave is 2:1, fifth is 3:2.',
+    body: 'Harmonics are all about ratios — octave is 2:1, the fifth is 3:2.',
   },
   kepler: {
     label: 'Kepler',
-    body: 'Believed planets were singing. Each orbit produced a tone.',
+    body: 'Believed the planets were singing. Each orbit produced a tone.',
   },
   harmony: {
     label: 'Harmonic Series',
@@ -37,15 +39,38 @@ const cardContent: Record<string, { label: string; body: string }> = {
   },
   orbit: {
     label: 'Orbital Period',
-    body: 'Longer string = lower note. Bigger orbit = longer period.',
+    body: 'Longer string → lower note. Bigger orbit → longer period.',
   },
 };
 
 export function NotebookCanvas() {
-  const { positions } = useCanvasPositions(initialPositions);
+  const { positions, updatePosition } = useCanvasPositions(initialPositions);
+
+  const handleDrag = useCallback(
+    (id: string, e: React.MouseEvent) => {
+      e.preventDefault();
+      const startX = e.clientX;
+      const startY = e.clientY;
+      const pos = positions.find((p) => p.id === id);
+      if (!pos) return;
+      const origX = pos.x;
+      const origY = pos.y;
+
+      const onMove = (ev: MouseEvent) => {
+        updatePosition(id, origX + ev.clientX - startX, origY + ev.clientY - startY);
+      };
+      const onUp = () => {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    },
+    [positions, updatePosition],
+  );
 
   return (
-    <CanvasMode label="concept map" minHeight={340}>
+    <CanvasMode label="concept map" minHeight={360}>
       <svg className={styles.connectorLayer}>
         {connections.map((conn) => {
           const from = positions.find((p) => p.id === conn.from);
@@ -71,11 +96,8 @@ export function NotebookCanvas() {
           <div
             key={pos.id}
             className={styles.card}
-            style={{
-              left: pos.x,
-              top: pos.y,
-              width: pos.width ?? 160,
-            }}
+            style={{ left: pos.x, top: pos.y, width: pos.width ?? 160 }}
+            onMouseDown={(e) => handleDrag(pos.id, e)}
           >
             <span className={styles.cardLabel}>{card.label}</span>
             <p className={styles.cardBody}>{card.body}</p>

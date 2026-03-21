@@ -1,12 +1,15 @@
 /**
  * Notebook — Surface 1: The Desk
  * The active session. Today's thinking.
+ * Includes a past session above (accessible by scrolling up)
+ * and the current session with staggered reveal.
  * See: 04-information-architecture.md, Surface one.
  */
 import { useState } from 'react';
 import { Column } from '@/primitives/Column';
 import { MarginZone } from '@/primitives/MarginZone';
 import { SessionHeader } from '@/components/peripheral/SessionHeader';
+import { SessionDivider } from '@/components/peripheral/SessionDivider';
 import { PinnedThread } from '@/components/student/PinnedThread';
 import { MarginalReference } from '@/components/ambient/MarginalReference';
 import { InputZone } from '@/components/student/InputZone';
@@ -14,6 +17,7 @@ import { useSessionEntries } from '@/hooks/useSessionEntries';
 import { useRevealSequence } from '@/hooks/useRevealSequence';
 import { NotebookEntryRenderer } from './NotebookEntryRenderer';
 import { NotebookCanvas } from './NotebookCanvas';
+import { demoPastSession, demoPastSessionMeta } from '@/data/demo-past-session';
 import styles from './Notebook.module.css';
 
 const pinnedThreads = [
@@ -30,6 +34,21 @@ export function Notebook() {
 
   return (
     <Column>
+      {/* Past session — visible when scrolling up */}
+      <SessionHeader
+        sessionNumber={demoPastSessionMeta.sessionNumber}
+        date={demoPastSessionMeta.date}
+        timeOfDay={demoPastSessionMeta.timeOfDay}
+        topic={demoPastSessionMeta.topic}
+      />
+      {demoPastSession.map((entry, i) => (
+        <div key={`past-${i}`} style={{ opacity: 0.6 }}>
+          <NotebookEntryRenderer entry={entry} />
+        </div>
+      ))}
+      <SessionDivider />
+
+      {/* Current session */}
       <SessionHeader
         sessionNumber={meta.sessionNumber}
         date={meta.date}
@@ -41,16 +60,12 @@ export function Notebook() {
           className={mode === 'linear' ? styles.modeActive : styles.modeButton}
           onClick={() => setMode('linear')}
           aria-current={mode === 'linear' ? 'page' : undefined}
-        >
-          Linear
-        </button>
+        >Linear</button>
         <button
           className={mode === 'canvas' ? styles.modeActive : styles.modeButton}
           onClick={() => setMode('canvas')}
           aria-current={mode === 'canvas' ? 'page' : undefined}
-        >
-          Canvas
-        </button>
+        >Canvas</button>
       </div>
       {pinnedThreads.length > 0 && (
         <div className={styles.pinZone} role="complementary" aria-label="Pinned threads">
@@ -75,9 +90,7 @@ export function Notebook() {
               </div>
             ))}
           </div>
-          {revealedCount >= entries.length && (
-            <InputZone />
-          )}
+          {revealedCount >= entries.length && <InputZone />}
         </>
       ) : (
         <NotebookCanvas />

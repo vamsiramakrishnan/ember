@@ -1,19 +1,22 @@
 .header {
-  padding-top: 24px;
+  padding-top: 32px;
+  padding-bottom: 4px;
 }
 
 .row {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .logo {
   font-family: var(--font-tutor);
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 300;
+  font-style: italic;
   color: var(--ink);
-  letter-spacing: -0.3px;
+  letter-spacing: -0.5px;
   margin: 0;
+  user-select: none;
 }

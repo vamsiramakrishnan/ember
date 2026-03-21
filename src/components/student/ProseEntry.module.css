@@ -3,8 +3,10 @@
   font-size: 18px;
   font-weight: 400;
   color: var(--ink);
-  line-height: 1.80;
+  line-height: 1.82;
+  letter-spacing: 0.005em;
   padding-left: var(--text-indent);
   margin-bottom: var(--entry-gap);
   margin-top: 0;
+  /* Student text has the fullest presence — the darkest ink on the page */
 }

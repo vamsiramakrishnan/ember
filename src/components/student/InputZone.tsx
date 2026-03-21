@@ -4,7 +4,7 @@
  * No border, no placeholder, just a blinking cursor that becomes a textarea on focus.
  * See: 06-component-inventory.md, Family 7
  */
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import styles from './InputZone.module.css';
 
 interface InputZoneProps {
@@ -15,6 +15,15 @@ export function InputZone({ onSubmit }: InputZoneProps) {
   const [value, setValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const autoGrow = useCallback(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  }, []);
+
+  useEffect(() => { autoGrow(); }, [value, autoGrow]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -27,14 +36,10 @@ export function InputZone({ onSubmit }: InputZoneProps) {
     [value, onSubmit],
   );
 
-  const handleContainerClick = useCallback(() => {
-    textareaRef.current?.focus();
-  }, []);
-
   return (
     <div
       className={styles.container}
-      onClick={handleContainerClick}
+      onClick={() => textareaRef.current?.focus()}
       role="textbox"
       aria-label="Writing area"
     >

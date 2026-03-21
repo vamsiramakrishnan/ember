@@ -6,8 +6,17 @@
 import { Text } from '@/primitives/Text';
 import { Rule } from '@/primitives/Rule';
 import { spacing } from '@/tokens/spacing';
+import { colors } from '@/tokens/colors';
 import type { LexiconEntry } from '@/types/lexicon';
+import type { MasteryLevel } from '@/types/mastery';
 import styles from './ConstellationLexicon.module.css';
+
+const levelColors: Record<MasteryLevel, string> = {
+  mastered: colors.sage,
+  strong: colors.ink,
+  developing: colors.indigo,
+  exploring: colors.inkGhost,
+};
 
 interface LexiconEntryRowProps {
   entry: LexiconEntry;
@@ -44,7 +53,10 @@ function LexiconEntryRow({ entry }: LexiconEntryRowProps) {
         <div className={styles.track}>
           <div
             className={styles.fill}
-            style={{ width: `${entry.percentage}%` }}
+            style={{
+              width: `${entry.percentage}%`,
+              backgroundColor: levelColors[entry.level],
+            }}
           />
         </div>
         <span className={styles.masteryLabel}>{entry.percentage}%</span>
