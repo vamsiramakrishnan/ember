@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&amp;family=Crimson+Pro:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,700;1,6..72,400&amp;family=Noto+Serif:wght@400;700&amp;family=Work+Sans:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-tertiary": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "surface-container-highest": "#e7e2db",
+                        "surface-container": "#f2ede6",
+                        "surface": "#fef9f2",
+                        "on-surface": "#1d1b17",
+                        "inverse-primary": "#cdc5c0",
+                        "tertiary-container": "#0d2f18",
+                        "primary-fixed-dim": "#cdc5c0",
+                        "secondary-container": "#ff8e84",
+                        "on-tertiary-fixed": "#00210c",
+                        "on-secondary-fixed": "#410003",
+                        "on-background": "#1d1b17",
+                        "inverse-surface": "#32302c",
+                        "on-tertiary-container": "#74997a",
+                        "on-secondary-fixed-variant": "#7e2a26",
+                        "inverse-on-surface": "#f5f0e9",
+                        "surface-variant": "#e7e2db",
+                        "surface-bright": "#fef9f2",
+                        "background": "#fef9f2",
+                        "tertiary": "#001908",
+                        "surface-container-high": "#ece7e1",
+                        "error": "#ba1a1a",
+                        "outline": "#7e756f",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed": "#c5ecc9",
+                        "error-container": "#ffdad6",
+                        "surface-tint": "#635d5a",
+                        "surface-dim": "#ded9d3",
+                        "on-surface-variant": "#4d4540",
+                        "on-primary-container": "#958f8a",
+                        "secondary-fixed": "#ffdad6",
+                        "primary-fixed": "#e9e1dc",
+                        "on-error": "#ffffff",
+                        "surface-container-low": "#f8f3ec",
+                        "on-tertiary-fixed-variant": "#2c4e34",
+                        "tertiary-fixed-dim": "#aad0ae",
+                        "secondary-fixed-dim": "#ffb3ac",
+                        "outline-variant": "#cfc4bd",
+                        "on-secondary-container": "#772521",
+                        "on-secondary": "#ffffff",
+                        "on-primary-fixed": "#1e1b18",
+                        "primary": "#171411",
+                        "secondary": "#9d413b",
+                        "primary-container": "#2c2825",
+                        "on-primary-fixed-variant": "#4b4642",
+                        "inquiry-indigo": "#4F46E5",
+                        "connection-amber": "#D97706"
+                    },
+                    fontFamily: {
+                        "headline": ["Newsreader", "serif"],
+                        "body": ["Noto Serif", "serif"],
+                        "label": ["IBM Plex Mono", "monospace"],
+                        "display": ["Cormorant Garamond", "serif"],
+                        "serif": ["Cormorant Garamond", "serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+            font-size: 20px;
+        }
+        .dot-grid {
+            background-image: radial-gradient(#cfc4bd 0.5px, transparent 0.5px);
+            background-size: 24px 24px;
+        }
+        .bezier-connector {
+            position: absolute;
+            pointer-events: none;
+            z-index: 0;
+        }
+    </style>
+</head>
+<body class="bg-background text-primary font-body antialiased selection:bg-secondary-container">
+<!-- SideNavBar Shell -->
+<aside class="fixed left-0 top-0 h-full flex flex-col p-8 space-y-8 bg-[#EDE6DB] dark:bg-[#24211F] h-screen w-64 border-r-0 z-50">
+<div class="flex flex-col gap-1">
+<h1 class="text-xl font-bold font-serif text-[#2C2825]">Paideia</h1>
+<p class="font-label text-[10px] uppercase tracking-widest opacity-60">The Digital Scriptorium</p>
+</div>
+<nav class="flex flex-col space-y-6">
+<div class="flex items-center gap-4 text-[#2C2825] opacity-60 font-medium font-serif text-lg tracking-tight hover:opacity-100 hover:text-[#B8564F] transition-all cursor-pointer">
+<span class="material-symbols-outlined" data-icon="edit_note">edit_note</span>
+<span>Notebook</span>
+</div>
+<div class="flex items-center gap-4 text-[#2C2825] opacity-60 font-medium font-serif text-lg tracking-tight hover:opacity-100 hover:text-[#B8564F] transition-all cursor-pointer">
+<span class="material-symbols-outlined" data-icon="auto_awesome_motion">auto_awesome_motion</span>
+<span>Constellation</span>
+</div>
+<div class="flex items-center gap-4 text-[#2C2825] opacity-60 font-medium font-serif text-lg tracking-tight hover:opacity-100 hover:text-[#B8564F] transition-all cursor-pointer">
+<span class="material-symbols-outlined" data-icon="auto_stories">auto_stories</span>
+<span>Philosophy</span>
+</div>
+<div class="flex items-center gap-4 text-[#2C2825] opacity-60 font-medium font-serif text-lg tracking-tight hover:opacity-100 hover:text-[#B8564F] transition-all cursor-pointer">
+<span class="material-symbols-outlined" data-icon="local_library">local_library</span>
+<span>Library</span>
+</div>
+<div class="flex items-center gap-4 text-[#2C2825] font-bold underline underline-offset-8 decoration-1.5 font-serif text-lg tracking-tight translate-x-1 transition-transform duration-300 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="architecture">architecture</span>
+<span>Transmutations</span>
+</div>
+<div class="flex items-center gap-4 text-[#2C2825] opacity-60 font-medium font-serif text-lg tracking-tight hover:opacity-100 hover:text-[#B8564F] transition-all cursor-pointer">
+<span class="material-symbols-outlined" data-icon="menu_book">menu_book</span>
+<span>Lexicon</span>
+</div>
+</nav>
+<div class="mt-auto pt-8 border-t border-outline-variant/20">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 bg-surface-container-highest rounded-sm flex items-center justify-center border border-outline-variant/30 overflow-hidden">
+<img class="w-full h-full object-cover opacity-80 mix-blend-multiply" data-alt="Scholar's Crest" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAgzUxM1A9EB8osUhuLrFFEDYQReq0gEMctr4fBML4M4IOJg7jz-Z2rALiSTJcaBJz0SlagZKWL9b8cCJgEke9fFcDQy7obhycR9YNGCyIKLbYzXKg6WAMd5MPOUBb4QVGpyM_Bf5M0tCv8w9oDd-PA95C_Jfc0N3tJUEl2evLQPptU6wuSTR6H1QHXn8KNIVOKqxW4d2qchOamq5sBQKI5BSdF5BBa7VNInjwuwq1I4_09mNJ1eMRZPk8vZQ-bMJG6KtF4UssCA9E"/>
+</div>
+<div>
+<p class="font-label text-[10px] text-primary/60">ACADEMIC RANK</p>
+<p class="font-serif text-sm font-bold">Magister Ludi</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 min-h-screen flex flex-col relative">
+<!-- TopAppBar -->
+<header class="flex justify-between items-center w-full px-8 py-6 max-w-none sticky top-0 bg-[#F6F1EA] dark:bg-[#2C2825] z-40 border-none">
+<div class="flex items-center gap-8">
+<span class="text-2xl font-serif italic text-[#2C2825] dark:text-[#F6F1EA]">Transmutations</span>
+<nav class="hidden md:flex gap-6">
+<span class="text-[#B8564F] border-b-1.5 border-[#2C2825] pb-1 font-serif text-sm cursor-pointer">Workbench</span>
+<span class="text-[#2C2825] opacity-80 font-serif text-sm hover:text-[#B8564F] transition-colors duration-300 cursor-pointer">Archive</span>
+<span class="text-[#2C2825] opacity-80 font-serif text-sm hover:text-[#B8564F] transition-colors duration-300 cursor-pointer">Formulas</span>
+</nav>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative group">
+<input class="bg-transparent border-b border-outline-variant/40 focus:border-secondary focus:ring-0 text-sm font-body w-64 transition-all pb-1 placeholder:italic placeholder:opacity-50" placeholder="Search the scriptorium..." type="text"/>
+<span class="material-symbols-outlined absolute right-0 top-0 text-primary/40" data-icon="search">search</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-[#2C2825] cursor-pointer hover:text-secondary" data-icon="menu_book">menu_book</span>
+<span class="material-symbols-outlined text-[#2C2825] cursor-pointer hover:text-secondary" data-icon="settings">settings</span>
+</div>
+</div>
+</header>
+<!-- Workbench Canvas -->
+<section class="flex-grow p-8 relative dot-grid overflow-hidden">
+<!-- Process Flow Header -->
+<div class="mb-12 flex justify-between items-end border-b border-outline-variant/30 pb-4">
+<div>
+<span class="font-label text-[10px] text-secondary tracking-widest uppercase">Active Operation</span>
+<h2 class="font-display text-4xl text-primary mt-1 italic">The Synthesis of Hegelian Dialectics</h2>
+</div>
+<div class="flex gap-4">
+<button class="bg-primary text-on-primary px-6 py-2 text-sm font-label flex items-center gap-2 hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-xs" data-icon="bolt">bolt</span>
+                        TRANSMUTE
+                    </button>
+</div>
+</div>
+<!-- Malleable Canvas Area -->
+<div class="relative w-full h-[716px] rounded-sm">
+<!-- Hand-drawn Bezier Connections (SVG Overlay) -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none opacity-40" xmlns="http://www.w3.org/2000/svg">
+<!-- Amber Connection 1 -->
+<path d="M 320 180 C 400 180, 450 300, 520 300" fill="none" stroke="#D97706" stroke-dasharray="4 2" stroke-width="1.5"></path>
+<!-- Indigo Inquiry 1 -->
+<path d="M 180 320 C 180 400, 280 450, 320 500" fill="none" stroke="#4F46E5" stroke-width="1.5"></path>
+<!-- Synthesis convergence -->
+<path d="M 520 350 C 600 450, 750 450, 850 450" fill="none" stroke="#2C2825" stroke-width="2"></path>
+</svg>
+<!-- Idea Cards -->
+<!-- Thesis (Amber/Connection) -->
+<div class="absolute top-[10%] left-[10%] w-72 bg-surface-container-lowest border border-outline-variant/20 p-6 z-10 hover:border-connection-amber transition-colors group">
+<div class="flex justify-between items-start mb-4">
+<span class="font-label text-[10px] bg-connection-amber/10 text-connection-amber px-2 py-0.5">THESIS</span>
+<span class="material-symbols-outlined text-sm opacity-20 group-hover:opacity-100" data-icon="drag_indicator">drag_indicator</span>
+</div>
+<p class="font-body text-lg leading-relaxed mb-4">The individual is a product of absolute historical necessity.</p>
+<div class="flex items-center gap-2 text-[10px] font-label text-primary/40">
+<span class="material-symbols-outlined text-[10px]" data-icon="schedule">schedule</span>
+<span>14 MAY 1807</span>
+</div>
+</div>
+<!-- Antithesis (Indigo/Inquiry) -->
+<div class="absolute top-[45%] left-[5%] w-72 bg-surface-container-lowest border border-outline-variant/20 p-6 z-10 hover:border-inquiry-indigo transition-colors group">
+<div class="flex justify-between items-start mb-4">
+<span class="font-label text-[10px] bg-inquiry-indigo/10 text-inquiry-indigo px-2 py-0.5">ANTITHESIS</span>
+<span class="material-symbols-outlined text-sm opacity-20 group-hover:opacity-100" data-icon="drag_indicator">drag_indicator</span>
+</div>
+<p class="font-body text-lg leading-relaxed mb-4">True freedom exists only in the negation of historical continuity.</p>
+<div class="flex items-center gap-2 text-[10px] font-label text-primary/40">
+<span class="material-symbols-outlined text-[10px]" data-icon="psychology">psychology</span>
+<span>CRITICAL INQUIRY</span>
+</div>
+</div>
+<!-- Hypothesis (Clay-like/Experimental) -->
+<div class="absolute top-[30%] left-[45%] w-80 bg-surface-container p-8 z-10 shadow-sm border-l-4 border-secondary/40">
+<div class="mb-4">
+<span class="font-label text-[10px] text-secondary tracking-widest uppercase">Hypothesis in flux</span>
+</div>
+<p class="font-display italic text-2xl text-primary/80 leading-tight">Can the contradiction be resolved by redefining 'negation' as 'preservation'?</p>
+<div class="mt-6 flex gap-3">
+<div class="h-1 w-full bg-outline-variant/30 overflow-hidden">
+<div class="h-full bg-secondary w-2/3"></div>
+</div>
+<span class="font-label text-[10px] whitespace-nowrap">65% COHERENCE</span>
+</div>
+</div>
+<!-- Synthesis (Final Result) -->
+<div class="absolute bottom-[10%] right-[10%] w-96 bg-surface-container-lowest border border-primary/20 p-10 z-20 shadow-xl">
+<div class="flex justify-between items-start mb-6">
+<span class="font-label text-[10px] border border-primary text-primary px-3 py-1 font-bold">SYNTHESIS</span>
+<span class="material-symbols-outlined text-primary/60" data-icon="verified_user" data-weight="fill" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+</div>
+<h3 class="font-display text-3xl mb-4">Aufhebung</h3>
+<p class="font-body text-xl text-primary leading-relaxed italic">
+                        The movement of the concept where contradiction is not destroyed, but uplifted into a higher unity.
+                    </p>
+<div class="mt-8 border-t border-outline-variant/40 pt-6">
+<button class="text-secondary font-label text-xs uppercase tracking-widest flex items-center gap-2 hover:underline">
+                            Export to Library
+                            <span class="material-symbols-outlined text-xs" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Marginalia / AI Sidebar -->
+<aside class="fixed right-0 top-24 bottom-0 w-80 bg-surface-container p-8 border-l border-outline-variant/20 shadow-[-10px_0_30px_rgba(0,0,0,0.02)] z-30">
+<div class="mb-8">
+<h4 class="font-label text-[10px] uppercase tracking-widest text-primary/60 mb-2">The Annotator</h4>
+<p class="font-display italic text-lg leading-relaxed">"You are approaching a critical threshold. The antithesis requires more 'indigo' weight to balance the historical thesis."</p>
+</div>
+<div class="space-y-6">
+<div class="p-4 bg-surface border border-outline-variant/10 rounded-sm">
+<span class="font-label text-[10px] text-connection-amber">SUGGESTION</span>
+<p class="font-body text-sm mt-2">Connect to 'The Phenomenology of Spirit' (Section IV) for grounding.</p>
+</div>
+<div class="p-4 bg-surface border border-outline-variant/10 rounded-sm opacity-60">
+<span class="font-label text-[10px] text-inquiry-indigo">INQUIRY</span>
+<p class="font-body text-sm mt-2">What happens if we reverse the temporal flow of the negation?</p>
+</div>
+</div>
+<div class="absolute bottom-8 left-8 right-8">
+<div class="relative">
+<input class="w-full bg-transparent border-b border-primary/20 py-2 font-body text-sm focus:border-secondary focus:ring-0 placeholder:italic" placeholder="Consult the master..." type="text"/>
+<span class="material-symbols-outlined absolute right-0 bottom-2 text-primary/40" data-icon="send">send</span>
+</div>
+</div>
+</aside>
+</section>
+<!-- Tool Dock -->
+<div class="fixed bottom-8 left-1/2 -translate-x-1/2 flex bg-primary-container p-2 rounded-sm shadow-2xl z-50">
+<button class="p-3 text-on-primary hover:bg-white/10 transition-colors" title="Add Idea">
+<span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
+</button>
+<div class="w-px bg-white/10 mx-1 self-stretch"></div>
+<button class="p-3 text-on-primary hover:bg-white/10 transition-colors" title="Draw Connection">
+<span class="material-symbols-outlined" data-icon="gesture">gesture</span>
+</button>
+<button class="p-3 text-on-primary hover:bg-white/10 transition-colors" title="Add Inquiry">
+<span class="material-symbols-outlined text-inquiry-indigo" data-icon="help_center">help_center</span>
+</button>
+<button class="p-3 text-on-primary hover:bg-white/10 transition-colors" title="Change Surface">
+<span class="material-symbols-outlined" data-icon="layers">layers</span>
+</button>
+<div class="w-px bg-white/10 mx-1 self-stretch"></div>
+<button class="p-3 text-on-primary hover:bg-white/10 transition-colors" title="Zoom Out">
+<span class="material-symbols-outlined" data-icon="zoom_out_map">zoom_out_map</span>
+</button>
+</div>
+</main>
+</body></html>
