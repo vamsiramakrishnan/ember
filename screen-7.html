@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&amp;family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-tertiary": "#ffffff",
+              "on-primary": "#ffffff",
+              "on-error-container": "#93000a",
+              "surface-container-highest": "#e7e2db",
+              "surface-container": "#f2ede6",
+              "surface": "#fef9f2",
+              "on-surface": "#1d1b17",
+              "inverse-primary": "#cdc5c0",
+              "tertiary-container": "#0d2f18",
+              "primary-fixed-dim": "#cdc5c0",
+              "secondary-container": "#ff8e84",
+              "on-tertiary-fixed": "#00210c",
+              "on-secondary-fixed": "#410003",
+              "on-background": "#1d1b17",
+              "inverse-surface": "#32302c",
+              "on-tertiary-container": "#74997a",
+              "on-secondary-fixed-variant": "#7e2a26",
+              "inverse-on-surface": "#f5f0e9",
+              "surface-variant": "#e7e2db",
+              "surface-bright": "#fef9f2",
+              "background": "#fef9f2",
+              "tertiary": "#001908",
+              "surface-container-high": "#ece7e1",
+              "error": "#ba1a1a",
+              "outline": "#7e756f",
+              "surface-container-lowest": "#ffffff",
+              "tertiary-fixed": "#c5ecc9",
+              "error-container": "#ffdad6",
+              "surface-tint": "#635d5a",
+              "surface-dim": "#ded9d3",
+              "on-surface-variant": "#4d4540",
+              "on-primary-container": "#958f8a",
+              "secondary-fixed": "#ffdad6",
+              "primary-fixed": "#e9e1dc",
+              "on-error": "#ffffff",
+              "surface-container-low": "#f8f3ec",
+              "on-tertiary-fixed-variant": "#2c4e34",
+              "tertiary-fixed-dim": "#aad0ae",
+              "secondary-fixed-dim": "#ffb3ac",
+              "outline-variant": "#cfc4bd",
+              "on-secondary-container": "#772521",
+              "on-secondary": "#ffffff",
+              "on-primary-fixed": "#1e1b18",
+              "primary": "#171411",
+              "secondary": "#9d413b",
+              "primary-container": "#2c2825",
+              "on-primary-fixed-variant": "#4b4642"
+            },
+            fontFamily: {
+              "serif": ["Cormorant Garamond", "serif"],
+              "body-serif": ["Crimson Pro", "serif"],
+              "mono": ["IBM Plex Mono", "monospace"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .ink-ghost {
+            text-decoration: line-through;
+            opacity: 0.3;
+            text-decoration-thickness: 1px;
+        }
+        .marginalia-shadow {
+            box-shadow: -10px 0 30px -15px rgba(0,0,0,0.05);
+        }
+    </style>
+</head>
+<body class="bg-surface text-primary font-body-serif selection:bg-secondary/20">
+<!-- SideNavBar (Predicted) -->
+<nav class="fixed left-0 top-0 h-full flex flex-col p-8 space-y-8 bg-[#EDE6DB] dark:bg-[#24211F] w-64 border-r-0 z-50 md:flex hidden">
+<div class="space-y-1">
+<h1 class="text-xl font-bold font-serif text-[#2C2825]">Paideia</h1>
+<p class="font-mono text-[10px] uppercase tracking-widest opacity-60">The Digital Scriptorium</p>
+</div>
+<div class="flex flex-col space-y-6 pt-4">
+<a class="text-[#2C2825] opacity-60 font-medium font-serif text-lg tracking-tight hover:opacity-100 hover:text-[#B8564F] transition-all flex items-center gap-3" href="#">
+<span class="material-symbols-outlined" data-icon="edit_note">edit_note</span> Notebook
+            </a>
+<a class="text-[#2C2825] opacity-60 font-medium font-serif text-lg tracking-tight hover:opacity-100 hover:text-[#B8564F] transition-all flex items-center gap-3" href="#">
+<span class="material-symbols-outlined" data-icon="auto_awesome_motion">auto_awesome_motion</span> Constellation
+            </a>
+<a class="text-[#2C2825] opacity-60 font-medium font-serif text-lg tracking-tight hover:opacity-100 hover:text-[#B8564F] transition-all flex items-center gap-3" href="#">
+<span class="material-symbols-outlined" data-icon="auto_stories">auto_stories</span> Philosophy
+            </a>
+<a class="text-[#2C2825] opacity-60 font-medium font-serif text-lg tracking-tight hover:opacity-100 hover:text-[#B8564F] transition-all flex items-center gap-3" href="#">
+<span class="material-symbols-outlined" data-icon="local_library">local_library</span> Library
+            </a>
+<a class="text-[#2C2825] opacity-60 font-medium font-serif text-lg tracking-tight hover:opacity-100 hover:text-[#B8564F] transition-all flex items-center gap-3" href="#">
+<span class="material-symbols-outlined" data-icon="architecture">architecture</span> Transmutations
+            </a>
+<a class="text-[#2C2825] font-bold underline underline-offset-8 decoration-1.5 font-serif text-lg tracking-tight translate-x-1 transition-transform duration-300 flex items-center gap-3" href="#">
+<span class="material-symbols-outlined" data-icon="menu_book" style="font-variation-settings: 'FILL' 1;">menu_book</span> Lexicon
+            </a>
+</div>
+<div class="mt-auto pt-8 border-t border-outline-variant/20">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center overflow-hidden border border-outline-variant/30">
+<img class="w-full h-full object-cover opacity-80 contrast-125 grayscale" data-alt="Scholar's Crest profile avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBWSBjcEPEoPiLekxwHCsMkFCmhs8Ex5xdbEu_PKREAQV5AJfAViotnK7F1i7bs7WPAWlXaWbmFZU2ZvdxuEw7iuHCXcH1sXsYCMN07tgf5WFTuNklbdtJeW8VUrsaQWYTRGH44YQxaUIeFyd51XffNGRaRRT3LsPTelknTKcmjjUExXQEnUeg8iVgAKeQTLV996xvSJpydk4bhlfJweo8YuCgzhvXYtSTGpWlx0kCG6dWZ2cCGUZKgAZY_xoLmHiCdoe9zlivs-V4"/>
+</div>
+<div>
+<p class="font-serif font-bold text-sm">Erasmus von R.</p>
+<p class="font-mono text-[9px] opacity-50">Level IV Adept</p>
+</div>
+</div>
+</div>
+</nav>
+<!-- TopAppBar (Predicted) -->
+<header class="fixed top-0 right-0 left-0 md:left-64 z-40 flex justify-between items-center px-8 py-6 bg-[#F6F1EA] dark:bg-[#2C2825] border-none">
+<div class="flex items-center gap-4">
+<span class="font-serif italic text-2xl text-[#2C2825] dark:text-[#F6F1EA]">Lexicon</span>
+<div class="h-4 w-[1px] bg-outline-variant/40"></div>
+<span class="font-mono text-[10px] tracking-widest opacity-60">VOLUME II: ETHICS &amp; TELEOLOGY</span>
+</div>
+<div class="flex items-center space-y-0 space-x-8">
+<div class="relative hidden sm:block">
+<input class="bg-transparent border-b border-outline-variant/40 focus:border-secondary outline-none py-1 px-2 font-body-serif text-sm w-48 transition-colors" placeholder="Trace a concept..." type="text"/>
+<span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-sm opacity-40" data-icon="search">search</span>
+</div>
+<div class="flex items-center gap-6">
+<button class="text-[#2C2825] opacity-80 hover:text-[#B8564F] transition-colors duration-300">
+<span class="material-symbols-outlined" data-icon="menu_book">menu_book</span>
+</button>
+<button class="text-[#2C2825] opacity-80 hover:text-[#B8564F] transition-colors duration-300">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="pt-24 md:ml-64 min-h-screen flex flex-row">
+<!-- Definitions Scroll Zone -->
+<div class="flex-grow max-w-4xl px-12 py-12 space-y-24">
+<!-- Entry 1: Teleology -->
+<section class="relative group">
+<header class="mb-6 flex items-baseline gap-4">
+<h2 class="font-serif text-4xl font-bold text-primary">Teleology</h2>
+<span class="font-mono text-[10px] opacity-40">/ˌtiːliˈɒlədʒi/</span>
+</header>
+<div class="space-y-6 max-w-2xl">
+<div class="relative">
+<p class="font-body-serif text-lg leading-relaxed text-primary/90">
+                            The explanation of phenomena in terms of the purpose they serve rather than of the cause by which they arise. In the Scriptorium, it refers to the <span class="border-b border-secondary/40 italic">intrinsic aim</span> of a student's inquiry.
+                        </p>
+<!-- Evolution Trace -->
+<div class="mt-4 pl-4 border-l-2 border-surface-container-high space-y-2">
+<p class="font-body-serif text-sm ink-ghost italic">
+                                "The study of design in nature." — Struck 14 Oct.
+                            </p>
+<p class="font-body-serif text-sm text-primary/40 italic">
+                                Revised: Teleology is the pull of the future upon the present.
+                            </p>
+</div>
+</div>
+<!-- Socratic Probe -->
+<div class="bg-surface-container-low p-6 rounded-sm border-l-4 border-tertiary-container/30">
+<p class="font-serif text-tertiary italic text-lg mb-4">"If the seed contains the tree, does the tree cause the seed to exist?"</p>
+<div class="flex gap-4">
+<input class="flex-grow bg-transparent border-b border-outline-variant py-1 font-mono text-xs focus:border-secondary outline-none" placeholder="Reflect here..." type="text"/>
+<button class="bg-primary text-on-primary px-4 py-1 text-xs font-mono uppercase tracking-tighter">Submit</button>
+</div>
+</div>
+</div>
+<!-- Floating Scratch Note -->
+<div class="absolute -left-8 top-12 w-32 hidden xl:block opacity-0 group-hover:opacity-100 transition-opacity">
+<p class="font-mono text-[9px] text-secondary leading-tight rotate-[-2deg]">
+                        *See also: Aristotle, Metaphysics Book Θ
+                    </p>
+</div>
+</section>
+<!-- Entry 2: Eudaimonia -->
+<section class="relative group">
+<header class="mb-6 flex items-baseline gap-4">
+<h2 class="font-serif text-4xl font-bold text-primary">Eudaimonia</h2>
+<span class="font-mono text-[10px] opacity-40">/juːdeɪˈmoʊniə/</span>
+</header>
+<div class="space-y-6 max-w-2xl">
+<div class="relative">
+<p class="font-body-serif text-lg leading-relaxed text-primary/90">
+                            Often translated as 'happiness' or 'flourishing', but more accurately described as the state of having a <span class="bg-secondary/5 px-1">good indwelling spirit</span>. It is the result of a life lived in accordance with virtue (*arete*).
+                        </p>
+<div class="mt-4 pl-4 border-l-2 border-surface-container-high space-y-2">
+<p class="font-body-serif text-sm ink-ghost italic">
+                                "A feeling of deep contentment." — Deleted 02 Nov. Incorrect definition.
+                            </p>
+</div>
+</div>
+<!-- Scratch Note / Student Interjection -->
+<div class="bg-white/50 p-4 border border-outline-variant/20 italic text-sm text-primary/70">
+                        Note: My previous attempts at this were too focused on transient joy. Eudaimonia is a structural property of a life, not a momentary spike in dopamine.
+                    </div>
+</div>
+</section>
+<!-- Entry 3: Hermeneutics -->
+<section class="relative group">
+<header class="mb-6 flex items-baseline gap-4">
+<h2 class="font-serif text-4xl font-bold text-primary">Hermeneutics</h2>
+<span class="font-mono text-[10px] opacity-40">/ˌhɜːrməˈnjuːtɪks/</span>
+</header>
+<div class="space-y-6 max-w-2xl">
+<div class="relative">
+<p class="font-body-serif text-lg leading-relaxed text-primary/90">
+                            The theory and methodology of interpretation, especially the interpretation of biblical texts, wisdom literature, and philosophical tracts. It involves the bridge between <span class="underline decoration-secondary/30 underline-offset-4">the past's intent and the present's understanding</span>.
+                        </p>
+</div>
+<!-- Socratic Probe -->
+<div class="bg-surface-container-low p-6 rounded-sm border-l-4 border-tertiary-container/30">
+<p class="font-serif text-tertiary italic text-lg mb-4">"Is it possible to understand an author better than they understood themselves?"</p>
+<div class="flex gap-4">
+<button class="border border-outline-variant px-4 py-2 text-xs font-mono hover:bg-surface-container transition-colors">AFFIRMATIVE</button>
+<button class="border border-outline-variant px-4 py-2 text-xs font-mono hover:bg-surface-container transition-colors">NEGATIVE</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Bottom Spacer for Scroll -->
+<div class="h-32"></div>
+</div>
+<!-- Marginalia Sidebar (Fixed/Sticky Right Zone) -->
+<aside class="w-[380px] border-l border-outline-variant/10 bg-surface-container-low/30 p-8 hidden lg:block sticky top-24 h-[calc(100vh-6rem)] overflow-y-auto marginalia-shadow">
+<div class="mb-8 flex items-center justify-between">
+<h3 class="font-mono text-[10px] tracking-[0.2em] uppercase text-primary/40">Tutor Annotations</h3>
+<span class="material-symbols-outlined text-sm opacity-30" data-icon="push_pin">push_pin</span>
+</div>
+<div class="space-y-12">
+<!-- Annotation Block 1 -->
+<div class="space-y-3">
+<div class="flex items-center gap-2">
+<div class="w-1.5 h-1.5 rounded-full bg-secondary"></div>
+<span class="font-mono text-[10px] font-bold text-secondary uppercase">Correction: Teleology</span>
+</div>
+<p class="font-serif text-primary text-base italic leading-snug">
+                        "Be careful with the 'intrinsic aim' phrase. Ensure you distinguish between *telos* as a terminal point and *telos* as a functional perfection."
+                    </p>
+<p class="font-mono text-[9px] text-primary/40">— Master Alaric, 22:14</p>
+</div>
+<!-- Annotation Block 2 -->
+<div class="space-y-3">
+<div class="flex items-center gap-2">
+<div class="w-1.5 h-1.5 rounded-full bg-tertiary-container"></div>
+<span class="font-mono text-[10px] font-bold text-tertiary uppercase">Insight: Etymology</span>
+</div>
+<p class="font-serif text-primary text-base italic leading-snug">
+                        "Notice the root 'Hermes' in Hermeneutics. He is the messenger who traverses the gap between gods and men. Think of yourself as that messenger when you read."
+                    </p>
+<div class="flex gap-2">
+<span class="bg-surface-container-highest px-2 py-0.5 font-mono text-[8px] rounded-full">#GREEK_ROOTS</span>
+<span class="bg-surface-container-highest px-2 py-0.5 font-mono text-[8px] rounded-full">#PHILOLOGY</span>
+</div>
+</div>
+<!-- Visual Element: Marginalia Scribble -->
+<div class="pt-8 opacity-40">
+<div class="border-t border-dashed border-outline-variant mb-4"></div>
+<p class="font-mono text-[10px] leading-relaxed">
+                        WORKSPACE STATS:<br/>
+                        - Definitions: 1,242<br/>
+                        - Mastered: 84<br/>
+                        - Socratic Challenges: 12 Pending
+                    </p>
+<!-- Abstract Scriptorium Sketch Representation -->
+<div class="mt-6 w-full h-32 bg-surface-container rounded-sm flex items-center justify-center border border-outline-variant/20 relative overflow-hidden">
+<div class="absolute inset-0 opacity-10 flex flex-col justify-center items-center pointer-events-none">
+<span class="material-symbols-outlined text-6xl" data-icon="auto_stories">auto_stories</span>
+</div>
+<p class="font-serif italic text-xs px-6 text-center text-primary/50">"The ink of the scholar is more holy than the blood of the martyr."</p>
+</div>
+</div>
+</div>
+</aside>
+</main>
+<!-- Contextual FAB (Predicted: suppressed on Lexicon per guidelines, but adding subtle 'Scroll to Top' indicator) -->
+<div class="fixed bottom-8 right-8 z-50 flex flex-col gap-4">
+<button class="w-12 h-12 bg-primary text-on-primary rounded-sm flex items-center justify-center shadow-lg hover:bg-secondary transition-colors duration-300">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+</button>
+</div>
+</body></html>
