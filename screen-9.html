@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&amp;family=Crimson+Pro:wght@400;600&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "on-tertiary": "#ffffff",
+            "on-primary": "#ffffff",
+            "on-error-container": "#93000a",
+            "surface-container-highest": "#e7e2db",
+            "surface-container": "#f2ede6",
+            "surface": "#fef9f2",
+            "on-surface": "#1d1b17",
+            "inverse-primary": "#cdc5c0",
+            "tertiary-container": "#0d2f18",
+            "primary-fixed-dim": "#cdc5c0",
+            "secondary-container": "#ff8e84",
+            "on-tertiary-fixed": "#00210c",
+            "on-secondary-fixed": "#410003",
+            "on-background": "#1d1b17",
+            "inverse-surface": "#32302c",
+            "on-tertiary-container": "#74997a",
+            "on-secondary-fixed-variant": "#7e2a26",
+            "inverse-on-surface": "#f5f0e9",
+            "surface-variant": "#e7e2db",
+            "surface-bright": "#fef9f2",
+            "background": "#fef9f2",
+            "tertiary": "#001908",
+            "surface-container-high": "#ece7e1",
+            "error": "#ba1a1a",
+            "outline": "#7e756f",
+            "surface-container-lowest": "#ffffff",
+            "tertiary-fixed": "#c5ecc9",
+            "error-container": "#ffdad6",
+            "surface-tint": "#635d5a",
+            "surface-dim": "#ded9d3",
+            "on-surface-variant": "#4d4540",
+            "on-primary-container": "#958f8a",
+            "secondary-fixed": "#ffdad6",
+            "primary-fixed": "#e9e1dc",
+            "on-error": "#ffffff",
+            "surface-container-low": "#f8f3ec",
+            "on-tertiary-fixed-variant": "#2c4e34",
+            "tertiary-fixed-dim": "#aad0ae",
+            "secondary-fixed-dim": "#ffb3ac",
+            "outline-variant": "#cfc4bd",
+            "on-secondary-container": "#772521",
+            "on-secondary": "#ffffff",
+            "on-primary-fixed": "#1e1b18",
+            "primary": "#171411",
+            "secondary": "#9d413b",
+            "primary-container": "#2c2825",
+            "on-primary-fixed-variant": "#4b4642"
+          },
+          fontFamily: {
+            "serif": ["Cormorant Garamond", "serif"],
+            "body": ["Crimson Pro", "serif"],
+            "mono": ["IBM Plex Mono", "monospace"]
+          },
+          borderRadius: {"DEFAULT": "2px", "sm": "2px", "lg": "4px", "xl": "8px", "full": "9999px"},
+        },
+      },
+    }
+  </script>
+<style>
+    body { font-family: 'Crimson Pro', serif; background-color: #fef9f2; }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
+    .brutalist-border { border-bottom: 1.5px solid #2C2825; }
+    .vertical-text { writing-mode: vertical-rl; text-orientation: mixed; }
+  </style>
+</head>
+<body class="bg-surface text-primary antialiased overflow-x-hidden">
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-0 h-full w-64 bg-[#EDE6DB] dark:bg-[#24211F] flex flex-col p-8 space-y-8 z-50 transition-all">
+<div class="mb-4">
+<h1 class="text-xl font-bold font-serif text-[#2C2825]">Paideia</h1>
+<p class="font-mono text-[10px] uppercase tracking-widest opacity-60">The Digital Scriptorium</p>
+</div>
+<nav class="flex flex-col space-y-6">
+<a class="flex items-center space-x-3 text-[#2C2825] opacity-60 font-medium font-serif text-lg tracking-tight hover:opacity-100 hover:text-[#B8564F] transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="edit_note">edit_note</span>
+<span>Notebook</span>
+</a>
+<a class="flex items-center space-x-3 text-[#2C2825] opacity-60 font-medium font-serif text-lg tracking-tight hover:opacity-100 hover:text-[#B8564F] transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="auto_awesome_motion">auto_awesome_motion</span>
+<span>Constellation</span>
+</a>
+<a class="flex items-center space-x-3 text-[#2C2825] opacity-60 font-medium font-serif text-lg tracking-tight hover:opacity-100 hover:text-[#B8564F] transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="auto_stories">auto_stories</span>
+<span>Philosophy</span>
+</a>
+<a class="flex items-center space-x-3 text-[#2C2825] opacity-60 font-medium font-serif text-lg tracking-tight hover:opacity-100 hover:text-[#B8564F] transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="local_library">local_library</span>
+<span>Library</span>
+</a>
+<a class="flex items-center space-x-3 text-[#2C2825] opacity-60 font-medium font-serif text-lg tracking-tight hover:opacity-100 hover:text-[#B8564F] transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="architecture">architecture</span>
+<span>Transmutations</span>
+</a>
+<!-- Active Tab: Lexicon -->
+<a class="flex items-center space-x-3 text-[#2C2825] font-bold underline underline-offset-8 decoration-1.5 font-serif text-lg tracking-tight translate-x-1 transition-transform duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="menu_book">menu_book</span>
+<span>Lexicon</span>
+</a>
+</nav>
+<div class="mt-auto pt-8 border-t border-[#2C2825]/10">
+<div class="flex items-center space-x-3">
+<div class="w-10 h-10 bg-surface-container-highest rounded-sm flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Scholar's Crest avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuASAiFnF5cHz3vKuHXvFcHS01XkEp4h0EPfTYQFlZcqnEXNsgz9FvuGM0OOryKX9LA78Mb8k1mFO1CiUWNMmx-beL6Kn0T4VQnUMm3U8liJlnz2Lpzne-WFoLgjbzvwMczytq4DqL-FzOY6NsPLEmQcmBlRpbHvPK5UrzKHt9b3_ZNhK_UgdJUrz2naAeVEdqEz85lZ0VobNNHc26ueZ2U77X_ZaAK5P1yNt1AK8HWivhT8s_SrX09k2bZk1_kBVB4Z2vY0RkLUBSg"/>
+</div>
+<div>
+<p class="font-serif text-sm font-bold">Erasmus v.3</p>
+<p class="font-mono text-[9px] opacity-50 uppercase">Active Scriptor</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- TopAppBar -->
+<header class="fixed top-0 left-64 right-0 h-20 bg-[#F6F1EA] dark:bg-[#2C2825] flex justify-between items-center px-12 z-40">
+<div class="flex items-center space-x-8">
+<span class="text-2xl font-serif italic text-[#2C2825] dark:text-[#F6F1EA]">Paideia</span>
+<div class="h-4 w-px bg-outline-variant/40"></div>
+<nav class="hidden md:flex space-x-8">
+<a class="font-serif text-[#2C2825] opacity-80 hover:text-[#B8564F] transition-colors duration-300" href="#">Etymology</a>
+<a class="font-serif text-[#B8564F] border-b-1.5 border-[#2C2825] pb-1 hover:text-[#B8564F] transition-colors duration-300" href="#">Lexicon</a>
+<a class="font-serif text-[#2C2825] opacity-80 hover:text-[#B8564F] transition-colors duration-300" href="#">Archive</a>
+</nav>
+</div>
+<div class="flex items-center space-x-6">
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-sm" data-icon="search">search</span>
+<input class="bg-surface-container-low border-none border-b border-outline-variant focus:ring-0 focus:border-secondary font-mono text-xs pl-10 pr-4 py-2 w-64" placeholder="Search Lexicon..." type="text"/>
+</div>
+<button class="material-symbols-outlined hover:text-secondary transition-colors" data-icon="menu_book">menu_book</button>
+<button class="material-symbols-outlined hover:text-secondary transition-colors" data-icon="settings">settings</button>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="ml-64 pt-32 pb-24 px-12 max-w-7xl">
+<!-- Lexicon Header -->
+<section class="mb-20">
+<div class="flex items-baseline justify-between mb-4">
+<span class="font-mono text-xs text-secondary uppercase tracking-[0.3em]">Root System : No. 0422</span>
+<span class="font-mono text-[10px] opacity-40 uppercase">Timestamp: 14.02.2024 // 09:12 GMT</span>
+</div>
+<h1 class="font-serif text-6xl md:text-8xl font-bold tracking-tighter leading-none mb-6">Logos</h1>
+<div class="max-w-2xl">
+<p class="font-serif italic text-2xl text-primary/80 mb-8">λóγος — The word as reason; the principle of cosmic order.</p>
+<div class="flex space-x-4">
+<span class="bg-surface-container-highest px-3 py-1 font-mono text-[10px] uppercase">GREEK</span>
+<span class="bg-surface-container-highest px-3 py-1 font-mono text-[10px] uppercase">PHILOSOPHY</span>
+<span class="bg-surface-container-highest px-3 py-1 font-mono text-[10px] uppercase">COGNITION</span>
+</div>
+</div>
+</section>
+<!-- Horizontal Root System / Timeline (Brutalist Layout) -->
+<section class="relative overflow-x-auto pb-12 scrollbar-hide">
+<div class="flex space-x-0 min-w-[1400px]">
+<!-- Root Node -->
+<div class="w-1/4 flex-shrink-0 border-r border-outline-variant/30 pr-8">
+<div class="font-mono text-[10px] text-secondary mb-4 uppercase tracking-widest">[01] PROTO-INDO-EUROPEAN</div>
+<div class="p-8 bg-surface-container-low border-l-4 border-primary">
+<h3 class="font-serif text-3xl font-bold mb-4">*leǵ-</h3>
+<p class="font-body text-sm leading-relaxed mb-6 opacity-80">Meaning: "to collect, gather," with derivatives meaning "to speak" (on the notion of "to pick out words").</p>
+<div class="space-y-2">
+<div class="flex justify-between font-mono text-[9px] border-b border-outline-variant/20 pb-1">
+<span>CONNECTION</span>
+<span class="text-secondary">STRONG</span>
+</div>
+<p class="font-serif italic text-sm">Lex — (Latin) Law, that which is collected/bound.</p>
+</div>
+</div>
+</div>
+<!-- Development Node 1 -->
+<div class="w-1/4 flex-shrink-0 border-r border-outline-variant/30 px-8 relative">
+<!-- Connector Line -->
+<div class="absolute top-1/2 -left-1 w-full h-px bg-primary/20 z-0"></div>
+<div class="font-mono text-[10px] text-secondary mb-4 uppercase tracking-widest relative z-10">[02] ARCHAIC GREECE</div>
+<div class="p-8 bg-surface border border-outline-variant/40 relative z-10">
+<h3 class="font-serif text-3xl font-bold mb-4">Légein</h3>
+<p class="font-body text-sm leading-relaxed mb-6 opacity-80">To speak, to tell, to recount. The shift from physical gathering to the gathering of thoughts into speech.</p>
+<div class="font-mono text-[9px] text-primary/40 mb-2">ASSOCIATED TEXTS:</div>
+<ul class="space-y-2">
+<li class="font-serif text-sm underline decoration-secondary/30 underline-offset-4 cursor-pointer hover:text-secondary transition-colors">Homer, The Iliad (Book IX)</li>
+<li class="font-serif text-sm underline decoration-secondary/30 underline-offset-4 cursor-pointer hover:text-secondary transition-colors">Hesiod, Theogony</li>
+</ul>
+</div>
+</div>
+<!-- Development Node 2 -->
+<div class="w-1/4 flex-shrink-0 border-r border-outline-variant/30 px-8 relative">
+<div class="absolute top-1/2 -left-1 w-full h-px bg-primary/20 z-0"></div>
+<div class="font-mono text-[10px] text-secondary mb-4 uppercase tracking-widest relative z-10">[03] HERACLITEAN SHIFT</div>
+<div class="p-8 bg-primary text-surface-container-lowest relative z-10">
+<h3 class="font-serif text-3xl font-bold mb-4 italic">Logos</h3>
+<p class="font-body text-sm leading-relaxed mb-6 opacity-90">Universal reason. The governing principle that makes the world intelligible. "All things come to be in accordance with this Logos."</p>
+<div class="flex items-center space-x-2 text-secondary">
+<span class="material-symbols-outlined text-sm" data-icon="auto_awesome_motion">auto_awesome_motion</span>
+<span class="font-mono text-[10px] uppercase">Mapped to: Dialectics</span>
+</div>
+</div>
+</div>
+<!-- Modern Node -->
+<div class="w-1/4 flex-shrink-0 px-8 relative">
+<div class="absolute top-1/2 -left-1 w-1/2 h-px bg-primary/20 z-0"></div>
+<div class="font-mono text-[10px] text-secondary mb-4 uppercase tracking-widest relative z-10">[04] MODERN SYNTHESIS</div>
+<div class="p-8 bg-surface-container-highest border border-outline-variant/40 relative z-10">
+<h3 class="font-serif text-3xl font-bold mb-4">Logic</h3>
+<p class="font-body text-sm leading-relaxed mb-6 opacity-80">The formalization of Logos into a tool of measurement and valid inference. Separation of 'word' and 'truth'.</p>
+<div class="space-y-4">
+<div class="p-4 bg-surface-container-low font-mono text-[10px] border-l border-secondary">
+<span class="block text-secondary mb-1">MARGIN NOTE:</span>
+                "Observe the transmutation from cosmic principle to mechanical procedure."
+              </div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Connections Grid (Bento Style) -->
+<section class="mt-24 grid grid-cols-12 gap-6">
+<div class="col-span-12 mb-8">
+<h2 class="font-serif text-4xl font-bold">Inter-Lexical Resonance</h2>
+<div class="h-1 w-24 bg-primary mt-4"></div>
+</div>
+<!-- Connection 1 -->
+<div class="col-span-12 md:col-span-4 p-8 bg-surface-container border border-outline-variant/30 hover:bg-surface-container-high transition-colors cursor-pointer group">
+<div class="flex justify-between items-start mb-12">
+<span class="font-mono text-[10px] uppercase opacity-40">Connection No. 1</span>
+<span class="material-symbols-outlined text-secondary group-hover:translate-x-1 transition-transform" data-icon="arrow_forward">arrow_forward</span>
+</div>
+<h4 class="font-serif text-2xl font-bold mb-2">Mythos</h4>
+<p class="font-body text-sm opacity-70">The necessary shadow of Logos. Where Logos explains, Mythos reveals. Inextricably linked in pre-Socratic thought.</p>
+<div class="mt-8 flex flex-wrap gap-2">
+<span class="font-mono text-[9px] bg-white px-2 py-0.5 border border-outline-variant/20">DICHOTOMY</span>
+<span class="font-mono text-[9px] bg-white px-2 py-0.5 border border-outline-variant/20">SHADOW</span>
+</div>
+</div>
+<!-- Connection 2 -->
+<div class="col-span-12 md:col-span-8 p-8 bg-surface-container-low flex flex-col md:flex-row gap-8">
+<div class="md:w-1/3">
+<span class="font-mono text-[10px] uppercase opacity-40 mb-8 block">Library Anchor</span>
+<h4 class="font-serif text-3xl font-bold mb-4">Primary Sources</h4>
+<p class="font-mono text-[11px] leading-relaxed opacity-60">The Lexicon is fed by the Library. These texts form the substructure of 'Logos'.</p>
+</div>
+<div class="md:w-2/3 grid grid-cols-2 gap-4">
+<div class="p-6 bg-white border border-outline-variant/10">
+<img class="w-full h-32 object-cover grayscale mb-4 opacity-50" data-alt="Old manuscript cover for Heraclitus Fragments" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-ujnXW8IVJ_Vyv537FiuqzRskiYoWvP-2Pa4D8sJYU0omQ-xjhOT_aAeDTbEypGkNvF0sPgrI9-4l4jRrgjC--c1OtowJxZIRM69b8Y5_ublfeEQv4km8a05DnVecxqqlLIpAd0teVhoZGRND2_GF-RdHY2acvsELZFYZiMDgO4EswNy563YHQzOGahUTzBBeYq67TENYJLlS7sSVzaqwB8B69e9hvTDAmfdlGjfLyvjQERQV7TMHVZ0-9Ce8X6Ye_6OvkR7OMbQ"/>
+<span class="font-serif text-sm font-bold block">The Fragments</span>
+<span class="font-mono text-[9px] opacity-40">Heraclitus</span>
+</div>
+<div class="p-6 bg-white border border-outline-variant/10">
+<img class="w-full h-32 object-cover grayscale mb-4 opacity-50" data-alt="Cover of Plato's Republic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAYmOW6rkTtdTF5E7a7EnYEVV6CiKQMhiwrWTgul_8QLQU0DLTwJHeGf6YhyU-4MdsXjtN7nJ6rqzjTvDugbebOG7v5uKh9Vsiu36zDNB38EwwzVqfa4tkroOls8TGmJdJzI29hfeOs1Tubms-O6b652qwoJkU5tIGQQdca6juWTtxl9N9XteAjnL6VKyLpWP0BzxFWrzggjWUPB-MdUASmCCSv-tllCRW2wMmyYkdN3iogS134kVUhQfjhF6SHk7Le-rHW579brWk"/>
+<span class="font-serif text-sm font-bold block">The Republic</span>
+<span class="font-mono text-[9px] opacity-40">Plato</span>
+</div>
+</div>
+</div>
+<!-- Connection 3 - Transmutations -->
+<div class="col-span-12 md:col-span-12 p-8 bg-surface-container-highest flex items-center justify-between border-y border-outline-variant/40">
+<div class="flex items-center space-x-12">
+<div class="vertical-text font-mono text-[10px] uppercase tracking-tighter opacity-30">Transmutation Flux</div>
+<div>
+<h4 class="font-serif text-4xl font-bold italic mb-2">Logos → Ratio</h4>
+<p class="font-body text-lg max-w-xl">The Latin translation shifted the focus from 'speech/reason' to 'calculation/proportion', fundamentally altering the course of Western science.</p>
+</div>
+</div>
+<div class="hidden lg:block w-48 h-48 bg-primary/5 rounded-full border border-dashed border-primary/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-4xl opacity-20" data-icon="architecture">architecture</span>
+</div>
+</div>
+</section>
+<!-- Marginalia Sidebar (Pinned Layout Logic) -->
+<aside class="fixed right-0 top-20 bottom-0 w-80 bg-surface-container border-l border-outline-variant/20 p-8 hidden xl:block overflow-y-auto">
+<div class="mb-12">
+<span class="font-mono text-[10px] text-secondary uppercase tracking-widest block mb-4">Marginalia</span>
+<div class="space-y-10">
+<div class="relative">
+<div class="absolute -left-10 top-0 text-secondary font-mono text-xs opacity-40">01</div>
+<p class="font-mono text-[11px] leading-relaxed italic">The Greek 'Logos' was never just 'Logic'. It was 'Gathering'. To lose the sense of gathering is to lose the essence of the word.</p>
+</div>
+<div class="relative">
+<div class="absolute -left-10 top-0 text-secondary font-mono text-xs opacity-40">02</div>
+<p class="font-mono text-[11px] leading-relaxed italic">Note how 'Logos' connects to 'Biology', 'Psychology', etc. The 'Ology' is the ghost of the Logos haunting every modern science.</p>
+</div>
+<div class="relative border-t border-outline-variant/20 pt-8 mt-12">
+<h5 class="font-serif font-bold text-sm mb-4 uppercase tracking-tighter">Related Terms</h5>
+<div class="flex flex-col space-y-2">
+<a class="font-serif italic text-lg hover:text-secondary transition-colors" href="#">Nomos (Law)</a>
+<a class="font-serif italic text-lg hover:text-secondary transition-colors" href="#">Physis (Nature)</a>
+<a class="font-serif italic text-lg hover:text-secondary transition-colors" href="#">Techne (Craft)</a>
+</div>
+</div>
+</div>
+</div>
+</aside>
+</main>
+<!-- Footer Navigation (BottomNavBar suppression check: Primary Destination - Shown) -->
+<footer class="md:hidden fixed bottom-0 left-0 right-0 bg-[#F6F1EA] px-6 py-4 flex justify-around items-center border-t border-outline-variant/20 z-50">
+<span class="material-symbols-outlined opacity-60" data-icon="edit_note">edit_note</span>
+<span class="material-symbols-outlined opacity-60" data-icon="auto_stories">auto_stories</span>
+<span class="material-symbols-outlined text-secondary" data-icon="menu_book">menu_book</span>
+<span class="material-symbols-outlined opacity-60" data-icon="local_library">local_library</span>
+</footer>
+</body></html>
