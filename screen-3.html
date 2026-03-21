@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&amp;family=Crimson+Pro:ital,wght@0,400;0,600;1,400&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-tertiary": "#ffffff",
+              "on-primary": "#ffffff",
+              "on-error-container": "#93000a",
+              "surface-container-highest": "#e7e2db",
+              "surface-container": "#f2ede6",
+              "surface": "#fef9f2",
+              "on-surface": "#1d1b17",
+              "inverse-primary": "#cdc5c0",
+              "tertiary-container": "#0d2f18",
+              "primary-fixed-dim": "#cdc5c0",
+              "secondary-container": "#ff8e84",
+              "on-tertiary-fixed": "#00210c",
+              "on-secondary-fixed": "#410003",
+              "on-background": "#1d1b17",
+              "inverse-surface": "#32302c",
+              "on-tertiary-container": "#74997a",
+              "on-secondary-fixed-variant": "#7e2a26",
+              "inverse-on-surface": "#f5f0e9",
+              "surface-variant": "#e7e2db",
+              "surface-bright": "#fef9f2",
+              "background": "#fef9f2",
+              "tertiary": "#001908",
+              "surface-container-high": "#ece7e1",
+              "error": "#ba1a1a",
+              "outline": "#7e756f",
+              "surface-container-lowest": "#ffffff",
+              "tertiary-fixed": "#c5ecc9",
+              "error-container": "#ffdad6",
+              "surface-tint": "#635d5a",
+              "surface-dim": "#ded9d3",
+              "on-surface-variant": "#4d4540",
+              "on-primary-container": "#958f8a",
+              "secondary-fixed": "#ffdad6",
+              "primary-fixed": "#e9e1dc",
+              "on-error": "#ffffff",
+              "surface-container-low": "#f8f3ec",
+              "on-tertiary-fixed-variant": "#2c4e34",
+              "tertiary-fixed-dim": "#aad0ae",
+              "secondary-fixed-dim": "#ffb3ac",
+              "outline-variant": "#cfc4bd",
+              "on-secondary-container": "#772521",
+              "on-secondary": "#ffffff",
+              "on-primary-fixed": "#1e1b18",
+              "primary": "#171411",
+              "secondary": "#9d413b",
+              "primary-container": "#2c2825",
+              "on-primary-fixed-variant": "#4b4642"
+            },
+            fontFamily: {
+              "serif": ["Cormorant Garamond", "serif"],
+              "body": ["Crimson Pro", "serif"],
+              "mono": ["IBM Plex Mono", "monospace"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 200, 'GRAD' 0, 'opsz' 24;
+            font-size: 20px;
+        }
+        body {
+            background-color: #fef9f2;
+            color: #171411;
+        }
+        .scholar-scrollbar::-webkit-scrollbar { width: 4px; }
+        .scholar-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .scholar-scrollbar::-webkit-scrollbar-thumb { background: #cfc4bd; border-radius: 2px; }
+    </style>
+</head>
+<body class="font-body antialiased selection:bg-secondary-container selection:text-on-secondary-container">
+<!-- SideNavBar -->
+<nav class="fixed left-0 top-0 h-full flex flex-col p-8 space-y-8 bg-[#EDE6DB] dark:bg-[#24211F] h-screen w-64 border-r-0 z-50 hidden md:flex">
+<div class="space-y-1">
+<h1 class="text-xl font-bold font-serif text-[#2C2825]">Paideia</h1>
+<p class="font-mono text-[10px] uppercase tracking-widest opacity-60">The Digital Scriptorium</p>
+</div>
+<div class="flex flex-col space-y-6 pt-8">
+<a class="flex items-center space-x-3 text-[#2C2825] opacity-60 font-medium font-serif text-lg tracking-tight hover:opacity-100 hover:text-[#B8564F] transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="edit_note">edit_note</span>
+<span>Notebook</span>
+</a>
+<a class="flex items-center space-x-3 text-[#2C2825] opacity-60 font-medium font-serif text-lg tracking-tight hover:opacity-100 hover:text-[#B8564F] transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="auto_awesome_motion">auto_awesome_motion</span>
+<span>Constellation</span>
+</a>
+<a class="flex items-center space-x-3 text-[#2C2825] opacity-60 font-medium font-serif text-lg tracking-tight hover:opacity-100 hover:text-[#B8564F] transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="auto_stories">auto_stories</span>
+<span>Philosophy</span>
+</a>
+<a class="flex items-center space-x-3 text-[#2C2825] opacity-60 font-medium font-serif text-lg tracking-tight hover:opacity-100 hover:text-[#B8564F] transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="local_library">local_library</span>
+<span>Library</span>
+</a>
+<a class="flex items-center space-x-3 text-[#2C2825] opacity-60 font-medium font-serif text-lg tracking-tight hover:opacity-100 hover:text-[#B8564F] transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="architecture">architecture</span>
+<span>Transmutations</span>
+</a>
+<a class="flex items-center space-x-3 text-[#2C2825] font-bold underline underline-offset-8 decoration-1.5 font-serif text-lg tracking-tight translate-x-1 transition-transform duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="menu_book" style="font-variation-settings: 'FILL' 1;">menu_book</span>
+<span>Lexicon</span>
+</a>
+</div>
+<div class="mt-auto pt-8 border-t border-outline-variant/20">
+<div class="flex items-center space-x-3">
+<div class="w-10 h-10 rounded-sm bg-surface-container-highest flex items-center justify-center border border-outline-variant/40">
+<span class="material-symbols-outlined text-primary" data-icon="history_edu">history_edu</span>
+</div>
+<div>
+<p class="font-mono text-[10px] opacity-60">Scholar Status</p>
+<p class="font-serif font-bold text-sm">Polymath I</p>
+</div>
+</div>
+</div>
+</nav>
+<!-- TopAppBar -->
+<header class="fixed top-0 right-0 left-0 md:left-64 z-40 bg-[#F6F1EA] dark:bg-[#2C2825] text-[#2C2825] dark:text-[#F6F1EA] flex justify-between items-center px-8 py-6 max-w-none border-none font-serif antialiased">
+<div class="flex items-center space-x-8">
+<span class="text-2xl font-serif italic text-[#2C2825] dark:text-[#F6F1EA]">Lexicon</span>
+<div class="hidden lg:flex space-x-6 items-center">
+<span class="text-[#B8564F] border-b-1.5 border-[#2C2825] pb-1 cursor-default">Personal Dictionary</span>
+<span class="text-[#2C2825] opacity-80 hover:text-[#B8564F] transition-colors duration-300 cursor-pointer">Etymologies</span>
+<span class="text-[#2C2825] opacity-80 hover:text-[#B8564F] transition-colors duration-300 cursor-pointer">Indices</span>
+</div>
+</div>
+<div class="flex items-center space-x-6">
+<div class="relative group hidden sm:block">
+<input class="bg-transparent border-b border-outline-variant focus:border-secondary transition-colors outline-none px-2 py-1 font-mono text-xs w-48" placeholder="Search insights..." type="text"/>
+<span class="material-symbols-outlined absolute right-2 top-1 text-outline-variant scale-75" data-icon="search">search</span>
+</div>
+<div class="flex items-center space-x-4">
+<button class="material-symbols-outlined hover:text-[#B8564F] transition-colors" data-icon="menu_book">menu_book</button>
+<button class="material-symbols-outlined hover:text-[#B8564F] transition-colors" data-icon="settings">settings</button>
+<div class="w-8 h-8 rounded-full bg-surface-container overflow-hidden border border-outline-variant/30">
+<img alt="User's scholarly profile avatar" class="w-full h-full object-cover grayscale" data-alt="Close up of an intellectual looking man with glasses" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDKzRXmAjLLGl_pkMkb_jHhWIIEllX8n_6VqvtYQse-4Zx6qLBjsO0P9Eat7-ZFlUmaOGeX286seCbDzYXc9vHV3n53EJUYjdxDMB738G6zVUbs9FwV88hX8G9rVMiPpNNtYD0iygmCdJKlntD7LFQfuasy1QXxKj0Zy9z3XzAtU5fjNbVkCUXGDIL6rryAU4EVPqdatSsCIpeG0Sw20w_zeL96iatcPLZfwG9mA49l7GJtghbB4g94K3Amfy7vqDIX_s5euGa2848"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="pt-24 md:ml-64 min-h-screen">
+<div class="max-w-5xl mx-auto px-8 py-12 lg:pr-32">
+<!-- Ledger Header -->
+<div class="mb-16 border-b border-outline-variant/40 pb-8 flex justify-between items-end">
+<div>
+<span class="font-mono text-[11px] tracking-[0.2em] text-outline uppercase mb-2 block">Volume I — Epistemic Foundations</span>
+<h2 class="text-5xl font-serif text-primary leading-tight">The Scholar's Glossary</h2>
+</div>
+<div class="text-right">
+<span class="font-mono text-[10px] text-outline-variant block mb-1">TERMS CATALOGED</span>
+<span class="text-3xl font-serif text-primary">142</span>
+</div>
+</div>
+<!-- The Ledger List -->
+<div class="space-y-12 mb-24">
+<!-- Entry 1 -->
+<div class="group relative grid grid-cols-12 gap-8 items-start">
+<div class="col-span-1 py-2">
+<span class="font-mono text-[10px] text-outline group-hover:text-secondary transition-colors">001</span>
+</div>
+<div class="col-span-11 space-y-4">
+<div class="flex justify-between items-baseline border-b border-outline-variant/20 pb-2">
+<h3 class="text-3xl font-serif italic text-primary group-hover:text-secondary transition-colors">Paideia</h3>
+<div class="flex items-center space-x-4">
+<span class="font-mono text-[10px] text-outline/60 italic">/pī-ˈdā-ə/</span>
+<div class="w-24 h-1 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-tertiary-container w-[85%]"></div>
+</div>
+<span class="font-mono text-[10px] text-tertiary-container font-bold">85% MASTERED</span>
+</div>
+</div>
+<div class="grid grid-cols-12 gap-8">
+<div class="col-span-8">
+<p class="text-xl text-primary font-body leading-relaxed">
+                                    The holistic education of the ideal citizen in classical Greek culture. It encompasses gymnastics, grammar, rhetoric, music, mathematics, and philosophy to create a harmonious development of the soul and body.
+                                </p>
+</div>
+<div class="col-span-4 space-y-4 border-l border-outline-variant/20 pl-6">
+<div>
+<h4 class="font-mono text-[10px] uppercase tracking-widest text-outline mb-1">Etymology</h4>
+<p class="font-mono text-xs text-outline leading-tight">Ancient Greek παίδεια, from παῖς (paîs, "child"). The process of rearing toward excellence.</p>
+</div>
+<div>
+<h4 class="font-mono text-[10px] uppercase tracking-widest text-outline mb-1">Cross-references</h4>
+<div class="flex flex-wrap gap-2">
+<span class="text-[11px] font-mono text-secondary border-b border-secondary/20 cursor-pointer hover:border-secondary">Socratic Dialogue</span>
+<span class="text-[11px] font-mono text-secondary border-b border-secondary/20 cursor-pointer hover:border-secondary">Arete</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Entry 2 -->
+<div class="group relative grid grid-cols-12 gap-8 items-start">
+<div class="col-span-1 py-2">
+<span class="font-mono text-[10px] text-outline group-hover:text-secondary transition-colors">002</span>
+</div>
+<div class="col-span-11 space-y-4">
+<div class="flex justify-between items-baseline border-b border-outline-variant/20 pb-2">
+<h3 class="text-3xl font-serif italic text-primary group-hover:text-secondary transition-colors">Episteme</h3>
+<div class="flex items-center space-x-4">
+<span class="font-mono text-[10px] text-outline/60 italic">/i-ˈpi-stə-mē/</span>
+<div class="w-24 h-1 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-tertiary-container w-[42%]"></div>
+</div>
+<span class="font-mono text-[10px] text-tertiary-container font-bold">42% MASTERED</span>
+</div>
+</div>
+<div class="grid grid-cols-12 gap-8">
+<div class="col-span-8">
+<p class="text-xl text-primary font-body leading-relaxed">
+                                    Justified true belief; the philosophical term for knowledge as opposed to mere opinion (doxa). In Foucault's work, it refers to the historical a priori that grounds knowledge and its discourses.
+                                </p>
+</div>
+<div class="col-span-4 space-y-4 border-l border-outline-variant/20 pl-6">
+<div>
+<h4 class="font-mono text-[10px] uppercase tracking-widest text-outline mb-1">Etymology</h4>
+<p class="font-mono text-xs text-outline leading-tight">Greek ἐπιστήμη, from ἐπίσταμαι (epístamai, "to know, understand").</p>
+</div>
+<div>
+<h4 class="font-mono text-[10px] uppercase tracking-widest text-outline mb-1">Cross-references</h4>
+<div class="flex flex-wrap gap-2">
+<span class="text-[11px] font-mono text-secondary border-b border-secondary/20 cursor-pointer hover:border-secondary">Michel Foucault</span>
+<span class="text-[11px] font-mono text-secondary border-b border-secondary/20 cursor-pointer hover:border-secondary">Doxa</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Entry 3 -->
+<div class="group relative grid grid-cols-12 gap-8 items-start">
+<div class="col-span-1 py-2">
+<span class="font-mono text-[10px] text-outline group-hover:text-secondary transition-colors">003</span>
+</div>
+<div class="col-span-11 space-y-4">
+<div class="flex justify-between items-baseline border-b border-outline-variant/20 pb-2">
+<h3 class="text-3xl font-serif italic text-primary group-hover:text-secondary transition-colors">Heuristic</h3>
+<div class="flex items-center space-x-4">
+<span class="font-mono text-[10px] text-outline/60 italic">/hyu̇-ˈris-tik/</span>
+<div class="w-24 h-1 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-tertiary-container w-[98%]"></div>
+</div>
+<span class="font-mono text-[10px] text-tertiary-container font-bold">98% MASTERED</span>
+</div>
+</div>
+<div class="grid grid-cols-12 gap-8">
+<div class="col-span-8">
+<p class="text-xl text-primary font-body leading-relaxed">
+                                    Any approach to problem solving or self-discovery that employs a practical method that is not guaranteed to be optimal, perfect, or rational, but is instead sufficient for reaching an immediate goal.
+                                </p>
+</div>
+<div class="col-span-4 space-y-4 border-l border-outline-variant/20 pl-6">
+<div>
+<h4 class="font-mono text-[10px] uppercase tracking-widest text-outline mb-1">Etymology</h4>
+<p class="font-mono text-xs text-outline leading-tight">Greek εὑρίσκω (heurískō, "I find, discover").</p>
+</div>
+<div>
+<h4 class="font-mono text-[10px] uppercase tracking-widest text-outline mb-1">Cross-references</h4>
+<div class="flex flex-wrap gap-2">
+<span class="text-[11px] font-mono text-secondary border-b border-secondary/20 cursor-pointer hover:border-secondary">Cognitive Bias</span>
+<span class="text-[11px] font-mono text-secondary border-b border-secondary/20 cursor-pointer hover:border-secondary">Algorithm</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Entry 4 -->
+<div class="group relative grid grid-cols-12 gap-8 items-start opacity-70">
+<div class="col-span-1 py-2">
+<span class="font-mono text-[10px] text-outline">004</span>
+</div>
+<div class="col-span-11 space-y-4">
+<div class="flex justify-between items-baseline border-b border-outline-variant/20 pb-2">
+<h3 class="text-3xl font-serif italic text-primary group-hover:text-secondary transition-colors">Logos</h3>
+<div class="flex items-center space-x-4">
+<span class="font-mono text-[10px] text-outline/60 italic">/ˈlō-ˌgōs/</span>
+<div class="w-24 h-1 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-tertiary-container w-[12%]"></div>
+</div>
+<span class="font-mono text-[10px] text-tertiary-container font-bold">12% MASTERED</span>
+</div>
+</div>
+<div class="grid grid-cols-12 gap-8">
+<div class="col-span-8">
+<p class="text-xl text-primary font-body leading-relaxed">
+                                    A term in Western philosophy, psychology, rhetoric, and religion derived from a Greek word meaning "ground", "plea", "opinion", "expectation", "word", "speech", "account", "reason", "proportion", and "discourse".
+                                </p>
+</div>
+<div class="col-span-4 space-y-4 border-l border-outline-variant/20 pl-6">
+<div>
+<h4 class="font-mono text-[10px] uppercase tracking-widest text-outline mb-1">Etymology</h4>
+<p class="font-mono text-xs text-outline leading-tight">Greek λόγος (lógos), meaning "reasoned discourse".</p>
+</div>
+<div>
+<h4 class="font-mono text-[10px] uppercase tracking-widest text-outline mb-1">Cross-references</h4>
+<div class="flex flex-wrap gap-2">
+<span class="text-[11px] font-mono text-secondary border-b border-secondary/20 cursor-pointer hover:border-secondary">Heraclitus</span>
+<span class="text-[11px] font-mono text-secondary border-b border-secondary/20 cursor-pointer hover:border-secondary">Stoicism</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Marginalia (AI Feedback Sidebar) -->
+<aside class="fixed right-0 top-0 bottom-0 w-24 lg:w-32 bg-surface-container border-l border-outline-variant/20 p-4 flex flex-col items-center space-y-12 z-10 hidden xl:flex">
+<div class="mt-32 transform -rotate-90 origin-center whitespace-nowrap">
+<span class="font-mono text-[10px] tracking-[0.4em] text-secondary uppercase font-bold">Marginal Notes</span>
+</div>
+<div class="flex flex-col space-y-8 overflow-y-auto scholar-scrollbar pr-1">
+<div class="space-y-2">
+<span class="font-mono text-[9px] text-outline">P. 12</span>
+<p class="font-mono text-[10px] text-primary italic leading-tight">Mastery in 'Paideia' suggests readiness for the Transmutations chamber.</p>
+</div>
+<div class="space-y-2">
+<span class="font-mono text-[9px] text-outline">P. 14</span>
+<p class="font-mono text-[10px] text-primary italic leading-tight">Your definition of 'Episteme' contradicts earlier notebook entries in Session 08.</p>
+</div>
+<div class="space-y-2">
+<span class="font-mono text-[9px] text-outline">SYSTEM</span>
+<p class="font-mono text-[10px] text-tertiary-container font-bold leading-tight">Lexicon synced to global ontology.</p>
+</div>
+</div>
+<div class="mt-auto pb-8">
+<button class="w-12 h-12 rounded-sm bg-primary flex items-center justify-center text-on-primary hover:bg-secondary transition-colors group">
+<span class="material-symbols-outlined transition-transform group-hover:rotate-90" data-icon="add">add</span>
+</button>
+</div>
+</aside>
+</main>
+<!-- Navigation Shadow/Tonal Fallback for Mobile -->
+<div class="md:hidden fixed bottom-0 left-0 right-0 bg-[#F6F1EA] h-16 border-t border-outline-variant/10 flex justify-around items-center px-4 z-50">
+<span class="material-symbols-outlined text-outline" data-icon="edit_note">edit_note</span>
+<span class="material-symbols-outlined text-outline" data-icon="auto_stories">auto_stories</span>
+<span class="material-symbols-outlined text-secondary" data-icon="menu_book" style="font-variation-settings: 'FILL' 1;">menu_book</span>
+<span class="material-symbols-outlined text-outline" data-icon="settings">settings</span>
+</div>
+</body></html>
