@@ -7,16 +7,40 @@
   margin-bottom: var(--entry-gap);
 }
 
-/* Input Zone (7.4) — no border, no container, no placeholder text */
-.inputZone {
-  padding-left: var(--text-indent);
-  padding-top: 24px;
-  padding-bottom: 80px;
+/* Mode toggle — linear vs canvas */
+.modeToggle {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
 }
 
-.inputCursor {
-  width: 1px;
-  height: 22px;
-  background-color: var(--ink);
-  animation: emberCursorBlink 1.2s ease infinite;
+.modeButton,
+.modeActive {
+  font-family: var(--font-system);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 0;
+  color: var(--ink-ghost);
+  border-bottom: 1px solid transparent;
+  transition: color 0.3s ease, border-color 0.3s ease;
+}
+
+.modeButton:hover {
+  color: var(--ink-faint);
+}
+
+.modeActive {
+  color: var(--ink-faint);
+  border-bottom-color: var(--ink-faint);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modeButton,
+  .modeActive {
+    transition: none;
+  }
 }

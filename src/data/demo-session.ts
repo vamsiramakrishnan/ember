@@ -1,6 +1,7 @@
 /**
  * The Kepler/harmonics demo session.
  * A conversation about music, planetary orbits, and the bridge between them.
+ * Extended to showcase the full learning journey across entry types.
  */
 import type { NotebookEntry } from '@/types/entries';
 
@@ -84,6 +85,11 @@ export const demoSession: NotebookEntry[] = [
     type: 'tutor-marginalia',
     content:
       'You just derived the relationship that took Kepler ten years of calculation to prove. He did it with astronomical tables. You did it with a guitar.',
+  },
+  {
+    type: 'bridge-suggestion',
+    content:
+      'Your understanding of harmonic ratios connects naturally to Fourier\'s insight — that any complex wave can be decomposed into simple harmonics. The mathematics of your guitar string becomes the mathematics of heat, light, and signal processing.',
   },
   {
     type: 'divider',

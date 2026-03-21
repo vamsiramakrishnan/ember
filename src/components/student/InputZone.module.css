@@ -1,0 +1,41 @@
+/* InputZone (7.4) — continuous with the notebook. No border, no container. */
+.container {
+  padding-left: var(--text-indent);
+  padding-top: 24px;
+  padding-bottom: 80px;
+  cursor: text;
+}
+
+.textarea {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  font-family: var(--font-student);
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--ink);
+  line-height: 1.80;
+  letter-spacing: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.textarea::placeholder {
+  color: transparent;
+}
+
+.cursor {
+  width: 1px;
+  height: 22px;
+  background-color: var(--ink);
+  animation: emberCursorBlink 1.2s ease infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cursor {
+    animation: none;
+    opacity: 0.3;
+  }
+}
