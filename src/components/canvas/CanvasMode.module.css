@@ -1,0 +1,22 @@
+.container {
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: var(--paper-warm);
+  position: relative;
+  padding: 24px;
+  margin-bottom: 24px;
+  background-image: radial-gradient(var(--rule-light) 0.5px, transparent 0.5px);
+  background-size: 24px 24px;
+}
+
+.label {
+  font-family: var(--font-system);
+  font-size: 11px;
+  font-weight: 300;
+  color: var(--ink-ghost);
+  margin-bottom: 16px;
+}
+
+.content {
+  position: relative;
+}

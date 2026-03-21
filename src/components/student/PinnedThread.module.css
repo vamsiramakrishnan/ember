@@ -1,0 +1,18 @@
+.thread {
+  font-family: var(--font-student);
+  font-size: 15px;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--ink-soft);
+  border-left: 1px solid var(--rule);
+  padding-left: 16px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.glyph {
+  color: var(--ink-ghost);
+  font-size: 10px;
+}

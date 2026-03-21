@@ -1,0 +1,39 @@
+/* Ember global styles — material, resets, reduced-motion */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+}
+
+::selection {
+  background-color: rgba(184, 86, 79, 0.15);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@keyframes emberCursorBlink {
+  0%, 100% { opacity: var(--cursor-opacity-max); }
+  50% { opacity: 0; }
+}

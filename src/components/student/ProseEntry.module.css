@@ -1,0 +1,10 @@
+.entry {
+  font-family: var(--font-student);
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--ink);
+  line-height: 1.80;
+  padding-left: var(--text-indent);
+  margin-bottom: var(--entry-gap);
+  margin-top: 0;
+}

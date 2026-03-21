@@ -1,0 +1,38 @@
+.container {
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 24px;
+  width: 100%;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.headerCell {
+  font-family: var(--font-tutor);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 10px 12px;
+  text-align: left;
+  background: var(--paper-deep);
+  border-bottom: 1px solid var(--rule);
+}
+
+.bodyCell {
+  font-family: var(--font-student);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--ink-soft);
+  padding: 10px 12px;
+}
+
+.bodyCellBordered {
+  composes: bodyCell;
+  border-bottom: 1px solid var(--rule-light);
+}

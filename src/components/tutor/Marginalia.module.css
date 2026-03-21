@@ -1,0 +1,22 @@
+.container {
+  display: grid;
+  grid-template-columns: var(--margin-rule-width) 1fr;
+  gap: var(--margin-rule-gap);
+  margin-bottom: var(--entry-gap);
+}
+
+.rule {
+  width: var(--margin-rule-width);
+  background-color: var(--margin);
+  opacity: 0.35;
+  border-radius: 1px;
+}
+
+.text {
+  font-family: var(--font-tutor);
+  font-size: 17.5px;
+  font-weight: 400;
+  color: var(--margin);
+  line-height: 1.75;
+  margin: 0;
+}

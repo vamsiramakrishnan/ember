@@ -1,0 +1,13 @@
+.block {
+  font-family: var(--font-tutor);
+  font-size: 18px;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--ink);
+  line-height: 1.75;
+  background: var(--margin-dim);
+  border-left: 2px solid var(--margin);
+  padding: 20px 24px;
+  border-radius: 2px;
+  margin: 0 0 24px 0;
+}

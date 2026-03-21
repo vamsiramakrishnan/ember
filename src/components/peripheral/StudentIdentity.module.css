@@ -1,0 +1,6 @@
+.identity {
+  font-family: var(--font-system);
+  font-size: 11px;
+  font-weight: 300;
+  color: var(--ink-ghost);
+}
