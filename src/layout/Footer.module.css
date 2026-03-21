@@ -5,6 +5,13 @@
   margin-top: 24px;
 }
 
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
 .text {
   font-family: var(--font-system);
   font-size: 10px;
@@ -15,4 +22,21 @@
   text-transform: lowercase;
   margin: 0;
   opacity: 0.7;
+}
+
+/* The quiet sync indicator — a 5px dot that shifts colour.
+   Synced = sage (green), offline = ghost, syncing = amber, error = margin. */
+.syncDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  opacity: 0.5;
+  transition: background-color 1.5s ease, opacity 1.5s ease;
+  flex-shrink: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .syncDot {
+    transition: none;
+  }
 }

@@ -20,7 +20,7 @@
  */
 
 export const DB_NAME = 'ember-notebook';
-export const DB_VERSION = 1;
+export const DB_VERSION = 2;
 
 export const Store = {
   Sessions: 'sessions',

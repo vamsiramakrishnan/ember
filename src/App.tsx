@@ -1,7 +1,7 @@
 /**
  * App — Root component.
  * Wires the three surfaces to tab navigation within the shell.
- * Initialises the persistence layer and seeds demo data on first run.
+ * Initialises persistence, seeds demo data, and starts background sync.
  */
 import { useState, useEffect } from 'react';
 import { Shell } from '@/layout/Shell';
@@ -12,6 +12,8 @@ import { Constellation } from '@/surfaces/Constellation';
 import { Philosophy } from '@/surfaces/Philosophy';
 import { openDB } from '@/persistence';
 import { seedIfEmpty } from '@/persistence/seed';
+import { registerAdapter, startSync } from '@/persistence/sync';
+import { createAdapterFromEnv } from '@/persistence/sync/supabase';
 import type { Surface } from '@/layout/Navigation';
 
 function ActiveSurface({ surface }: { surface: Surface }) {
@@ -32,7 +34,14 @@ export function App() {
   useEffect(() => {
     openDB()
       .then(() => seedIfEmpty())
-      .then(() => setReady(true))
+      .then(() => {
+        const adapter = createAdapterFromEnv();
+        if (adapter) {
+          registerAdapter(adapter);
+          startSync();
+        }
+        setReady(true);
+      })
       .catch((err) => {
         console.error('Failed to initialise database:', err);
         setReady(true);

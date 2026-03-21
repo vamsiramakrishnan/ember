@@ -24,6 +24,10 @@ export * as mastery from './repositories/mastery';
 export * as blobs from './repositories/blobs';
 export * as canvas from './repositories/canvas';
 
+// Sync
+export { registerAdapter, startSync, stopSync, sync } from './sync';
+export { useSyncStatus } from './sync/useSyncStatus';
+
 // Record types
 export type {
   SessionRecord,

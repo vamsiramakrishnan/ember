@@ -4,6 +4,7 @@
  * All operations return Promises. Batch writes are atomic within a transaction.
  */
 import { DB_NAME, DB_VERSION, stores, type StoreName } from './schema';
+import { createOplogStores } from './sync/oplog';
 
 let dbInstance: IDBDatabase | null = null;
 
@@ -23,6 +24,7 @@ export function openDB(): Promise<IDBDatabase> {
           store.createIndex(idx.name, idx.keyPath, { unique: idx.unique });
         }
       }
+      createOplogStores(db);
     };
 
     req.onsuccess = () => {
