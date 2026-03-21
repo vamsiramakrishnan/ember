@@ -1,14 +1,17 @@
 /**
  * App — Root component.
  * Wires the three surfaces to tab navigation within the shell.
+ * Initialises the persistence layer and seeds demo data on first run.
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Shell } from '@/layout/Shell';
 import { Header } from '@/layout/Header';
 import { Footer } from '@/layout/Footer';
 import { Notebook } from '@/surfaces/Notebook';
 import { Constellation } from '@/surfaces/Constellation';
 import { Philosophy } from '@/surfaces/Philosophy';
+import { openDB } from '@/persistence';
+import { seedIfEmpty } from '@/persistence/seed';
 import type { Surface } from '@/layout/Navigation';
 
 function ActiveSurface({ surface }: { surface: Surface }) {
@@ -24,6 +27,19 @@ function ActiveSurface({ surface }: { surface: Surface }) {
 
 export function App() {
   const [surface, setSurface] = useState<Surface>('notebook');
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    openDB()
+      .then(() => seedIfEmpty())
+      .then(() => setReady(true))
+      .catch((err) => {
+        console.error('Failed to initialise database:', err);
+        setReady(true);
+      });
+  }, []);
+
+  if (!ready) return null;
 
   return (
     <Shell>
