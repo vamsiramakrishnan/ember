@@ -21,6 +21,7 @@ import { useMasteryUpdater } from '@/hooks/useMasteryUpdater';
 import { useConstellationSync } from '@/hooks/useConstellationSync';
 import { useSessionIndexer } from '@/hooks/useSessionIndexer';
 import { useContentDrop } from '@/hooks/useContentDrop';
+import { useEntryReorder } from '@/hooks/useEntryReorder';
 import { createStudentEntry } from '@/hooks/useEntryInference';
 import { NotebookEntryWrapper } from './NotebookEntryWrapper';
 import { NotebookEntryRenderer } from './NotebookEntryRenderer';
@@ -46,6 +47,7 @@ export function Notebook() {
   useConstellationSync(entries);
   useSessionIndexer(past);
   const contentDrop = useContentDrop({ addEntry });
+  const reorder = useEntryReorder();
   const [mode, setMode] = useState<NotebookMode>('linear');
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -128,6 +130,13 @@ export function Notebook() {
                   onToggleBookmark={toggleBookmark}
                   onTogglePin={togglePin}
                   onAnnotate={annotate}
+                  onDragStart={reorder.onDragStart}
+                  onDragOver={reorder.onDragOver}
+                  onDragLeave={reorder.onDragLeave}
+                  onDrop={reorder.onDrop}
+                  onDragEnd={reorder.onDragEnd}
+                  isDragOver={reorder.overId === le.id}
+                  isDragging={reorder.dragId === le.id}
                 />
                 {/* Inserter between entries — appears on hover */}
                 {i < entries.length - 1 && (

@@ -40,6 +40,11 @@
   border-color: var(--ink-ghost);
 }
 
+.runButton:focus-visible {
+  outline: 2px solid var(--margin);
+  outline-offset: 1px;
+}
+
 .source {
   font-family: var(--font-system);
   font-size: 13px;

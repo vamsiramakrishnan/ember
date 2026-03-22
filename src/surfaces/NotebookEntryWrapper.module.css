@@ -1,9 +1,40 @@
-/* NotebookEntryWrapper — quiet actions on hover */
+/* NotebookEntryWrapper — the interactive shell around every entry.
+ * Three zones: handle (left), content (center), actions (right).
+ * Everything hidden until hover/touch — the notebook is quiet. */
+
 .wrapper {
   position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  padding: 2px 0;
+  border-radius: 2px;
+  transition: background 0.15s ease;
 }
 
-/* Crossed-out entries: ink-ghost with single horizontal strike */
+/* Hover: warm glow to show the block boundary */
+.wrapper:hover {
+  background: rgba(250, 246, 241, 0.5);
+}
+
+/* Touch: same as hover but triggered by tap */
+.touched {
+  background: rgba(250, 246, 241, 0.5);
+}
+
+/* ─── Drag states ─────────────────────────────────── */
+
+.dragging {
+  opacity: 0.4;
+}
+
+.dragOver {
+  border-top: 2px solid var(--margin);
+  margin-top: -2px;
+}
+
+/* ─── Crossed out ─────────────────────────────────── */
+
 .crossedOut {
   opacity: 0.35;
   text-decoration: line-through;
@@ -11,25 +42,79 @@
   text-decoration-thickness: 1px;
 }
 
+/* ─── Left: drag handle + type indicator ──────────── */
+
+.handle {
+  position: absolute;
+  left: -48px;
+  top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  cursor: grab;
+  user-select: none;
+}
+
+.handle:active {
+  cursor: grabbing;
+}
+
+/* Show on hover or touch */
+.wrapper:hover .handle,
+.touched .handle {
+  opacity: 1;
+}
+
+.grip {
+  font-size: 10px;
+  color: var(--ink-ghost);
+  letter-spacing: -1px;
+  line-height: 1;
+}
+
+.typeTag {
+  font-family: var(--font-system);
+  font-size: 9px;
+  font-weight: 300;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--ink-ghost);
+  white-space: nowrap;
+}
+
+/* ─── Content ─────────────────────────────────────── */
+
+.content {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ─── Right: bookmark position ────────────────────── */
+
 .bookmarkPos {
   position: absolute;
   top: 0;
   right: 0;
 }
 
-/* Actions appear on hover — quiet until needed */
+/* ─── Right: actions ──────────────────────────────── */
+
 .actions {
   position: absolute;
-  top: 0;
+  top: 4px;
   right: -36px;
   display: flex;
   flex-direction: column;
   gap: 4px;
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.15s ease;
 }
 
-.wrapper:hover .actions {
+/* Show on hover or touch */
+.wrapper:hover .actions,
+.touched .actions {
   opacity: 1;
 }
 
@@ -41,12 +126,19 @@
   font-size: 11px;
   color: var(--ink-ghost);
   padding: 2px 4px;
+  border-radius: 2px;
   line-height: 1;
-  transition: color 0.15s ease;
+  transition: color 0.1s ease, background 0.1s ease;
 }
 
 .action:hover {
   color: var(--ink-faint);
+  background: var(--paper-warm);
+}
+
+.action:focus-visible {
+  outline: 2px solid var(--margin);
+  outline-offset: 1px;
 }
 
 .actionActive {
@@ -57,17 +149,21 @@
   color: var(--amber);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .actions {
-    transition: none;
-  }
-  .action {
-    transition: none;
-  }
-}
+/* ─── Narrow screens: inline layout ──────────────── */
 
-/* On narrow screens, show actions inline below */
 @media (max-width: 800px) {
+  .handle {
+    position: static;
+    opacity: 0.5;
+    margin-right: 8px;
+    flex-shrink: 0;
+  }
+
+  .wrapper:hover .handle,
+  .touched .handle {
+    opacity: 1;
+  }
+
   .actions {
     position: static;
     flex-direction: row;
@@ -76,7 +172,21 @@
     margin-left: var(--text-indent);
   }
 
-  .wrapper:hover .actions {
+  .wrapper:hover .actions,
+  .touched .actions {
     opacity: 1;
+  }
+}
+
+/* ─── Reduced motion ─────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .wrapper {
+    transition: none;
+  }
+  .handle,
+  .actions,
+  .action {
+    transition: none;
   }
 }

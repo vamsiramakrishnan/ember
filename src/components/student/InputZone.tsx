@@ -1,8 +1,8 @@
 /**
  * InputZone (7.4)
  * The student's writing area — continuous with the notebook above.
- * Supports text writing, sketch mode, and forced entry types
- * (from block inserter). No border, no placeholder, just a blinking cursor.
+ * Supports text, sketch mode, forced entry types, @ mentions,
+ * and / slash commands. No border, no placeholder, just a cursor.
  * See: 06-component-inventory.md, Family 7
  */
 import { useState, useRef, useCallback, useEffect } from 'react';
@@ -13,19 +13,25 @@ import type { StudentEntryType } from '@/types/entries';
 import styles from './InputZone.module.css';
 
 const typeLabels: Record<StudentEntryType, string> = {
-  prose: '',
-  question: 'question',
-  hypothesis: 'hypothesis',
-  scratch: 'note',
+  prose: '', question: 'question', hypothesis: 'hypothesis', scratch: 'note',
 };
 
 interface InputZoneProps {
   onSubmit?: (content: string) => void;
   onSubmitTyped?: (content: string, type: StudentEntryType) => void;
   onSketchSubmit?: (dataUrl: string) => void;
+  /** Triggered when @ is typed — parent shows MentionPopup. */
+  onMentionTrigger?: (query: string) => void;
+  /** Triggered when / is typed — parent shows SlashCommandPopup. */
+  onSlashTrigger?: (query: string) => void;
+  /** Called when mention/slash popups should close. */
+  onPopupClose?: () => void;
 }
 
-export function InputZone({ onSubmit, onSubmitTyped, onSketchSubmit }: InputZoneProps) {
+export function InputZone({
+  onSubmit, onSubmitTyped, onSketchSubmit,
+  onMentionTrigger, onSlashTrigger, onPopupClose,
+}: InputZoneProps) {
   const [value, setValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [sketchMode, setSketchMode] = useState(false);
@@ -42,15 +48,38 @@ export function InputZone({ onSubmit, onSubmitTyped, onSketchSubmit }: InputZone
   useEffect(() => { autoGrow(); }, [value, autoGrow]);
 
   const submit = useCallback((text: string, type?: StudentEntryType) => {
-    const resolvedType = type ?? forcedType;
-    if (resolvedType && onSubmitTyped) {
-      onSubmitTyped(text, resolvedType);
+    const resolved = type ?? forcedType;
+    if (resolved && onSubmitTyped) {
+      onSubmitTyped(text, resolved);
     } else {
       onSubmit?.(text);
     }
     setValue('');
     setForcedType(null);
-  }, [forcedType, onSubmit, onSubmitTyped]);
+    onPopupClose?.();
+  }, [forcedType, onSubmit, onSubmitTyped, onPopupClose]);
+
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const text = e.target.value;
+    setValue(text);
+
+    // Detect @ mention trigger
+    const atMatch = text.match(/@(\w*)$/);
+    if (atMatch) {
+      onMentionTrigger?.(atMatch[1] ?? '');
+      return;
+    }
+
+    // Detect / slash command trigger (only at start of line)
+    const slashMatch = text.match(/^\/(\w*)$/);
+    if (slashMatch) {
+      onSlashTrigger?.(slashMatch[1] ?? '');
+      return;
+    }
+
+    // Close popups if no trigger
+    onPopupClose?.();
+  }, [onMentionTrigger, onSlashTrigger, onPopupClose]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -58,12 +87,12 @@ export function InputZone({ onSubmit, onSubmitTyped, onSketchSubmit }: InputZone
         e.preventDefault();
         submit(value.trim());
       }
-      // Escape clears forced type
-      if (e.key === 'Escape' && forcedType) {
-        setForcedType(null);
+      if (e.key === 'Escape') {
+        if (forcedType) setForcedType(null);
+        onPopupClose?.();
       }
     },
-    [value, submit, forcedType],
+    [value, submit, forcedType, onPopupClose],
   );
 
   const handleBlockSelect = useCallback((type: StudentEntryType) => {
@@ -71,21 +100,10 @@ export function InputZone({ onSubmit, onSubmitTyped, onSketchSubmit }: InputZone
     textareaRef.current?.focus();
   }, []);
 
-  const handlePaste = useCallback((text: string, type: StudentEntryType) => {
-    if (onSubmitTyped) {
-      onSubmitTyped(text, type);
-    } else {
-      onSubmit?.(text);
-    }
-  }, [onSubmit, onSubmitTyped]);
-
   if (sketchMode) {
     return (
       <SketchInput
-        onSubmit={(dataUrl) => {
-          onSketchSubmit?.(dataUrl);
-          setSketchMode(false);
-        }}
+        onSubmit={(dataUrl) => { onSketchSubmit?.(dataUrl); setSketchMode(false); }}
         onCancel={() => setSketchMode(false)}
       />
     );
@@ -93,9 +111,7 @@ export function InputZone({ onSubmit, onSubmitTyped, onSketchSubmit }: InputZone
 
   const displayType = forcedType
     ? typeLabels[forcedType] || forcedType
-    : value.trim()
-      ? typeLabels[inferEntryType(value.trim())]
-      : '';
+    : value.trim() ? typeLabels[inferEntryType(value.trim())] : '';
 
   return (
     <div
@@ -104,7 +120,7 @@ export function InputZone({ onSubmit, onSubmitTyped, onSketchSubmit }: InputZone
       role="textbox"
       aria-label="Writing area"
     >
-      <BlockInserter onSelect={handleBlockSelect} onPaste={handlePaste} />
+      <BlockInserter onSelect={handleBlockSelect} />
       {forcedType && (
         <div className={styles.forcedTypeBar}>
           <span className={styles.forcedTypeLabel}>{forcedType}</span>
@@ -121,7 +137,7 @@ export function InputZone({ onSubmit, onSubmitTyped, onSketchSubmit }: InputZone
         ref={textareaRef}
         className={styles.textarea}
         value={value}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={handleChange}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
         onKeyDown={handleKeyDown}

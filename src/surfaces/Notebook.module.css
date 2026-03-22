@@ -46,6 +46,12 @@
   color: var(--ink-faint);
 }
 
+.modeButton:focus-visible,
+.modeActive:focus-visible {
+  outline: 2px solid var(--margin);
+  outline-offset: 2px;
+}
+
 .modeActive {
   color: var(--ink-faint);
   border-bottom-color: var(--ink-faint);
