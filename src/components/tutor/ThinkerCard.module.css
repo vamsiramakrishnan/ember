@@ -2,6 +2,7 @@
 
 .container {
   padding: 20px 0;
+  animation: cardReveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .containerBordered {
@@ -17,8 +18,8 @@
 }
 
 .monogram {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   background: var(--paper-warm);
   border: 1px solid var(--rule);
@@ -31,6 +32,12 @@
   color: var(--margin);
   flex-shrink: 0;
   letter-spacing: -0.5px;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.container:hover .monogram {
+  border-color: var(--margin);
+  background: rgba(139, 115, 85, 0.06);
 }
 
 .identity {
@@ -100,8 +107,18 @@
   margin: 0;
 }
 
+@keyframes cardReveal {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 @media (max-width: 500px) {
   .body {
     padding-left: 0;
   }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .container { animation: none; }
+  .monogram { transition: none; }
 }

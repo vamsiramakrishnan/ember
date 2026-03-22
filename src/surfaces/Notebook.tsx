@@ -155,6 +155,15 @@ export function Notebook({ onNavigate }: NotebookProps) {
     }
   }, [annotate, submitEntry, popup]);
 
+  /** Handle inline follow-up on a tutor entry. */
+  const handleFollowUp = useCallback((question: string, tutorContext: string) => {
+    const contextHint = tutorContext.length > 100
+      ? tutorContext.slice(0, 100) + '…'
+      : tutorContext;
+    const fullQuestion = `Regarding your note "${contextHint}" — ${question}`;
+    submitEntry({ type: 'question', content: fullQuestion });
+  }, [submitEntry]);
+
   const handleSketchSubmit = useCallback((dataUrl: string) => {
     void addEntry({ type: 'sketch', dataUrl });
     setTimeout(scrollToBottom, 50);
@@ -207,6 +216,7 @@ export function Notebook({ onNavigate }: NotebookProps) {
                   onAnnotate={annotate}
                   onSelectionAction={handleSelectionAction}
                   onBranch={handleBranch}
+                  onFollowUp={handleFollowUp}
                   onDragStart={reorder.onDragStart}
                   onDragOver={reorder.onDragOver}
                   onDragLeave={reorder.onDragLeave}

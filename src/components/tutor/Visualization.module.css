@@ -1,7 +1,14 @@
-/* Visualization — the tutor's whiteboard, rendered as sandboxed HTML */
+/* Visualization — interactive whiteboard, sandboxed HTML */
 .container {
   margin: 16px 0;
-  padding-left: var(--text-indent);
+  position: relative;
+  transition: margin 0.3s ease;
+}
+
+/* Expanded: break out of column, use full viewport width */
+.expanded {
+  margin-left: calc(-1 * var(--column-padding, 24px));
+  margin-right: calc(-1 * var(--column-padding, 24px));
 }
 
 .frame {
@@ -10,7 +17,44 @@
   border-radius: 2px;
   background: var(--paper);
   overflow: hidden;
-  transition: height 0.3s ease;
+  transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 1;
+}
+
+.frameHidden {
+  composes: frame;
+  opacity: 0;
+  position: absolute;
+  pointer-events: none;
+}
+
+/* Loading skeleton — warm pulsing placeholder */
+.skeleton {
+  width: 100%;
+  height: 300px;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: linear-gradient(
+    110deg,
+    var(--paper) 30%,
+    var(--paper-warm) 50%,
+    var(--paper) 70%
+  );
+  background-size: 200% 100%;
+  animation: skeletonPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes skeletonPulse {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
+  gap: 8px;
 }
 
 .caption {
@@ -19,12 +63,33 @@
   font-weight: 300;
   letter-spacing: 1px;
   color: var(--ink-ghost);
-  margin-top: 6px;
   text-transform: lowercase;
+  margin: 0;
+  flex: 1;
+}
+
+.expandBtn {
+  font-family: var(--font-system);
+  font-size: 12px;
+  color: var(--ink-ghost);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 6px;
+  transition: color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.expandBtn:hover {
+  color: var(--ink-faint);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .frame {
+  .frame, .container {
     transition: none;
+  }
+  .skeleton {
+    animation: none;
+    background: var(--paper-warm);
   }
 }

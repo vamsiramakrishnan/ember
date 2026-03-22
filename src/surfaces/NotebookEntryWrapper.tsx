@@ -8,9 +8,15 @@ import type { LiveEntry } from '@/types/entries';
 import { Bookmark } from '@/components/student/Bookmark';
 import { AnnotationMargin } from '@/components/student/AnnotationMargin';
 import { SelectionToolbar } from '@/components/student/SelectionToolbar';
+import { FollowUp } from '@/components/tutor/FollowUp';
 import { NotebookEntryRenderer } from './NotebookEntryRenderer';
 import { TYPE_META, isStudentEntry } from './entryTypeMeta';
 import styles from './NotebookEntryWrapper.module.css';
+
+const TUTOR_TYPES = new Set([
+  'tutor-marginalia', 'tutor-question', 'tutor-connection',
+  'tutor-reflection', 'tutor-directive',
+]);
 
 interface Props {
   liveEntry: LiveEntry;
@@ -25,6 +31,7 @@ interface Props {
   onDragLeave?: (id: string) => void;
   onDrop?: (id: string, e: React.DragEvent) => void;
   onDragEnd?: () => void;
+  onFollowUp?: (question: string, context: string) => void;
   isDragOver?: boolean;
   isDragging?: boolean;
   style?: React.CSSProperties;
@@ -33,7 +40,7 @@ interface Props {
 export function NotebookEntryWrapper({
   liveEntry, onCrossOut, onToggleBookmark, onTogglePin,
   onAnnotate, onSelectionAction, onBranch, onDragStart, onDragOver,
-  onDragLeave, onDrop, onDragEnd, isDragOver, isDragging, style,
+  onDragLeave, onDrop, onDragEnd, onFollowUp, isDragOver, isDragging, style,
 }: Props) {
   const { id, entry, crossedOut, bookmarked, pinned, annotations } = liveEntry;
   const canPin = entry.type === 'question';
@@ -83,6 +90,12 @@ export function NotebookEntryWrapper({
           entryId={id}
           onAction={(a) => onSelectionAction?.(a.entryId, a.type, a.selectedText)}
         />
+        {onFollowUp && TUTOR_TYPES.has(entry.type) && 'content' in entry && (
+          <FollowUp
+            context={(entry as { content: string }).content}
+            onSubmit={onFollowUp}
+          />
+        )}
       </div>
       {bookmarked && (
         <div className={styles.bookmarkPos}><Bookmark /></div>

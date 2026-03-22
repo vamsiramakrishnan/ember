@@ -159,7 +159,7 @@ export function InputZone({
   );
 }
 
-const AFFORDANCE_HINTS = ['@mention', '/command', '? asks the tutor', 'paste images'];
+const AFFORDANCE_HINTS = ['? asks the tutor', '/visualize', '@mention'];
 function InputAffordances() {
   return (
     <div className={styles.affordances} aria-hidden="true">
