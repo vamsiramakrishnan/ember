@@ -23,7 +23,7 @@ import {
   searchNotebook,
   searchByType,
   indexSession,
-} from './gemini-file-search';
+} from './file-search';
 import { classifyImmediate } from './router-agent';
 import {
   assembleContext,

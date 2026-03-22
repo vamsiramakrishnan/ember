@@ -10,7 +10,7 @@ import {
   indexSession,
   searchAll,
   searchNotebook,
-} from '@/services/gemini-file-search';
+} from '@/services/file-search';
 import { useStudent } from '@/contexts/StudentContext';
 
 export interface MemorySearchResult {

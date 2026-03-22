@@ -23,7 +23,7 @@ import {
   indexLibrary,
   indexMastery,
   indexCuriosities,
-} from '@/services/gemini-file-search';
+} from '@/services/file-search';
 import { useStudent } from '@/contexts/StudentContext';
 import { getEntriesBySession } from '@/persistence/repositories/entries';
 import { getLexiconByNotebook } from '@/persistence/repositories/lexicon';

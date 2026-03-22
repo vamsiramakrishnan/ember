@@ -15,7 +15,7 @@
 import { useCallback, useRef } from 'react';
 import { storeBlob } from '@/persistence/repositories/blobs';
 import { isGeminiAvailable } from '@/services/gemini';
-import { getOrCreateStore, uploadRawFile } from '@/services/gemini-file-search';
+import { getOrCreateStore, uploadRawFile } from '@/services/file-search';
 import { useStudent } from '@/contexts/StudentContext';
 import type { NotebookEntry, FileAttachment } from '@/types/entries';
 

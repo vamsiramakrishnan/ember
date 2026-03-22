@@ -1,0 +1,95 @@
+/* Shared micro-interaction patterns — imported by components */
+
+/* Entry spacing rhythm (02-visual-language.md) */
+.entrySpacing {
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.sectionSpacing {
+  margin-top: 32px;
+  margin-bottom: 32px;
+}
+
+.silenceSpacing {
+  padding-top: 48px;
+  padding-bottom: 48px;
+}
+
+.diagramSpacing {
+  margin-top: 28px;
+  margin-bottom: 28px;
+}
+
+/* Hover reveal pattern */
+.hoverReveal {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.hoverRevealParent:hover .hoverReveal {
+  opacity: 1;
+}
+
+/* Interactive element base */
+.interactiveBase {
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.interactiveBase:hover {
+  border-color: var(--ink-ghost);
+  background: var(--paper-warm);
+}
+
+/* System label pattern (IBM Plex Mono, 10px, uppercase) */
+.systemLabel {
+  font-family: var(--font-system);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink-ghost);
+}
+
+/* Tutor margin rule pattern */
+.tutorRule {
+  width: 3px;
+  background: var(--margin);
+  opacity: 0.35;
+  border-radius: 1px;
+  flex-shrink: 0;
+  align-self: stretch;
+}
+
+/* Drag handle indicator */
+.dragHandle {
+  cursor: grab;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  color: var(--ink-ghost);
+  font-size: 10px;
+  user-select: none;
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+/* Focus ring — subtle, warm */
+.focusRing:focus-visible {
+  outline: 2px solid var(--margin);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hoverReveal,
+  .interactiveBase,
+  .dragHandle {
+    transition: none;
+  }
+}
