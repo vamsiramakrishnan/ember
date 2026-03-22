@@ -36,7 +36,7 @@ export function Notebook() {
 
   const {
     entries, addEntry, crossOut,
-    toggleBookmark, togglePin, pinnedEntries,
+    toggleBookmark, togglePin, annotate, pinnedEntries,
   } = usePersistedNotebook(sessionId);
 
   const addEntries = useCallback((_e: unknown[]) => {}, []);
@@ -127,6 +127,7 @@ export function Notebook() {
                   onCrossOut={crossOut}
                   onToggleBookmark={toggleBookmark}
                   onTogglePin={togglePin}
+                  onAnnotate={annotate}
                 />
                 {/* Inserter between entries — appears on hover */}
                 {i < entries.length - 1 && (

@@ -55,6 +55,8 @@ export interface EntryRecord extends BaseRecord {
   bookmarked: boolean;
   pinned: boolean;
   blobHash?: string;
+  /** Annotations from student and tutor on this entry. */
+  annotations?: import('@/types/entries').EntryAnnotation[];
 }
 
 export interface LexiconRecord extends BaseRecord {

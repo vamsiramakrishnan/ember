@@ -1,10 +1,12 @@
 /**
  * NotebookEntryWrapper — wraps each entry with interactive affordances.
- * Cross-out (permanence principle), bookmark, pin (questions only).
+ * Cross-out (permanence principle), bookmark, pin (questions only),
+ * and margin annotations (student and tutor).
  * Actions appear on hover — quiet until needed.
  */
 import type { LiveEntry } from '@/types/entries';
 import { Bookmark } from '@/components/student/Bookmark';
+import { AnnotationMargin } from '@/components/student/AnnotationMargin';
 import { NotebookEntryRenderer } from './NotebookEntryRenderer';
 import styles from './NotebookEntryWrapper.module.css';
 
@@ -13,20 +15,22 @@ interface NotebookEntryWrapperProps {
   onCrossOut: (id: string) => void;
   onToggleBookmark: (id: string) => void;
   onTogglePin: (id: string) => void;
+  onAnnotate?: (id: string, content: string) => void;
   style?: React.CSSProperties;
 }
 
 const isStudentEntry = (type: string) =>
-  ['prose', 'scratch', 'hypothesis', 'question'].includes(type);
+  ['prose', 'scratch', 'hypothesis', 'question', 'code-cell', 'image'].includes(type);
 
 export function NotebookEntryWrapper({
   liveEntry,
   onCrossOut,
   onToggleBookmark,
   onTogglePin,
+  onAnnotate,
   style,
 }: NotebookEntryWrapperProps) {
-  const { id, entry, crossedOut, bookmarked, pinned } = liveEntry;
+  const { id, entry, crossedOut, bookmarked, pinned, annotations } = liveEntry;
   const canPin = entry.type === 'question';
   const canCrossOut = isStudentEntry(entry.type);
 
@@ -71,6 +75,12 @@ export function NotebookEntryWrapper({
           </button>
         )}
       </div>
+      {onAnnotate && (
+        <AnnotationMargin
+          annotations={annotations ?? []}
+          onAdd={(content) => onAnnotate(id, content)}
+        />
+      )}
     </div>
   );
 }
