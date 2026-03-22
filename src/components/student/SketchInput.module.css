@@ -1,0 +1,57 @@
+/* SketchInput — the drawing canvas and its quiet toolbar */
+.container {
+  padding-left: var(--text-indent);
+  padding-top: 16px;
+  padding-bottom: 24px;
+}
+
+.canvas {
+  display: block;
+  width: 100%;
+  max-width: 560px;
+  height: 200px;
+  background: var(--paper-warm);
+  border-top: 1px solid var(--rule-light);
+  border-bottom: 1px solid var(--rule-light);
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.toolbar {
+  display: flex;
+  gap: 16px;
+  margin-top: 10px;
+}
+
+.toolBtn {
+  font-family: var(--font-system);
+  font-size: 10px;
+  font-weight: 300;
+  letter-spacing: 1.5px;
+  text-transform: lowercase;
+  color: var(--ink-ghost);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 0;
+  transition: color 0.2s ease;
+}
+
+.toolBtn:hover {
+  color: var(--ink-faint);
+}
+
+.toolBtn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.toolBtnReady {
+  color: var(--ink-faint);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toolBtn {
+    transition: none;
+  }
+}

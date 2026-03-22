@@ -17,6 +17,9 @@ The AI builds and maintains a persistent, evolving model of the student's intell
 - **The analogy repertoire:** which analogies have worked for this student, which have failed, and which domains the student draws from naturally when reasoning.
 - **The intellectual lineage:** which thinkers have entered the student's world, and which ideas those thinkers contributed.
 - **The difficulty calibration:** the current edge of the student's understanding — the boundary between fluency and genuine challenge.
+- **The personal lexicon:** the terms and concepts the student has defined in their own words, with their evolving definitions. This is not a dictionary the AI maintains — it is a record of how the student's language has changed. Early definitions are preserved alongside later revisions, forming a visible trace of intellectual growth.
+- **The encounter history:** which thinkers and ideas the student has met, when, and in what context. This temporal record enables the AI to reference not just *what* the student has learned, but *when* and *why* — creating richer connections and echoes.
+- **The reading context:** which primary texts the student is engaging with, what annotations they have made, and how those texts connect to their curiosity threads. This allows the tutor to bridge between a student's reading and their open questions.
 
 This model is the memory that makes Ember a relationship rather than a transaction. Session 47 behaves differently from Session 1 because the AI knows 46 sessions' worth of the student's thinking.
 

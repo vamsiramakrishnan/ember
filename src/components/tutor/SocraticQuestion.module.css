@@ -4,10 +4,13 @@
   font-weight: 400;
   font-style: italic;
   color: var(--ink);
-  line-height: 1.75;
+  line-height: 1.78;
+  letter-spacing: 0.01em;
   background: var(--margin-dim);
   border-left: 2px solid var(--margin);
-  padding: 20px 24px;
+  padding: 22px 28px;
   border-radius: 2px;
-  margin: 0 0 24px 0;
+  margin: 4px 0 28px 0;
+  /* The one moment where the interface raises its voice slightly */
+  position: relative;
 }

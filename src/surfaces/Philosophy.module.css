@@ -4,28 +4,31 @@
 
 .question {
   font-family: var(--font-tutor);
-  font-size: 18px;
-  font-weight: 400;
+  font-size: 20px;
+  font-weight: 300;
   font-style: italic;
   color: var(--ink-soft);
-  line-height: 1.75;
+  line-height: 1.8;
+  letter-spacing: -0.1px;
+  max-width: 540px;
 }
 
 .principleBlock {
-  margin-bottom: 28px;
+  margin-bottom: 36px;
 }
 
 .numeralRow {
   display: flex;
-  gap: 12px;
+  gap: 14px;
   align-items: baseline;
 }
 
 .numeral {
   font-family: var(--font-tutor);
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 300;
-  color: var(--ink-faint);
+  color: var(--ink-ghost);
+  min-width: 24px;
 }
 
 .body {
@@ -33,21 +36,24 @@
   font-size: 16px;
   font-weight: 400;
   color: var(--ink-soft);
-  line-height: 1.75;
+  line-height: 1.78;
+  letter-spacing: 0.005em;
   padding-left: var(--content-indent);
-  margin-top: 12px;
-  margin-bottom: 8px;
+  margin-top: 14px;
+  margin-bottom: 10px;
 }
 
 .provenance {
   font-family: var(--font-system);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 300;
   color: var(--ink-ghost);
+  letter-spacing: 0.5px;
   padding-left: var(--content-indent);
   margin: 0;
+  font-style: italic;
 }
 
 .spacer {
-  height: 80px;
+  height: 96px;
 }

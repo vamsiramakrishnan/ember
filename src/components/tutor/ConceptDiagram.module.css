@@ -1,8 +1,9 @@
 .container {
   border-top: 1px solid var(--rule);
   border-bottom: 1px solid var(--rule);
-  padding: 20px 0;
+  padding: 28px 0;
   margin-bottom: var(--diagram-gap);
+  background-color: var(--paper-warm);
 }
 
 .nodes {
@@ -11,37 +12,43 @@
   align-items: center;
   justify-content: center;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
 }
 
 .nodeGroup {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .arrow {
   font-family: var(--font-tutor);
-  font-size: 20px;
+  font-size: 18px;
   color: var(--ink-ghost);
+  padding: 0 4px;
 }
 
 .nodeContent {
   text-align: center;
-  padding: 0 20px;
+  padding: 8px 20px;
+  border: 1px solid var(--rule-light);
+  border-radius: 2px;
+  background-color: var(--paper);
 }
 
 .nodeLabel {
   font-family: var(--font-tutor);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
   color: var(--ink);
+  letter-spacing: -0.1px;
 }
 
 .nodeSub {
   font-family: var(--font-system);
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 300;
   color: var(--ink-faint);
-  margin-top: 2px;
+  margin-top: 4px;
+  letter-spacing: 0.5px;
 }

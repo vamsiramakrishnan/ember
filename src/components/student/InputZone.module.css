@@ -1,0 +1,82 @@
+/* InputZone (7.4) — continuous with the notebook. No border, no container. */
+.container {
+  padding-left: var(--text-indent);
+  padding-top: 32px;
+  padding-bottom: 96px;
+  cursor: text;
+  min-height: 120px;
+}
+
+.textarea {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  font-family: var(--font-student);
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--ink);
+  line-height: 1.82;
+  letter-spacing: 0.005em;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+.textarea::placeholder {
+  color: transparent;
+}
+
+.cursor {
+  width: 1px;
+  height: 22px;
+  background-color: var(--ink);
+  animation: emberCursorBlink var(--cursor-cycle) ease infinite;
+}
+
+.bottomRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 10px;
+  min-height: 18px;
+}
+
+.typeIndicator {
+  font-family: var(--font-system);
+  font-size: 9px;
+  font-weight: 300;
+  color: var(--ink-ghost);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.sketchToggle {
+  font-family: var(--font-system);
+  font-size: 9px;
+  font-weight: 300;
+  letter-spacing: 1.5px;
+  text-transform: lowercase;
+  color: var(--ink-ghost);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 0;
+  margin-left: auto;
+  transition: color 0.2s ease;
+}
+
+.sketchToggle:hover {
+  color: var(--ink-faint);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cursor {
+    animation: none;
+    opacity: 0.3;
+  }
+  .sketchToggle {
+    transition: none;
+  }
+}

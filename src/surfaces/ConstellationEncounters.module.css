@@ -1,0 +1,129 @@
+/* ConstellationEncounters — archive ledger display */
+.header {
+  display: grid;
+  grid-template-columns: 48px 120px 1fr 120px 90px;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--ink);
+  margin-bottom: 4px;
+}
+
+.headerCell,
+.headerCellWide {
+  font-family: var(--font-system);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--ink-faint);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 48px 120px 1fr 120px 90px;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--rule-light);
+  align-items: start;
+  transition: background-color 0.2s ease;
+}
+
+.row:hover {
+  background-color: var(--paper-warm);
+}
+
+.ref {
+  font-family: var(--font-system);
+  font-size: 11px;
+  color: var(--ink-ghost);
+}
+
+.thinkerCol {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.thinkerName {
+  font-family: var(--font-tutor);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.3;
+}
+
+.tradition {
+  font-family: var(--font-system);
+  font-size: 9px;
+  color: var(--ink-faint);
+  letter-spacing: 1px;
+}
+
+.coreIdea {
+  font-family: var(--font-student);
+  font-size: 14px;
+  font-style: italic;
+  color: var(--ink-soft);
+  line-height: 1.6;
+}
+
+.sessionCol {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sessionTopic {
+  font-family: var(--font-system);
+  font-size: 10px;
+  color: var(--ink-soft);
+}
+
+.date {
+  font-family: var(--font-system);
+  font-size: 9px;
+  color: var(--ink-ghost);
+}
+
+.status {
+  font-family: var(--font-system);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 2px 6px;
+  border: 1px solid var(--rule);
+  text-align: center;
+  align-self: start;
+}
+
+.active {
+  color: var(--margin);
+  border-color: var(--margin);
+}
+
+.dormant {
+  color: var(--ink-faint);
+  border-color: var(--rule);
+}
+
+.bridged {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
+.pending {
+  color: var(--amber);
+  border-color: var(--amber);
+}
+
+/* On narrow screens, simplify the grid */
+@media (max-width: 640px) {
+  .header {
+    display: none;
+  }
+
+  .row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+}

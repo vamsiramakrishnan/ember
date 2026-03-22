@@ -2,14 +2,47 @@
   margin-top: var(--session-header-top);
 }
 
-.subtitle {
-  margin-bottom: var(--entry-gap);
-}
-
 .sectionLabel {
   text-transform: uppercase;
 }
 
 .spacer {
   height: 80px;
+}
+
+/* Sub-navigation for Constellation views */
+.subNav {
+  display: flex;
+  gap: 24px;
+  margin-top: 12px;
+}
+
+.subTab,
+.subTabActive {
+  font-family: var(--font-tutor);
+  font-size: 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 0;
+  color: var(--ink-faint);
+  border-bottom: 1.5px solid transparent;
+  transition: color 0.3s ease, border-color 0.3s ease;
+}
+
+.subTab:hover {
+  color: var(--ink-soft);
+}
+
+.subTabActive {
+  color: var(--ink);
+  border-bottom-color: var(--ink);
+  font-weight: 500;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .subTab,
+  .subTabActive {
+    transition: none;
+  }
 }

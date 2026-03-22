@@ -135,6 +135,33 @@ Socratic Question (tutor)
 
 The student discovers their own error through the tutor's questioning. The tutor never announces the error. The correction is the student's, and the credit is the student's. This is the most demanding pattern for the AI to execute, because it requires generating a question that will surface a specific logical contradiction without revealing the answer.
 
+### Pattern 6: The definition evolution
+
+Over time, the student's understanding of a concept deepens. Their early definitions are naive; later definitions are precise. The notebook preserves this evolution.
+
+```
+Session 8: Prose Entry (student defines "harmony" as "when things sound nice together")
+Session 15: Hypothesis Marker (student revises: "harmony is about whole-number ratios")
+Session 23: Prose Entry (student synthesises: "harmony is the mathematical structure
+   that makes simple ratios perceptually consonant — Kepler saw this in orbits")
+```
+
+The evolution is visible in the Constellation's Lexicon view, where the student's current definition sits alongside the trace of earlier attempts (rendered in `ink-ghost` with horizontal strike). This is the permanence principle made pedagogically valuable — the student can see how their thinking has changed.
+
+### Pattern 7: The etymology bridge
+
+A concept's etymology becomes a bridge to deeper understanding. The tutor uses the word's history to illuminate the idea.
+
+```
+Marginalia (tutor: "Notice the root 'harmonia' — it means 'to fit together'")
+  → Connection (tutor links to the student's own use of the word)
+    → Concept Diagram (showing the word's journey: Greek → Latin → modern usage)
+      → Socratic Question (tutor: "If harmony means fitting together,
+         what does dis-harmony tell us about the structure it disrupts?")
+```
+
+This pattern enriches the Lexicon view over time. Each term accumulates etymological depth through the natural flow of sessions, not through a separate "etymology lesson."
+
 ---
 
 ## The grammar of voices

@@ -32,6 +32,8 @@ The three surfaces are derived from the physical spaces of aristocratic tutoring
 
 **Relationship to the other surfaces.** The Notebook is where the student spends almost all of their time. It is the product. The other two surfaces are peripheral — visited occasionally, glanced at, returned from. The Notebook is the desk. You sit at it.
 
+**Canvas mode.** The Notebook supports a toggle between linear mode (the default chronological flow) and canvas mode (spatial arrangement of the session's concepts). The toggle is rendered in IBM Plex Mono at 10px, `ink-ghost`, positioned below the session header. In canvas mode, the entry stream is replaced by a spatial concept map showing the session's key ideas as positioned cards connected by bezier lines (see Component Inventory 4.1 and 4.2). The student can switch freely between modes. Canvas mode is a thinking tool — it does not replace the notebook, it supplements it.
+
 **Scroll behaviour.** The Notebook scrolls vertically. New entries appear at the bottom. The student can scroll up to re-read earlier parts of the session. When they scroll back down, the input cursor is waiting where they left it.
 
 Past sessions are accessible by scrolling beyond the top of the current session. The transition is marked by a subtle date divider — a thin ruled line with the session date in `ink-ghost` IBM Plex Mono. There is no "load more" button. The notebook is continuous, like a physical notebook. You flip backward.
@@ -52,11 +54,21 @@ When a concept reaches fluency, the system offers a bridge — a quiet suggestio
 
 **Thinkers in orbit.** The intellectual lineage. Each thinker who has entered the student's world is presented with their name (italic Cormorant Garamond), their dates (IBM Plex Mono), a one-sentence description of their gift to this student's thinking (Crimson Pro), and a bridge notation showing how they connect to the student's questions (IBM Plex Mono).
 
+**Lexicon.** The student's personal vocabulary — the terms and concepts they have defined in their own words during sessions. Each entry shows the term, pronunciation, the student's definition, mastery level, etymology, and cross-references to related terms. This is the student's growing intellectual language made visible. Entries are presented as a quiet ledger: italic Cormorant Garamond for the term, Crimson Pro for the definition, IBM Plex Mono for etymology and cross-references. A thin mastery bar (same treatment as Fluency) shows depth of understanding for each term.
+
+**Encounters.** A chronological record of the thinkers and ideas the student has met across sessions. Each encounter shows the thinker's name, their tradition, the core idea encountered, the session context, and the date. This is the ledger of the student's intellectual history — not a metric, but a memory. Rendered as a quiet table using the same visual vocabulary as the rest of the surface.
+
+**Library.** The primary texts the student is working through — the books left open on the desk. Each text shows its title, author, a representative quote, and the number of annotations the student has made. The currently active text receives a subtle left border in `margin`. This section is deliberately small — three to five texts at most. The library is not a catalogue; it is what is on the desk right now.
+
+**Navigation within the Constellation.** The four aspects of the intellectual map (Overview, Lexicon, Encounters, Library) are accessed through quiet sub-navigation labels beneath the surface title. These are Cormorant Garamond at 14px, styled identically to the main navigation tabs but lighter — the active view has an `ink` underline, inactive views are `ink-faint`. The default view is Overview, showing Active Threads, Fluency, and Thinkers in Orbit. The student can switch views to examine their lexicon, encounter history, or reading list.
+
 **What it does not contain:**
 - A graph visualisation (nodes and edges on a canvas). The Constellation is a list, not a diagram. Graphs are visually impressive but cognitively expensive — they demand interpretation. The list is for reading, not for parsing.
 - Comparative metrics (percentile rankings, class averages, pace indicators)
 - Goals or targets
 - Gamification elements (streaks, badges, levels, unlockables)
+- Status badges or synthesis indicators (the student's relationship to a thinker is expressed through the tutor's conversation, not through a label)
+- Workspace statistics, intensity meters, or progress dashboards
 
 **Relationship to the other surfaces.** The Constellation is the bookshelf. You stand up from the desk, turn around, and look at it. It tells you where you are in the larger landscape of what you know. Then you turn back to the desk and continue.
 

@@ -7,6 +7,7 @@ import { ProseEntry } from '@/components/student/ProseEntry';
 import { ScratchNote } from '@/components/student/ScratchNote';
 import { HypothesisMarker } from '@/components/student/HypothesisMarker';
 import { QuestionBubble } from '@/components/student/QuestionBubble';
+import { SketchEntry } from '@/components/student/SketchEntry';
 import { Marginalia } from '@/components/tutor/Marginalia';
 import { SocraticQuestion } from '@/components/tutor/SocraticQuestion';
 import { Connection } from '@/components/tutor/Connection';
@@ -31,6 +32,8 @@ export function NotebookEntryRenderer({ entry }: Props) {
       return <HypothesisMarker>{entry.content}</HypothesisMarker>;
     case 'question':
       return <QuestionBubble>{entry.content}</QuestionBubble>;
+    case 'sketch':
+      return <SketchEntry dataUrl={entry.dataUrl} />;
     case 'tutor-marginalia':
       return <Marginalia>{entry.content}</Marginalia>;
     case 'tutor-question':

@@ -30,10 +30,10 @@ docs/
   01-design-principles.md   — Six ranked principles. Governs all decisions.
   02-visual-language.md     — Colour, typography, spacing, material. The complete token system.
   03-interaction-language.md — Tutor's voice, five interaction modes, pacing, silence.
-  04-information-architecture.md — Three surfaces: Notebook, Constellation, Philosophy.
-  05-ai-contract.md         — What the AI does and does not do.
-  06-component-inventory.md — Every UI element, fully specified. Seven families, 27 elements.
-  07-compositional-grammar.md — How elements combine. Linear mode, canvas mode, patterns.
+  04-information-architecture.md — Three surfaces: Notebook, Constellation (with sub-views), Philosophy.
+  05-ai-contract.md         — What the AI does and does not do. Student model includes lexicon, encounters, reading context.
+  06-component-inventory.md — Every UI element, fully specified. Eight families, 30 elements.
+  07-compositional-grammar.md — How elements combine. Linear mode, canvas mode, seven patterns.
 ```
 
 **Read order:** Start with `00`, `01`, `02` for philosophy, principles, and visual tokens. Then `06` for the component inventory — this is your parts list. Then `07` for how parts compose. Then `03`, `04`, `05` for interaction, architecture, and AI behaviour.
@@ -51,6 +51,43 @@ src/prototypes/
 These files are rough. They contain inline styles, monolithic structures, duplicated logic, and inconsistent naming. They are sketches, not code. Your job is to extract the design intent from each prototype and re-implement it as clean, modular React components that conform to the design spec.
 
 **Do not copy-paste from prototypes.** Read them, understand what they are attempting, then implement from the spec. Use the prototypes as visual reference, not as code reference.
+
+-----
+
+## Prototype-to-spec mapping
+
+The prototypes show nine screens across six navigation surfaces. The spec defines three surfaces. This mapping shows where each prototype's design intent lives in the final architecture, and what must be discarded.
+
+### Integrated into the architecture
+
+| Prototype | Design intent | Where it lives | Spec reference |
+|-----------|--------------|----------------|----------------|
+| **Screen 1** (Library) | Primary texts, thinker cards in grid, reading list | Constellation → Library sub-view | 04 (expanded), 08.3 |
+| **Screen 2** (Transmutations Canvas) | Spatial concept mapping with bezier connectors | Notebook → Canvas Mode toggle | 04 (canvas mode), 4.1, 4.2 |
+| **Screen 3** (Lexicon) | Personal vocabulary with mastery, etymology, cross-refs | Constellation → Lexicon sub-view | 04 (expanded), 08.1 |
+| **Screen 4** (Archive Ledger) | Encounter history with thinkers | Constellation → Encounters sub-view | 04 (expanded), 08.2 |
+| **Screen 7** (Lexicon II) | Evolution traces of definitions, inline Socratic probes | Notebook (permanence principle) + Lexicon | 07 (Pattern 6) |
+| **Screen 8** (Synthesis Forge) | Fragment→structured understanding progression | Accumulation pattern (07, Pattern 4) | 07 (long-game pattern) |
+| **Screen 9** (Etymology Timeline) | Etymology exploration across history | Concept Diagram evolution (2.4 variants) | 06 (timeline slivers) |
+
+### Deliberately excluded
+
+| Prototype feature | Reason for exclusion |
+|-------------------|---------------------|
+| Left sidebar with 6 navigation items | Spec: "Three surfaces. Not five, not seven." (04) |
+| Tool docks (canvas manipulation buttons) | Violates "The interface is a notebook, not a chat" (Principle 5) |
+| Status badges (Active/Dormant/Bridged) | Violates "Mastery is invisible" (Principle 3) |
+| Workspace statistics, intensity meters | Violates peripheral visibility — system must stay at periphery |
+| "Ignite New Synthesis" / action buttons | Notebook metaphor — notebooks have no buttons |
+| Affirmative/Negative binary choice buttons | Socratic method demands open response, not multiple choice |
+| Book spine visualizations | Decorative; not in component inventory |
+| Search bars in headers | UI chrome; notebooks have no search |
+| External avatar images | Not in visual language; no external resources |
+| "Ink remaining" footer metrics | Gamification (streaks, badges, levels, unlockables are forbidden) |
+
+### Screens 5/6 (Transmutation Lab variants)
+
+These are canvas-mode variants of Screen 2. The concept-block stacking and bridge-suggestion UI is captured by the existing Canvas Mode (4.1) + Connector (4.2) + Bridge Suggestion (5.4) components. The workspace-statistics and tool-dock patterns are excluded per the design principles.
 
 -----
 
@@ -91,7 +128,8 @@ ember/
 │   │   │   ├── Table.tsx              ← 3.3
 │   │   │   ├── Group.tsx              ← 3.4
 │   │   │   ├── Bookmark.tsx           ← 3.5
-│   │   │   └── Divider.tsx            ← 3.6
+│   │   │   ├── Divider.tsx            ← 3.6
+│   │   │   └── InputZone.tsx          ← 7.4 (functional textarea)
 │   │   ├── tutor/
 │   │   │   ├── Marginalia.tsx         ← 2.1
 │   │   │   ├── SocraticQuestion.tsx   ← 2.2
@@ -112,8 +150,13 @@ ember/
 │   │       ├── CanvasMode.tsx         ← 4.1
 │   │       └── Connector.tsx          ← 4.2
 │   ├── surfaces/
-│   │   ├── Notebook.tsx               ← Surface 1: the desk
-│   │   ├── Constellation.tsx          ← Surface 2: the bookshelf
+│   │   ├── Notebook.tsx               ← Surface 1: the desk (linear + canvas mode)
+│   │   ├── NotebookEntryRenderer.tsx  ← type-based entry dispatcher
+│   │   ├── NotebookCanvas.tsx         ← canvas mode view with concept cards
+│   │   ├── Constellation.tsx          ← Surface 2: the bookshelf (with sub-navigation)
+│   │   ├── ConstellationLexicon.tsx   ← Lexicon sub-view (8.1)
+│   │   ├── ConstellationEncounters.tsx← Encounters sub-view (8.2)
+│   │   ├── ConstellationLibrary.tsx   ← Library sub-view (8.3)
 │   │   └── Philosophy.tsx             ← Surface 3: the star chart
 │   ├── layout/
 │   │   ├── Shell.tsx                  ← outer shell, background, global styles
@@ -129,12 +172,16 @@ ember/
 │   │   ├── entries.ts                 ← union type for all notebook entry types
 │   │   ├── mastery.ts                 ← mastery state shape
 │   │   ├── thinkers.ts               ← thinker card data shape
-│   │   └── canvas.ts                  ← canvas element positioning
+│   │   ├── canvas.ts                  ← canvas element positioning
+│   │   └── lexicon.ts                 ← LexiconEntry, Encounter, PrimaryText types
 │   ├── data/
 │   │   ├── demo-session.ts            ← the Kepler/harmonics demo session
 │   │   ├── demo-mastery.ts            ← sample mastery data
 │   │   ├── demo-thinkers.ts           ← Kepler, Euler, Lovelace
-│   │   └── demo-curiosities.ts        ← sample curiosity vector
+│   │   ├── demo-curiosities.ts        ← sample curiosity vector
+│   │   ├── demo-lexicon.ts            ← sample vocabulary data
+│   │   ├── demo-encounters.ts         ← sample encounter history
+│   │   └── demo-library.ts            ← sample primary text data
 │   ├── App.tsx                        ← root component
 │   └── index.tsx                      ← entry point
 ├── public/
@@ -291,7 +338,7 @@ Build components in this order, testing each in isolation:
 
 ### Step 4: Surfaces
 
-Compose components into the three surfaces: `Notebook`, `Constellation`, `Philosophy`. Each surface is a layout component that arranges its children according to `04-information-architecture.md`.
+Compose components into the three surfaces: `Notebook` (with canvas mode toggle and functional InputZone), `Constellation` (with four sub-views: Overview, Lexicon, Encounters, Library), and `Philosophy`. Each surface is a layout component that arranges its children according to `04-information-architecture.md`. The Constellation sub-views are separate files to maintain the 150-line discipline.
 
 ### Step 5: Shell and navigation
 
@@ -333,7 +380,7 @@ If it doesn’t feel like that, something is wrong. Go back to the spec. The ans
 1. **No `any` type in TypeScript.**
 1. **No pure black or pure white anywhere in the rendered output.**
 1. **No animation without `prefers-reduced-motion` support.**
-1. **No element not in the component inventory (06) appears in the app.**
+1. **No element not in the component inventory (06, Families 1–8) appears in the app.**
 1. **The 640px column width is never exceeded.**
 1. **The three typefaces are the only typefaces.** No fallbacks to system fonts in the visible UI.
 1. **Read the spec documents before writing code.** Every time you start a new component, re-read its section in `06-component-inventory.md`.

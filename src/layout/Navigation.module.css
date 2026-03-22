@@ -1,21 +1,23 @@
 .nav {
   display: flex;
-  gap: 24px;
+  gap: 28px;
   border-bottom: 1px solid var(--rule-light);
-  padding-bottom: 12px;
+  padding-bottom: 14px;
 }
 
 .tab {
   font-family: var(--font-tutor);
   font-size: 14px;
   font-weight: 400;
+  letter-spacing: 0.2px;
   background: none;
   border: none;
-  padding-bottom: 10px;
+  padding: 0 0 12px 0;
   cursor: pointer;
   transition: color var(--tab-transition), border-color var(--tab-transition);
-  margin-bottom: -13px;
+  margin-bottom: -15px;
   outline: none;
+  position: relative;
 }
 
 .tab:focus-visible {
@@ -28,6 +30,10 @@
   composes: tab;
   color: var(--ink-faint);
   border-bottom: 1.5px solid transparent;
+}
+
+.tabInactive:hover {
+  color: var(--ink-soft);
 }
 
 .tabActive {

@@ -1,4 +1,12 @@
 .shell {
   min-height: 100vh;
   background-color: var(--paper);
+  /* Reading-lamp warmth pooling at top center */
+  background-image:
+    radial-gradient(
+      ellipse 80% 50% at 50% 0%,
+      var(--paper-warm) 0%,
+      transparent 70%
+    );
+  background-attachment: fixed;
 }

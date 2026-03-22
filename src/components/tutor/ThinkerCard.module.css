@@ -1,5 +1,5 @@
 .container {
-  padding: 20px 0;
+  padding: 24px 0;
 }
 
 .containerBordered {
@@ -11,6 +11,7 @@
   display: flex;
   align-items: baseline;
   gap: 12px;
+  margin-bottom: 4px;
 }
 
 .name {
@@ -19,6 +20,7 @@
   font-weight: 500;
   font-style: italic;
   color: var(--ink);
+  letter-spacing: -0.2px;
 }
 
 .dates {
@@ -26,25 +28,28 @@
   font-size: 11px;
   font-weight: 300;
   color: var(--ink-ghost);
+  letter-spacing: 0.5px;
 }
 
 .sectionLabel {
   font-family: var(--font-system);
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 300;
-  color: var(--ink-ghost);
+  color: var(--margin);
   letter-spacing: 2px;
   text-transform: uppercase;
-  margin-top: 14px;
-  margin-bottom: 4px;
+  margin-top: 16px;
+  margin-bottom: 6px;
+  opacity: 0.7;
 }
 
 .gift {
   font-family: var(--font-student);
   font-size: 15px;
   font-weight: 400;
+  font-style: italic;
   color: var(--ink-soft);
-  line-height: 1.70;
+  line-height: 1.72;
   max-width: 480px;
   margin-top: 0;
   margin-bottom: 0;
@@ -55,6 +60,7 @@
   font-size: 11px;
   font-weight: 300;
   color: var(--ink-faint);
+  line-height: 1.5;
   margin-top: 0;
   margin-bottom: 0;
 }

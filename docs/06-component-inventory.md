@@ -509,4 +509,61 @@ The area between the session header and the first entry, reserved for pinned thr
 
 ### 7.4 — The Input Zone
 
-The area below the last entry, where the student's cursor lives. This zone has no border, no container, no placeholder text. It is continuous with the notebook above it. The cursor blinks at the left margin of the student's column (19px indent). The zone expands as the student types.
+The area below the last entry, where the student's cursor lives. This zone has no border, no container, no placeholder text. It is continuous with the notebook above it. The cursor blinks at the left margin of the student's column (19px indent). The zone expands as the student types. When focused, the blinking cursor is replaced by a full-width textarea styled identically to a Prose Entry — Crimson Pro 18px, `ink`, line-height 1.80. The student's typing is indistinguishable from the notebook above it. Submission (Enter without Shift) converts the text into a permanent entry.
+
+---
+
+## Family 8: The Constellation's Extended Views
+
+These elements appear only within the Constellation surface (Surface 2). They present the student's intellectual history as a quiet ledger — each view is a different lens on the same underlying intellectual landscape. They follow the same visual vocabulary as the rest of the system.
+
+---
+
+### 8.1 — Lexicon Entry
+
+**What it is.** A single term in the student's personal vocabulary. The student has encountered this term across sessions and defined it in their own words.
+
+**Visual specification.**
+- Entry number: IBM Plex Mono, 10px, Light (300), `ink-ghost`, letter-spacing 1px
+- Term: Cormorant Garamond Italic, 22px, Medium (500), `ink`
+- Pronunciation: IBM Plex Mono, 10px, `ink-ghost`, italic
+- Definition: Crimson Pro, 16px, Regular (400), `ink`, line-height 1.75
+- Etymology: IBM Plex Mono, 11px, `ink-faint`, line-height 1.5
+- Cross-references: IBM Plex Mono, 11px, `margin`, underline in `margin-dim`
+- Mastery bar: 2px height, same treatment as Mastery Bar (5.3)
+- Vertical separation: Rule (1px `rule-light`) between entries
+
+**Behaviour.** Lexicon entries are derived from the student's session history. When the student defines or explores a term in the notebook, it is recorded in the student model and appears in the Constellation's lexicon view. The student does not manually add entries — the system curates them from the dialogue.
+
+### 8.2 — Encounter Row
+
+**What it is.** A single record in the student's intellectual encounter history. It captures when and where a thinker or idea entered the student's world.
+
+**Visual specification.**
+- Grid layout: `48px 120px 1fr 120px 90px` columns
+- Reference: IBM Plex Mono, 11px, `ink-ghost`
+- Thinker name: Cormorant Garamond, 16px, Medium (500), `ink`
+- Tradition: IBM Plex Mono, 9px, `ink-faint`, letter-spacing 1px
+- Core idea: Crimson Pro Italic, 14px, `ink-soft`, line-height 1.6
+- Session/date: IBM Plex Mono, 10px, `ink-soft` / `ink-ghost`
+- Header row: IBM Plex Mono, 9px, `ink-faint`, uppercase, letter-spacing 2px, bottom border 1px `ink`
+- Row separator: 1px `rule-light`
+- Row hover: `paper-warm` background, 200ms ease transition
+
+**Behaviour.** Encounter rows are a passive record. They cannot be edited or reordered by the student. They exist for reflection — "when did I first meet this thinker? what was I thinking about when I met them?"
+
+### 8.3 — Primary Text Card
+
+**What it is.** A reference to a text the student is currently working through. Not a book catalogue — only the three to five texts that are "on the desk."
+
+**Visual specification.**
+- Container: 1px `rule-light` border, 2px border-radius, 20px padding
+- Current focus indicator: 3px left border in `margin` (replaces the 1px left border)
+- Current label: IBM Plex Mono, 9px, `margin`, uppercase, letter-spacing 2px
+- Title: Cormorant Garamond Italic, 20px, Medium (500), `ink`
+- Author: IBM Plex Mono, 11px, `ink-faint`, letter-spacing 1px
+- Quote: Crimson Pro Italic, 14px, `ink-soft`, line-height 1.7
+- Annotations: IBM Plex Mono, 10px, `ink-ghost`, border-bottom 1px `rule-light`
+- Hover: `paper-warm` background, 200ms ease transition
+
+**Behaviour.** Primary text cards represent the student's current reading, inferred from session content. The AI introduces texts through connections and marginalia. When a text is referenced enough to become part of the student's intellectual landscape, it appears here.

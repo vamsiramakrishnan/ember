@@ -3,13 +3,12 @@
   font-size: 18px;
   font-weight: 400;
   color: var(--ink);
-  line-height: 1.80;
+  line-height: 1.82;
+  letter-spacing: 0.005em;
   margin-left: var(--text-indent);
   margin-bottom: var(--entry-gap);
-  border-left: 2px solid rgba(91, 107, 138, 0.4); /* indigo at 40% opacity per spec */
-  padding-left: 14px;
+  border-left: 2px solid rgba(91, 107, 138, 0.4);
+  padding: 10px 16px 10px 14px;
   background: var(--indigo-dim);
   border-radius: 2px;
-  padding-top: 4px;
-  padding-bottom: 4px;
 }

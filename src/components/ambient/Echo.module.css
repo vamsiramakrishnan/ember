@@ -2,16 +2,20 @@
   font-family: var(--font-student);
   font-size: 13px;
   font-weight: 300;
+  font-style: italic;
   color: var(--ink-faint);
+  line-height: 1.65;
   padding-left: var(--text-indent);
-  margin-bottom: var(--scratch-bottom);
+  margin-bottom: 16px;
   margin-top: 0;
   display: flex;
   align-items: flex-start;
-  gap: 6px;
+  gap: 8px;
 }
 
 .glyph {
   color: var(--ink-ghost);
   font-size: 10px;
+  flex-shrink: 0;
+  margin-top: 2px;
 }
