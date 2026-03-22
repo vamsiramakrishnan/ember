@@ -1,6 +1,6 @@
 /**
  * Lexicon Repository — personal vocabulary persistence.
- * The student's growing dictionary of terms they've internalized.
+ * Scoped to notebook — each notebook builds its own vocabulary.
  * Constellation → Lexicon sub-view.
  */
 import { Store } from '../schema';
@@ -11,6 +11,7 @@ import type { MasteryLevel } from '@/types/mastery';
 
 export async function createLexiconEntry(params: {
   studentId: string;
+  notebookId: string;
   number: number;
   term: string;
   pronunciation: string;
@@ -37,13 +38,13 @@ export async function getLexiconEntry(
   return get<LexiconRecord>(Store.Lexicon, id);
 }
 
-export async function getLexiconByTerm(
-  term: string,
-): Promise<LexiconRecord | undefined> {
-  const results = await getByIndex<LexiconRecord>(
-    Store.Lexicon, 'by-term', term,
+export async function getLexiconByNotebook(
+  notebookId: string,
+): Promise<LexiconRecord[]> {
+  const records = await getByIndex<LexiconRecord>(
+    Store.Lexicon, 'by-notebook', notebookId,
   );
-  return results[0];
+  return records.sort((a, b) => a.number - b.number);
 }
 
 export async function getAllLexicon(): Promise<LexiconRecord[]> {

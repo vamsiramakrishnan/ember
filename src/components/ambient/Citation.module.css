@@ -1,0 +1,59 @@
+/* Citation — quiet footnote-style sources */
+
+.container {
+  margin: 8px 0;
+  padding-left: var(--text-indent);
+}
+
+.label {
+  font-family: var(--font-system);
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.source {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 3px 8px;
+  border: 1px solid var(--rule-light);
+  border-radius: 2px;
+  text-decoration: none;
+  transition: border-color 0.15s ease;
+}
+
+.source:hover {
+  border-color: var(--ink-ghost);
+}
+
+.domain {
+  font-family: var(--font-system);
+  font-size: 10px;
+  color: var(--ink-faint);
+  letter-spacing: 0.3px;
+}
+
+.title {
+  font-family: var(--font-student);
+  font-size: 11px;
+  color: var(--ink-faint);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .source { transition: none; }
+}

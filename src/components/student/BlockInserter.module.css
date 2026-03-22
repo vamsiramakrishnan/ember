@@ -1,0 +1,153 @@
+/* BlockInserter — the quiet "+" in the left margin */
+.container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 0;
+}
+
+.trigger {
+  position: absolute;
+  left: -36px;
+  top: -16px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease, border-color 0.2s ease;
+}
+
+/* Show on parent hover (the entry wrapper or inserter row) */
+*:hover > .container > .trigger,
+.container:hover > .trigger,
+.trigger:focus-visible {
+  opacity: 1;
+}
+
+.trigger:hover,
+.trigger:focus-visible {
+  border-color: var(--rule);
+  background: var(--paper-warm);
+}
+
+.plus {
+  font-family: var(--font-system);
+  font-size: 16px;
+  font-weight: 300;
+  color: var(--ink-faint);
+  line-height: 1;
+}
+
+/* Popover menu */
+.menu {
+  position: absolute;
+  left: -8px;
+  top: 16px;
+  z-index: 10;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 6px 0;
+  min-width: 220px;
+  box-shadow: none;
+}
+
+.sectionLabel {
+  font-family: var(--font-system);
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  padding: 8px 16px 4px;
+}
+
+.sectionLabel:not(:first-child) {
+  border-top: 1px solid var(--rule-light);
+  margin-top: 4px;
+  padding-top: 10px;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.typeButton {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 16px;
+  min-height: 36px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+
+.typeButton:hover {
+  background: var(--paper-warm);
+}
+
+.typeLabel {
+  font-family: var(--font-system);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.typeHint {
+  font-family: var(--font-student);
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--ink-faint);
+  font-style: italic;
+}
+
+.pasteAction {
+  font-family: var(--font-system);
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: lowercase;
+  color: var(--ink-ghost);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 12px 4px 0;
+  white-space: nowrap;
+  transition: color 0.15s ease;
+}
+
+.pasteAction:hover {
+  color: var(--ink-faint);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trigger {
+    transition: none;
+  }
+  .typeButton {
+    transition: none;
+  }
+  .pasteAction {
+    transition: none;
+  }
+}
+
+/* On narrow screens, show trigger inline */
+@media (max-width: 800px) {
+  .trigger {
+    left: -28px;
+  }
+}

@@ -1,7 +1,7 @@
 /**
  * usePersistedNotebook — IndexedDB-backed notebook state.
  * Reads entries from persistence, writes back on every mutation.
- * Replaces the in-memory useNotebookEntries for persistent sessions.
+ * Supports cross-out, bookmark, pin, and annotations.
  */
 import { useCallback } from 'react';
 import { Store, useStoreQuery, notify } from '@/persistence';
@@ -11,8 +11,9 @@ import {
   updateEntry,
 } from '@/persistence/repositories/entries';
 import { getBlobAsDataUrl } from '@/persistence/repositories/blobs';
+import { createId } from '@/persistence/ids';
 import type { EntryRecord } from '@/persistence/records';
-import type { NotebookEntry, LiveEntry } from '@/types/entries';
+import type { NotebookEntry, LiveEntry, EntryAnnotation } from '@/types/entries';
 
 /** Convert an EntryRecord to a LiveEntry for the UI. */
 async function recordToLiveEntry(rec: EntryRecord): Promise<LiveEntry> {
@@ -30,6 +31,7 @@ async function recordToLiveEntry(rec: EntryRecord): Promise<LiveEntry> {
     bookmarked: rec.bookmarked,
     pinned: rec.pinned,
     timestamp: rec.createdAt,
+    annotations: rec.annotations ?? [],
   };
 }
 
@@ -74,6 +76,28 @@ export function usePersistedNotebook(sessionId: string | null) {
     notify(Store.Entries);
   }, [entries]);
 
+  /** Add a student annotation to an entry. */
+  const annotate = useCallback(async (
+    entryId: string,
+    content: string,
+  ) => {
+    const live = entries.find((e) => e.id === entryId);
+    if (!live) return;
+
+    const annotation: EntryAnnotation = {
+      id: createId(),
+      author: 'student',
+      content,
+      timestamp: Date.now(),
+    };
+
+    const existing = live.annotations ?? [];
+    await updateEntry(entryId, {
+      annotations: [...existing, annotation],
+    } as Partial<EntryRecord>);
+    notify(Store.Entries);
+  }, [entries]);
+
   const pinnedEntries = entries.filter(
     (e) => e.pinned && e.entry.type === 'question',
   );
@@ -85,6 +109,7 @@ export function usePersistedNotebook(sessionId: string | null) {
     crossOut,
     toggleBookmark,
     togglePin,
+    annotate,
     pinnedEntries,
   };
 }

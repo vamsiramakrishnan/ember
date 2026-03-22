@@ -19,10 +19,10 @@ import { registerAdapter, startSync } from '@/persistence/sync';
 import { createAdapterFromEnv } from '@/persistence/sync/supabase';
 import type { Surface } from '@/layout/Navigation';
 
-function ActiveSurface({ surface }: { surface: Surface }) {
+function ActiveSurface({ surface, onNavigate }: { surface: Surface; onNavigate: (s: Surface) => void }) {
   switch (surface) {
     case 'notebook':
-      return <Notebook />;
+      return <Notebook onNavigate={onNavigate} />;
     case 'constellation':
       return <Constellation />;
     case 'philosophy':
@@ -61,7 +61,7 @@ function AppContent() {
     <Shell>
       <Header activeSurface={surface} onNavigate={setSurface} />
       <main style={{ minHeight: '80vh' }}>
-        <ActiveSurface surface={surface} />
+        <ActiveSurface surface={surface} onNavigate={setSurface} />
       </main>
       <Footer />
     </Shell>

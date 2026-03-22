@@ -1,0 +1,63 @@
+/* SelectionToolbar — floating above selected text */
+.toolbar {
+  position: absolute;
+  z-index: 30;
+  display: flex;
+  gap: 2px;
+  padding: 4px 6px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  transform: translateX(-50%);
+  opacity: 0;
+  animation: toolbarIn 0.15s ease forwards;
+}
+
+@keyframes toolbarIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.action {
+  font-family: var(--font-system);
+  font-size: 13px;
+  color: var(--ink-faint);
+  background: none;
+  border: none;
+  cursor: pointer;
+  min-width: 32px;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 2px;
+  line-height: 1;
+  transition: color 0.1s ease, background 0.1s ease;
+}
+
+.action:hover {
+  color: var(--ink);
+  background: var(--paper-warm);
+}
+
+.action:focus-visible {
+  outline: 2px solid var(--margin);
+  outline-offset: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toolbar {
+    animation: none;
+    opacity: 1;
+  }
+  .action {
+    transition: none;
+  }
+}

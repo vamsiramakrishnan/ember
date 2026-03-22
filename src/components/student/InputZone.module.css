@@ -35,6 +35,41 @@
   animation: emberCursorBlink var(--cursor-cycle) ease infinite;
 }
 
+/* Forced type indicator — shows when block inserter selected a type */
+.forcedTypeBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.forcedTypeLabel {
+  font-family: var(--font-system);
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--margin);
+  border-bottom: 1px solid var(--margin);
+  padding-bottom: 1px;
+}
+
+.forcedTypeClear {
+  font-family: var(--font-system);
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--ink-ghost);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s ease;
+}
+
+.forcedTypeClear:hover {
+  color: var(--ink-faint);
+}
+
 .bottomRow {
   display: flex;
   align-items: center;
@@ -71,7 +106,51 @@
   color: var(--ink-faint);
 }
 
+/* Warm hint — visible when empty and unfocused */
+.hint {
+  position: absolute;
+  top: 32px;
+  left: var(--text-indent);
+  font-family: var(--font-student);
+  font-size: 16px;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--ink-faint);
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  line-height: 1.82;
+}
+
+.hintHidden {
+  composes: hint;
+  opacity: 0;
+}
+
+/* Affordance row — shows available input modes */
+.affordances {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.container:hover .affordances,
+.container:focus-within .affordances {
+  opacity: 1;
+}
+
+.affordance {
+  font-family: var(--font-system);
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  color: var(--ink-faint);
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .hint, .affordances {
+    transition: none;
+  }
   .cursor {
     animation: none;
     opacity: 0.3;

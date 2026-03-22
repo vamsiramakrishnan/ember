@@ -1,107 +1,27 @@
 /**
- * useGeminiTutor — AI-powered tutor responses using Gemini agents.
- * Uses the TUTOR_AGENT config for Socratic dialogue and can
- * delegate to RESEARCHER_AGENT for deep factual grounding.
+ * useGeminiTutor — AI-powered tutor responses using multi-agent orchestration.
+ *
+ * Pipeline per student entry:
+ * 1. Router Agent classifies → which agents to invoke
+ * 2. Context Assembler builds layered context (profile + memory + research)
+ * 3. File Search retrieves relevant history (always-on)
+ * 4. Tutor responds with enriched context
+ * 5. Visualiser/Illustrator produce rich content (when warranted)
+ *
  * Falls back gracefully when no API key is configured.
  */
 import { useCallback, useRef, useState } from 'react';
+import type { DeferredAction } from '@/services/tool-executor';
 import { isGeminiAvailable } from '@/services/gemini';
-import { TUTOR_AGENT } from '@/services/agents';
-import { runTextAgent } from '@/services/run-agent';
+import { orchestrate } from '@/services/orchestrator';
+import { useStudent } from '@/contexts/StudentContext';
+import { getMasteryByNotebook, getCuriositiesByNotebook } from '@/persistence/repositories/mastery';
+import { getLexiconByNotebook } from '@/persistence/repositories/lexicon';
+import { getEncountersByNotebook } from '@/persistence/repositories/encounters';
+import { useSessionManager } from '@/hooks/useSessionManager';
+import { runBackgroundTasks } from '@/services/background-task-runner';
+import type { StudentProfile, NotebookContext } from '@/services/context-assembler';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
-
-/** Build conversation history from recent notebook entries. */
-function buildConversation(
-  entries: LiveEntry[],
-  latestContent: string,
-): Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> {
-  const recent = entries.slice(-12);
-  const messages: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = [];
-
-  for (const le of recent) {
-    const e = le.entry;
-    const isStudent = ['prose', 'question', 'hypothesis', 'scratch'].includes(e.type);
-    const isTutor = e.type.startsWith('tutor-');
-
-    if (isStudent && 'content' in e) {
-      messages.push({
-        role: 'user',
-        parts: [{ text: `[${e.type}]: ${e.content}` }],
-      });
-    } else if (isTutor && 'content' in e) {
-      messages.push({
-        role: 'model',
-        parts: [{ text: e.content }],
-      });
-    }
-  }
-
-  // Add the latest student entry
-  messages.push({
-    role: 'user',
-    parts: [{ text: latestContent }],
-  });
-
-  return messages;
-}
-
-/** Parse the tutor's JSON response into a NotebookEntry. */
-function parseTutorResponse(raw: string): NotebookEntry | null {
-  try {
-    const cleaned = raw
-      .replace(/```json\s*/g, '')
-      .replace(/```\s*/g, '')
-      .trim();
-    const parsed = JSON.parse(cleaned) as Record<string, unknown>;
-    const type = parsed.type as string;
-
-    if (type === 'tutor-marginalia' && typeof parsed.content === 'string') {
-      return { type: 'tutor-marginalia', content: parsed.content };
-    }
-    if (type === 'tutor-question' && typeof parsed.content === 'string') {
-      return { type: 'tutor-question', content: parsed.content };
-    }
-    if (type === 'tutor-connection' && typeof parsed.content === 'string') {
-      return {
-        type: 'tutor-connection',
-        content: parsed.content,
-        emphasisEnd:
-          typeof parsed.emphasisEnd === 'number' ? parsed.emphasisEnd : 0,
-      };
-    }
-    if (type === 'thinker-card' && typeof parsed.thinker === 'object' && parsed.thinker) {
-      const t = parsed.thinker as Record<string, unknown>;
-      return {
-        type: 'thinker-card',
-        thinker: {
-          name: String(t.name ?? ''),
-          dates: String(t.dates ?? ''),
-          gift: String(t.gift ?? ''),
-          bridge: String(t.bridge ?? ''),
-        },
-      };
-    }
-    if (type === 'concept-diagram' && Array.isArray(parsed.items)) {
-      return {
-        type: 'concept-diagram',
-        items: (parsed.items as Record<string, unknown>[]).map((item) => ({
-          label: String(item.label ?? ''),
-          subLabel: item.subLabel ? String(item.subLabel) : undefined,
-        })),
-      };
-    }
-
-    if (typeof parsed.content === 'string') {
-      return { type: 'tutor-marginalia', content: parsed.content };
-    }
-    return null;
-  } catch {
-    if (raw.trim().length > 0) {
-      return { type: 'tutor-marginalia', content: raw.trim() };
-    }
-    return null;
-  }
-}
 
 interface UseGeminiTutorOptions {
   addEntry: (entry: NotebookEntry) => void;
@@ -111,11 +31,51 @@ interface UseGeminiTutorOptions {
 export function useGeminiTutor({ addEntry, entries }: UseGeminiTutorOptions) {
   const [isThinking, setIsThinking] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
+  const lastSyncRef = useRef(Date.now());
+  const { student, notebook } = useStudent();
+  const { current } = useSessionManager();
+
+  /** Build student profile from persisted data. */
+  const buildProfile = useCallback(async (): Promise<StudentProfile | null> => {
+    if (!student || !notebook) return null;
+
+    const [mastery, lexicon, curiosities] = await Promise.all([
+      getMasteryByNotebook(notebook.id),
+      getLexiconByNotebook(notebook.id),
+      getCuriositiesByNotebook(notebook.id),
+    ]);
+
+    return {
+      name: student.displayName,
+      masterySnapshot: mastery.map((m) => ({
+        concept: m.concept, level: m.level, percentage: m.percentage,
+      })),
+      vocabularyCount: lexicon.length,
+      activeCuriosities: curiosities.map((c) => c.question),
+      totalMinutes: student.totalMinutes,
+    };
+  }, [student, notebook]);
+
+  /** Build notebook context from current state. */
+  const buildNotebookCtx = useCallback(async (): Promise<NotebookContext | null> => {
+    if (!notebook || !current) return null;
+
+    const encounters = await getEncountersByNotebook(notebook.id);
+
+    return {
+      title: notebook.title,
+      description: notebook.description,
+      sessionNumber: current.number,
+      sessionTopic: current.topic,
+      thinkersMet: encounters.map((e) => e.thinker),
+    };
+  }, [notebook, current]);
 
   const respond = useCallback(
     async (studentEntry: NotebookEntry) => {
       if (!isGeminiAvailable()) return;
       if (!('content' in studentEntry)) return;
+      if (!student || !notebook) return;
 
       const silence: NotebookEntry = { type: 'silence' };
       addEntry(silence);
@@ -123,13 +83,48 @@ export function useGeminiTutor({ addEntry, entries }: UseGeminiTutorOptions) {
 
       try {
         abortRef.current = new AbortController();
-        const messages = buildConversation(entries, studentEntry.content);
 
-        const result = await runTextAgent(TUTOR_AGENT, messages);
-        const entry = parseTutorResponse(result.text);
-        if (entry) {
+        // Build profile and notebook context in parallel
+        const [profile, notebookCtx] = await Promise.all([
+          buildProfile(),
+          buildNotebookCtx(),
+        ]);
+
+        const result = await orchestrate(
+          studentEntry.content,
+          entries,
+          student.id,
+          notebook.id,
+          profile,
+          notebookCtx,
+          lastSyncRef.current,
+        );
+
+        lastSyncRef.current = Date.now();
+
+        // Stagger entry additions for natural feel
+        for (let i = 0; i < result.entries.length; i++) {
+          const entry = result.entries[i];
+          if (!entry) continue;
+          if (i > 0) await delay(800);
           addEntry(entry);
         }
+
+        // Execute deferred actions (annotations, lexicon adds)
+        for (const action of result.deferredActions) {
+          executeDeferredAction(action, student.id, notebook.id);
+        }
+
+        // Background tasks: assess what needs updating, then dispatch
+        void runBackgroundTasks(
+          studentEntry.content,
+          result.entries,
+          student.id,
+          notebook.id,
+          current?.topic ?? '',
+          entries,
+          notebook.title,
+        );
       } catch (err) {
         console.error('[Ember] Gemini tutor error:', err);
       } finally {
@@ -137,8 +132,29 @@ export function useGeminiTutor({ addEntry, entries }: UseGeminiTutorOptions) {
         abortRef.current = null;
       }
     },
-    [addEntry, entries],
+    [addEntry, entries, student, notebook, buildProfile, buildNotebookCtx],
   );
 
   return { respond, isThinking };
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+/** Execute deferred write actions from the agentic loop. */
+function executeDeferredAction(
+  action: DeferredAction,
+  _studentId: string,
+  _notebookId: string,
+): void {
+  // These are fire-and-forget — executed via the persistence layer
+  // by the constellation sync and mastery updater hooks.
+  // Logging for now; full persistence wiring is in the hooks.
+  if (action.type === 'annotate') {
+    console.log('[Ember] Agent annotation:', action.args);
+  }
+  if (action.type === 'add_lexicon') {
+    console.log('[Ember] Agent lexicon add:', action.args);
+  }
 }

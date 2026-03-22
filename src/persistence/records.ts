@@ -35,6 +35,14 @@ export interface NotebookRecord extends BaseRecord {
   sessionCount: number;
   /** Whether this is the currently active notebook. */
   isActive: boolean;
+  /** AI-generated icon (base64 data URL, 64x64 PNG). */
+  iconDataUrl?: string;
+  /** AI-generated tags for categorisation. */
+  tags?: string[];
+  /** AI-generated one-line summary of the exploration so far. */
+  summary?: string;
+  /** Primary discipline detected by AI (e.g. "mathematics", "philosophy"). */
+  discipline?: string;
 }
 
 export interface SessionRecord extends BaseRecord {
@@ -55,10 +63,13 @@ export interface EntryRecord extends BaseRecord {
   bookmarked: boolean;
   pinned: boolean;
   blobHash?: string;
+  /** Annotations from student and tutor on this entry. */
+  annotations?: import('@/types/entries').EntryAnnotation[];
 }
 
 export interface LexiconRecord extends BaseRecord {
   studentId: string;
+  notebookId: string;
   number: number;
   term: string;
   pronunciation: string;
@@ -67,10 +78,13 @@ export interface LexiconRecord extends BaseRecord {
   percentage: number;
   etymology: string;
   crossReferences: string[];
+  /** The entry where this term was first encountered. */
+  sourceEntryId?: string;
 }
 
 export interface EncounterRecord extends BaseRecord {
   studentId: string;
+  notebookId: string;
   ref: string;
   thinker: string;
   tradition: string;
@@ -79,10 +93,13 @@ export interface EncounterRecord extends BaseRecord {
   date: string;
   status: 'active' | 'dormant' | 'bridged' | 'pending';
   bridgedTo?: string;
+  /** The entry that introduced this thinker. */
+  sourceEntryId?: string;
 }
 
 export interface LibraryRecord extends BaseRecord {
   studentId: string;
+  notebookId: string;
   title: string;
   author: string;
   isCurrent: boolean;
@@ -92,13 +109,17 @@ export interface LibraryRecord extends BaseRecord {
 
 export interface MasteryRecord extends BaseRecord {
   studentId: string;
+  notebookId: string;
   concept: string;
   level: MasteryLevel;
   percentage: number;
+  /** The entry that first introduced this concept. */
+  sourceEntryId?: string;
 }
 
 export interface CuriosityRecord extends BaseRecord {
   studentId: string;
+  notebookId: string;
   question: string;
 }
 

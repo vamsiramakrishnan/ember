@@ -13,6 +13,7 @@ import { BridgeSuggestion } from '@/components/peripheral/BridgeSuggestion';
 import { ThinkerCard } from '@/components/tutor/ThinkerCard';
 import { PinnedThread } from '@/components/student/PinnedThread';
 import { useMasteryData } from '@/hooks/useMasteryData';
+import { useStudent } from '@/contexts/StudentContext';
 import { spacing } from '@/tokens/spacing';
 import { ConstellationLexicon } from './ConstellationLexicon';
 import { ConstellationEncounters } from './ConstellationEncounters';
@@ -31,7 +32,7 @@ const viewTabs: { id: ConstellationView; label: string }[] = [
 export function Constellation() {
   const { concepts, threads, thinkers, lexicon, encounters, library } =
     useMasteryData();
-  const hasMastered = concepts.some((c) => c.level === 'mastered');
+  const { notebook } = useStudent();
   const [view, setView] = useState<ConstellationView>('overview');
 
   return (
@@ -40,10 +41,19 @@ export function Constellation() {
         <Text
           variant="pageTitle"
           as="h1"
-          style={{ marginBottom: 16 }}
+          style={{ marginBottom: 4 }}
         >
-          Constellation
+          {notebook?.title ?? 'Constellation'}
         </Text>
+        {notebook?.description && (
+          <Text
+            variant="bodySecondary"
+            as="p"
+            style={{ marginBottom: 16, fontStyle: 'italic' }}
+          >
+            {notebook.description}
+          </Text>
+        )}
         <nav className={styles.subNav} aria-label="Constellation views">
           {viewTabs.map((tab) => (
             <button
@@ -64,7 +74,6 @@ export function Constellation() {
             concepts={concepts}
             threads={threads}
             thinkers={thinkers}
-            hasMastered={hasMastered}
           />
         )}
         {view === 'lexicon' && <ConstellationLexicon entries={lexicon} />}
@@ -83,12 +92,10 @@ function ConstellationOverview({
   concepts,
   threads,
   thinkers,
-  hasMastered,
 }: {
   concepts: ReturnType<typeof useMasteryData>['concepts'];
   threads: ReturnType<typeof useMasteryData>['threads'];
   thinkers: ReturnType<typeof useMasteryData>['thinkers'];
-  hasMastered: boolean;
 }) {
   return (
     <>
@@ -111,12 +118,9 @@ function ConstellationOverview({
           <MasteryBar key={c.concept} concept={c.concept}
             level={c.level} percentage={c.percentage} />
         ))}
-        {hasMastered && (
+        {threads.length > 0 && (
           <BridgeSuggestion>
-            Your understanding of harmonic ratios connects to
-            Fourier's discovery that any wave can be decomposed
-            into simple harmonics — the same mathematics, applied
-            to heat, light, and sound.
+            {threads[0]?.question ?? ''}
           </BridgeSuggestion>
         )}
       </section>

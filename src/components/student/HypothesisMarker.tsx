@@ -4,6 +4,7 @@
  * Indigo left border at 40% opacity, indigo-dim background.
  * See: 06-component-inventory.md, Family 1.
  */
+import { MarkdownContent } from '@/primitives/MarkdownContent';
 import styles from './HypothesisMarker.module.css';
 
 interface HypothesisMarkerProps {
@@ -11,5 +12,9 @@ interface HypothesisMarkerProps {
 }
 
 export function HypothesisMarker({ children }: HypothesisMarkerProps) {
-  return <div className={styles.marker}>{children}</div>;
+  return (
+    <div className={styles.marker}>
+      <MarkdownContent>{children}</MarkdownContent>
+    </div>
+  );
 }

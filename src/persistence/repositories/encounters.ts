@@ -1,6 +1,6 @@
 /**
  * Encounter Repository — thinker encounter history.
- * Tracks every intellectual encounter with a thinker across sessions.
+ * Scoped to notebook — each notebook tracks its own thinker encounters.
  * Constellation → Encounters sub-view.
  */
 import { Store } from '../schema';
@@ -12,6 +12,7 @@ type EncounterStatus = EncounterRecord['status'];
 
 export async function createEncounter(params: {
   studentId: string;
+  notebookId: string;
   ref: string;
   thinker: string;
   tradition: string;
@@ -36,6 +37,15 @@ export async function getEncounter(
   id: string,
 ): Promise<EncounterRecord | undefined> {
   return get<EncounterRecord>(Store.Encounters, id);
+}
+
+export async function getEncountersByNotebook(
+  notebookId: string,
+): Promise<EncounterRecord[]> {
+  const records = await getByIndex<EncounterRecord>(
+    Store.Encounters, 'by-notebook', notebookId,
+  );
+  return records.sort((a, b) => b.createdAt - a.createdAt);
 }
 
 export async function getAllEncounters(): Promise<EncounterRecord[]> {

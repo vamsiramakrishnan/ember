@@ -1,0 +1,65 @@
+/* Carousel — scroll-snap horizontal card container */
+
+.container {
+  margin: 16px 0;
+  padding-left: var(--text-indent);
+}
+
+.label {
+  font-family: var(--font-system);
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  display: block;
+  margin-bottom: 8px;
+}
+
+.track {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding: 4px 0;
+  /* Hide scrollbar but keep functionality */
+  scrollbar-width: none;
+}
+
+.track::-webkit-scrollbar {
+  display: none;
+}
+
+.track > * {
+  scroll-snap-align: start;
+  flex-shrink: 0;
+  min-width: 240px;
+  max-width: 300px;
+}
+
+.dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--ink-ghost);
+  transition: background 0.2s ease;
+}
+
+.dotActive {
+  composes: dot;
+  background: var(--margin);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dot {
+    transition: none;
+  }
+}

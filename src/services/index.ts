@@ -55,8 +55,11 @@ export type { MasterySignal } from './mastery-extractor';
 export {
   getOrCreateStore,
   indexSession,
-  searchNotebooks,
-} from './gemini-file-search';
+  searchAll,
+  searchNotebook,
+  searchByType,
+  uploadRawFile,
+} from './file-search';
 
 // Proxy client (for production Vercel deployment)
 export {

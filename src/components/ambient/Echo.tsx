@@ -4,6 +4,7 @@
  * Preceded by a ↩ glyph. The notebook remembers.
  * See: 06-component-inventory.md, Family 6.
  */
+import { MarkdownContent } from '@/primitives/MarkdownContent';
 import styles from './Echo.module.css';
 
 interface EchoProps {
@@ -14,7 +15,7 @@ export function Echo({ children }: EchoProps) {
   return (
     <p className={styles.echo}>
       <span className={styles.glyph}>↩</span>
-      <span>{children}</span>
+      <span><MarkdownContent>{children}</MarkdownContent></span>
     </p>
   );
 }

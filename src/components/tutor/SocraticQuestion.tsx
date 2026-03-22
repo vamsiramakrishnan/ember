@@ -4,6 +4,7 @@
  * Tinted background, left border, italic Cormorant Garamond.
  * See: 06-component-inventory.md, Family 2.
  */
+import { MarkdownContent } from '@/primitives/MarkdownContent';
 import styles from './SocraticQuestion.module.css';
 
 interface SocraticQuestionProps {
@@ -12,6 +13,8 @@ interface SocraticQuestionProps {
 
 export function SocraticQuestion({ children }: SocraticQuestionProps) {
   return (
-    <blockquote className={styles.block}>{children}</blockquote>
+    <blockquote className={styles.block}>
+      <MarkdownContent>{children}</MarkdownContent>
+    </blockquote>
   );
 }

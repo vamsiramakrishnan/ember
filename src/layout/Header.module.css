@@ -10,6 +10,12 @@
   margin-bottom: 24px;
 }
 
+.breadcrumb {
+  display: flex;
+  align-items: baseline;
+  gap: 0;
+}
+
 .logo {
   font-family: var(--font-tutor);
   font-size: 22px;
@@ -19,4 +25,39 @@
   letter-spacing: -0.5px;
   margin: 0;
   user-select: none;
+}
+
+.separator {
+  font-family: var(--font-tutor);
+  font-size: 18px;
+  color: var(--ink-ghost);
+  margin: 0 8px;
+  user-select: none;
+}
+
+.notebookName {
+  font-family: var(--font-tutor);
+  font-size: 16px;
+  font-weight: 300;
+  color: var(--ink-faint);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s ease;
+}
+
+.notebookName:hover {
+  color: var(--ink-soft);
+}
+
+.notebookName:focus-visible {
+  outline: 2px solid var(--margin);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notebookName {
+    transition: none;
+  }
 }

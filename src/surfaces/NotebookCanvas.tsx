@@ -1,109 +1,135 @@
 /**
  * NotebookCanvas — Canvas mode view within the Notebook surface.
- * Spatial arrangement of the student's key concepts from the session.
- * Cards are draggable. Connectors update as cards move.
+ * Derives concept cards from actual notebook entries.
+ * Supports mouse drag + touch drag for reposition.
  * See: 06-component-inventory.md, Family 4.
  */
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { CanvasMode } from '@/components/canvas/CanvasMode';
 import { Connector } from '@/components/canvas/Connector';
 import { useCanvasPositions } from '@/hooks/useCanvasPositions';
-import type { CanvasPosition, CanvasConnection } from '@/types/canvas';
+import type { LiveEntry } from '@/types/entries';
 import styles from './NotebookCanvas.module.css';
 
-const initialPositions: CanvasPosition[] = [
-  { id: 'guitar', x: 40, y: 30, width: 200 },
-  { id: 'kepler', x: 300, y: 20, width: 200 },
-  { id: 'harmony', x: 160, y: 180, width: 220 },
-  { id: 'orbit', x: 400, y: 200, width: 180 },
-];
+interface Props {
+  sessionId: string | null;
+  entries: LiveEntry[];
+}
 
-const connections: CanvasConnection[] = [
-  { from: 'guitar', to: 'harmony', label: 'frequency ratios' },
-  { from: 'kepler', to: 'harmony', label: 'Musica Universalis' },
-  { from: 'harmony', to: 'orbit', label: 'period ∝ distance³ᐟ²' },
-];
+/** Extract a label and body from any entry type. */
+function cardContent(e: LiveEntry): { label: string; body: string } | null {
+  const entry = e.entry;
+  switch (entry.type) {
+    case 'prose': return { label: 'Thought', body: trunc(entry.content) };
+    case 'scratch': return { label: 'Note', body: trunc(entry.content) };
+    case 'hypothesis': return { label: 'Hypothesis', body: trunc(entry.content) };
+    case 'question': return { label: 'Question', body: trunc(entry.content) };
+    case 'tutor-marginalia': return { label: 'Tutor', body: trunc(entry.content) };
+    case 'tutor-question': return { label: 'Probe', body: trunc(entry.content) };
+    case 'tutor-connection': return { label: 'Connection', body: trunc(entry.content) };
+    case 'tutor-reflection': return { label: 'Reflection', body: trunc(entry.content) };
+    case 'tutor-directive': return { label: 'Explore', body: trunc(entry.content) };
+    case 'bridge-suggestion': return { label: 'Bridge', body: trunc(entry.content) };
+    case 'thinker-card': return { label: entry.thinker.name, body: entry.thinker.gift };
+    case 'concept-diagram': return { label: 'Concept Map', body: entry.items.map((i) => i.label).join(' → ') };
+    default: return null;
+  }
+}
 
-const cardContent: Record<string, { label: string; body: string }> = {
-  guitar: {
-    label: 'Guitar String',
-    body: 'Harmonics are all about ratios — octave is 2:1, the fifth is 3:2.',
-  },
-  kepler: {
-    label: 'Kepler',
-    body: 'Believed the planets were singing. Each orbit produced a tone.',
-  },
-  harmony: {
-    label: 'Harmonic Series',
-    body: 'The same mathematical structure underlies both music and orbits.',
-  },
-  orbit: {
-    label: 'Orbital Period',
-    body: 'Longer string → lower note. Bigger orbit → longer period.',
-  },
-};
+function trunc(s: string, max = 100): string {
+  return s.length > max ? s.slice(0, max) + '…' : s;
+}
 
-export function NotebookCanvas() {
-  const { positions, updatePosition } = useCanvasPositions(initialPositions);
+export function NotebookCanvas({ sessionId, entries }: Props) {
+  const { positions, connections, updatePosition } = useCanvasPositions(sessionId, entries);
+  const dragRef = useRef<{ id: string; startX: number; startY: number; origX: number; origY: number } | null>(null);
 
-  const handleDrag = useCallback(
-    (id: string, e: React.MouseEvent) => {
-      e.preventDefault();
-      const startX = e.clientX;
-      const startY = e.clientY;
-      const pos = positions.find((p) => p.id === id);
-      if (!pos) return;
-      const origX = pos.x;
-      const origY = pos.y;
+  const startDrag = useCallback((id: string, clientX: number, clientY: number) => {
+    const pos = positions.find((p) => p.id === id);
+    if (!pos) return;
+    dragRef.current = { id, startX: clientX, startY: clientY, origX: pos.x, origY: pos.y };
+  }, [positions]);
 
-      const onMove = (ev: MouseEvent) => {
-        updatePosition(id, origX + ev.clientX - startX, origY + ev.clientY - startY);
-      };
-      const onUp = () => {
-        document.removeEventListener('mousemove', onMove);
-        document.removeEventListener('mouseup', onUp);
-      };
-      document.addEventListener('mousemove', onMove);
-      document.addEventListener('mouseup', onUp);
-    },
-    [positions, updatePosition],
-  );
+  const moveDrag = useCallback((clientX: number, clientY: number) => {
+    if (!dragRef.current) return;
+    const { id, startX, startY, origX, origY } = dragRef.current;
+    updatePosition(id, origX + clientX - startX, origY + clientY - startY);
+  }, [updatePosition]);
+
+  const endDrag = useCallback(() => { dragRef.current = null; }, []);
+
+  // Mouse handlers
+  const onMouseDown = useCallback((id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    startDrag(id, e.clientX, e.clientY);
+    const onMove = (ev: MouseEvent) => moveDrag(ev.clientX, ev.clientY);
+    const onUp = () => { endDrag(); document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }, [startDrag, moveDrag, endDrag]);
+
+  // Touch handlers
+  const onTouchStart = useCallback((id: string, e: React.TouchEvent) => {
+    const t = e.touches[0];
+    if (!t) return;
+    startDrag(id, t.clientX, t.clientY);
+  }, [startDrag]);
+
+  const onTouchMove = useCallback((e: React.TouchEvent) => {
+    const t = e.touches[0];
+    if (!t || !dragRef.current) return;
+    e.preventDefault(); // prevent scroll while dragging
+    moveDrag(t.clientX, t.clientY);
+  }, [moveDrag]);
+
+  const entryMap = new Map(entries.map((e) => [e.id, e]));
+
+  // Calculate content bounds for proper scrollable area
+  const maxX = positions.reduce((m, p) => Math.max(m, p.x + (p.width ?? 160) + 20), 400);
+  const maxY = positions.reduce((m, p) => Math.max(m, p.y + 120), 300);
 
   return (
-    <CanvasMode label="concept map" minHeight={360}>
-      <svg className={styles.connectorLayer}>
-        {connections.map((conn) => {
-          const from = positions.find((p) => p.id === conn.from);
-          const to = positions.find((p) => p.id === conn.to);
-          if (!from || !to) return null;
+    <CanvasMode label="concept map" minHeight={Math.max(360, maxY)}>
+      <div style={{ minWidth: maxX, minHeight: maxY }}>
+        <svg className={styles.connectorLayer} style={{ width: maxX, height: maxY }}>
+          {connections.map((conn) => {
+            const from = positions.find((p) => p.id === conn.from);
+            const to = positions.find((p) => p.id === conn.to);
+            if (!from || !to) return null;
+            return (
+              <Connector
+                key={`${conn.from}-${conn.to}`}
+                x1={from.x + (from.width ?? 160) / 2} y1={from.y + 50}
+                x2={to.x + (to.width ?? 160) / 2} y2={to.y + 10}
+                label={conn.label} showArrow
+              />
+            );
+          })}
+        </svg>
+        {positions.map((pos) => {
+          const entry = entryMap.get(pos.id);
+          if (!entry) return null;
+          const card = cardContent(entry);
+          if (!card) return null;
           return (
-            <Connector
-              key={`${conn.from}-${conn.to}`}
-              x1={from.x + (from.width ?? 160) / 2}
-              y1={from.y + 50}
-              x2={to.x + (to.width ?? 160) / 2}
-              y2={to.y + 10}
-              label={conn.label}
-              showArrow
-            />
+            <div
+              key={pos.id}
+              className={styles.card}
+              style={{ left: pos.x, top: pos.y, width: pos.width ?? 160 }}
+              onMouseDown={(e) => onMouseDown(pos.id, e)}
+              onTouchStart={(e) => onTouchStart(pos.id, e)}
+              onTouchMove={onTouchMove}
+              onTouchEnd={endDrag}
+            >
+              <span className={styles.cardLabel}>{card.label}</span>
+              <p className={styles.cardBody}>{card.body}</p>
+            </div>
           );
         })}
-      </svg>
-      {positions.map((pos) => {
-        const card = cardContent[pos.id];
-        if (!card) return null;
-        return (
-          <div
-            key={pos.id}
-            className={styles.card}
-            style={{ left: pos.x, top: pos.y, width: pos.width ?? 160 }}
-            onMouseDown={(e) => handleDrag(pos.id, e)}
-          >
-            <span className={styles.cardLabel}>{card.label}</span>
-            <p className={styles.cardBody}>{card.body}</p>
-          </div>
-        );
-      })}
+      </div>
+      {positions.length === 0 && (
+        <p className={styles.empty}>Concepts will appear here as you explore</p>
+      )}
     </CanvasMode>
   );
 }
