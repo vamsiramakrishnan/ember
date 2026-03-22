@@ -6,6 +6,7 @@
 import { ILLUSTRATOR_AGENT } from './agents';
 import { runImageAgent } from './run-agent';
 import { generateHtml } from './gemini-html';
+import { EMBER_VIZ_KIT } from './viz-components';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
 
 /** Generate an HTML visualization for a concept. */
@@ -26,9 +27,11 @@ export async function generateVisualization(
     });
 
     if (html.trim()) {
+      // Wrap generated body content with the component library
+      const fullHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${EMBER_VIZ_KIT}</head><body>${html}</body></html>`;
       return {
         type: 'visualization',
-        html,
+        html: fullHtml,
         caption: `concept map: ${prompt.slice(0, 60)}`,
       };
     }

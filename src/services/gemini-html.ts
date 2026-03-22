@@ -69,13 +69,29 @@ export async function generateHtml(
     config.tools = tools;
   }
 
-  const fullPrompt = `Generate a beautiful, self-contained HTML page that visualises the following concept. The HTML must include all CSS inline (no external dependencies except Google Fonts). Include the Google Fonts link for Cormorant Garamond, Crimson Pro, and IBM Plex Mono.
+  const componentRef = `
+You have a pre-built component library available. Use these custom HTML elements:
+- <ember-card accent="sage|indigo|amber|margin"> with .card-title, .card-meta, .card-body
+- <ember-timeline> with .tl-item, .tl-dot, .tl-date, .tl-title, .tl-content
+- <ember-carousel> with .carousel-track containing cards
+- <ember-compare> with two children and .compare-header
+- <ember-quote> with .quote-text and .quote-attr
+- <ember-node> with .node-label and .node-sub
+- <ember-tree> with .tree-label, .tree-node, .tree-leaf
+
+The CSS for these components is already injected. Generate ONLY the <body> content using these components.
+For custom visuals (charts, spatial diagrams), use inline SVG with Ember colour tokens.
+`;
+
+  const fullPrompt = `Generate the body content for a visualization page. The component CSS is pre-injected — you only need to write the HTML body content.
 
 ${EMBER_STYLE_CONTEXT}
 
+${componentRef}
+
 ${options.context ? `Student context: ${options.context}\n\n` : ''}Concept to visualise: ${options.prompt}
 
-Return ONLY the complete HTML — no markdown fences, no explanation. The HTML should be a complete document starting with <!DOCTYPE html>.`;
+Return ONLY the body HTML — no <!DOCTYPE>, no <html>, no <head> tags. Just the content that goes inside <body>.`;
 
   const contents = [
     {
