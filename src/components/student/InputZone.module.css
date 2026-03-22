@@ -36,6 +36,13 @@
   animation: emberCursorBlink var(--cursor-cycle) ease infinite;
 }
 
+/* When the tutor is thinking — slower, quieter pulse */
+.cursorThinking {
+  composes: cursor;
+  background-color: var(--ink-ghost);
+  animation-duration: 2.4s;
+}
+
 /* Forced type indicator — shows when block inserter selected a type */
 .forcedTypeBar {
   display: flex;

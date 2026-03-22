@@ -59,7 +59,7 @@ export function Notebook({ onNavigate }: NotebookProps) {
   } = usePersistedNotebook(sessionId);
 
   const addEntries = useCallback((_e: unknown[]) => {}, []);
-  const { respond } = useTutorResponse(
+  const { respond, isThinking } = useTutorResponse(
     addEntry, addEntries, entries, addEntryWithId, patchEntryContent,
   );
   const { analyseSketch } = useSketchAnalysis(addEntry);
@@ -84,15 +84,27 @@ export function Notebook({ onNavigate }: NotebookProps) {
   }, [entries]);
 
   const scrollToBottom = useCallback(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    // Use requestAnimationFrame to wait for the next paint, ensuring
+    // the new entry is in the DOM before scrolling.
+    requestAnimationFrame(() => {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    });
   }, []);
+
+  // Auto-scroll when new entries arrive (handles async addEntry + streaming)
+  const prevEntryCount = useRef(entries.length);
+  useEffect(() => {
+    if (entries.length > prevEntryCount.current) {
+      scrollToBottom();
+    }
+    prevEntryCount.current = entries.length;
+  }, [entries.length, scrollToBottom]);
 
   const submitEntry = useCallback((entry: NotebookEntry) => {
     void addEntry(entry);
-    setTimeout(scrollToBottom, 50);
     respond(entry);
     void checkAndUpdate(entries);
-  }, [addEntry, respond, scrollToBottom, checkAndUpdate, entries]);
+  }, [addEntry, respond, checkAndUpdate, entries]);
 
   const handleSubmit = useCallback((text: string) => {
     submitEntry(createStudentEntry(text));
@@ -156,9 +168,8 @@ export function Notebook({ onNavigate }: NotebookProps) {
 
   const handleSketchSubmit = useCallback((dataUrl: string) => {
     void addEntry({ type: 'sketch', dataUrl });
-    setTimeout(scrollToBottom, 50);
     void analyseSketch(dataUrl);
-  }, [addEntry, scrollToBottom, analyseSketch]);
+  }, [addEntry, analyseSketch]);
 
   return (
     <Column>
@@ -190,6 +201,8 @@ export function Notebook({ onNavigate }: NotebookProps) {
             className={styles.entryContainer}
             onDrop={contentDrop.handleDrop}
             onDragOver={contentDrop.handleDragOver}
+            aria-live="polite"
+            aria-relevant="additions"
           >
             {marginalRef && (
               <MarginZone>
@@ -246,6 +259,7 @@ export function Notebook({ onNavigate }: NotebookProps) {
               onPaste={contentDrop.handlePaste}
               insertText={popup.pendingInsert}
               onInsertConsumed={popup.handleInsertConsumed}
+              disabled={isThinking}
             />
           </div>
           <div ref={bottomRef} />

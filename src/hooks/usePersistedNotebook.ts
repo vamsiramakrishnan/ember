@@ -65,12 +65,25 @@ export function usePersistedNotebook(sessionId: string | null) {
     return patch ? { ...le, entry: patch } : le;
   });
 
-  // Clear local patches when DB entries update (sync complete)
+  // Reconcile local patches with DB: only clear a patch when the DB
+  // version has caught up (content matches or exceeds the local patch).
+  // This prevents flicker during streaming where DB lags behind.
   useEffect(() => {
-    if (localPatches.size > 0) {
-      setLocalPatches(new Map());
-    }
-    // Only run when dbEntries changes, not localPatches
+    if (localPatches.size === 0) return;
+    setLocalPatches((prev) => {
+      const next = new Map<string, NotebookEntry>();
+      for (const [id, patch] of prev) {
+        const dbEntry = dbEntries.find((e) => e.id === id);
+        if (!dbEntry) { next.set(id, patch); continue; }
+        // If DB has caught up (content matches), drop the patch
+        const dbContent = 'content' in dbEntry.entry ? dbEntry.entry.content : '';
+        const patchContent = 'content' in patch ? patch.content : '';
+        if (dbContent !== patchContent) {
+          next.set(id, patch); // DB still behind — keep local patch
+        }
+      }
+      return next.size === prev.size ? prev : next;
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dbEntries]);
 

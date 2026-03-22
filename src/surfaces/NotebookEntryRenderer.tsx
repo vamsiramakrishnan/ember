@@ -130,5 +130,12 @@ export function NotebookEntryRenderer({ entry }: Props) {
       return <Citation sources={entry.sources} />;
     case 'streaming-text':
       return <StreamingText done={entry.done}>{entry.content}</StreamingText>;
+    default:
+      // Exhaustive check: if a new entry type is added without a renderer,
+      // render nothing rather than crash. In development, log a warning.
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn(`NotebookEntryRenderer: unhandled entry type "${(entry as { type: string }).type}"`);
+      }
+      return null;
   }
 }

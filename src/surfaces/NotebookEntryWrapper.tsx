@@ -1,9 +1,10 @@
 /**
  * NotebookEntryWrapper — interactive shell around every entry.
  * Hover/touch: drag handle (left) + type tag + actions (right).
+ * Wrapped in React.memo to prevent cascade re-renders in the entry list.
  * See: 08-touch-and-interaction-states.md
  */
-import { useState, useRef, useCallback } from 'react';
+import { memo, useState, useRef, useCallback } from 'react';
 import type { LiveEntry } from '@/types/entries';
 import { Bookmark } from '@/components/student/Bookmark';
 import { AnnotationMargin } from '@/components/student/AnnotationMargin';
@@ -37,7 +38,7 @@ interface Props {
   style?: React.CSSProperties;
 }
 
-export function NotebookEntryWrapper({
+export const NotebookEntryWrapper = memo(function NotebookEntryWrapper({
   liveEntry, onCrossOut, onToggleBookmark, onTogglePin,
   onAnnotate, onSelectionAction, onBranch, onDragStart, onDragOver,
   onDragLeave, onDrop, onDragEnd, onFollowUp, isDragOver, isDragging, style,
@@ -116,7 +117,7 @@ export function NotebookEntryWrapper({
       )}
     </div>
   );
-}
+});
 
 function EntryActions({ id, canCrossOut, crossedOut, bookmarked, canPin, pinned,
   onCrossOut, onToggleBookmark, onTogglePin, onBranch,
@@ -129,7 +130,7 @@ function EntryActions({ id, canCrossOut, crossedOut, bookmarked, canPin, pinned,
   onBranch?: () => void;
 }) {
   return (
-    <div className={styles.actions} aria-label="Entry actions">
+    <div className={styles.actions} role="group" aria-label="Entry actions">
       {canCrossOut && (
         <button className={styles.action} onClick={() => onCrossOut(id)}
           aria-label={crossedOut ? 'Restore' : 'Cross out'}>
