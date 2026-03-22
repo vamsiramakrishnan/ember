@@ -47,6 +47,17 @@ export type { MultimodalAnalysisOptions } from './gemini-multimodal';
 // Tutor prompt (shared by tutor agent and multimodal reader)
 export { TUTOR_SYSTEM_PROMPT } from './tutor-prompt';
 
+// Mastery extraction
+export { extractMasterySignals } from './mastery-extractor';
+export type { MasterySignal } from './mastery-extractor';
+
+// File Search (managed RAG)
+export {
+  getOrCreateStore,
+  indexSession,
+  searchNotebooks,
+} from './gemini-file-search';
+
 // Proxy client (for production Vercel deployment)
 export {
   useProxy,
