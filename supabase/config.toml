@@ -2,9 +2,12 @@
 # Used by the Supabase CLI for local development and migrations.
 # See: https://supabase.com/docs/guides/cli
 
-[project]
-id = ""  # Fill in after `supabase link`
-name = "ember"
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+extra_search_path = ["public"]
+max_rows = 1000
 
 [db]
 port = 54322
@@ -17,7 +20,7 @@ port = 54323
 
 [storage]
 enabled = true
-file_size_limit = "10MB"
+file_size_limit = "10MiB"
 
 [auth]
-enabled = false  # No auth for initial prototype — add later
+enabled = false
