@@ -4,6 +4,7 @@
  * Identical to Marginalia, but first sentence is Medium (500) weight.
  * See: 06-component-inventory.md, Family 2.
  */
+import { MarkdownContent } from '@/primitives/MarkdownContent';
 import styles from './Connection.module.css';
 
 interface ConnectionProps {
@@ -21,7 +22,7 @@ export function Connection({ children, emphasisEnd }: ConnectionProps) {
       <div className={styles.rule} />
       <p className={styles.text}>
         <span className={styles.emphasis}>{emphasized}</span>
-        {rest}
+        <MarkdownContent>{rest}</MarkdownContent>
       </p>
     </div>
   );

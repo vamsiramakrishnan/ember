@@ -4,6 +4,7 @@
  * Layout: CSS grid — 3px rule | 16px gap | text.
  * See: 06-component-inventory.md, Family 2.
  */
+import { MarkdownContent } from '@/primitives/MarkdownContent';
 import styles from './Marginalia.module.css';
 
 interface MarginaliaProps {
@@ -14,7 +15,9 @@ export function Marginalia({ children }: MarginaliaProps) {
   return (
     <div className={styles.container}>
       <div className={styles.rule} />
-      <p className={styles.text}>{children}</p>
+      <p className={styles.text}>
+        <MarkdownContent>{children}</MarkdownContent>
+      </p>
     </div>
   );
 }

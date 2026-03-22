@@ -1,6 +1,7 @@
 /**
  * Seed — populates the database with demo data on first run.
- * Creates a demo student, notebook, and sessions.
+ * Creates a demo student with four diverse notebooks spanning
+ * music, evolution, linguistics, and philosophy of mind.
  * Idempotent — safe to call on every app start.
  */
 import { count } from './engine';
@@ -13,6 +14,15 @@ import { putBatch } from './engine';
 import { createId } from './ids';
 import { demoSession, demoSessionMeta } from '@/data/demo-session';
 import { demoPastSession, demoPastSessionMeta } from '@/data/demo-past-session';
+import {
+  demoEvolutionSession, demoEvolutionMeta, demoEvolutionNotebook,
+} from '@/data/demo-evolution';
+import {
+  demoLanguageSession, demoLanguageMeta, demoLanguageNotebook,
+} from '@/data/demo-language';
+import {
+  demoConsciousnessSession, demoConsciousnessMeta, demoConsciousnessNotebook,
+} from '@/data/demo-consciousness';
 import { demoLexicon } from '@/data/demo-lexicon';
 import { demoEncounters } from '@/data/demo-encounters';
 import { demoLibrary } from '@/data/demo-library';
@@ -23,22 +33,40 @@ export async function seedIfEmpty(): Promise<void> {
   const studentCount = await count(Store.Students);
   if (studentCount > 0) return;
 
-  // Seed a demo student
   const student = await createStudent({
     name: 'Arjun',
     displayName: 'Arjun',
   });
 
-  // Create a notebook
+  // Notebook 1: Music & Mathematics (original demo)
+  await seedMusicNotebook(student.id);
+
+  // Notebook 2: Darwin & Evolution
+  await seedSimpleNotebook(student.id, demoEvolutionNotebook, demoEvolutionSession, demoEvolutionMeta);
+
+  // Notebook 3: Language & Etymology
+  await seedSimpleNotebook(student.id, demoLanguageNotebook, demoLanguageSession, demoLanguageMeta);
+
+  // Notebook 4: Consciousness
+  await seedSimpleNotebook(student.id, demoConsciousnessNotebook, demoConsciousnessSession, demoConsciousnessMeta);
+
+  // Constellation data (shared across notebooks)
+  await seedLexicon(student.id);
+  await seedEncounters(student.id);
+  await seedLibrary(student.id);
+  await seedMastery(student.id);
+  await seedCuriosities(student.id);
+}
+
+async function seedMusicNotebook(studentId: string): Promise<void> {
   const notebook = await createNotebook({
-    studentId: student.id,
+    studentId,
     title: 'Music & Mathematics',
     description: 'Why is music mathematical? What did Kepler hear in the orbits?',
   });
 
-  // Past session
   const past = await createSession({
-    studentId: student.id,
+    studentId,
     notebookId: notebook.id,
     number: demoPastSessionMeta.sessionNumber,
     date: demoPastSessionMeta.date,
@@ -47,9 +75,8 @@ export async function seedIfEmpty(): Promise<void> {
   });
   await createEntries(past.id, demoPastSession);
 
-  // Current session
   const current = await createSession({
-    studentId: student.id,
+    studentId,
     notebookId: notebook.id,
     number: demoSessionMeta.sessionNumber,
     date: demoSessionMeta.date,
@@ -57,12 +84,29 @@ export async function seedIfEmpty(): Promise<void> {
     topic: demoSessionMeta.topic,
   });
   await createEntries(current.id, demoSession);
+}
 
-  await seedLexicon(student.id);
-  await seedEncounters(student.id);
-  await seedLibrary(student.id);
-  await seedMastery(student.id);
-  await seedCuriosities(student.id);
+async function seedSimpleNotebook(
+  studentId: string,
+  meta: { title: string; description: string },
+  entries: import('@/types/entries').NotebookEntry[],
+  sessionMeta: { sessionNumber: number; date: string; timeOfDay: string; topic: string },
+): Promise<void> {
+  const notebook = await createNotebook({
+    studentId,
+    title: meta.title,
+    description: meta.description,
+  });
+
+  const session = await createSession({
+    studentId,
+    notebookId: notebook.id,
+    number: sessionMeta.sessionNumber,
+    date: sessionMeta.date,
+    timeOfDay: sessionMeta.timeOfDay,
+    topic: sessionMeta.topic,
+  });
+  await createEntries(session.id, entries);
 }
 
 async function seedLexicon(studentId: string): Promise<void> {
