@@ -10,6 +10,8 @@ import type { AgentConfig } from './agents';
 export interface AgentContentPart {
   text?: string;
   inlineData?: { mimeType: string; data: string };
+  functionCall?: { name: string; args: Record<string, unknown> };
+  functionResponse?: { name: string; response: { result: string } };
 }
 
 export interface AgentMessage {

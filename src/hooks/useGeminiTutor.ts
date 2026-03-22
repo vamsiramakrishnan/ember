@@ -11,6 +11,7 @@
  * Falls back gracefully when no API key is configured.
  */
 import { useCallback, useRef, useState } from 'react';
+import type { DeferredAction } from '@/services/tool-executor';
 import { isGeminiAvailable } from '@/services/gemini';
 import { orchestrate } from '@/services/orchestrator';
 import { useStudent } from '@/contexts/StudentContext';
@@ -29,6 +30,7 @@ interface UseGeminiTutorOptions {
 export function useGeminiTutor({ addEntry, entries }: UseGeminiTutorOptions) {
   const [isThinking, setIsThinking] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
+  const lastSyncRef = useRef(Date.now());
   const { student, notebook } = useStudent();
   const { current } = useSessionManager();
 
@@ -94,7 +96,10 @@ export function useGeminiTutor({ addEntry, entries }: UseGeminiTutorOptions) {
           notebook.id,
           profile,
           notebookCtx,
+          lastSyncRef.current,
         );
+
+        lastSyncRef.current = Date.now();
 
         // Stagger entry additions for natural feel
         for (let i = 0; i < result.entries.length; i++) {
@@ -102,6 +107,11 @@ export function useGeminiTutor({ addEntry, entries }: UseGeminiTutorOptions) {
           if (!entry) continue;
           if (i > 0) await delay(800);
           addEntry(entry);
+        }
+
+        // Execute deferred actions (annotations, lexicon adds)
+        for (const action of result.deferredActions) {
+          executeDeferredAction(action, student.id, notebook.id);
         }
       } catch (err) {
         console.error('[Ember] Gemini tutor error:', err);
@@ -118,4 +128,21 @@ export function useGeminiTutor({ addEntry, entries }: UseGeminiTutorOptions) {
 
 function delay(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
+}
+
+/** Execute deferred write actions from the agentic loop. */
+function executeDeferredAction(
+  action: DeferredAction,
+  _studentId: string,
+  _notebookId: string,
+): void {
+  // These are fire-and-forget — executed via the persistence layer
+  // by the constellation sync and mastery updater hooks.
+  // Logging for now; full persistence wiring is in the hooks.
+  if (action.type === 'annotate') {
+    console.log('[Ember] Agent annotation:', action.args);
+  }
+  if (action.type === 'add_lexicon') {
+    console.log('[Ember] Agent lexicon add:', action.args);
+  }
 }
