@@ -76,9 +76,24 @@ export function useGeminiTutor({
       if (!('content' in studentEntry)) return;
       if (!student || !notebook) return;
 
-      const silence: NotebookEntry = { type: 'silence' };
-      addEntry(silence);
       setIsThinking(true);
+      const canStream = addEntryWithId && patchEntryContent;
+
+      // Streaming path: the streaming-text entry itself is the
+      // thinking indicator — no separate silence marker needed.
+      // Non-streaming fallback: add a compact silence marker.
+      let streamingId: string | null = null;
+
+      if (canStream) {
+        const streamEntry: NotebookEntry = {
+          type: 'streaming-text', content: '', done: false,
+        };
+        const id = addEntryWithId(streamEntry);
+        streamingId = typeof id === 'string' ? id : await id;
+        setIsStreaming(true);
+      } else {
+        addEntry({ type: 'silence' });
+      }
 
       try {
         abortRef.current = new AbortController();
@@ -88,23 +103,12 @@ export function useGeminiTutor({
           buildNotebookCtx(),
         ]);
 
-        // Create a streaming entry that will update in-place
-        let streamingId: string | null = null;
-        const canStream = addEntryWithId && patchEntryContent;
-
-        if (canStream) {
-          const streamEntry: NotebookEntry = {
-            type: 'streaming-text', content: '', done: false,
-          };
-          const id = addEntryWithId(streamEntry);
-          streamingId = typeof id === 'string' ? id : await id;
-          setIsStreaming(true);
-        }
-
         const onChunk = (_chunk: string, accumulated: string) => {
           if (streamingId && patchEntryContent) {
             patchEntryContent(streamingId, {
-              type: 'streaming-text', content: accumulated, done: false,
+              type: 'streaming-text',
+              content: accumulated,
+              done: false,
             });
           }
         };
@@ -122,19 +126,8 @@ export function useGeminiTutor({
 
         lastSyncRef.current = Date.now();
 
-        // Mark streaming as done, then replace with parsed entry
         if (streamingId && patchEntryContent) {
-          // First mark done so the cursor fades out
-          patchEntryContent(streamingId, {
-            type: 'streaming-text',
-            content: result.entries[0]
-              ? ('content' in result.entries[0] ? result.entries[0].content : '')
-              : '',
-            done: true,
-          });
-
-          // After a brief pause, replace with the final parsed entry
-          await delay(400);
+          // Replace streaming entry with the final parsed tutor entry
           const firstEntry = result.entries[0];
           if (firstEntry) {
             patchEntryContent(streamingId, firstEntry);
@@ -144,15 +137,15 @@ export function useGeminiTutor({
           for (let i = 1; i < result.entries.length; i++) {
             const entry = result.entries[i];
             if (!entry) continue;
-            await delay(800);
+            await delay(600);
             addEntry(entry);
           }
         } else {
-          // Fallback: non-streaming path
+          // Non-streaming fallback
           for (let i = 0; i < result.entries.length; i++) {
             const entry = result.entries[i];
             if (!entry) continue;
-            if (i > 0) await delay(800);
+            if (i > 0) await delay(600);
             addEntry(entry);
           }
         }

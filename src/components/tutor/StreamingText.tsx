@@ -1,7 +1,8 @@
 /**
  * StreamingText — progressive text rendering for tutor responses.
- * Displays text as it arrives chunk-by-chunk from the Gemini stream,
- * with a blinking cursor that fades out when generation is complete.
+ * Displays text as it arrives chunk-by-chunk from the Gemini stream.
+ * When empty (thinking), shows just a blinking cursor with margin rule.
+ * When streaming, text appears with cursor at the end.
  * Layout mirrors Marginalia (2.1): margin rule + text.
  * See: 06-component-inventory.md, Family 2.
  */
@@ -16,8 +17,18 @@ interface StreamingTextProps {
 }
 
 export function StreamingText({ children, done }: StreamingTextProps) {
+  const hasContent = children.length > 0;
   const ruleCls = done ? styles.rule : styles.ruleStreaming;
-  const cursorCls = done ? styles.cursorDone : styles.cursor;
+
+  // Thinking state: no text yet, just a subtle cursor
+  if (!hasContent && !done) {
+    return (
+      <div className={styles.thinkingContainer}>
+        <div className={styles.ruleStreaming} />
+        <span className={styles.cursor} aria-hidden="true" />
+      </div>
+    );
+  }
 
   return (
     <div className={styles.container}>
@@ -26,9 +37,7 @@ export function StreamingText({ children, done }: StreamingTextProps) {
         <span className={styles.text}>
           <MarkdownContent>{children}</MarkdownContent>
         </span>
-        {(!done || children.length > 0) && (
-          <span className={cursorCls} aria-hidden="true" />
-        )}
+        {!done && <span className={styles.cursor} aria-hidden="true" />}
       </div>
     </div>
   );

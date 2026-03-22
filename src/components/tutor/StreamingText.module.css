@@ -1,9 +1,18 @@
 /**
  * StreamingText — progressive text reveal with tutor's margin rule.
- * Mirrors Marginalia layout: 3px rule | gap | text.
- * Cursor blinks at the end while streaming, fades out when done.
+ * Thinking state: compact cursor. Streaming state: text with cursor.
  */
 
+/* Thinking state — just the cursor, minimal vertical footprint */
+.thinkingContainer {
+  display: grid;
+  grid-template-columns: var(--margin-rule-width) 1fr;
+  gap: var(--margin-rule-gap);
+  padding: 8px 0;
+  align-items: center;
+}
+
+/* Active streaming / done state */
 .container {
   display: grid;
   grid-template-columns: var(--margin-rule-width) 1fr;
@@ -21,7 +30,11 @@
 }
 
 .ruleStreaming {
-  composes: rule;
+  width: var(--margin-rule-width);
+  background-color: var(--margin);
+  opacity: 0.35;
+  border-radius: 1px;
+  min-height: 20px;
   animation: rulePulse 2s ease-in-out infinite;
 }
 
@@ -53,19 +66,9 @@
   animation: emberCursorBlink var(--cursor-cycle) ease infinite;
 }
 
-.cursorDone {
-  composes: cursor;
-  animation: cursorFadeOut 0.6s ease forwards;
-}
-
 @keyframes rulePulse {
   0%, 100% { opacity: 0.35; }
-  50% { opacity: 0.55; }
-}
-
-@keyframes cursorFadeOut {
-  from { opacity: var(--cursor-opacity-max); }
-  to { opacity: 0; }
+  50% { opacity: 0.50; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -73,8 +76,7 @@
     animation: none;
     opacity: 0.35;
   }
-  .cursor,
-  .cursorDone {
+  .cursor {
     animation: none;
     opacity: 0;
   }
