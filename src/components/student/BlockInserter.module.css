@@ -8,10 +8,10 @@
 
 .trigger {
   position: absolute;
-  left: -32px;
-  top: -12px;
-  width: 24px;
-  height: 24px;
+  left: -36px;
+  top: -16px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -40,7 +40,7 @@
   font-family: var(--font-system);
   font-size: 16px;
   font-weight: 300;
-  color: var(--ink-ghost);
+  color: var(--ink-faint);
   line-height: 1;
 }
 
@@ -61,10 +61,10 @@
 .sectionLabel {
   font-family: var(--font-system);
   font-size: 9px;
-  font-weight: 300;
+  font-weight: 400;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--ink-ghost);
+  color: var(--ink-faint);
   padding: 8px 16px 4px;
 }
 
@@ -85,7 +85,8 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 8px 16px;
+  padding: 10px 16px;
+  min-height: 36px;
   background: transparent;
   border: none;
   cursor: pointer;

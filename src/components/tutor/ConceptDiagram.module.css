@@ -24,7 +24,7 @@
 .arrow {
   font-family: var(--font-tutor);
   font-size: 18px;
-  color: var(--ink-ghost);
+  color: var(--ink-faint);
   padding: 0 4px;
 }
 
@@ -46,9 +46,9 @@
 
 .nodeSub {
   font-family: var(--font-system);
-  font-size: 9px;
-  font-weight: 300;
-  color: var(--ink-faint);
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--ink-soft);
   margin-top: 4px;
   letter-spacing: 0.5px;
 }

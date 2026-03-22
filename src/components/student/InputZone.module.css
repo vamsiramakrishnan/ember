@@ -115,7 +115,7 @@
   font-size: 16px;
   font-weight: 300;
   font-style: italic;
-  color: var(--ink-ghost);
+  color: var(--ink-faint);
   pointer-events: none;
   transition: opacity 0.3s ease;
   line-height: 1.82;
@@ -142,17 +142,15 @@
 
 .affordance {
   font-family: var(--font-system);
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.5px;
-  color: var(--ink-ghost);
-}
-
-.affordanceKey {
   color: var(--ink-faint);
-  margin-right: 3px;
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .hint, .affordances {
+    transition: none;
+  }
   .cursor {
     animation: none;
     opacity: 0.3;

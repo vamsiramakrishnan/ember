@@ -16,7 +16,8 @@
 
 .inserterRow {
   position: relative;
-  height: 8px;
+  height: 0;
+  overflow: visible;
   margin: 0 0 0 var(--text-indent);
 }
 

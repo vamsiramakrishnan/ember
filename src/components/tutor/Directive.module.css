@@ -16,7 +16,7 @@
 .body {
   padding-left: 16px;
   border-left: 2px solid var(--indigo);
-  border-left-color: rgba(74, 88, 153, 0.35);
+  border-left-color: var(--indigo);
 }
 
 .action {
