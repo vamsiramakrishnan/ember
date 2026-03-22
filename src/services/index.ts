@@ -1,0 +1,48 @@
+/**
+ * Services — Gemini AI integration for Ember.
+ * Five specialised agents, each with tailored context, tools, and models.
+ */
+
+// Core client
+export {
+  getGeminiClient,
+  isGeminiAvailable,
+  generateText,
+  generateTextWithHistory,
+  MODELS,
+} from './gemini';
+export type { GeminiTextOptions } from './gemini';
+
+// Agent configs
+export {
+  AGENTS,
+  TUTOR_AGENT,
+  RESEARCHER_AGENT,
+  VISUALISER_AGENT,
+  ILLUSTRATOR_AGENT,
+  READER_AGENT,
+} from './agents';
+export type { AgentConfig, AgentName } from './agents';
+
+// Agent execution
+export { runTextAgent, runImageAgent, askAgent } from './run-agent';
+export type { AgentMessage, AgentContentPart } from './run-agent';
+
+// Image generation
+export { generateImage } from './gemini-image';
+export type {
+  GeneratedImage,
+  ImageGenerationResult,
+  ImageGenerationOptions,
+} from './gemini-image';
+
+// HTML generation
+export { generateHtml, HTML_MODEL } from './gemini-html';
+export type { HtmlGenerationOptions } from './gemini-html';
+
+// Multimodal analysis
+export { analyseImage, extractTextFromImage } from './gemini-multimodal';
+export type { MultimodalAnalysisOptions } from './gemini-multimodal';
+
+// Tutor prompt (shared by tutor agent and multimodal reader)
+export { TUTOR_SYSTEM_PROMPT } from './tutor-prompt';

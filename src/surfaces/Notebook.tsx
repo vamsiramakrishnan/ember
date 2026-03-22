@@ -31,7 +31,7 @@ export function Notebook() {
     toggleBookmark, togglePin, pinnedEntries,
   } = useNotebookEntries(demoSession);
   const { revealedCount, getEntryStyle } = useRevealSequence(demoSession.length);
-  const { respond } = useTutorResponse(addEntry, addEntries);
+  const { respond } = useTutorResponse(addEntry, addEntries, entries);
   const [mode, setMode] = useState<NotebookMode>('linear');
   const bottomRef = useRef<HTMLDivElement>(null);
   const [demoRevealed, setDemoRevealed] = useState(false);
