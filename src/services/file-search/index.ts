@@ -10,3 +10,4 @@ export {
 } from './indexing';
 export { searchAll, searchNotebook, searchByType } from './search';
 export type { SearchResult } from './search';
+export { indexCurrentSession } from './session-indexer';
