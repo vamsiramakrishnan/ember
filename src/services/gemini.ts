@@ -21,9 +21,17 @@ export function getGeminiClient(): GoogleGenAI | null {
   return clientInstance;
 }
 
-/** Whether the Gemini API is available (API key is configured). */
+/**
+ * Whether Gemini is available — either via client-side key (dev)
+ * or via server-side proxy (production on Vercel).
+ * In production, we assume the proxy is available.
+ */
 export function isGeminiAvailable(): boolean {
-  return Boolean(API_KEY);
+  // Client-side key available (local dev)
+  if (API_KEY) return true;
+  // In production (no VITE_ key), assume proxy routes are deployed
+  if (import.meta.env.PROD) return true;
+  return false;
 }
 
 /** Models used by Ember. */

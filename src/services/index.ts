@@ -46,3 +46,12 @@ export type { MultimodalAnalysisOptions } from './gemini-multimodal';
 
 // Tutor prompt (shared by tutor agent and multimodal reader)
 export { TUTOR_SYSTEM_PROMPT } from './tutor-prompt';
+
+// Proxy client (for production Vercel deployment)
+export {
+  useProxy,
+  proxyTextGeneration,
+  proxyImageGeneration,
+  proxyHtmlGeneration,
+  proxyMultimodalAnalysis,
+} from './proxy-client';

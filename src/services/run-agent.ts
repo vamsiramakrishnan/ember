@@ -1,9 +1,10 @@
 /**
  * runAgent — unified execution for any Gemini agent.
- * Takes an AgentConfig and content parts, returns the response.
- * Handles streaming, tool configuration, and error wrapping.
+ * Uses the server-side proxy when no client-side API key is set,
+ * or calls the Gemini SDK directly in development.
  */
 import { getGeminiClient } from './gemini';
+import { useProxy, proxyTextGeneration } from './proxy-client';
 import type { AgentConfig } from './agents';
 
 export interface AgentContentPart {
@@ -26,12 +27,25 @@ export interface AgentImageResult {
 }
 
 /**
- * Run a text-only agent. Returns the concatenated text response.
+ * Run a text-only agent. Routes through the proxy in production
+ * or directly via SDK in development.
  */
 export async function runTextAgent(
   agent: AgentConfig,
   messages: AgentMessage[],
 ): Promise<AgentTextResult> {
+  if (useProxy()) {
+    const text = await proxyTextGeneration({
+      messages,
+      model: agent.model,
+      systemInstruction: agent.systemInstruction,
+      thinkingLevel: agent.thinkingLevel,
+      tools: agent.tools.length > 0 ? agent.tools : undefined,
+    });
+    return { text };
+  }
+
+  // Direct SDK path (development with VITE_GEMINI_API_KEY)
   const client = getGeminiClient();
   if (!client) {
     throw new Error('Gemini API key not configured');
