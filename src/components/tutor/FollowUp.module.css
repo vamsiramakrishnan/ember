@@ -1,0 +1,93 @@
+/* FollowUp — Socratic follow-up beneath tutor entries.
+ * Always subtly visible — this is the invitation to keep thinking. */
+
+.trigger {
+  font-family: var(--font-system);
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 1.5px;
+  color: var(--ink-ghost);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px 0 2px;
+  margin-top: 6px;
+  transition: color 0.2s ease;
+  display: block;
+}
+
+.trigger:hover {
+  color: var(--margin);
+}
+
+.container {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--rule-light);
+  animation: slideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.inputRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.prompt {
+  font-family: var(--font-tutor);
+  font-size: 14px;
+  color: var(--margin);
+  flex-shrink: 0;
+  opacity: 0.5;
+}
+
+.input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--font-student);
+  font-size: 15px;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--ink);
+  padding: 6px 0;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.input:focus {
+  border-bottom-color: var(--margin);
+}
+
+.input::placeholder {
+  color: var(--ink-ghost);
+  font-style: italic;
+}
+
+.cancel {
+  font-family: var(--font-system);
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--ink-ghost);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 0;
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+}
+
+.cancel:hover {
+  color: var(--ink-faint);
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .container { animation: none; }
+  .trigger, .input, .cancel { transition: none; }
+}

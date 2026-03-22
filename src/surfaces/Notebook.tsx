@@ -11,7 +11,6 @@ import { SessionHeader } from '@/components/peripheral/SessionHeader';
 import { SessionDivider } from '@/components/peripheral/SessionDivider';
 import { PinnedThread } from '@/components/student/PinnedThread';
 import { MarginalReference } from '@/components/ambient/MarginalReference';
-import { BlockInserter } from '@/components/student/BlockInserter';
 import { InputZone } from '@/components/student/InputZone';
 import { MentionPopup } from '@/components/student/MentionPopup';
 import { SlashCommandPopup } from '@/components/student/SlashCommandPopup';
@@ -55,12 +54,14 @@ export function Notebook({ onNavigate }: NotebookProps) {
   const sessionId = current?.id ?? null;
 
   const {
-    entries, addEntry, crossOut,
+    entries, addEntry, addEntryWithId, patchEntryContent, crossOut,
     toggleBookmark, togglePin, annotate, pinnedEntries,
   } = usePersistedNotebook(sessionId);
 
   const addEntries = useCallback((_e: unknown[]) => {}, []);
-  const { respond } = useTutorResponse(addEntry, addEntries, entries);
+  const { respond, isThinking } = useTutorResponse(
+    addEntry, addEntries, entries, addEntryWithId, patchEntryContent,
+  );
   const { analyseSketch } = useSketchAnalysis(addEntry);
   const { checkAndUpdate } = useMasteryUpdater();
   useConstellationSync(entries);
@@ -83,30 +84,33 @@ export function Notebook({ onNavigate }: NotebookProps) {
   }, [entries]);
 
   const scrollToBottom = useCallback(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    // Use requestAnimationFrame to wait for the next paint, ensuring
+    // the new entry is in the DOM before scrolling.
+    requestAnimationFrame(() => {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    });
   }, []);
+
+  // Auto-scroll when new entries arrive (handles async addEntry + streaming)
+  const prevEntryCount = useRef(entries.length);
+  useEffect(() => {
+    if (entries.length > prevEntryCount.current) {
+      scrollToBottom();
+    }
+    prevEntryCount.current = entries.length;
+  }, [entries.length, scrollToBottom]);
 
   const submitEntry = useCallback((entry: NotebookEntry) => {
     void addEntry(entry);
-    setTimeout(scrollToBottom, 50);
     respond(entry);
     void checkAndUpdate(entries);
-  }, [addEntry, respond, scrollToBottom, checkAndUpdate, entries]);
+  }, [addEntry, respond, checkAndUpdate, entries]);
 
   const handleSubmit = useCallback((text: string) => {
     submitEntry(createStudentEntry(text));
   }, [submitEntry]);
 
   const handleSubmitTyped = useCallback((text: string, type: StudentEntryType) => {
-    submitEntry({ type, content: text });
-  }, [submitEntry]);
-
-  const handleInlineInsert = useCallback((_type: StudentEntryType) => {
-    // Scroll to the InputZone — the type will be set there
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-  }, []);
-
-  const handleInlinePaste = useCallback((text: string, type: StudentEntryType) => {
     submitEntry({ type, content: text });
   }, [submitEntry]);
 
@@ -153,11 +157,19 @@ export function Notebook({ onNavigate }: NotebookProps) {
     }
   }, [annotate, submitEntry, popup]);
 
+  /** Handle inline follow-up on a tutor entry. */
+  const handleFollowUp = useCallback((question: string, tutorContext: string) => {
+    const contextHint = tutorContext.length > 100
+      ? tutorContext.slice(0, 100) + '…'
+      : tutorContext;
+    const fullQuestion = `Regarding your note "${contextHint}" — ${question}`;
+    submitEntry({ type: 'question', content: fullQuestion });
+  }, [submitEntry]);
+
   const handleSketchSubmit = useCallback((dataUrl: string) => {
     void addEntry({ type: 'sketch', dataUrl });
-    setTimeout(scrollToBottom, 50);
     void analyseSketch(dataUrl);
-  }, [addEntry, scrollToBottom, analyseSketch]);
+  }, [addEntry, analyseSketch]);
 
   return (
     <Column>
@@ -189,13 +201,15 @@ export function Notebook({ onNavigate }: NotebookProps) {
             className={styles.entryContainer}
             onDrop={contentDrop.handleDrop}
             onDragOver={contentDrop.handleDragOver}
+            aria-live="polite"
+            aria-relevant="additions"
           >
             {marginalRef && (
               <MarginZone>
                 <MarginalReference>{marginalRef}</MarginalReference>
               </MarginZone>
             )}
-            {entries.map((le, i) => (
+            {entries.map((le) => (
               <div key={le.id} className={styles.entryRow}>
                 <NotebookEntryWrapper
                   liveEntry={le}
@@ -205,6 +219,7 @@ export function Notebook({ onNavigate }: NotebookProps) {
                   onAnnotate={annotate}
                   onSelectionAction={handleSelectionAction}
                   onBranch={handleBranch}
+                  onFollowUp={handleFollowUp}
                   onDragStart={reorder.onDragStart}
                   onDragOver={reorder.onDragOver}
                   onDragLeave={reorder.onDragLeave}
@@ -213,16 +228,8 @@ export function Notebook({ onNavigate }: NotebookProps) {
                   isDragOver={reorder.overId === le.id}
                   isDragging={reorder.dragId === le.id}
                 />
-                {/* Inserter between entries — appears on hover */}
-                {i < entries.length - 1 && (
-                  <div className={styles.inserterRow}>
-                    <BlockInserter
-                      onSelect={handleInlineInsert}
-                      onPaste={handleInlinePaste}
-                      onFileUpload={contentDrop.processFile}
-                    />
-                  </div>
-                )}
+                {/* Inline inserters removed — use InputZone at bottom
+                   or + button in the margin */}
               </div>
             ))}
           </div>
@@ -252,6 +259,7 @@ export function Notebook({ onNavigate }: NotebookProps) {
               onPaste={contentDrop.handlePaste}
               insertText={popup.pendingInsert}
               onInsertConsumed={popup.handleInsertConsumed}
+              disabled={isThinking}
             />
           </div>
           <div ref={bottomRef} />

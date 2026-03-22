@@ -34,6 +34,7 @@ export const TYPE_META: Record<string, TypeMeta> = {
   'tutor-reflection': { label: 'reflection', tinted: true },
   'tutor-directive': { label: 'explore', tinted: true },
   citation: { label: 'sources' },
+  'streaming-text': { label: 'tutor', tinted: true },
 };
 
 const STUDENT_TYPES = new Set([

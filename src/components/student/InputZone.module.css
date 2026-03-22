@@ -1,10 +1,11 @@
 /* InputZone (7.4) — continuous with the notebook. No border, no container. */
 .container {
   padding-left: var(--text-indent);
-  padding-top: 32px;
-  padding-bottom: 96px;
+  padding-top: 24px;
+  padding-bottom: 48px;
   cursor: text;
-  min-height: 120px;
+  min-height: 80px;
+  position: relative;
 }
 
 .textarea {
@@ -33,6 +34,13 @@
   height: 22px;
   background-color: var(--ink);
   animation: emberCursorBlink var(--cursor-cycle) ease infinite;
+}
+
+/* When the tutor is thinking — slower, quieter pulse */
+.cursorThinking {
+  composes: cursor;
+  background-color: var(--ink-ghost);
+  animation-duration: 2.4s;
 }
 
 /* Forced type indicator — shows when block inserter selected a type */
@@ -109,13 +117,13 @@
 /* Warm hint — visible when empty and unfocused */
 .hint {
   position: absolute;
-  top: 32px;
+  top: 24px;
   left: var(--text-indent);
   font-family: var(--font-student);
   font-size: 16px;
   font-weight: 300;
   font-style: italic;
-  color: var(--ink-faint);
+  color: var(--ink-ghost);
   pointer-events: none;
   transition: opacity 0.3s ease;
   line-height: 1.82;
@@ -129,22 +137,21 @@
 /* Affordance row — shows available input modes */
 .affordances {
   display: flex;
-  gap: 16px;
-  margin-top: 8px;
+  gap: 20px;
+  margin-top: 12px;
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.4s ease;
 }
 
-.container:hover .affordances,
 .container:focus-within .affordances {
   opacity: 1;
 }
 
 .affordance {
   font-family: var(--font-system);
-  font-size: 10px;
-  letter-spacing: 0.5px;
-  color: var(--ink-faint);
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--ink-ghost);
 }
 
 @media (prefers-reduced-motion: reduce) {

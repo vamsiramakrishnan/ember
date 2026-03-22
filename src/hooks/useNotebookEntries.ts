@@ -38,6 +38,20 @@ export function useNotebookEntries(initial: NotebookEntry[]) {
     ]);
   }, []);
 
+  /** Add an entry and return its assigned ID (for streaming updates). */
+  const addEntryWithId = useCallback((entry: NotebookEntry): string => {
+    const live = toLiveEntry(entry);
+    setEntries((prev) => [...prev, live]);
+    return live.id;
+  }, []);
+
+  /** Update an existing entry in-place by ID. */
+  const updateEntry = useCallback((id: string, entry: NotebookEntry) => {
+    setEntries((prev) =>
+      prev.map((e) => (e.id === id ? { ...e, entry } : e)),
+    );
+  }, []);
+
   const crossOut = useCallback((id: string) => {
     setEntries((prev) =>
       prev.map((e) =>
@@ -73,7 +87,9 @@ export function useNotebookEntries(initial: NotebookEntry[]) {
   return {
     entries,
     addEntry,
+    addEntryWithId,
     addEntries,
+    updateEntry,
     crossOut,
     toggleBookmark,
     togglePin,

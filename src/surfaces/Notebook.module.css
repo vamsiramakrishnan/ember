@@ -14,13 +14,6 @@
   position: relative;
 }
 
-.inserterRow {
-  position: relative;
-  height: 0;
-  overflow: visible;
-  margin: 0 0 0 var(--text-indent);
-}
-
 /* Mode toggle — linear vs canvas */
 .modeToggle {
   display: flex;

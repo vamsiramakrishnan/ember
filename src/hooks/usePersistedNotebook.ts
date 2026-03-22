@@ -1,14 +1,19 @@
 /**
  * usePersistedNotebook — IndexedDB-backed notebook state.
  * Reads entries from persistence, writes back on every mutation.
- * Supports cross-out, bookmark, pin, and annotations.
+ * Supports cross-out, bookmark, pin, annotations, and streaming.
+ *
+ * Streaming optimization: patchEntryContent updates local state
+ * immediately (optimistic) and debounces IndexedDB writes to
+ * avoid re-querying the full entry list on every token.
  */
-import { useCallback } from 'react';
+import { useCallback, useRef, useState, useEffect } from 'react';
 import { Store, useStoreQuery, notify } from '@/persistence';
 import {
   createEntry,
   getEntriesBySession,
   updateEntry,
+  updateEntryContent,
 } from '@/persistence/repositories/entries';
 import { getBlobAsDataUrl } from '@/persistence/repositories/blobs';
 import { createId } from '@/persistence/ids';
@@ -36,7 +41,7 @@ async function recordToLiveEntry(rec: EntryRecord): Promise<LiveEntry> {
 }
 
 export function usePersistedNotebook(sessionId: string | null) {
-  const { data: entries, loading } = useStoreQuery<LiveEntry[]>(
+  const { data: dbEntries, loading } = useStoreQuery<LiveEntry[]>(
     Store.Entries,
     async () => {
       if (!sessionId) return [];
@@ -47,11 +52,81 @@ export function usePersistedNotebook(sessionId: string | null) {
     [sessionId],
   );
 
+  // Local overlay for optimistic streaming updates.
+  // Maps entry ID → patched NotebookEntry. Cleared on DB sync.
+  const [localPatches, setLocalPatches] = useState<
+    Map<string, NotebookEntry>
+  >(new Map());
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+
+  // Merge DB entries with local patches
+  const entries = dbEntries.map((le) => {
+    const patch = localPatches.get(le.id);
+    return patch ? { ...le, entry: patch } : le;
+  });
+
+  // Reconcile local patches with DB: only clear a patch when the DB
+  // version has caught up (content matches or exceeds the local patch).
+  // This prevents flicker during streaming where DB lags behind.
+  useEffect(() => {
+    if (localPatches.size === 0) return;
+    setLocalPatches((prev) => {
+      const next = new Map<string, NotebookEntry>();
+      for (const [id, patch] of prev) {
+        const dbEntry = dbEntries.find((e) => e.id === id);
+        if (!dbEntry) { next.set(id, patch); continue; }
+        // If DB has caught up (content matches), drop the patch
+        const dbContent = 'content' in dbEntry.entry ? dbEntry.entry.content : '';
+        const patchContent = 'content' in patch ? patch.content : '';
+        if (dbContent !== patchContent) {
+          next.set(id, patch); // DB still behind — keep local patch
+        }
+      }
+      return next.size === prev.size ? prev : next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dbEntries]);
+
   const addEntry = useCallback(async (entry: NotebookEntry) => {
     if (!sessionId) return;
     await createEntry(sessionId, entry);
     notify(Store.Entries);
   }, [sessionId]);
+
+  const addEntryWithId = useCallback(async (
+    entry: NotebookEntry,
+  ): Promise<string> => {
+    if (!sessionId) return '';
+    const record = await createEntry(sessionId, entry);
+    notify(Store.Entries);
+    return record.id;
+  }, [sessionId]);
+
+  /**
+   * Update an entry's content in-place. Optimistic: updates local
+   * state immediately. IndexedDB write + notify are debounced
+   * to avoid re-querying the full list on every streaming token.
+   */
+  const patchEntryContent = useCallback((
+    id: string,
+    entry: NotebookEntry,
+  ) => {
+    // Optimistic local update — renders instantly
+    setLocalPatches((prev) => {
+      const next = new Map(prev);
+      next.set(id, entry);
+      return next;
+    });
+
+    // Debounced persistence (300ms) — batches rapid streaming updates
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      void (async () => {
+        await updateEntryContent(id, entry);
+        notify(Store.Entries);
+      })();
+    }, 300);
+  }, []);
 
   const crossOut = useCallback(async (id: string) => {
     const live = entries.find((e) => e.id === id);
@@ -76,7 +151,6 @@ export function usePersistedNotebook(sessionId: string | null) {
     notify(Store.Entries);
   }, [entries]);
 
-  /** Add a student annotation to an entry. */
   const annotate = useCallback(async (
     entryId: string,
     content: string,
@@ -106,6 +180,8 @@ export function usePersistedNotebook(sessionId: string | null) {
     entries,
     loading,
     addEntry,
+    addEntryWithId,
+    patchEntryContent,
     crossOut,
     toggleBookmark,
     togglePin,

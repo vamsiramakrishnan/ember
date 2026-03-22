@@ -123,3 +123,91 @@ export async function runAgenticLoop(
   // Max iterations reached — return whatever we have
   return { text: '', toolCalls, deferredActions };
 }
+
+/**
+ * Run an agent with function calling tools, streaming the final text.
+ * Tool calls are handled non-streaming; the final text response streams
+ * chunk-by-chunk via the onChunk callback.
+ */
+export async function runAgenticLoopStreaming(
+  agent: AgentConfig,
+  messages: AgentMessage[],
+  context: {
+    studentId: string;
+    notebookId: string;
+    graph: Subgraph | null;
+  },
+  onChunk: (chunk: string, accumulated: string) => void,
+): Promise<AgenticResult> {
+  const client = getGeminiClient();
+  if (!client) throw new Error('Gemini API key not configured');
+
+  const tools = [...agent.tools, ...AGENT_TOOL_DECLARATIONS];
+  const config: Record<string, unknown> = {
+    thinkingConfig: { thinkingLevel: agent.thinkingLevel },
+    systemInstruction: agent.systemInstruction,
+    tools,
+  };
+
+  const toolCalls: string[] = [];
+  const deferredActions: DeferredAction[] = [];
+  let currentMessages = [...messages];
+
+  for (let iter = 0; iter < MAX_ITERATIONS; iter++) {
+    // Use non-streaming for tool-call iterations
+    const probe = await client.models.generateContent({
+      model: agent.model, config, contents: currentMessages,
+    });
+
+    const parts = probe.candidates?.[0]?.content?.parts;
+    if (!parts) break;
+
+    const functionCalls = parts.filter(
+      (p): p is { functionCall: { name: string; args: Record<string, unknown> } } =>
+        'functionCall' in p && Boolean(p.functionCall),
+    );
+
+    // No tool calls — this is the final turn. Re-stream it.
+    if (functionCalls.length === 0) {
+      const stream = await client.models.generateContentStream({
+        model: agent.model, config, contents: currentMessages,
+      });
+      let accumulated = '';
+      for await (const chunk of stream) {
+        const cParts = chunk.candidates?.[0]?.content?.parts;
+        if (!cParts) continue;
+        for (const p of cParts) {
+          if ('text' in p && p.text) {
+            accumulated += p.text;
+            onChunk(p.text, accumulated);
+          }
+        }
+      }
+      return { text: accumulated, toolCalls, deferredActions };
+    }
+
+    // Execute tool calls (same as non-streaming loop)
+    const functionResponses: Array<{
+      functionResponse: { name: string; response: { result: string } };
+    }> = [];
+
+    for (const part of functionCalls) {
+      const { name, args } = part.functionCall;
+      toolCalls.push(`${name}(${JSON.stringify(args)})`);
+      const deferred = extractDeferredActions(name, args);
+      if (deferred) deferredActions.push(deferred);
+      const result = await executeTool(name, args, context);
+      functionResponses.push({
+        functionResponse: { name, response: { result } },
+      });
+    }
+
+    currentMessages = [
+      ...currentMessages,
+      { role: 'model' as const, parts: functionCalls },
+      { role: 'user' as const, parts: functionResponses },
+    ];
+  }
+
+  return { text: '', toolCalls, deferredActions };
+}
