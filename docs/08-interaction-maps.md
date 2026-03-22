@@ -377,6 +377,150 @@
 - Drag-over state has transition to prevent visual flicker
 - NotebookEntryRenderer has a default case for unknown entry types
 
+---
+
+## Architectural Mechanisms (Durable, Not Patches)
+
+### Mechanism 1: TutorSessionState (`src/state/session-state.ts`)
+
+**Eigen principle traced:** Principles I, III, VI + Interaction Language §3
+
+A shared reactive store between the tutor pipeline and learner UI. Both sides read from and write to the same state, enabling the tutor to make decisions based on what the student is doing *right now*, not just what they typed.
+
+```
+┌──────────────────────────────────────────────────────────┐
+│                  SESSION STATE SHAPE                     │
+│                                                          │
+│  Session rhythm:                                         │
+│  ├── phase: opening | exploration | deepening | leaving  │
+│  ├── studentTurnCount / tutorTurnCount                   │
+│  ├── consecutiveTutorEntries (for voice alternation)     │
+│  └── lastTutorMode (connection | socratic | etc.)        │
+│                                                          │
+│  Student awareness:                                      │
+│  ├── focus: writing | reading(id) | idle(since) | canvas │
+│  ├── activeConcepts: [{term, sourceEntryId, activatedAt}]│
+│  └── recentStudentTypes: last 3 entry types              │
+│                                                          │
+│  Tutor state:                                            │
+│  ├── isThinking / isStreaming                             │
+│  ├── coveredTopics (avoid repetition)                    │
+│  └── introducedThinkers (no duplicate intros)            │
+│                                                          │
+│  Mastery context:                                        │
+│  └── masterySnapshot: [{concept, level, percentage}]     │
+│                                                          │
+│  Subscriptions: useSyncExternalStore (zero-overhead)     │
+│                                                          │
+└──────────────────────────────────────────────────────────┘
+```
+
+**Writers:** `recordStudentTurn()` from Notebook.tsx, `recordTutorTurn()` from useGeminiTutor, `setTutorActivity()` from tutor pipeline.
+
+**Readers:** Any component via `useSessionState()`. The tutor pipeline reads directly via `getSessionState()`.
+
+---
+
+### Mechanism 2: CompositionGuard (`src/state/composition-guard.ts`)
+
+**Eigen principle traced:** 07-compositional-grammar.md + Principle I + Principle VI
+
+Enforces the spec's grammar rules *before* tutor entries are emitted. Consulted by the tutor pipeline after orchestration returns entries.
+
+```
+Rules enforced:
+1. Max 2 consecutive tutor entries (3rd deferred until student speaks)
+2. No duplicate thinker introductions in same session
+3. Echoes spaced: ≥5 entries since last echo
+4. Reflections spaced: ≥10 entries since last reflection
+5. Bridge suggestions: max one per session
+6. Opening phase: max 3 tutor entries total
+```
+
+**Verdicts:** `emit` (go ahead), `defer` (wait for student), `suppress` (drop silently).
+
+**Integration:** `filterByComposition(proposedEntries, currentEntries)` called in `useGeminiTutor.ts` after `streamOrchestrate()` returns.
+
+---
+
+### Mechanism 3: EntryGraph (`src/state/entry-graph.ts`)
+
+**Eigen principle traced:** Principle II (Permanence) + Pattern 4 (Accumulation) + Pattern 6 (Definition Evolution)
+
+An in-memory relationship graph between entries. Every relationship has a type, a source, a target, and optional metadata. Enables deep linking, follow-up chains, and cross-referencing.
+
+```
+Relationship types:
+├── prompted-by    Student entry prompted this tutor response
+├── follow-up      This entry follows up on another
+├── references     This entry references a concept from another
+├── branches-from  This entry branched into a new notebook
+├── echoes         Echo entry references original student thought
+├── extends        Tutor extends a prior response
+├── contradicts    Student hypothesis contradicts prior entry
+└── confirms       Tutor confirms student hypothesis
+
+API:
+├── addRelation(rel)          Add a relationship
+├── getFollowUpChain(id)      Get the full chain from an entry
+├── getOutgoing(id)           All relations FROM an entry
+├── getIncoming(id)           All relations TO an entry
+└── useEntryConnections(id)   React hook for a specific entry
+```
+
+**Writers:** `addRelation()` from Notebook.tsx (follow-ups, branches) and useGeminiTutor (prompted-by).
+
+**Readers:** Any component via `useEntryConnections(entryId)`. Future: canvas view shows entry relationships visually.
+
+---
+
+### Mechanism 4: ConstellationProjection (`src/state/constellation-projection.ts`)
+
+**Eigen principle traced:** Principle III (Mastery is Invisible) + §04 (Three Surfaces)
+
+Pure projection functions that map entry types to constellation records. The constellation is a *mirror* of notebook activity, not an independent data store.
+
+```
+Entry type          → Constellation record
+────────────────────────────────────────────
+thinker-card        → Encounter (active)
+concept-diagram     → Mastery (exploring, 15%)
+bridge-suggestion   → Curiosity thread
+question (>20 chars)→ Curiosity thread
+tutor-connection    → Mastery (exploring, 10%)
+hypothesis          → Mastery (developing, 35%)
+```
+
+**Integration:** `projectEntry(liveEntry)` returns a `ProjectionResult` with encounters, mastery, curiosities, and lexicon arrays. `useConstellationSync` applies these projections to IndexedDB.
+
+**Key property:** Pure functions, no side effects, easily testable. The sync hook handles deduplication and persistence.
+
+---
+
+### How the Mechanisms Compose
+
+```
+Student types → Enter
+    │
+    ├── recordStudentTurn()          → SessionState
+    ├── setStudentFocus('writing')   → SessionState
+    ├── addEntry()                   → IndexedDB
+    ├── respond()                    → Tutor pipeline
+    │       │
+    │       ├── streamOrchestrate()  → [proposed entries]
+    │       ├── filterByComposition()→ [filtered entries]  ← CompositionGuard
+    │       ├── recordTutorTurn()    → SessionState
+    │       ├── addRelation()        → EntryGraph
+    │       └── addEntry()           → IndexedDB
+    │
+    └── useConstellationSync         → Watches entries
+            │
+            ├── projectEntry()       → ProjectionResult  ← ConstellationProjection
+            └── apply to IndexedDB   → Encounters, Mastery, Curiosities
+```
+
+Every arrow traces back to a design principle. Every mechanism is independent, composable, and testable in isolation. No mechanism knows about the others — they communicate through the shared entry list and the session state store.
+
 ### Design Principle Alignment
 - Principle VI (Silence): InputZone reflects thinking state with a quieter cursor
 - Principle V (Notebook): no additional chrome added; existing chrome made more subtle
