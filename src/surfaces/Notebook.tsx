@@ -196,7 +196,7 @@ export function Notebook({ onNavigate }: NotebookProps) {
                 <MarginalReference>{marginalRef}</MarginalReference>
               </MarginZone>
             )}
-            {entries.map((le, i) => (
+            {entries.map((le) => (
               <div key={le.id} className={styles.entryRow}>
                 <NotebookEntryWrapper
                   liveEntry={le}
