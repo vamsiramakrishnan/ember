@@ -19,6 +19,7 @@ import { useTutorResponse } from '@/hooks/useTutorResponse';
 import { useSketchAnalysis } from '@/hooks/useSketchAnalysis';
 import { useMasteryUpdater } from '@/hooks/useMasteryUpdater';
 import { useConstellationSync } from '@/hooks/useConstellationSync';
+import { useSessionIndexer } from '@/hooks/useSessionIndexer';
 import { createStudentEntry } from '@/hooks/useEntryInference';
 import { NotebookEntryWrapper } from './NotebookEntryWrapper';
 import { NotebookEntryRenderer } from './NotebookEntryRenderer';
@@ -42,6 +43,7 @@ export function Notebook() {
   const { analyseSketch } = useSketchAnalysis(addEntry);
   const { checkAndUpdate } = useMasteryUpdater();
   useConstellationSync(entries);
+  useSessionIndexer(past);
   const [mode, setMode] = useState<NotebookMode>('linear');
   const bottomRef = useRef<HTMLDivElement>(null);
 

@@ -17,6 +17,8 @@ import { SilenceMarker } from '@/components/tutor/SilenceMarker';
 import { Divider } from '@/components/student/Divider';
 import { Echo } from '@/components/ambient/Echo';
 import { BridgeSuggestion } from '@/components/peripheral/BridgeSuggestion';
+import { Visualization } from '@/components/tutor/Visualization';
+import { Illustration } from '@/components/tutor/Illustration';
 
 interface Props {
   entry: NotebookEntry;
@@ -56,5 +58,9 @@ export function NotebookEntryRenderer({ entry }: Props) {
       return <Echo>{entry.content}</Echo>;
     case 'bridge-suggestion':
       return <BridgeSuggestion>{entry.content}</BridgeSuggestion>;
+    case 'visualization':
+      return <Visualization html={entry.html} caption={entry.caption} />;
+    case 'illustration':
+      return <Illustration dataUrl={entry.dataUrl} caption={entry.caption} />;
   }
 }

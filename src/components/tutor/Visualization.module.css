@@ -1,0 +1,30 @@
+/* Visualization — the tutor's whiteboard, rendered as sandboxed HTML */
+.container {
+  margin: 16px 0;
+  padding-left: var(--text-indent);
+}
+
+.frame {
+  width: 100%;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: var(--paper);
+  overflow: hidden;
+  transition: height 0.3s ease;
+}
+
+.caption {
+  font-family: var(--font-system);
+  font-size: 10px;
+  font-weight: 300;
+  letter-spacing: 1px;
+  color: var(--ink-ghost);
+  margin-top: 6px;
+  text-transform: lowercase;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .frame {
+    transition: none;
+  }
+}
