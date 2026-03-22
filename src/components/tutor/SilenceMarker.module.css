@@ -34,3 +34,10 @@
   animation: emberCursorBlink var(--cursor-cycle) ease infinite;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .cursor {
+    animation: none;
+    opacity: 0.3;
+  }
+}
+

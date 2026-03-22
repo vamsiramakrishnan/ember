@@ -11,7 +11,6 @@ import { SessionHeader } from '@/components/peripheral/SessionHeader';
 import { SessionDivider } from '@/components/peripheral/SessionDivider';
 import { PinnedThread } from '@/components/student/PinnedThread';
 import { MarginalReference } from '@/components/ambient/MarginalReference';
-import { BlockInserter } from '@/components/student/BlockInserter';
 import { InputZone } from '@/components/student/InputZone';
 import { MentionPopup } from '@/components/student/MentionPopup';
 import { SlashCommandPopup } from '@/components/student/SlashCommandPopup';
@@ -100,15 +99,6 @@ export function Notebook({ onNavigate }: NotebookProps) {
   }, [submitEntry]);
 
   const handleSubmitTyped = useCallback((text: string, type: StudentEntryType) => {
-    submitEntry({ type, content: text });
-  }, [submitEntry]);
-
-  const handleInlineInsert = useCallback((_type: StudentEntryType) => {
-    // Scroll to the InputZone — the type will be set there
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-  }, []);
-
-  const handleInlinePaste = useCallback((text: string, type: StudentEntryType) => {
     submitEntry({ type, content: text });
   }, [submitEntry]);
 
@@ -225,16 +215,8 @@ export function Notebook({ onNavigate }: NotebookProps) {
                   isDragOver={reorder.overId === le.id}
                   isDragging={reorder.dragId === le.id}
                 />
-                {/* Inserter between entries — appears on hover */}
-                {i < entries.length - 1 && (
-                  <div className={styles.inserterRow}>
-                    <BlockInserter
-                      onSelect={handleInlineInsert}
-                      onPaste={handleInlinePaste}
-                      onFileUpload={contentDrop.processFile}
-                    />
-                  </div>
-                )}
+                {/* Inline inserters removed — use InputZone at bottom
+                   or + button in the margin */}
               </div>
             ))}
           </div>

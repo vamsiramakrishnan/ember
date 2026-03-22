@@ -37,7 +37,7 @@
 
 .container:hover .monogram {
   border-color: var(--margin);
-  background: rgba(139, 115, 85, 0.06);
+  background: var(--paper-deep);
 }
 
 .identity {

@@ -18,7 +18,7 @@
 
 .block:hover {
   border-left-width: 3px;
-  background: rgba(184, 86, 79, 0.09);
+  background: var(--margin-dim);
 }
 
 @keyframes questionReveal {

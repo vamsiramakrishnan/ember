@@ -14,24 +14,6 @@
   position: relative;
 }
 
-/* Inline inserters: completely invisible. Only materialize on long-press. */
-.inserterRow {
-  position: relative;
-  height: 0;
-  overflow: visible;
-  margin: 0;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease;
-}
-
-/* Only show inserter on the specific row being long-pressed */
-.entryRow:active + .entryRow .inserterRow,
-.inserterRow:focus-within {
-  opacity: 1;
-  pointer-events: auto;
-}
-
 /* Mode toggle — linear vs canvas */
 .modeToggle {
   display: flex;

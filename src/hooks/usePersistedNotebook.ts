@@ -1,9 +1,13 @@
 /**
  * usePersistedNotebook — IndexedDB-backed notebook state.
  * Reads entries from persistence, writes back on every mutation.
- * Supports cross-out, bookmark, pin, and annotations.
+ * Supports cross-out, bookmark, pin, annotations, and streaming.
+ *
+ * Streaming optimization: patchEntryContent updates local state
+ * immediately (optimistic) and debounces IndexedDB writes to
+ * avoid re-querying the full entry list on every token.
  */
-import { useCallback } from 'react';
+import { useCallback, useRef, useState, useEffect } from 'react';
 import { Store, useStoreQuery, notify } from '@/persistence';
 import {
   createEntry,
@@ -37,7 +41,7 @@ async function recordToLiveEntry(rec: EntryRecord): Promise<LiveEntry> {
 }
 
 export function usePersistedNotebook(sessionId: string | null) {
-  const { data: entries, loading } = useStoreQuery<LiveEntry[]>(
+  const { data: dbEntries, loading } = useStoreQuery<LiveEntry[]>(
     Store.Entries,
     async () => {
       if (!sessionId) return [];
@@ -48,24 +52,67 @@ export function usePersistedNotebook(sessionId: string | null) {
     [sessionId],
   );
 
+  // Local overlay for optimistic streaming updates.
+  // Maps entry ID → patched NotebookEntry. Cleared on DB sync.
+  const [localPatches, setLocalPatches] = useState<
+    Map<string, NotebookEntry>
+  >(new Map());
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+
+  // Merge DB entries with local patches
+  const entries = dbEntries.map((le) => {
+    const patch = localPatches.get(le.id);
+    return patch ? { ...le, entry: patch } : le;
+  });
+
+  // Clear local patches when DB entries update (sync complete)
+  useEffect(() => {
+    if (localPatches.size > 0) {
+      setLocalPatches(new Map());
+    }
+    // Only run when dbEntries changes, not localPatches
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dbEntries]);
+
   const addEntry = useCallback(async (entry: NotebookEntry) => {
     if (!sessionId) return;
     await createEntry(sessionId, entry);
     notify(Store.Entries);
   }, [sessionId]);
 
-  /** Add an entry and return its persisted ID (for streaming updates). */
-  const addEntryWithId = useCallback(async (entry: NotebookEntry): Promise<string> => {
+  const addEntryWithId = useCallback(async (
+    entry: NotebookEntry,
+  ): Promise<string> => {
     if (!sessionId) return '';
     const record = await createEntry(sessionId, entry);
     notify(Store.Entries);
     return record.id;
   }, [sessionId]);
 
-  /** Update an entry's content in-place (streaming text updates). */
-  const patchEntryContent = useCallback(async (id: string, entry: NotebookEntry) => {
-    await updateEntryContent(id, entry);
-    notify(Store.Entries);
+  /**
+   * Update an entry's content in-place. Optimistic: updates local
+   * state immediately. IndexedDB write + notify are debounced
+   * to avoid re-querying the full list on every streaming token.
+   */
+  const patchEntryContent = useCallback((
+    id: string,
+    entry: NotebookEntry,
+  ) => {
+    // Optimistic local update — renders instantly
+    setLocalPatches((prev) => {
+      const next = new Map(prev);
+      next.set(id, entry);
+      return next;
+    });
+
+    // Debounced persistence (300ms) — batches rapid streaming updates
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      void (async () => {
+        await updateEntryContent(id, entry);
+        notify(Store.Entries);
+      })();
+    }, 300);
   }, []);
 
   const crossOut = useCallback(async (id: string) => {
@@ -91,7 +138,6 @@ export function usePersistedNotebook(sessionId: string | null) {
     notify(Store.Entries);
   }, [entries]);
 
-  /** Add a student annotation to an entry. */
   const annotate = useCallback(async (
     entryId: string,
     content: string,
