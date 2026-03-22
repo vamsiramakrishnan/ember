@@ -1,7 +1,7 @@
 /**
  * Seed — populates the database with demo data on first run.
- * Creates a demo student with four diverse notebooks spanning
- * music, evolution, linguistics, and philosophy of mind.
+ * Creates a demo student with four diverse notebooks, each with
+ * its own notebook-scoped constellation data.
  * Idempotent — safe to call on every app start.
  */
 import { count } from './engine';
@@ -28,6 +28,7 @@ import { demoEncounters } from '@/data/demo-encounters';
 import { demoLibrary } from '@/data/demo-library';
 import { demoMastery } from '@/data/demo-mastery';
 import { demoCuriosities } from '@/data/demo-curiosities';
+import type { NotebookEntry } from '@/types/entries';
 
 export async function seedIfEmpty(): Promise<void> {
   const studentCount = await count(Store.Students);
@@ -38,27 +39,30 @@ export async function seedIfEmpty(): Promise<void> {
     displayName: 'Arjun',
   });
 
-  // Notebook 1: Music & Mathematics (original demo)
-  await seedMusicNotebook(student.id);
+  // Notebook 1: Music & Mathematics (original demo — with constellation data)
+  const musicNb = await seedMusicNotebook(student.id);
+  await seedConstellation(student.id, musicNb);
 
   // Notebook 2: Darwin & Evolution
-  await seedSimpleNotebook(student.id, demoEvolutionNotebook, demoEvolutionSession, demoEvolutionMeta);
+  await seedSimpleNotebook(
+    student.id, demoEvolutionNotebook,
+    demoEvolutionSession, demoEvolutionMeta,
+  );
 
   // Notebook 3: Language & Etymology
-  await seedSimpleNotebook(student.id, demoLanguageNotebook, demoLanguageSession, demoLanguageMeta);
+  await seedSimpleNotebook(
+    student.id, demoLanguageNotebook,
+    demoLanguageSession, demoLanguageMeta,
+  );
 
   // Notebook 4: Consciousness
-  await seedSimpleNotebook(student.id, demoConsciousnessNotebook, demoConsciousnessSession, demoConsciousnessMeta);
-
-  // Constellation data (shared across notebooks)
-  await seedLexicon(student.id);
-  await seedEncounters(student.id);
-  await seedLibrary(student.id);
-  await seedMastery(student.id);
-  await seedCuriosities(student.id);
+  await seedSimpleNotebook(
+    student.id, demoConsciousnessNotebook,
+    demoConsciousnessSession, demoConsciousnessMeta,
+  );
 }
 
-async function seedMusicNotebook(studentId: string): Promise<void> {
+async function seedMusicNotebook(studentId: string): Promise<string> {
   const notebook = await createNotebook({
     studentId,
     title: 'Music & Mathematics',
@@ -84,12 +88,14 @@ async function seedMusicNotebook(studentId: string): Promise<void> {
     topic: demoSessionMeta.topic,
   });
   await createEntries(current.id, demoSession);
+
+  return notebook.id;
 }
 
 async function seedSimpleNotebook(
   studentId: string,
   meta: { title: string; description: string },
-  entries: import('@/types/entries').NotebookEntry[],
+  entries: NotebookEntry[],
   sessionMeta: { sessionNumber: number; date: string; timeOfDay: string; topic: string },
 ): Promise<void> {
   const notebook = await createNotebook({
@@ -109,64 +115,67 @@ async function seedSimpleNotebook(
   await createEntries(session.id, entries);
 }
 
-async function seedLexicon(studentId: string): Promise<void> {
+/** Seed constellation data for the Music & Mathematics notebook. */
+async function seedConstellation(
+  studentId: string,
+  notebookId: string,
+): Promise<void> {
   const now = Date.now();
-  const records = demoLexicon.map((entry, i) => ({
+
+  // Lexicon
+  const lexiconRecords = demoLexicon.map((entry, i) => ({
     id: createId(),
     studentId,
+    notebookId,
     createdAt: now + i,
     updatedAt: now + i,
     ...entry,
   }));
-  await putBatch(Store.Lexicon, records);
-}
+  await putBatch(Store.Lexicon, lexiconRecords);
 
-async function seedEncounters(studentId: string): Promise<void> {
-  const now = Date.now();
-  const records = demoEncounters.map((enc, i) => ({
+  // Encounters
+  const encounterRecords = demoEncounters.map((enc, i) => ({
     id: createId(),
     studentId,
+    notebookId,
     createdAt: now + i,
     updatedAt: now + i,
     ...enc,
   }));
-  await putBatch(Store.Encounters, records);
-}
+  await putBatch(Store.Encounters, encounterRecords);
 
-async function seedLibrary(studentId: string): Promise<void> {
-  const now = Date.now();
-  const records = demoLibrary.map((lib, i) => ({
+  // Library
+  const libraryRecords = demoLibrary.map((lib, i) => ({
     id: createId(),
     studentId,
+    notebookId,
     createdAt: now + i,
     updatedAt: now + i,
     ...lib,
   }));
-  await putBatch(Store.Library, records);
-}
+  await putBatch(Store.Library, libraryRecords);
 
-async function seedMastery(studentId: string): Promise<void> {
-  const now = Date.now();
-  const records = demoMastery.map((m, i) => ({
+  // Mastery
+  const masteryRecords = demoMastery.map((m, i) => ({
     id: createId(),
     studentId,
+    notebookId,
     concept: m.concept,
     level: m.level,
     percentage: m.percentage,
     createdAt: now + i,
     updatedAt: now + i,
   }));
-  await putBatch(Store.Mastery, records);
-}
+  await putBatch(Store.Mastery, masteryRecords);
 
-async function seedCuriosities(studentId: string): Promise<void> {
-  const now = Date.now();
-  const records = demoCuriosities.map((q, i) => ({
+  // Curiosities
+  const curiosityRecords = demoCuriosities.map((q, i) => ({
     id: createId(),
     studentId,
+    notebookId,
     question: q,
     createdAt: now + i,
     updatedAt: now + i,
   }));
-  await putBatch(Store.Curiosities, records);
+  await putBatch(Store.Curiosities, curiosityRecords);
 }

@@ -59,6 +59,7 @@ export interface EntryRecord extends BaseRecord {
 
 export interface LexiconRecord extends BaseRecord {
   studentId: string;
+  notebookId: string;
   number: number;
   term: string;
   pronunciation: string;
@@ -71,6 +72,7 @@ export interface LexiconRecord extends BaseRecord {
 
 export interface EncounterRecord extends BaseRecord {
   studentId: string;
+  notebookId: string;
   ref: string;
   thinker: string;
   tradition: string;
@@ -83,6 +85,7 @@ export interface EncounterRecord extends BaseRecord {
 
 export interface LibraryRecord extends BaseRecord {
   studentId: string;
+  notebookId: string;
   title: string;
   author: string;
   isCurrent: boolean;
@@ -92,6 +95,7 @@ export interface LibraryRecord extends BaseRecord {
 
 export interface MasteryRecord extends BaseRecord {
   studentId: string;
+  notebookId: string;
   concept: string;
   level: MasteryLevel;
   percentage: number;
@@ -99,6 +103,7 @@ export interface MasteryRecord extends BaseRecord {
 
 export interface CuriosityRecord extends BaseRecord {
   studentId: string;
+  notebookId: string;
   question: string;
 }
 

@@ -1,13 +1,13 @@
 /**
- * Ember DB Schema — v3: multi-student, multi-notebook.
+ * Ember DB Schema — v4: notebook-scoped constellation data.
  *
- * New stores: students, notebooks
- * All domain stores now indexed by studentId for isolation.
- * Sessions scoped to notebooks. Entries scoped to sessions.
+ * Breaking change: Lexicon, Encounters, Library, Mastery, and
+ * Curiosities now carry notebookId for per-notebook isolation.
+ * Unique indexes updated to compound [notebookId, ...] keys.
  */
 
 export const DB_NAME = 'ember-notebook';
-export const DB_VERSION = 3;
+export const DB_VERSION = 4;
 
 export const Store = {
   Students: 'students',
@@ -81,7 +81,8 @@ export const stores: StoreDef[] = [
     keyPath: 'id',
     indexes: [
       { name: 'by-student', keyPath: 'studentId' },
-      { name: 'by-term', keyPath: ['studentId', 'term'], unique: true },
+      { name: 'by-notebook', keyPath: 'notebookId' },
+      { name: 'by-term', keyPath: ['notebookId', 'term'], unique: true },
       { name: 'by-level', keyPath: 'level' },
     ],
   },
@@ -90,7 +91,8 @@ export const stores: StoreDef[] = [
     keyPath: 'id',
     indexes: [
       { name: 'by-student', keyPath: 'studentId' },
-      { name: 'by-ref', keyPath: ['studentId', 'ref'], unique: true },
+      { name: 'by-notebook', keyPath: 'notebookId' },
+      { name: 'by-ref', keyPath: ['notebookId', 'ref'], unique: true },
       { name: 'by-thinker', keyPath: 'thinker' },
       { name: 'by-status', keyPath: 'status' },
     ],
@@ -100,7 +102,8 @@ export const stores: StoreDef[] = [
     keyPath: 'id',
     indexes: [
       { name: 'by-student', keyPath: 'studentId' },
-      { name: 'by-title', keyPath: ['studentId', 'title'], unique: true },
+      { name: 'by-notebook', keyPath: 'notebookId' },
+      { name: 'by-title', keyPath: ['notebookId', 'title'], unique: true },
     ],
   },
   {
@@ -108,7 +111,8 @@ export const stores: StoreDef[] = [
     keyPath: 'id',
     indexes: [
       { name: 'by-student', keyPath: 'studentId' },
-      { name: 'by-concept', keyPath: ['studentId', 'concept'], unique: true },
+      { name: 'by-notebook', keyPath: 'notebookId' },
+      { name: 'by-concept', keyPath: ['notebookId', 'concept'], unique: true },
       { name: 'by-level', keyPath: 'level' },
     ],
   },
@@ -117,6 +121,7 @@ export const stores: StoreDef[] = [
     keyPath: 'id',
     indexes: [
       { name: 'by-student', keyPath: 'studentId' },
+      { name: 'by-notebook', keyPath: 'notebookId' },
     ],
   },
   {

@@ -1,31 +1,50 @@
 /**
  * useMasteryData — reactive mastery state for the Constellation surface.
- * Reads from IndexedDB persistence layer instead of static demo data.
+ * Scoped to the current notebook from StudentContext.
  * Falls back to demo data structure for thinkers (not yet persisted).
  */
-import { Store, useStore } from '@/persistence';
-import { getAllMastery, getAllCuriosities } from '@/persistence/repositories/mastery';
-import { getAllLexicon } from '@/persistence/repositories/lexicon';
-import { getAllEncounters } from '@/persistence/repositories/encounters';
-import { getAllLibrary } from '@/persistence/repositories/library';
+import { Store, useStoreQuery } from '@/persistence';
+import { getMasteryByNotebook, getCuriositiesByNotebook } from '@/persistence/repositories/mastery';
+import { getLexiconByNotebook } from '@/persistence/repositories/lexicon';
+import { getEncountersByNotebook } from '@/persistence/repositories/encounters';
+import { getLibraryByNotebook } from '@/persistence/repositories/library';
+import { useStudent } from '@/contexts/StudentContext';
 import { demoThinkers } from '@/data/demo-thinkers';
 import type { MasteryRecord, CuriosityRecord, LexiconRecord, EncounterRecord, LibraryRecord } from '@/persistence/records';
 
 export function useMasteryData() {
-  const { data: masteryRecords } = useStore<MasteryRecord[]>(
-    Store.Mastery, getAllMastery, [],
+  const { notebook } = useStudent();
+  const notebookId = notebook?.id ?? '';
+
+  const { data: masteryRecords } = useStoreQuery<MasteryRecord[]>(
+    Store.Mastery,
+    () => notebookId ? getMasteryByNotebook(notebookId) : Promise.resolve([]),
+    [],
+    [notebookId],
   );
-  const { data: curiosityRecords } = useStore<CuriosityRecord[]>(
-    Store.Curiosities, getAllCuriosities, [],
+  const { data: curiosityRecords } = useStoreQuery<CuriosityRecord[]>(
+    Store.Curiosities,
+    () => notebookId ? getCuriositiesByNotebook(notebookId) : Promise.resolve([]),
+    [],
+    [notebookId],
   );
-  const { data: lexiconRecords } = useStore<LexiconRecord[]>(
-    Store.Lexicon, getAllLexicon, [],
+  const { data: lexiconRecords } = useStoreQuery<LexiconRecord[]>(
+    Store.Lexicon,
+    () => notebookId ? getLexiconByNotebook(notebookId) : Promise.resolve([]),
+    [],
+    [notebookId],
   );
-  const { data: encounterRecords } = useStore<EncounterRecord[]>(
-    Store.Encounters, getAllEncounters, [],
+  const { data: encounterRecords } = useStoreQuery<EncounterRecord[]>(
+    Store.Encounters,
+    () => notebookId ? getEncountersByNotebook(notebookId) : Promise.resolve([]),
+    [],
+    [notebookId],
   );
-  const { data: libraryRecords } = useStore<LibraryRecord[]>(
-    Store.Library, getAllLibrary, [],
+  const { data: libraryRecords } = useStoreQuery<LibraryRecord[]>(
+    Store.Library,
+    () => notebookId ? getLibraryByNotebook(notebookId) : Promise.resolve([]),
+    [],
+    [notebookId],
   );
 
   const concepts = masteryRecords
