@@ -58,6 +58,22 @@
   box-shadow: none;
 }
 
+.sectionLabel {
+  font-family: var(--font-system);
+  font-size: 9px;
+  font-weight: 300;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink-ghost);
+  padding: 8px 16px 4px;
+}
+
+.sectionLabel:not(:first-child) {
+  border-top: 1px solid var(--rule-light);
+  margin-top: 4px;
+  padding-top: 10px;
+}
+
 .menuItem {
   display: flex;
   align-items: center;

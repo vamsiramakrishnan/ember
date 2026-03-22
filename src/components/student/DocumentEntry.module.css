@@ -1,0 +1,65 @@
+/* DocumentEntry — a document reference on warm paper */
+.container {
+  margin: 12px 0;
+  padding-left: var(--text-indent);
+}
+
+.docCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: var(--paper-warm);
+}
+
+.icon {
+  font-size: 24px;
+  color: var(--ink-faint);
+  flex-shrink: 0;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.name {
+  font-family: var(--font-student);
+  font-size: 16px;
+  color: var(--ink);
+}
+
+.meta {
+  font-family: var(--font-system);
+  font-size: 10px;
+  color: var(--ink-ghost);
+  letter-spacing: 0.5px;
+}
+
+.extract {
+  margin-top: 12px;
+  padding-left: 16px;
+  border-left: 1px solid var(--rule);
+}
+
+.extractLabel {
+  font-family: var(--font-system);
+  font-size: 9px;
+  font-weight: 300;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink-ghost);
+  margin-bottom: 6px;
+}
+
+.extractText {
+  font-family: var(--font-student);
+  font-size: 14px;
+  color: var(--ink-soft);
+  line-height: 1.7;
+  max-height: 200px;
+  overflow-y: auto;
+}

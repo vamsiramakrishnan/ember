@@ -20,6 +20,7 @@ import { useSketchAnalysis } from '@/hooks/useSketchAnalysis';
 import { useMasteryUpdater } from '@/hooks/useMasteryUpdater';
 import { useConstellationSync } from '@/hooks/useConstellationSync';
 import { useSessionIndexer } from '@/hooks/useSessionIndexer';
+import { useContentDrop } from '@/hooks/useContentDrop';
 import { createStudentEntry } from '@/hooks/useEntryInference';
 import { NotebookEntryWrapper } from './NotebookEntryWrapper';
 import { NotebookEntryRenderer } from './NotebookEntryRenderer';
@@ -44,6 +45,7 @@ export function Notebook() {
   const { checkAndUpdate } = useMasteryUpdater();
   useConstellationSync(entries);
   useSessionIndexer(past);
+  const contentDrop = useContentDrop({ addEntry });
   const [mode, setMode] = useState<NotebookMode>('linear');
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -107,7 +109,11 @@ export function Notebook() {
       )}
       {mode === 'linear' ? (
         <>
-          <div className={styles.entryContainer}>
+          <div
+            className={styles.entryContainer}
+            onDrop={contentDrop.handleDrop}
+            onDragOver={contentDrop.handleDragOver}
+          >
             <MarginZone>
               <MarginalReference>
                 Pythagoras also believed in the music of the spheres —
@@ -128,6 +134,7 @@ export function Notebook() {
                     <BlockInserter
                       onSelect={handleInlineInsert}
                       onPaste={handleInlinePaste}
+                      onFileUpload={contentDrop.processFile}
                     />
                   </div>
                 )}

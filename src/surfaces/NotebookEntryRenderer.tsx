@@ -1,6 +1,8 @@
 /**
  * NotebookEntryRenderer — renders a single NotebookEntry by type.
  * Pure mapping component, no state. Delegates to the component inventory.
+ *
+ * Covers all block types: student, tutor, rich content, AI-generated, system.
  */
 import type { NotebookEntry } from '@/types/entries';
 import { ProseEntry } from '@/components/student/ProseEntry';
@@ -8,6 +10,11 @@ import { ScratchNote } from '@/components/student/ScratchNote';
 import { HypothesisMarker } from '@/components/student/HypothesisMarker';
 import { QuestionBubble } from '@/components/student/QuestionBubble';
 import { SketchEntry } from '@/components/student/SketchEntry';
+import { CodeCell } from '@/components/student/CodeCell';
+import { ImageEntry } from '@/components/student/ImageEntry';
+import { FileUploadEntry } from '@/components/student/FileUploadEntry';
+import { EmbedEntry } from '@/components/student/EmbedEntry';
+import { DocumentEntry } from '@/components/student/DocumentEntry';
 import { Marginalia } from '@/components/tutor/Marginalia';
 import { SocraticQuestion } from '@/components/tutor/SocraticQuestion';
 import { Connection } from '@/components/tutor/Connection';
@@ -26,6 +33,7 @@ interface Props {
 
 export function NotebookEntryRenderer({ entry }: Props) {
   switch (entry.type) {
+    // Student blocks
     case 'prose':
       return <ProseEntry>{entry.content}</ProseEntry>;
     case 'scratch':
@@ -36,6 +44,50 @@ export function NotebookEntryRenderer({ entry }: Props) {
       return <QuestionBubble>{entry.content}</QuestionBubble>;
     case 'sketch':
       return <SketchEntry dataUrl={entry.dataUrl} />;
+
+    // Rich content blocks
+    case 'code-cell':
+      return (
+        <CodeCell
+          language={entry.language}
+          source={entry.source}
+          result={entry.result}
+        />
+      );
+    case 'image':
+      return (
+        <ImageEntry
+          dataUrl={entry.dataUrl}
+          alt={entry.alt}
+          caption={entry.caption}
+        />
+      );
+    case 'file-upload':
+      return (
+        <FileUploadEntry
+          file={entry.file}
+          summary={entry.summary}
+        />
+      );
+    case 'embed':
+      return (
+        <EmbedEntry
+          url={entry.url}
+          title={entry.title}
+          description={entry.description}
+          favicon={entry.favicon}
+        />
+      );
+    case 'document':
+      return (
+        <DocumentEntry
+          file={entry.file}
+          pages={entry.pages}
+          extractedText={entry.extractedText}
+        />
+      );
+
+    // Tutor blocks
     case 'tutor-marginalia':
       return <Marginalia>{entry.content}</Marginalia>;
     case 'tutor-question':
@@ -50,6 +102,14 @@ export function NotebookEntryRenderer({ entry }: Props) {
       return <ConceptDiagram items={entry.items} />;
     case 'thinker-card':
       return <ThinkerCard thinker={entry.thinker} />;
+
+    // AI-generated blocks
+    case 'visualization':
+      return <Visualization html={entry.html} caption={entry.caption} />;
+    case 'illustration':
+      return <Illustration dataUrl={entry.dataUrl} caption={entry.caption} />;
+
+    // System blocks
     case 'silence':
       return <SilenceMarker text={entry.text} />;
     case 'divider':
@@ -58,9 +118,5 @@ export function NotebookEntryRenderer({ entry }: Props) {
       return <Echo>{entry.content}</Echo>;
     case 'bridge-suggestion':
       return <BridgeSuggestion>{entry.content}</BridgeSuggestion>;
-    case 'visualization':
-      return <Visualization html={entry.html} caption={entry.caption} />;
-    case 'illustration':
-      return <Illustration dataUrl={entry.dataUrl} caption={entry.caption} />;
   }
 }

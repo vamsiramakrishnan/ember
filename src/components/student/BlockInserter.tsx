@@ -3,32 +3,41 @@
  * and at the left margin of the InputZone. Opens a quiet popover
  * to select the entry type before writing.
  *
- * Appears on hover in the left margin. Stays invisible otherwise.
- * The notebook metaphor: turning to a fresh page and deciding
- * whether to write prose, a question, a hypothesis, or a note.
+ * Two sections: text blocks (prose, question, hypothesis, note)
+ * and content blocks (code, image, file, link).
  */
 import { useState, useRef, useEffect, useCallback } from 'react';
-import type { StudentEntryType } from '@/types/entries';
+import type { StudentEntryType, InsertableBlockType } from '@/types/entries';
 import styles from './BlockInserter.module.css';
 
 interface BlockInserterProps {
   onSelect: (type: StudentEntryType) => void;
+  onSelectBlock?: (type: InsertableBlockType) => void;
   onPaste?: (text: string, type: StudentEntryType) => void;
+  onFileUpload?: (file: File) => void;
 }
 
-const BLOCK_TYPES: { type: StudentEntryType; label: string; hint: string }[] = [
+const TEXT_BLOCKS: { type: StudentEntryType; label: string; hint: string }[] = [
   { type: 'prose', label: 'prose', hint: 'a considered thought' },
   { type: 'question', label: 'question', hint: 'something you wonder' },
   { type: 'hypothesis', label: 'hypothesis', hint: 'a tentative idea' },
   { type: 'scratch', label: 'note', hint: 'a quick fragment' },
 ];
 
-export function BlockInserter({ onSelect, onPaste }: BlockInserterProps) {
+const CONTENT_BLOCKS: { type: InsertableBlockType; label: string; hint: string }[] = [
+  { type: 'code-cell', label: 'code', hint: 'a code snippet' },
+  { type: 'image', label: 'image', hint: 'upload or paste' },
+  { type: 'file-upload', label: 'file', hint: 'pdf, document, data' },
+  { type: 'embed', label: 'link', hint: 'paste a url' },
+];
+
+export function BlockInserter({
+  onSelect, onSelectBlock, onPaste, onFileUpload,
+}: BlockInserterProps) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Close on outside click
   useEffect(() => {
     if (!open) return;
     const handleClick = (e: MouseEvent) => {
@@ -40,7 +49,6 @@ export function BlockInserter({ onSelect, onPaste }: BlockInserterProps) {
     return () => document.removeEventListener('mousedown', handleClick);
   }, [open]);
 
-  // Close on Escape
   useEffect(() => {
     if (!open) return;
     const handleKey = (e: KeyboardEvent) => {
@@ -50,10 +58,43 @@ export function BlockInserter({ onSelect, onPaste }: BlockInserterProps) {
     return () => document.removeEventListener('keydown', handleKey);
   }, [open]);
 
-  const handleSelect = useCallback((type: StudentEntryType) => {
+  const handleTextSelect = useCallback((type: StudentEntryType) => {
     setOpen(false);
     onSelect(type);
   }, [onSelect]);
+
+  const handleContentSelect = useCallback((type: InsertableBlockType) => {
+    setOpen(false);
+
+    // Image and file need the file picker
+    if ((type === 'image' || type === 'file-upload') && fileInputRef.current) {
+      fileInputRef.current.accept = type === 'image'
+        ? 'image/png,image/jpeg,image/gif,image/webp'
+        : '*/*';
+      fileInputRef.current.click();
+      return;
+    }
+
+    // Link: prompt for URL
+    if (type === 'embed') {
+      const url = prompt('Paste a URL:');
+      if (url?.trim()) {
+        onSelectBlock?.('embed');
+      }
+      return;
+    }
+
+    onSelectBlock?.(type);
+  }, [onSelectBlock]);
+
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && onFileUpload) {
+      onFileUpload(file);
+    }
+    // Reset so the same file can be re-selected
+    if (e.target) e.target.value = '';
+  }, [onFileUpload]);
 
   const handlePaste = useCallback(async (type: StudentEntryType) => {
     try {
@@ -63,15 +104,13 @@ export function BlockInserter({ onSelect, onPaste }: BlockInserterProps) {
         onPaste?.(text.trim(), type);
       }
     } catch {
-      // Clipboard access denied — just select the type
-      handleSelect(type);
+      handleTextSelect(type);
     }
-  }, [onPaste, handleSelect]);
+  }, [onPaste, handleTextSelect]);
 
   return (
     <div className={styles.container} ref={menuRef}>
       <button
-        ref={buttonRef}
         className={styles.trigger}
         onClick={() => setOpen(!open)}
         aria-label="Insert a new block"
@@ -80,14 +119,22 @@ export function BlockInserter({ onSelect, onPaste }: BlockInserterProps) {
         <span className={styles.plus}>+</span>
       </button>
 
+      <input
+        ref={fileInputRef}
+        type="file"
+        style={{ display: 'none' }}
+        onChange={handleFileChange}
+      />
+
       {open && (
         <div className={styles.menu} role="menu" aria-label="Block types">
-          {BLOCK_TYPES.map((bt) => (
+          <div className={styles.sectionLabel}>text</div>
+          {TEXT_BLOCKS.map((bt) => (
             <div key={bt.type} className={styles.menuItem}>
               <button
                 className={styles.typeButton}
                 role="menuitem"
-                onClick={() => handleSelect(bt.type)}
+                onClick={() => handleTextSelect(bt.type)}
               >
                 <span className={styles.typeLabel}>{bt.label}</span>
                 <span className={styles.typeHint}>{bt.hint}</span>
@@ -96,13 +143,25 @@ export function BlockInserter({ onSelect, onPaste }: BlockInserterProps) {
                 <button
                   className={styles.pasteAction}
                   onClick={() => handlePaste(bt.type)}
-                  title={`Paste as ${bt.label}`}
-                  aria-label={`Paste clipboard as ${bt.label}`}
+                  aria-label={`Paste as ${bt.label}`}
                 >
                   paste
                 </button>
               )}
             </div>
+          ))}
+
+          <div className={styles.sectionLabel}>content</div>
+          {CONTENT_BLOCKS.map((bt) => (
+            <button
+              key={bt.type}
+              className={styles.typeButton}
+              role="menuitem"
+              onClick={() => handleContentSelect(bt.type)}
+            >
+              <span className={styles.typeLabel}>{bt.label}</span>
+              <span className={styles.typeHint}>{bt.hint}</span>
+            </button>
           ))}
         </div>
       )}
