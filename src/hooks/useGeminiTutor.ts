@@ -19,6 +19,7 @@ import { getMasteryByNotebook, getCuriositiesByNotebook } from '@/persistence/re
 import { getLexiconByNotebook } from '@/persistence/repositories/lexicon';
 import { getEncountersByNotebook } from '@/persistence/repositories/encounters';
 import { useSessionManager } from '@/hooks/useSessionManager';
+import { runBackgroundTasks } from '@/services/background-task-runner';
 import type { StudentProfile, NotebookContext } from '@/services/context-assembler';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
 
@@ -113,6 +114,16 @@ export function useGeminiTutor({ addEntry, entries }: UseGeminiTutorOptions) {
         for (const action of result.deferredActions) {
           executeDeferredAction(action, student.id, notebook.id);
         }
+
+        // Background tasks: assess what needs updating, then dispatch
+        void runBackgroundTasks(
+          studentEntry.content,
+          result.entries,
+          student.id,
+          notebook.id,
+          current?.topic ?? '',
+          entries,
+        );
       } catch (err) {
         console.error('[Ember] Gemini tutor error:', err);
       } finally {

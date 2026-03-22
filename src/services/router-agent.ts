@@ -27,20 +27,22 @@ const ROUTER_AGENT: AgentConfig = {
 Return ONLY a JSON object with these boolean fields:
 {
   "tutor": true,        // Always true — the tutor always responds
-  "research": false,    // True if factual grounding needed (historical claims, specific facts, "who/what/when" questions)
-  "visualize": false,   // True if a visual diagram, timeline, or concept map would help understanding
-  "illustrate": false,  // True if a hand-drawn sketch would help (spatial/physical concepts)
-  "deepMemory": false,  // True if student references past learning, asks about their progress, or the response would benefit from their full history
+  "research": false,    // True if factual grounding needed
+  "visualize": false,   // True if a concept diagram would help
+  "illustrate": false,  // True if a hand-drawn sketch would help
+  "deepMemory": false,  // True if past learning context would help
+  "directive": false,   // True if the tutor should send the student to explore something outside the notebook
   "reason": ""          // One sentence explaining your routing decision
 }
 
 Routing heuristics:
-- research=true: Student asks factual questions, makes claims that need verification, or the tutor would benefit from real scholarship to respond well
-- visualize=true: Concepts with spatial relationships, timelines, hierarchies, processes, or comparisons. NOT for simple Q&A
-- illustrate=true: Physical systems, anatomical structures, mechanical processes — things that are better shown than described
-- deepMemory=true: References to past sessions, questions about progress, or when the student's vocabulary/mastery history would enrich the response
+- research=true: Student asks factual questions, makes claims needing verification, or the tutor needs real scholarship
+- visualize=true: Spatial relationships, timelines, hierarchies, processes. NOT for simple Q&A
+- illustrate=true: Physical systems, anatomical structures, mechanical processes
+- deepMemory=true: References past sessions, progress questions, or vocabulary/mastery history enriches the response
+- directive=true: After 3-4 standard exchanges, OR when the student is ready for hands-on exploration, OR when a specific book/search/experiment would deepen understanding. The tutor should push them outside the notebook
 
-Be conservative with visualize and illustrate — they are expensive. Only flag them when they would genuinely aid understanding, not as decoration.`,
+Be conservative with visualize, illustrate, and directive — they are expensive or disruptive. Only flag when genuinely valuable.`,
   thinkingLevel: 'MINIMAL',
   tools: [],
   responseModalities: ['TEXT'],
@@ -54,6 +56,8 @@ export interface RoutingDecision {
   visualize: boolean;
   illustrate: boolean;
   deepMemory: boolean;
+  /** Whether the tutor should use a directive (exploration instruction). */
+  directive: boolean;
   reason: string;
   source: 'router' | 'fallback';
 }
@@ -64,6 +68,7 @@ const DEFAULT_DECISION: RoutingDecision = {
   visualize: false,
   illustrate: false,
   deepMemory: false,
+  directive: false,
   reason: 'Default routing — tutor only',
   source: 'fallback',
 };
@@ -73,10 +78,11 @@ const DEFAULT_DECISION: RoutingDecision = {
 const cooldowns: Record<string, number> = {};
 
 const COOLDOWN_MS: Record<string, number> = {
-  research: 30_000,   // 30s between research calls
-  visualize: 60_000,  // 60s between visualizations
-  illustrate: 60_000, // 60s between illustrations
-  deepMemory: 20_000, // 20s between deep memory queries
+  research: 30_000,    // 30s between research calls
+  visualize: 60_000,   // 60s between visualizations
+  illustrate: 60_000,  // 60s between illustrations
+  deepMemory: 20_000,  // 20s between deep memory queries
+  directive: 45_000,   // 45s between exploration directives
 };
 
 function isOnCooldown(agent: string): boolean {
@@ -192,20 +198,21 @@ Classify this entry. Return JSON only.`;
 
     const parsed = JSON.parse(cleaned) as Record<string, unknown>;
     const decision: RoutingDecision = {
-      tutor: true, // Always true
+      tutor: true,
       research: Boolean(parsed.research) && !isOnCooldown('research'),
       visualize: Boolean(parsed.visualize) && !isOnCooldown('visualize'),
       illustrate: Boolean(parsed.illustrate) && !isOnCooldown('illustrate'),
       deepMemory: Boolean(parsed.deepMemory) && !isOnCooldown('deepMemory'),
+      directive: Boolean(parsed.directive) && !isOnCooldown('directive'),
       reason: typeof parsed.reason === 'string' ? parsed.reason : '',
       source: 'router',
     };
 
-    // Mark cooldowns for activated agents
     if (decision.research) markUsed('research');
     if (decision.visualize) markUsed('visualize');
     if (decision.illustrate) markUsed('illustrate');
     if (decision.deepMemory) markUsed('deepMemory');
+    if (decision.directive) markUsed('directive');
 
     return decision;
   } catch (err) {

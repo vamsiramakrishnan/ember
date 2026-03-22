@@ -62,13 +62,18 @@ export async function orchestrate(
   // Research (if router says so)
   const research = routing.research ? await fetchResearch(studentText) : null;
 
+  // If router says directive, hint the tutor
+  const directiveHint = routing.directive
+    ? '\n\n[SYSTEM: The student is ready for an exploration directive. Respond with a tutor-directive type — send them to search, read, try, observe, or compare something specific outside the notebook.]'
+    : '';
+
   // Assemble minimal context (the agent will fetch more via tools)
   const ctx = assembleContext({
-    studentText: studentText + graphContext,
+    studentText: studentText + graphContext + directiveHint,
     entries,
     profile: profile ?? null,
     notebook: notebookCtx ?? null,
-    memory: null, // Agent fetches its own via search_history tool
+    memory: null,
     research,
   });
 
