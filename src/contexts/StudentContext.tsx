@@ -1,8 +1,9 @@
 /**
  * StudentContext — provides the current student and notebook
- * to all components. Manages student selection and switching.
+ * to all components. Handles both local and auth-based sign out.
  */
 import { createContext, useContext, useState, useCallback } from 'react';
+import { getSupabase } from '@/auth/supabase-client';
 import type { ReactNode } from 'react';
 import type { StudentRecord, NotebookRecord } from '@/persistence/records';
 
@@ -29,6 +30,11 @@ export function StudentProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(() => {
     setStudent(null);
     setNotebook(null);
+    // Also sign out of Supabase auth if active
+    const supabase = getSupabase();
+    if (supabase) {
+      void supabase.auth.signOut();
+    }
   }, []);
 
   return (
