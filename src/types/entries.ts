@@ -88,7 +88,8 @@ export type NotebookEntry =
   | { type: 'bridge-suggestion'; content: string }
   | { type: 'tutor-reflection'; content: string }
   | { type: 'tutor-directive'; content: string; action?: string }
-  | { type: 'citation'; sources: Array<{ title: string; url: string }> };
+  | { type: 'citation'; sources: Array<{ title: string; url: string }> }
+  | { type: 'streaming-text'; content: string; done: boolean };
 
 /** A notebook entry with metadata for live notebook interaction. */
 export interface LiveEntry {

@@ -22,12 +22,14 @@ interface InputZoneProps {
   insertText?: string | null;
   /** Called after insertText is consumed. */
   onInsertConsumed?: () => void;
+  /** When true, the tutor is thinking — textarea becomes quiet. */
+  disabled?: boolean;
 }
 
 export function InputZone({
   onSubmit, onSubmitTyped, onSketchSubmit,
   onMentionTrigger, onSlashTrigger, onPopupClose, onPaste,
-  insertText, onInsertConsumed,
+  insertText, onInsertConsumed, disabled,
 }: InputZoneProps) {
   const [value, setValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
@@ -45,7 +47,7 @@ export function InputZone({
     if (!insertText) return;
     setValue((prev) => {
       // Replace @query or /query at end of text with the insertion
-      const replaced = prev.replace(/@\w*$/, insertText).replace(/^\/\w*$/, insertText);
+      const replaced = prev.replace(/@\w*$/, insertText).replace(/\/\w*$/, insertText);
       return replaced === prev ? prev + insertText : replaced;
     });
     onInsertConsumed?.();
@@ -70,7 +72,7 @@ export function InputZone({
 
     const atMatch = text.match(/@(\w*)$/);
     if (atMatch) { onMentionTrigger?.(atMatch[1] ?? ''); return; }
-    const slashMatch = text.match(/^\/(\w*)$/);
+    const slashMatch = text.match(/\/(\w*)$/);
     if (slashMatch) { onSlashTrigger?.(slashMatch[1] ?? ''); return; }
     onPopupClose?.();
   }, [onMentionTrigger, onSlashTrigger, onPopupClose]);
@@ -108,8 +110,6 @@ export function InputZone({
     <div
       className={styles.container}
       onClick={() => textareaRef.current?.focus()}
-      role="textbox"
-      aria-label="Writing area"
     >
       <BlockInserter onSelect={handleBlockSelect} />
       {forcedType && (
@@ -134,12 +134,14 @@ export function InputZone({
         onKeyDown={handleKeyDown}
         onPaste={onPaste}
         rows={1}
+        disabled={disabled}
         aria-label="Write your thoughts"
+        aria-busy={disabled}
       />
       {!isFocused && !value && !forcedType && (
         <>
-          <div className={styles.cursor} aria-hidden="true" />
-          <span className={styles.hint}>What are you thinking about?</span>
+          <div className={disabled ? styles.cursorThinking : styles.cursor} aria-hidden="true" />
+          {!disabled && <span className={styles.hint}>What are you thinking about?</span>}
         </>
       )}
       <div className={styles.bottomRow}>
@@ -159,7 +161,7 @@ export function InputZone({
   );
 }
 
-const AFFORDANCE_HINTS = ['@mention', '/command', '? asks the tutor', 'paste images'];
+const AFFORDANCE_HINTS = ['? asks the tutor', '/visualize', '@mention'];
 function InputAffordances() {
   return (
     <div className={styles.affordances} aria-hidden="true">

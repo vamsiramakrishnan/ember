@@ -106,9 +106,13 @@ export function useTutorResponse(
   addEntry: (entry: NotebookEntry) => void,
   _addEntries: (entries: NotebookEntry[]) => void,
   entries?: LiveEntry[],
+  addEntryWithId?: (entry: NotebookEntry) => string | Promise<string>,
+  patchEntryContent?: (id: string, entry: NotebookEntry) => void,
 ) {
   const gemini = useGeminiTutor({
     addEntry,
+    addEntryWithId,
+    patchEntryContent,
     entries: entries ?? [],
   });
   const staticRespond = useStaticFallback(addEntry);
@@ -124,5 +128,9 @@ export function useTutorResponse(
     [gemini, staticRespond],
   );
 
-  return { respond, isThinking: gemini.isThinking };
+  return {
+    respond,
+    isThinking: gemini.isThinking,
+    isStreaming: gemini.isStreaming,
+  };
 }

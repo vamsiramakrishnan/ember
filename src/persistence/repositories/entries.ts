@@ -115,6 +115,21 @@ export async function updateEntry(
   await put(Store.Entries, { ...existing, ...updates, updatedAt: Date.now() });
 }
 
+/** Update the entry content in-place (used for streaming updates). */
+export async function updateEntryContent(
+  id: string,
+  entry: NotebookEntry,
+): Promise<void> {
+  const existing = await get<EntryRecord>(Store.Entries, id);
+  if (!existing) return;
+  await put(Store.Entries, {
+    ...existing,
+    type: entry.type,
+    entry,
+    updatedAt: Date.now(),
+  });
+}
+
 /** Get all pinned entries across all sessions. */
 export async function getPinnedEntries(): Promise<EntryRecord[]> {
   const results = await getByIndex<EntryRecord>(

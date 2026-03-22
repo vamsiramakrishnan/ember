@@ -29,6 +29,7 @@ import { Illustration } from '@/components/tutor/Illustration';
 import { Reflection } from '@/components/tutor/Reflection';
 import { Directive } from '@/components/tutor/Directive';
 import { Citation } from '@/components/ambient/Citation';
+import { StreamingText } from '@/components/tutor/StreamingText';
 
 interface Props {
   entry: NotebookEntry;
@@ -127,5 +128,14 @@ export function NotebookEntryRenderer({ entry }: Props) {
       return <Directive action={entry.action}>{entry.content}</Directive>;
     case 'citation':
       return <Citation sources={entry.sources} />;
+    case 'streaming-text':
+      return <StreamingText done={entry.done}>{entry.content}</StreamingText>;
+    default:
+      // Exhaustive check: if a new entry type is added without a renderer,
+      // render nothing rather than crash. In development, log a warning.
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn(`NotebookEntryRenderer: unhandled entry type "${(entry as { type: string }).type}"`);
+      }
+      return null;
   }
 }

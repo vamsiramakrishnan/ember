@@ -1,16 +1,23 @@
 /**
  * NotebookEntryWrapper — interactive shell around every entry.
  * Hover/touch: drag handle (left) + type tag + actions (right).
+ * Wrapped in React.memo to prevent cascade re-renders in the entry list.
  * See: 08-touch-and-interaction-states.md
  */
-import { useState, useRef, useCallback } from 'react';
+import { memo, useState, useRef, useCallback } from 'react';
 import type { LiveEntry } from '@/types/entries';
 import { Bookmark } from '@/components/student/Bookmark';
 import { AnnotationMargin } from '@/components/student/AnnotationMargin';
 import { SelectionToolbar } from '@/components/student/SelectionToolbar';
+import { FollowUp } from '@/components/tutor/FollowUp';
 import { NotebookEntryRenderer } from './NotebookEntryRenderer';
 import { TYPE_META, isStudentEntry } from './entryTypeMeta';
 import styles from './NotebookEntryWrapper.module.css';
+
+const TUTOR_TYPES = new Set([
+  'tutor-marginalia', 'tutor-question', 'tutor-connection',
+  'tutor-reflection', 'tutor-directive',
+]);
 
 interface Props {
   liveEntry: LiveEntry;
@@ -25,15 +32,16 @@ interface Props {
   onDragLeave?: (id: string) => void;
   onDrop?: (id: string, e: React.DragEvent) => void;
   onDragEnd?: () => void;
+  onFollowUp?: (question: string, context: string) => void;
   isDragOver?: boolean;
   isDragging?: boolean;
   style?: React.CSSProperties;
 }
 
-export function NotebookEntryWrapper({
+export const NotebookEntryWrapper = memo(function NotebookEntryWrapper({
   liveEntry, onCrossOut, onToggleBookmark, onTogglePin,
   onAnnotate, onSelectionAction, onBranch, onDragStart, onDragOver,
-  onDragLeave, onDrop, onDragEnd, isDragOver, isDragging, style,
+  onDragLeave, onDrop, onDragEnd, onFollowUp, isDragOver, isDragging, style,
 }: Props) {
   const { id, entry, crossedOut, bookmarked, pinned, annotations } = liveEntry;
   const canPin = entry.type === 'question';
@@ -83,6 +91,12 @@ export function NotebookEntryWrapper({
           entryId={id}
           onAction={(a) => onSelectionAction?.(a.entryId, a.type, a.selectedText)}
         />
+        {onFollowUp && TUTOR_TYPES.has(entry.type) && 'content' in entry && (
+          <FollowUp
+            context={(entry as { content: string }).content}
+            onSubmit={onFollowUp}
+          />
+        )}
       </div>
       {bookmarked && (
         <div className={styles.bookmarkPos}><Bookmark /></div>
@@ -103,7 +117,7 @@ export function NotebookEntryWrapper({
       )}
     </div>
   );
-}
+});
 
 function EntryActions({ id, canCrossOut, crossedOut, bookmarked, canPin, pinned,
   onCrossOut, onToggleBookmark, onTogglePin, onBranch,
@@ -116,7 +130,7 @@ function EntryActions({ id, canCrossOut, crossedOut, bookmarked, canPin, pinned,
   onBranch?: () => void;
 }) {
   return (
-    <div className={styles.actions} aria-label="Entry actions">
+    <div className={styles.actions} role="group" aria-label="Entry actions">
       {canCrossOut && (
         <button className={styles.action} onClick={() => onCrossOut(id)}
           aria-label={crossedOut ? 'Restore' : 'Cross out'}>

@@ -114,6 +114,107 @@ export async function generateText(
 }
 
 /**
+ * Stream text with conversation history. Yields chunks via callback.
+ */
+export async function generateTextStreamWithHistory(
+  messages: Array<{ role: 'user' | 'model'; text: string }>,
+  options?: Omit<GeminiTextOptions, 'prompt'> & {
+    onChunk?: (chunk: string, accumulated: string) => void;
+  },
+): Promise<string> {
+  const client = getGeminiClient();
+  if (!client) {
+    throw new Error('Gemini API key not configured');
+  }
+
+  const tools: Record<string, unknown>[] = [];
+  if (options?.useSearch) tools.push({ googleSearch: {} });
+  if (options?.useUrlContext) tools.push({ urlContext: {} });
+  if (options?.useCodeExecution) tools.push({ codeExecution: {} });
+
+  const config: Record<string, unknown> = {};
+  if (tools.length > 0) config.tools = tools;
+  if (options?.systemInstruction) {
+    config.systemInstruction = options.systemInstruction;
+  }
+
+  const contents = messages.map((m) => ({
+    role: m.role,
+    parts: [{ text: m.text }],
+  }));
+
+  const response = await client.models.generateContentStream({
+    model: options?.model ?? MODELS.text,
+    config,
+    contents,
+  });
+
+  let accumulated = '';
+  for await (const chunk of response) {
+    const parts = chunk.candidates?.[0]?.content?.parts;
+    if (!parts) continue;
+    for (const part of parts) {
+      if ('text' in part && part.text) {
+        accumulated += part.text;
+        options?.onChunk?.(part.text, accumulated);
+      }
+    }
+  }
+
+  return accumulated;
+}
+
+/**
+ * Stream text using Gemini. Yields chunks as they arrive via callback.
+ * Returns the full concatenated text when complete.
+ */
+export async function generateTextStream(
+  options: GeminiTextOptions & {
+    onChunk: (chunk: string, accumulated: string) => void;
+  },
+): Promise<string> {
+  const client = getGeminiClient();
+  if (!client) {
+    throw new Error('Gemini API key not configured');
+  }
+
+  const tools: Record<string, unknown>[] = [];
+  if (options.useSearch) tools.push({ googleSearch: {} });
+  if (options.useUrlContext) tools.push({ urlContext: {} });
+  if (options.useCodeExecution) tools.push({ codeExecution: {} });
+
+  const config: Record<string, unknown> = {};
+  if (tools.length > 0) config.tools = tools;
+  if (options.systemInstruction) {
+    config.systemInstruction = options.systemInstruction;
+  }
+
+  const contents = [
+    { role: 'user' as const, parts: [{ text: options.prompt }] },
+  ];
+
+  const response = await client.models.generateContentStream({
+    model: options.model ?? MODELS.text,
+    config,
+    contents,
+  });
+
+  let accumulated = '';
+  for await (const chunk of response) {
+    const parts = chunk.candidates?.[0]?.content?.parts;
+    if (!parts) continue;
+    for (const part of parts) {
+      if ('text' in part && part.text) {
+        accumulated += part.text;
+        options.onChunk(part.text, accumulated);
+      }
+    }
+  }
+
+  return accumulated;
+}
+
+/**
  * Generate text with conversation history.
  * Each message has a role ('user' | 'model') and text content.
  */

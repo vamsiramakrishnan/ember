@@ -2,6 +2,7 @@
  * NotebookCanvas — Canvas mode view within the Notebook surface.
  * Derives concept cards from actual notebook entries.
  * Supports mouse drag + touch drag for reposition.
+ * Canvas cards are keyboard-accessible (arrow keys, tab).
  * See: 06-component-inventory.md, Family 4.
  */
 import { useCallback, useRef } from 'react';
@@ -15,6 +16,8 @@ interface Props {
   sessionId: string | null;
   entries: LiveEntry[];
 }
+
+const ARROW_STEP = 10;
 
 /** Extract a label and body from any entry type. */
 function cardContent(e: LiveEntry): { label: string; body: string } | null {
@@ -42,7 +45,10 @@ function trunc(s: string, max = 100): string {
 
 export function NotebookCanvas({ sessionId, entries }: Props) {
   const { positions, connections, updatePosition } = useCanvasPositions(sessionId, entries);
-  const dragRef = useRef<{ id: string; startX: number; startY: number; origX: number; origY: number } | null>(null);
+  const dragRef = useRef<{
+    id: string; startX: number; startY: number;
+    origX: number; origY: number;
+  } | null>(null);
 
   const startDrag = useCallback((id: string, clientX: number, clientY: number) => {
     const pos = positions.find((p) => p.id === id);
@@ -58,29 +64,55 @@ export function NotebookCanvas({ sessionId, entries }: Props) {
 
   const endDrag = useCallback(() => { dragRef.current = null; }, []);
 
-  // Mouse handlers
+  // Mouse handlers — document-level for drag outside card bounds
   const onMouseDown = useCallback((id: string, e: React.MouseEvent) => {
     e.preventDefault();
     startDrag(id, e.clientX, e.clientY);
     const onMove = (ev: MouseEvent) => moveDrag(ev.clientX, ev.clientY);
-    const onUp = () => { endDrag(); document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+    const onUp = () => {
+      endDrag();
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup', onUp);
   }, [startDrag, moveDrag, endDrag]);
 
-  // Touch handlers
+  // Touch handlers — document-level so drag continues outside card bounds
   const onTouchStart = useCallback((id: string, e: React.TouchEvent) => {
     const t = e.touches[0];
     if (!t) return;
     startDrag(id, t.clientX, t.clientY);
-  }, [startDrag]);
+    const onMove = (ev: TouchEvent) => {
+      const touch = ev.touches[0];
+      if (!touch || !dragRef.current) return;
+      ev.preventDefault(); // prevent scroll only while actively dragging
+      moveDrag(touch.clientX, touch.clientY);
+    };
+    const onEnd = () => {
+      endDrag();
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('touchend', onEnd);
+    };
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('touchend', onEnd);
+  }, [startDrag, moveDrag, endDrag]);
 
-  const onTouchMove = useCallback((e: React.TouchEvent) => {
-    const t = e.touches[0];
-    if (!t || !dragRef.current) return;
-    e.preventDefault(); // prevent scroll while dragging
-    moveDrag(t.clientX, t.clientY);
-  }, [moveDrag]);
+  // Keyboard handler — arrow keys move the focused card
+  const onKeyDown = useCallback((id: string, e: React.KeyboardEvent) => {
+    const pos = positions.find((p) => p.id === id);
+    if (!pos) return;
+    let dx = 0, dy = 0;
+    switch (e.key) {
+      case 'ArrowUp': dy = -ARROW_STEP; break;
+      case 'ArrowDown': dy = ARROW_STEP; break;
+      case 'ArrowLeft': dx = -ARROW_STEP; break;
+      case 'ArrowRight': dx = ARROW_STEP; break;
+      default: return;
+    }
+    e.preventDefault();
+    updatePosition(id, pos.x + dx, pos.y + dy);
+  }, [positions, updatePosition]);
 
   const entryMap = new Map(entries.map((e) => [e.id, e]));
 
@@ -116,10 +148,12 @@ export function NotebookCanvas({ sessionId, entries }: Props) {
               key={pos.id}
               className={styles.card}
               style={{ left: pos.x, top: pos.y, width: pos.width ?? 160 }}
+              tabIndex={0}
+              role="button"
+              aria-label={`${card.label}: ${card.body.slice(0, 40)}`}
               onMouseDown={(e) => onMouseDown(pos.id, e)}
               onTouchStart={(e) => onTouchStart(pos.id, e)}
-              onTouchMove={onTouchMove}
-              onTouchEnd={endDrag}
+              onKeyDown={(e) => onKeyDown(pos.id, e)}
             >
               <span className={styles.cardLabel}>{card.label}</span>
               <p className={styles.cardBody}>{card.body}</p>

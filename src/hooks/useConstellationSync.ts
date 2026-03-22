@@ -1,13 +1,14 @@
 /**
  * useConstellationSync — watches notebook entries and automatically
- * creates constellation records when the AI tutor introduces content:
+ * creates constellation records via declarative projections.
  *
- * - thinker-card entries → Encounter records
- * - concept-diagram entries → Mastery records (exploring level)
- * - bridge-suggestion entries → Curiosity records
+ * Uses ConstellationProjection to map entry types to constellation
+ * records (encounters, mastery, curiosities), keeping the logic
+ * centralized and testable.
  *
- * This bridges the gap between "what appears in the notebook" and
- * "what shows up in the constellation." The tutor's work is not lost.
+ * Traces to:
+ * - Principle III (Mastery is Invisible): projections are automatic
+ * - 04-information-architecture.md: constellation reflects notebook
  */
 import { useEffect, useRef } from 'react';
 import { Store, notify } from '@/persistence';
@@ -15,6 +16,7 @@ import { createEncounter, getEncountersByNotebook } from '@/persistence/reposito
 import { upsertMastery } from '@/persistence/repositories/mastery';
 import { createCuriosity, getCuriositiesByNotebook } from '@/persistence/repositories/mastery';
 import { useStudent } from '@/contexts/StudentContext';
+import { projectEntry } from '@/state';
 import type { LiveEntry } from '@/types/entries';
 
 export function useConstellationSync(entries: LiveEntry[]) {
@@ -25,66 +27,74 @@ export function useConstellationSync(entries: LiveEntry[]) {
     if (!student || !notebook || entries.length === 0) return;
 
     const process = async () => {
+      let encountersChanged = false;
+      let masteryChanged = false;
+      let curiositiesChanged = false;
+
       for (const le of entries) {
         if (processedRef.current.has(le.id)) continue;
         processedRef.current.add(le.id);
 
-        // Thinker cards → Encounters
-        if (le.entry.type === 'thinker-card') {
-          const { thinker } = le.entry;
+        // Use declarative projection
+        const projection = projectEntry(le);
+
+        // Apply encounter projections
+        for (const enc of projection.encounters) {
           const existing = await getEncountersByNotebook(notebook.id);
           const already = existing.some(
-            (e) => e.thinker.toLowerCase() === thinker.name.toLowerCase(),
+            (e) => e.thinker.toLowerCase() === enc.thinkerName.toLowerCase(),
           );
           if (!already) {
             await createEncounter({
               studentId: student.id,
               notebookId: notebook.id,
               ref: String(existing.length + 1).padStart(3, '0'),
-              thinker: thinker.name,
+              thinker: enc.thinkerName,
               tradition: '',
-              coreIdea: thinker.gift,
+              coreIdea: enc.coreIdea,
               sessionTopic: '',
               date: new Date().toLocaleDateString('en-GB', {
                 day: 'numeric', month: 'long', year: 'numeric',
               }),
               status: 'active',
             });
-            notify(Store.Encounters);
+            encountersChanged = true;
           }
         }
 
-        // Concept diagrams → Mastery (exploring level)
-        if (le.entry.type === 'concept-diagram') {
-          for (const item of le.entry.items) {
-            await upsertMastery({
-              studentId: student.id,
-              notebookId: notebook.id,
-              concept: item.label,
-              level: 'exploring',
-              percentage: 15,
-            });
-          }
-          notify(Store.Mastery);
+        // Apply mastery projections
+        for (const mas of projection.mastery) {
+          await upsertMastery({
+            studentId: student.id,
+            notebookId: notebook.id,
+            concept: mas.concept,
+            level: mas.level,
+            percentage: mas.percentage,
+          });
+          masteryChanged = true;
         }
 
-        // Bridge suggestions → Curiosity threads
-        if (le.entry.type === 'bridge-suggestion') {
+        // Apply curiosity projections
+        for (const cur of projection.curiosities) {
           const existing = await getCuriositiesByNotebook(notebook.id);
-          const content = le.entry.content;
           const already = existing.some(
-            (c) => c.question === content,
+            (c) => c.question === cur.question,
           );
           if (!already) {
             await createCuriosity({
               studentId: student.id,
               notebookId: notebook.id,
-              question: content,
+              question: cur.question,
             });
-            notify(Store.Curiosities);
+            curiositiesChanged = true;
           }
         }
       }
+
+      // Batch notifications
+      if (encountersChanged) notify(Store.Encounters);
+      if (masteryChanged) notify(Store.Mastery);
+      if (curiositiesChanged) notify(Store.Curiosities);
     };
 
     void process();
