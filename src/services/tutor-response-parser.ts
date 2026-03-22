@@ -45,6 +45,13 @@ export function parseTutorResponse(raw: string): NotebookEntry | null {
         },
       };
     }
+    if (type === 'tutor-directive' && typeof parsed.content === 'string') {
+      return {
+        type: 'tutor-directive',
+        content: parsed.content,
+        action: typeof parsed.action === 'string' ? parsed.action : undefined,
+      };
+    }
     if (type === 'concept-diagram' && Array.isArray(parsed.items)) {
       return {
         type: 'concept-diagram',

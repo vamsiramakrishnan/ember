@@ -20,10 +20,14 @@ interface Props {
 function cardContent(entry: LiveEntry): { label: string; body: string } | null {
   const e = entry.entry;
   switch (e.type) {
-    case 'prose': return { label: 'Prose', body: truncate(e.content) };
+    case 'prose': return { label: 'Thought', body: truncate(e.content) };
+    case 'scratch': return { label: 'Note', body: truncate(e.content) };
     case 'hypothesis': return { label: 'Hypothesis', body: truncate(e.content) };
     case 'question': return { label: 'Question', body: truncate(e.content) };
+    case 'tutor-marginalia': return { label: 'Tutor', body: truncate(e.content) };
+    case 'tutor-question': return { label: 'Probe', body: truncate(e.content) };
     case 'tutor-connection': return { label: 'Connection', body: truncate(e.content) };
+    case 'tutor-reflection': return { label: 'Reflection', body: truncate(e.content) };
     case 'bridge-suggestion': return { label: 'Bridge', body: truncate(e.content) };
     case 'thinker-card': return { label: e.thinker.name, body: e.thinker.gift };
     case 'concept-diagram': {

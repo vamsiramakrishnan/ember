@@ -27,6 +27,7 @@ import { BridgeSuggestion } from '@/components/peripheral/BridgeSuggestion';
 import { Visualization } from '@/components/tutor/Visualization';
 import { Illustration } from '@/components/tutor/Illustration';
 import { Reflection } from '@/components/tutor/Reflection';
+import { Directive } from '@/components/tutor/Directive';
 
 interface Props {
   entry: NotebookEntry;
@@ -121,5 +122,7 @@ export function NotebookEntryRenderer({ entry }: Props) {
       return <BridgeSuggestion>{entry.content}</BridgeSuggestion>;
     case 'tutor-reflection':
       return <Reflection>{entry.content}</Reflection>;
+    case 'tutor-directive':
+      return <Directive action={entry.action}>{entry.content}</Directive>;
   }
 }

@@ -106,6 +106,52 @@
   color: var(--ink-faint);
 }
 
+/* Warm hint — visible when empty and unfocused */
+.hint {
+  position: absolute;
+  top: 32px;
+  left: var(--text-indent);
+  font-family: var(--font-student);
+  font-size: 16px;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--ink-ghost);
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  line-height: 1.82;
+}
+
+.hintHidden {
+  composes: hint;
+  opacity: 0;
+}
+
+/* Affordance row — shows available input modes */
+.affordances {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.container:hover .affordances,
+.container:focus-within .affordances {
+  opacity: 1;
+}
+
+.affordance {
+  font-family: var(--font-system);
+  font-size: 9px;
+  letter-spacing: 0.5px;
+  color: var(--ink-ghost);
+}
+
+.affordanceKey {
+  color: var(--ink-faint);
+  margin-right: 3px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cursor {
     animation: none;

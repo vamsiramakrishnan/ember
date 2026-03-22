@@ -1,6 +1,6 @@
 /**
- * Header — Logo, navigation tabs, student identity.
- * Now reads from StudentContext instead of hardcoded values.
+ * Header — Logo, notebook breadcrumb, navigation tabs, student identity.
+ * Shows which notebook is active as a quiet breadcrumb.
  */
 import { Column } from '@/primitives/Column';
 import { Navigation, type Surface } from './Navigation';
@@ -14,25 +14,34 @@ interface HeaderProps {
 }
 
 export function Header({ activeSurface, onNavigate }: HeaderProps) {
-  const { student, signOut } = useStudent();
+  const { student, notebook, setNotebook, signOut } = useStudent();
 
   return (
     <header className={styles.header}>
       <Column>
         <div className={styles.row}>
-          <button
-            className={styles.logo}
-            aria-label="Ember — return to notebooks"
-            onClick={signOut}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              padding: 0,
-            }}
-          >
-            Ember
-          </button>
+          <div className={styles.breadcrumb}>
+            <button
+              className={styles.logo}
+              aria-label="Ember — return to notebooks"
+              onClick={signOut}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+            >
+              Ember
+            </button>
+            {notebook && (
+              <>
+                <span className={styles.separator}>·</span>
+                <button
+                  className={styles.notebookName}
+                  onClick={() => setNotebook(null)}
+                  aria-label="Back to notebook list"
+                >
+                  {notebook.title}
+                </button>
+              </>
+            )}
+          </div>
           {student && (
             <StudentIdentity
               name={student.displayName}

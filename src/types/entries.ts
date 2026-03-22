@@ -78,7 +78,8 @@ export type NotebookEntry =
   | { type: 'divider'; label?: string }
   | { type: 'echo'; content: string }
   | { type: 'bridge-suggestion'; content: string }
-  | { type: 'tutor-reflection'; content: string };
+  | { type: 'tutor-reflection'; content: string }
+  | { type: 'tutor-directive'; content: string; action?: string };
 
 /** A notebook entry with metadata for live notebook interaction. */
 export interface LiveEntry {

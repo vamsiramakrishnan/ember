@@ -77,17 +77,14 @@ export function InputZone({
     textareaRef.current?.focus();
   }, []);
 
-  if (sketchMode) {
-    return (
-      <SketchInput
-        onSubmit={(dataUrl) => { onSketchSubmit?.(dataUrl); setSketchMode(false); }}
-        onCancel={() => setSketchMode(false)}
-      />
-    );
-  }
+  if (sketchMode) return (
+    <SketchInput
+      onSubmit={(d) => { onSketchSubmit?.(d); setSketchMode(false); }}
+      onCancel={() => setSketchMode(false)}
+    />
+  );
 
-  const displayType = forcedType
-    ? typeLabels[forcedType] || forcedType
+  const displayType = forcedType ? typeLabels[forcedType] || forcedType
     : value.trim() ? typeLabels[inferEntryType(value.trim())] : '';
 
   return (
@@ -123,7 +120,10 @@ export function InputZone({
         aria-label="Write your thoughts"
       />
       {!isFocused && !value && !forcedType && (
-        <div className={styles.cursor} aria-hidden="true" />
+        <>
+          <div className={styles.cursor} aria-hidden="true" />
+          <span className={styles.hint}>What are you thinking about?</span>
+        </>
       )}
       <div className={styles.bottomRow}>
         {displayType && !forcedType && (
@@ -137,6 +137,16 @@ export function InputZone({
           sketch
         </button>
       </div>
+      <InputAffordances />
+    </div>
+  );
+}
+
+const AFFORDANCE_HINTS = ['@mention', '/command', '? asks the tutor', 'paste images'];
+function InputAffordances() {
+  return (
+    <div className={styles.affordances} aria-hidden="true">
+      {AFFORDANCE_HINTS.map((h) => <span key={h} className={styles.affordance}>{h}</span>)}
     </div>
   );
 }

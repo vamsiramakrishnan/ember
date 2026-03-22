@@ -1,0 +1,41 @@
+/* Directive — exploration instruction. Indigo accent, left border. */
+
+.container {
+  margin: 12px 0;
+  padding: 0;
+}
+
+.rule {
+  width: 24px;
+  height: 1px;
+  background: var(--indigo);
+  opacity: 0.3;
+  margin-bottom: 8px;
+}
+
+.body {
+  padding-left: 16px;
+  border-left: 2px solid var(--indigo);
+  border-left-color: rgba(74, 88, 153, 0.35);
+}
+
+.action {
+  display: block;
+  font-family: var(--font-system);
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--indigo);
+  opacity: 0.6;
+  margin-bottom: 4px;
+}
+
+.text {
+  font-family: var(--font-tutor);
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--ink-soft);
+  line-height: 1.75;
+  margin: 0;
+}

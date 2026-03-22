@@ -32,6 +32,7 @@ export const TYPE_META: Record<string, TypeMeta> = {
   echo: { label: 'echo' },
   'bridge-suggestion': { label: 'bridge' },
   'tutor-reflection': { label: 'reflection', tinted: true },
+  'tutor-directive': { label: 'explore', tinted: true },
 };
 
 const STUDENT_TYPES = new Set([

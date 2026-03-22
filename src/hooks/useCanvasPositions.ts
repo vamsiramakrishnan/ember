@@ -10,8 +10,10 @@ import type { LiveEntry } from '@/types/entries';
 
 /** Entry types that become canvas cards. */
 const CARD_TYPES = new Set([
-  'prose', 'hypothesis', 'question', 'tutor-connection',
+  'prose', 'hypothesis', 'question', 'scratch',
+  'tutor-marginalia', 'tutor-question', 'tutor-connection',
   'concept-diagram', 'thinker-card', 'bridge-suggestion',
+  'tutor-reflection',
 ]);
 
 /** Extract card-worthy entries and auto-position them. */
