@@ -64,7 +64,7 @@ export {
 } from './entry-graph';
 export type { EntryRelation, RelationType } from './entry-graph';
 
-// Constellation projection
+// Constellation projection (legacy — use entity-projector for new code)
 export {
   projectEntry,
   projectEntries,
@@ -76,6 +76,18 @@ export type {
   CuriosityProjection,
   LexiconProjection,
 } from './constellation-projection';
+
+// Entity projector (new — atomic, command-based projections)
+export {
+  projectEntry as projectEntityCommands,
+  projectEntries as projectEntityCommandsBatch,
+} from './entity-projector';
+export type {
+  ProjectionCommand,
+  CreateEntityCommand,
+  CreateRelationCommand,
+  UpdateEntityCommand,
+} from './entity-projector';
 
 // React hooks
 export { useSessionState } from './useSessionState';

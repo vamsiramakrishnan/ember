@@ -1,7 +1,11 @@
 /**
- * useNotebookEntries — manages the live notebook entry stream.
- * Supports adding entries, crossing out, bookmarking, and pinning.
- * Initialises from demo data, then accepts live student input.
+ * useNotebookEntries — DEPRECATED.
+ *
+ * This was the in-memory entry manager that initialized from demo data.
+ * All state now flows through usePersistedNotebook, which reads/writes
+ * IndexedDB. The persistence layer is the single source of truth.
+ *
+ * @deprecated Use usePersistedNotebook(sessionId) instead.
  */
 import { useState, useCallback } from 'react';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
@@ -22,7 +26,15 @@ function toLiveEntry(entry: NotebookEntry): LiveEntry {
   };
 }
 
+/** @deprecated Use usePersistedNotebook(sessionId) instead. */
 export function useNotebookEntries(initial: NotebookEntry[]) {
+  if (import.meta.env.DEV) {
+    console.warn(
+      '[Ember] useNotebookEntries is deprecated. ' +
+      'Use usePersistedNotebook(sessionId) for persisted entries.',
+    );
+  }
+
   const [entries, setEntries] = useState<LiveEntry[]>(
     () => initial.map(toLiveEntry),
   );
@@ -38,14 +50,12 @@ export function useNotebookEntries(initial: NotebookEntry[]) {
     ]);
   }, []);
 
-  /** Add an entry and return its assigned ID (for streaming updates). */
   const addEntryWithId = useCallback((entry: NotebookEntry): string => {
     const live = toLiveEntry(entry);
     setEntries((prev) => [...prev, live]);
     return live.id;
   }, []);
 
-  /** Update an existing entry in-place by ID. */
   const updateEntry = useCallback((id: string, entry: NotebookEntry) => {
     setEntries((prev) =>
       prev.map((e) => (e.id === id ? { ...e, entry } : e)),

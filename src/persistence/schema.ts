@@ -1,13 +1,14 @@
 /**
- * Ember DB Schema — v4: notebook-scoped constellation data.
+ * Ember DB Schema — v5: knowledge graph and collaboration events.
  *
- * Breaking change: Lexicon, Encounters, Library, Mastery, and
- * Curiosities now carry notebookId for per-notebook isolation.
- * Unique indexes updated to compound [notebookId, ...] keys.
+ * v4: Notebook-scoped constellation data.
+ * v5: Adds Relations (knowledge graph edges) and Events
+ *     (append-only collaboration log). These power graph traversal,
+ *     entity linking, and event-sourced session state.
  */
 
 export const DB_NAME = 'ember-notebook';
-export const DB_VERSION = 4;
+export const DB_VERSION = 5;
 
 export const Store = {
   Students: 'students',
@@ -21,6 +22,8 @@ export const Store = {
   Curiosities: 'curiosities',
   Blobs: 'blobs',
   Canvas: 'canvas',
+  Relations: 'relations',
+  Events: 'events',
 } as const;
 
 export type StoreName = (typeof Store)[keyof typeof Store];
@@ -138,6 +141,30 @@ export const stores: StoreDef[] = [
     keyPath: 'id',
     indexes: [
       { name: 'by-session', keyPath: 'sessionId', unique: true },
+    ],
+  },
+  {
+    name: Store.Relations,
+    keyPath: 'id',
+    indexes: [
+      { name: 'by-notebook', keyPath: 'notebookId' },
+      { name: 'by-from', keyPath: 'from' },
+      { name: 'by-to', keyPath: 'to' },
+      { name: 'by-type', keyPath: 'type' },
+      { name: 'by-from-type', keyPath: ['from', 'type'] },
+      { name: 'by-to-type', keyPath: ['to', 'type'] },
+      { name: 'by-from-to', keyPath: ['from', 'to'] },
+      { name: 'by-notebook-type', keyPath: ['notebookId', 'type'] },
+    ],
+  },
+  {
+    name: Store.Events,
+    keyPath: 'id',
+    indexes: [
+      { name: 'by-notebook', keyPath: 'notebookId' },
+      { name: 'by-session', keyPath: 'sessionId' },
+      { name: 'by-type', keyPath: 'type' },
+      { name: 'by-timestamp', keyPath: 'timestamp' },
     ],
   },
 ];

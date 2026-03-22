@@ -25,6 +25,8 @@ export * as library from './repositories/library';
 export * as mastery from './repositories/mastery';
 export * as blobs from './repositories/blobs';
 export * as canvas from './repositories/canvas';
+export * as graph from './repositories/graph';
+export * as events from './repositories/events';
 
 // Sync
 export { registerAdapter, startSync, stopSync, sync } from './sync';
@@ -44,3 +46,13 @@ export type {
   BlobRecord,
   CanvasRecord,
 } from './records';
+
+// Entity types (new unified model)
+export type {
+  Entity,
+  EntityKind,
+  Relation,
+  RelationType,
+  CollaborationEvent,
+  Annotation,
+} from '@/types/entity';
