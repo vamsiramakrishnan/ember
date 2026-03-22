@@ -26,6 +26,7 @@ import { Echo } from '@/components/ambient/Echo';
 import { BridgeSuggestion } from '@/components/peripheral/BridgeSuggestion';
 import { Visualization } from '@/components/tutor/Visualization';
 import { Illustration } from '@/components/tutor/Illustration';
+import { Reflection } from '@/components/tutor/Reflection';
 
 interface Props {
   entry: NotebookEntry;
@@ -118,5 +119,7 @@ export function NotebookEntryRenderer({ entry }: Props) {
       return <Echo>{entry.content}</Echo>;
     case 'bridge-suggestion':
       return <BridgeSuggestion>{entry.content}</BridgeSuggestion>;
+    case 'tutor-reflection':
+      return <Reflection>{entry.content}</Reflection>;
   }
 }

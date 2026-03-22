@@ -1,0 +1,25 @@
+/* Reflection — session synthesis. More spacious than marginalia. */
+
+.container {
+  padding: 24px 0;
+  margin: 16px 0;
+}
+
+.rule {
+  width: 40%;
+  height: 1px;
+  background: var(--rule);
+  margin: 0 auto;
+}
+
+.text {
+  font-family: var(--font-tutor);
+  font-size: 15px;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--ink-faint);
+  line-height: 1.8;
+  text-align: center;
+  margin: 16px 0;
+  padding: 0 32px;
+}

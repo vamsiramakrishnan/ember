@@ -4,7 +4,7 @@
  * Now persistence-backed — entries survive refresh, sessions accumulate.
  * See: 04-information-architecture.md, Surface one.
  */
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { Column } from '@/primitives/Column';
 import { MarginZone } from '@/primitives/MarginZone';
 import { SessionHeader } from '@/components/peripheral/SessionHeader';
@@ -13,6 +13,8 @@ import { PinnedThread } from '@/components/student/PinnedThread';
 import { MarginalReference } from '@/components/ambient/MarginalReference';
 import { BlockInserter } from '@/components/student/BlockInserter';
 import { InputZone } from '@/components/student/InputZone';
+import { MentionPopup } from '@/components/student/MentionPopup';
+import { SlashCommandPopup } from '@/components/student/SlashCommandPopup';
 import { usePersistedNotebook } from '@/hooks/usePersistedNotebook';
 import { useSessionManager } from '@/hooks/useSessionManager';
 import { useTutorResponse } from '@/hooks/useTutorResponse';
@@ -22,6 +24,7 @@ import { useConstellationSync } from '@/hooks/useConstellationSync';
 import { useSessionIndexer } from '@/hooks/useSessionIndexer';
 import { useContentDrop } from '@/hooks/useContentDrop';
 import { useEntryReorder } from '@/hooks/useEntryReorder';
+import { usePopupState } from '@/hooks/usePopupState';
 import { createStudentEntry } from '@/hooks/useEntryInference';
 import { NotebookEntryWrapper } from './NotebookEntryWrapper';
 import { NotebookEntryRenderer } from './NotebookEntryRenderer';
@@ -56,8 +59,20 @@ export function Notebook() {
   useSessionIndexer(past);
   const contentDrop = useContentDrop({ addEntry });
   const reorder = useEntryReorder();
+  const popup = usePopupState();
   const [mode, setMode] = useState<NotebookMode>('linear');
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Derive marginal reference from tutor connections or echoes
+  const marginalRef = useMemo(() => {
+    for (let i = entries.length - 1; i >= 0; i--) {
+      const e = entries[i]?.entry;
+      if (!e) continue;
+      if (e.type === 'tutor-connection') return e.content.slice(0, 120) + (e.content.length > 120 ? '…' : '');
+      if (e.type === 'echo') return e.content;
+    }
+    return null;
+  }, [entries]);
 
   const scrollToBottom = useCallback(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -124,12 +139,11 @@ export function Notebook() {
             onDrop={contentDrop.handleDrop}
             onDragOver={contentDrop.handleDragOver}
           >
-            <MarginZone>
-              <MarginalReference>
-                Pythagoras also believed in the music of the spheres —
-                but he arrived at it through pure number theory, not observation.
-              </MarginalReference>
-            </MarginZone>
+            {marginalRef && (
+              <MarginZone>
+                <MarginalReference>{marginalRef}</MarginalReference>
+              </MarginZone>
+            )}
             {entries.map((le, i) => (
               <div key={le.id} className={styles.entryRow}>
                 <NotebookEntryWrapper
@@ -159,15 +173,36 @@ export function Notebook() {
               </div>
             ))}
           </div>
-          <InputZone
-            onSubmit={handleSubmit}
-            onSubmitTyped={handleSubmitTyped}
-            onSketchSubmit={handleSketchSubmit}
-          />
+          <div style={{ position: 'relative' }}>
+            {popup.mentionQuery !== null && (
+              <MentionPopup
+                query={popup.mentionQuery}
+                results={popup.mentionResults}
+                onSelect={(e) => popup.handleMentionSelect(e)}
+                onClose={popup.handlePopupClose}
+              />
+            )}
+            {popup.slashQuery !== null && (
+              <SlashCommandPopup
+                query={popup.slashQuery}
+                onSelect={(c) => popup.handleSlashSelect(c)}
+                onClose={popup.handlePopupClose}
+              />
+            )}
+            <InputZone
+              onSubmit={handleSubmit}
+              onSubmitTyped={handleSubmitTyped}
+              onSketchSubmit={handleSketchSubmit}
+              onMentionTrigger={popup.handleMentionTrigger}
+              onSlashTrigger={popup.handleSlashTrigger}
+              onPopupClose={popup.handlePopupClose}
+              onPaste={contentDrop.handlePaste}
+            />
+          </div>
           <div ref={bottomRef} />
         </>
       ) : (
-        <NotebookCanvas />
+        <NotebookCanvas sessionId={sessionId} entries={entries} />
       )}
     </Column>
   );

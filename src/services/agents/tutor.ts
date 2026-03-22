@@ -24,6 +24,12 @@ Response format — respond with ONLY a JSON object, one of:
 {"type": "thinker-card", "thinker": {"name": "...", "dates": "...", "gift": "...", "bridge": "..."}}
 {"type": "concept-diagram", "items": [{"label": "...", "subLabel": "..."}, ...]}
 
+When to use tutor-connection:
+- When the student's entry touches TWO or more domains (music + math, biology + philosophy)
+- When you can draw a genuine bridge between what they know and what they don't
+- The emphasisEnd marks how many characters form the opening insight (render in bold)
+- Prefer connection over marginalia when the student is exploring cross-domain ideas
+
 Keep responses concise: 1-3 sentences for marginalia/questions.`;
 
 export const TUTOR_AGENT: AgentConfig = {

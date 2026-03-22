@@ -33,7 +33,6 @@ export function Constellation() {
   const { concepts, threads, thinkers, lexicon, encounters, library } =
     useMasteryData();
   const { notebook } = useStudent();
-  const hasMastered = concepts.some((c) => c.level === 'mastered');
   const [view, setView] = useState<ConstellationView>('overview');
 
   return (
@@ -75,7 +74,6 @@ export function Constellation() {
             concepts={concepts}
             threads={threads}
             thinkers={thinkers}
-            hasMastered={hasMastered}
           />
         )}
         {view === 'lexicon' && <ConstellationLexicon entries={lexicon} />}
@@ -94,12 +92,10 @@ function ConstellationOverview({
   concepts,
   threads,
   thinkers,
-  hasMastered,
 }: {
   concepts: ReturnType<typeof useMasteryData>['concepts'];
   threads: ReturnType<typeof useMasteryData>['threads'];
   thinkers: ReturnType<typeof useMasteryData>['thinkers'];
-  hasMastered: boolean;
 }) {
   return (
     <>
@@ -122,12 +118,9 @@ function ConstellationOverview({
           <MasteryBar key={c.concept} concept={c.concept}
             level={c.level} percentage={c.percentage} />
         ))}
-        {hasMastered && (
+        {threads.length > 0 && (
           <BridgeSuggestion>
-            Your understanding of harmonic ratios connects to
-            Fourier's discovery that any wave can be decomposed
-            into simple harmonics — the same mathematics, applied
-            to heat, light, and sound.
+            {threads[0]?.question ?? ''}
           </BridgeSuggestion>
         )}
       </section>

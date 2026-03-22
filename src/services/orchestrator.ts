@@ -17,6 +17,7 @@ import { buildGraph, getDelta, serializeSubgraph } from './knowledge-graph';
 import { isGeminiAvailable, getGeminiClient } from './gemini';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
 import type { DeferredAction } from './tool-executor';
+import { generateEcho, generateBridge, generateReflection, incrementReflectionCounter } from './temporal-layers';
 
 export interface OrchestratorResult {
   entries: NotebookEntry[];
@@ -36,8 +37,12 @@ export async function orchestrate(
 ): Promise<OrchestratorResult> {
   if (!isGeminiAvailable()) return { entries: [], deferredActions: [] };
 
+  incrementReflectionCounter();
   const routing = await classifyImmediate(studentText, entries);
   const results: NotebookEntry[] = [];
+
+  // Temporal layer: Echo (backward — runs in parallel with tutor)
+  const echoPromise = generateEcho(studentText, entries);
 
   // Build knowledge graph + delta for context
   let graphContext = '';
@@ -96,6 +101,18 @@ export async function orchestrate(
     const ill = await generateIllustration(studentText);
     if (ill) results.push(ill);
   }
+
+  // Temporal layer: Echo (resolve the parallel promise)
+  const echo = await echoPromise;
+  if (echo) results.unshift(echo); // Echo appears BEFORE tutor response
+
+  // Temporal layer: Bridge (forward — based on mastery thresholds)
+  const bridge = await generateBridge(notebookId, studentText);
+  if (bridge) results.push(bridge);
+
+  // Temporal layer: Reflection (inward — every ~10 entries)
+  const reflection = await generateReflection(entries);
+  if (reflection) results.push(reflection);
 
   return {
     entries: results,

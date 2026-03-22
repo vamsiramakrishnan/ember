@@ -17,11 +17,12 @@ interface InputZoneProps {
   onMentionTrigger?: (query: string) => void;
   onSlashTrigger?: (query: string) => void;
   onPopupClose?: () => void;
+  onPaste?: (e: React.ClipboardEvent) => void;
 }
 
 export function InputZone({
   onSubmit, onSubmitTyped, onSketchSubmit,
-  onMentionTrigger, onSlashTrigger, onPopupClose,
+  onMentionTrigger, onSlashTrigger, onPopupClose, onPaste,
 }: InputZoneProps) {
   const [value, setValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
@@ -117,6 +118,7 @@ export function InputZone({
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
         onKeyDown={handleKeyDown}
+        onPaste={onPaste}
         rows={1}
         aria-label="Write your thoughts"
       />

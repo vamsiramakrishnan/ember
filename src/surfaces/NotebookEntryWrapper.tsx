@@ -7,6 +7,7 @@ import { useState, useRef, useCallback } from 'react';
 import type { LiveEntry } from '@/types/entries';
 import { Bookmark } from '@/components/student/Bookmark';
 import { AnnotationMargin } from '@/components/student/AnnotationMargin';
+import { SelectionToolbar } from '@/components/student/SelectionToolbar';
 import { NotebookEntryRenderer } from './NotebookEntryRenderer';
 import { TYPE_META, isStudentEntry } from './entryTypeMeta';
 import styles from './NotebookEntryWrapper.module.css';
@@ -17,6 +18,7 @@ interface Props {
   onToggleBookmark: (id: string) => void;
   onTogglePin: (id: string) => void;
   onAnnotate?: (id: string, content: string) => void;
+  onSelectionAction?: (entryId: string, type: string, text: string) => void;
   onDragStart?: (id: string, e: React.DragEvent) => void;
   onDragOver?: (id: string, e: React.DragEvent) => void;
   onDragLeave?: (id: string) => void;
@@ -29,7 +31,7 @@ interface Props {
 
 export function NotebookEntryWrapper({
   liveEntry, onCrossOut, onToggleBookmark, onTogglePin,
-  onAnnotate, onDragStart, onDragOver, onDragLeave,
+  onAnnotate, onSelectionAction, onDragStart, onDragOver, onDragLeave,
   onDrop, onDragEnd, isDragOver, isDragging, style,
 }: Props) {
   const { id, entry, crossedOut, bookmarked, pinned, annotations } = liveEntry;
@@ -40,6 +42,7 @@ export function NotebookEntryWrapper({
 
   const [touched, setTouched] = useState(false);
   const touchTimer = useRef<ReturnType<typeof setTimeout>>();
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const handleTouchStart = useCallback(() => {
     touchTimer.current = setTimeout(() => setTouched(true), 200);
@@ -72,8 +75,13 @@ export function NotebookEntryWrapper({
         <span className={styles.grip}>⠿</span>
         <span className={tagCls}>{meta.label}</span>
       </div>
-      <div className={styles.content}>
+      <div className={styles.content} ref={contentRef}>
         <NotebookEntryRenderer entry={entry} />
+        <SelectionToolbar
+          containerRef={contentRef}
+          entryId={id}
+          onAction={(a) => onSelectionAction?.(a.entryId, a.type, a.selectedText)}
+        />
       </div>
       {bookmarked && (
         <div className={styles.bookmarkPos}><Bookmark /></div>

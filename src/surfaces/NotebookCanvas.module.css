@@ -45,6 +45,17 @@
   margin: 0;
 }
 
+.empty {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-system);
+  font-size: 11px;
+  color: var(--ink-ghost);
+  letter-spacing: 0.5px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .card {
     transition: none;

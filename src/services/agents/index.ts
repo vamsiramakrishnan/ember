@@ -9,6 +9,8 @@ export { VISUALISER_AGENT } from './visualiser';
 export { ILLUSTRATOR_AGENT } from './illustrator';
 export { READER_AGENT } from './reader';
 export { BOOTSTRAP_AGENT } from './bootstrap';
+export { ECHO_AGENT } from './echo';
+export { REFLECTION_AGENT } from './reflection';
 
 import { TUTOR_AGENT } from './tutor';
 import { RESEARCHER_AGENT } from './researcher';
@@ -16,6 +18,8 @@ import { VISUALISER_AGENT } from './visualiser';
 import { ILLUSTRATOR_AGENT } from './illustrator';
 import { READER_AGENT } from './reader';
 import { BOOTSTRAP_AGENT } from './bootstrap';
+import { ECHO_AGENT } from './echo';
+import { REFLECTION_AGENT } from './reflection';
 
 export const AGENTS = {
   tutor: TUTOR_AGENT,
@@ -24,6 +28,8 @@ export const AGENTS = {
   illustrator: ILLUSTRATOR_AGENT,
   reader: READER_AGENT,
   bootstrap: BOOTSTRAP_AGENT,
+  echo: ECHO_AGENT,
+  reflection: REFLECTION_AGENT,
 } as const;
 
 export type AgentName = keyof typeof AGENTS;
