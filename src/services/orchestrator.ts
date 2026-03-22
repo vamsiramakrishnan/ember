@@ -1,17 +1,19 @@
 /**
- * Orchestrator — the multi-agent brain.
+ * Orchestrator — the multi-agent brain, v2.
  *
- * Every student entry triggers this pipeline:
- * 1. File Search (always) — find relevant context from ALL indexed content
- * 2. Researcher (when factual depth needed) — Google Search + URL grounding
- * 3. Tutor (always) — Socratic response with enriched context
- * 4. Visualiser (when diagrams/visuals requested) — HTML generation
- * 5. Illustrator (when sketches requested) — image generation
+ * Pipeline:
+ * 1. Router Agent classifies the entry (flash-lite, ~100ms)
+ * 2. Context Assembler builds a layered context window
+ * 3. File Search retrieves relevant history (always-on)
+ * 4. Researcher grounds facts (if router says so)
+ * 5. Tutor responds with full context (always)
+ * 6. Visualiser / Illustrator produce rich content (if router says so)
  *
- * File Search is ALWAYS-ON: the tutor always has access to the student's
- * full intellectual history (sessions, lexicon, encounters, library,
- * mastery, curiosities). This enables natural cross-references without
- * the student needing to say "remember when...".
+ * Key changes from v1:
+ * - Router Agent replaces keyword pattern matching
+ * - Context Assembler provides structured, layered context
+ * - File Search is always-on with targeted type queries
+ * - Debounce and cooldown prevent over-triggering expensive agents
  */
 import { TUTOR_AGENT, RESEARCHER_AGENT, ILLUSTRATOR_AGENT } from './agents';
 import { runTextAgent, runImageAgent } from './run-agent';
@@ -22,77 +24,194 @@ import {
   searchByType,
   indexSession,
 } from './gemini-file-search';
+import { classifyImmediate } from './router-agent';
+import {
+  assembleContext,
+  type StudentProfile,
+  type NotebookContext,
+  type SemanticMemory,
+  type ResearchContext,
+} from './context-assembler';
 import { isGeminiAvailable, getGeminiClient } from './gemini';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
-import type { AgentMessage } from './run-agent';
 
-/** What the orchestrator decides to do. */
-export interface OrchestratorPlan {
-  tutor: boolean;
-  research: boolean;
-  visualize: boolean;
-  illustrate: boolean;
-  deepMemory: boolean;
+export interface OrchestratorResult {
+  entries: NotebookEntry[];
 }
 
-const VISUAL_TRIGGERS = [
-  'show me', 'draw', 'diagram', 'visuali', 'picture',
-  'map', 'timeline', 'chart', 'graph', 'illustrat',
-  'what does it look like', 'how does it connect',
-];
-
-const RESEARCH_TRIGGERS = [
-  'who was', 'when did', 'what year', 'is it true',
-  'what exactly', 'how exactly', 'tell me more about',
-  'what\'s the evidence', 'what did', 'where did',
-  'the history of', 'in what century',
-];
-
-/** Decide what agents to activate beyond the always-on baseline. */
-export function planResponse(text: string): OrchestratorPlan {
-  const lower = text.toLowerCase();
-
-  return {
-    tutor: true,
-    research: RESEARCH_TRIGGERS.some((t) => lower.includes(t))
-      || text.length > 150
-      || (text.match(/\?/g) ?? []).length > 1,
-    visualize: VISUAL_TRIGGERS.some((t) => lower.includes(t))
-      || lower.includes('compare')
-      || lower.includes('difference between'),
-    illustrate: lower.includes('sketch') || lower.includes('draw me'),
-    // Deep memory: explicitly reference past context or ask about mastery
-    deepMemory: lower.includes('what do i know')
-      || lower.includes('what have i learned')
-      || lower.includes('my vocabulary')
-      || lower.includes('which thinkers'),
-  };
-}
-
-/** Build conversation messages from recent entries. */
-function buildMessages(
+/**
+ * Execute the full orchestration pipeline.
+ * Router Agent classifies → Context assembled → Agents invoked.
+ */
+export async function orchestrate(
+  studentText: string,
   entries: LiveEntry[],
-  latest: string,
-  contextPrefix?: string,
-): AgentMessage[] {
-  const recent = entries.slice(-12);
-  const messages: AgentMessage[] = [];
+  studentId: string,
+  notebookId: string,
+  profile?: StudentProfile | null,
+  notebookCtx?: NotebookContext | null,
+): Promise<OrchestratorResult> {
+  if (!isGeminiAvailable()) {
+    return { entries: [] };
+  }
 
-  for (const le of recent) {
-    const e = le.entry;
-    const isStudent = ['prose', 'question', 'hypothesis', 'scratch'].includes(e.type);
-    const isTutor = e.type.startsWith('tutor-');
+  // Step 1: Router Agent classifies the entry
+  const routing = await classifyImmediate(studentText, entries);
 
-    if (isStudent && 'content' in e) {
-      messages.push({ role: 'user', parts: [{ text: `[${e.type}]: ${e.content}` }] });
-    } else if (isTutor && 'content' in e) {
-      messages.push({ role: 'model', parts: [{ text: e.content }] });
+  const results: NotebookEntry[] = [];
+
+  // Step 2: File Search — always-on context retrieval
+  let memory: SemanticMemory | null = null;
+  if (getGeminiClient()) {
+    try {
+      const storeName = await getOrCreateStore(studentId);
+
+      // Always: search this notebook for relevant context
+      const mainSearch = await searchNotebook(
+        storeName,
+        buildSearchQuery(studentText, routing),
+        notebookId,
+        'You are retrieving context for a Socratic tutor. Return relevant past discussions, vocabulary, thinker connections, and mastery data. Be concise — only include what is directly relevant.',
+      );
+
+      memory = {
+        relevantHistory: mainSearch.text.trim() || null,
+        relevantVocabulary: null,
+        relevantThinkers: null,
+        citations: mainSearch.citations,
+      };
+
+      // Deep memory: targeted type queries
+      if (routing.deepMemory) {
+        const [masteryResult, lexiconResult, encounterResult] = await Promise.allSettled([
+          searchByType(storeName, studentText, 'mastery', notebookId),
+          searchByType(storeName, studentText, 'lexicon', notebookId),
+          searchByType(storeName, studentText, 'encounter', notebookId),
+        ]);
+
+        if (masteryResult.status === 'fulfilled' && masteryResult.value.text) {
+          memory.relevantHistory = (memory.relevantHistory ?? '') +
+            `\n\n[Mastery data]: ${masteryResult.value.text}`;
+        }
+        if (lexiconResult.status === 'fulfilled' && lexiconResult.value.text) {
+          memory.relevantVocabulary = lexiconResult.value.text;
+        }
+        if (encounterResult.status === 'fulfilled' && encounterResult.value.text) {
+          memory.relevantThinkers = encounterResult.value.text;
+        }
+      }
+    } catch {
+      // File search failed — continue without memory
     }
   }
 
-  const fullText = contextPrefix ? `${contextPrefix}\n\n${latest}` : latest;
-  messages.push({ role: 'user', parts: [{ text: fullText }] });
-  return messages;
+  // Step 3: Researcher (if router says so)
+  let research: ResearchContext | null = null;
+  if (routing.research) {
+    try {
+      const result = await runTextAgent(RESEARCHER_AGENT, [{
+        role: 'user',
+        parts: [{
+          text: `The student asked: "${studentText}"\n\nProvide factual grounding, historical context, and relevant thinker connections. Be specific with names, dates, and ideas. Concise — max 200 words.`,
+        }],
+      }]);
+      if (result.text.trim()) {
+        research = { facts: result.text };
+      }
+    } catch {
+      // Research failed — tutor responds without it
+    }
+  }
+
+  // Step 4: Assemble context and call tutor
+  const ctx = assembleContext({
+    studentText,
+    entries,
+    profile: profile ?? null,
+    notebook: notebookCtx ?? null,
+    memory,
+    research,
+  });
+
+  try {
+    const result = await runTextAgent(TUTOR_AGENT, ctx.messages);
+    const entry = parseTutorResponse(result.text);
+    if (entry) results.push(entry);
+  } catch (err) {
+    console.error('[Ember] Tutor response error:', err);
+  }
+
+  // Step 5: Visualization (if router says so)
+  if (routing.visualize) {
+    try {
+      const recentContext = entries.slice(-5).map((le) =>
+        'content' in le.entry ? le.entry.content : '',
+      ).filter(Boolean).join('\n');
+
+      const html = await generateHtml({
+        prompt: studentText,
+        context: recentContext,
+        useSearch: true,
+      });
+      if (html.trim()) {
+        results.push({
+          type: 'visualization',
+          html,
+          caption: `concept map: ${studentText.slice(0, 60)}`,
+        });
+      }
+    } catch {
+      // Visualization failed — not critical
+    }
+  }
+
+  // Step 6: Illustration (if router says so)
+  if (routing.illustrate) {
+    try {
+      const imageResult = await runImageAgent(ILLUSTRATOR_AGENT, [{
+        role: 'user',
+        parts: [{
+          text: `Draw a hand-sketched concept illustration for: ${studentText}. Style: warm sepia paper, fountain pen ink, minimal colour.`,
+        }],
+      }]);
+      if (imageResult.images.length > 0) {
+        const img = imageResult.images[0];
+        if (img) {
+          results.push({
+            type: 'illustration',
+            dataUrl: `data:${img.mimeType};base64,${img.data}`,
+            caption: imageResult.text || undefined,
+          });
+        }
+      }
+    } catch {
+      // Illustration failed — not critical
+    }
+  }
+
+  return { entries: results };
+}
+
+/**
+ * Build a smarter search query based on what the router decided.
+ * Instead of just forwarding the student's text, we compose a
+ * query that tells File Search what to look for.
+ */
+function buildSearchQuery(
+  studentText: string,
+  routing: { research: boolean; deepMemory: boolean },
+): string {
+  const parts = [`Student wrote: "${studentText}"`];
+
+  if (routing.research) {
+    parts.push('Find past discussions of this topic, relevant vocabulary, and thinker connections.');
+  }
+  if (routing.deepMemory) {
+    parts.push('Include mastery data, vocabulary progress, and curiosity threads.');
+  }
+
+  parts.push('Return only directly relevant context.');
+  return parts.join(' ');
 }
 
 /** Parse tutor JSON response. */
@@ -143,156 +262,7 @@ function parseTutorResponse(raw: string): NotebookEntry | null {
   }
 }
 
-export interface OrchestratorResult {
-  entries: NotebookEntry[];
-}
-
-/**
- * Execute the full orchestration pipeline.
- * File Search is ALWAYS consulted for context enrichment.
- */
-export async function orchestrate(
-  studentText: string,
-  entries: LiveEntry[],
-  studentId: string,
-  notebookId: string,
-): Promise<OrchestratorResult> {
-  if (!isGeminiAvailable()) {
-    return { entries: [] };
-  }
-
-  const plan = planResponse(studentText);
-  const results: NotebookEntry[] = [];
-
-  // Step 1: Always query File Search for relevant context
-  let memoryContext: string | undefined;
-  if (getGeminiClient()) {
-    try {
-      const storeName = await getOrCreateStore(studentId);
-
-      // Query across all content in this notebook
-      const search = await searchNotebook(
-        storeName,
-        `The student just wrote: "${studentText}"\n\nFind relevant context from their past sessions, vocabulary, thinker encounters, and mastery data that would help the tutor respond.`,
-        notebookId,
-        'You are retrieving context for a Socratic tutor. Return relevant facts, past discussions, vocabulary the student has learned, and thinker connections. Be concise.',
-      );
-
-      if (search.text.trim()) {
-        memoryContext = `[Student's intellectual history — from File Search]:\n${search.text}`;
-        if (search.citations.length > 0) {
-          memoryContext += `\n[Sources: ${search.citations.join(', ')}]`;
-        }
-      }
-
-      // Deep memory: also query specific content types
-      if (plan.deepMemory) {
-        const [masteryResult, lexiconResult] = await Promise.allSettled([
-          searchByType(storeName, studentText, 'mastery', notebookId),
-          searchByType(storeName, studentText, 'lexicon', notebookId),
-        ]);
-
-        const parts: string[] = [];
-        if (masteryResult.status === 'fulfilled' && masteryResult.value.text) {
-          parts.push(`[Mastery data]: ${masteryResult.value.text}`);
-        }
-        if (lexiconResult.status === 'fulfilled' && lexiconResult.value.text) {
-          parts.push(`[Vocabulary data]: ${lexiconResult.value.text}`);
-        }
-        if (parts.length > 0) {
-          memoryContext = (memoryContext ?? '') + '\n' + parts.join('\n');
-        }
-      }
-    } catch {
-      // File search failed — continue without memory
-    }
-  }
-
-  // Step 2: Research for factual grounding (if needed)
-  let researchContext: string | undefined;
-  if (plan.research) {
-    try {
-      const result = await runTextAgent(RESEARCHER_AGENT, [{
-        role: 'user',
-        parts: [{
-          text: `The student asked: "${studentText}"\n\nProvide factual grounding, historical context, and relevant thinker connections. Be specific with names, dates, and ideas.`,
-        }],
-      }]);
-      if (result.text.trim()) {
-        researchContext = `[Research — verified facts]:\n${result.text}`;
-      }
-    } catch {
-      // Research failed — tutor responds without it
-    }
-  }
-
-  // Step 3: Tutor response (always — enriched with all available context)
-  const contextParts = [memoryContext, researchContext].filter(Boolean);
-  const contextPrefix = contextParts.length > 0
-    ? contextParts.join('\n\n')
-    : undefined;
-
-  const messages = buildMessages(entries, studentText, contextPrefix);
-  try {
-    const result = await runTextAgent(TUTOR_AGENT, messages);
-    const entry = parseTutorResponse(result.text);
-    if (entry) results.push(entry);
-  } catch (err) {
-    console.error('[Ember] Tutor response error:', err);
-  }
-
-  // Step 4: Visualization (if requested)
-  if (plan.visualize) {
-    try {
-      const html = await generateHtml({
-        prompt: studentText,
-        context: entries.slice(-5).map((le) =>
-          'content' in le.entry ? le.entry.content : '',
-        ).filter(Boolean).join('\n'),
-        useSearch: true,
-      });
-      if (html.trim()) {
-        results.push({
-          type: 'visualization',
-          html,
-          caption: `concept map: ${studentText.slice(0, 60)}`,
-        });
-      }
-    } catch {
-      // Visualization failed — not critical
-    }
-  }
-
-  // Step 5: Illustration (if requested)
-  if (plan.illustrate) {
-    try {
-      const imageResult = await runImageAgent(ILLUSTRATOR_AGENT, [{
-        role: 'user',
-        parts: [{
-          text: `Draw a hand-sketched concept illustration for: ${studentText}. Style: warm sepia paper, fountain pen ink, minimal colour.`,
-        }],
-      }]);
-      if (imageResult.images.length > 0) {
-        const img = imageResult.images[0];
-        if (img) {
-          results.push({
-            type: 'illustration',
-            dataUrl: `data:${img.mimeType};base64,${img.data}`,
-            caption: imageResult.text || undefined,
-          });
-        }
-      }
-    } catch {
-      // Illustration failed — not critical
-    }
-  }
-
-  return { entries: results };
-}
-
-/**
- * Index the current session for future File Search retrieval.
- */
+/** Index the current session for future File Search retrieval. */
 export async function indexCurrentSession(
   studentId: string,
   notebookId: string,

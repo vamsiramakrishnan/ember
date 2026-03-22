@@ -87,7 +87,7 @@ async function uploadDocument(
   });
 }
 
-/** Index a session's dialogue entries. */
+/** Index a session's dialogue entries with rich metadata. */
 export async function indexSession(
   storeName: string,
   notebookId: string,
@@ -110,16 +110,79 @@ export async function indexSession(
     lines.push('');
   }
 
+  // Extract rich metadata from session content
+  const signals = extractSessionSignals(session.entries);
+
+  const metadata: Array<{ key: string; string_value?: string; numeric_value?: number }> = [
+    { key: 'type', string_value: 'session' },
+    { key: 'notebookId', string_value: notebookId },
+    { key: 'sessionNumber', numeric_value: session.number },
+    { key: 'topic', string_value: session.topic },
+    { key: 'hasQuestions', string_value: String(signals.hasQuestions) },
+    { key: 'hasHypotheses', string_value: String(signals.hasHypotheses) },
+    { key: 'entryCount', numeric_value: session.entries.length },
+  ];
+
+  // Tag with thinkers mentioned (enables "which sessions mention Darwin?" queries)
+  if (signals.thinkersMentioned) {
+    metadata.push({ key: 'thinkers', string_value: signals.thinkersMentioned });
+  }
+
+  // Tag with key concepts (enables "which sessions discuss evolution?" queries)
+  if (signals.keyConcepts) {
+    metadata.push({ key: 'concepts', string_value: signals.keyConcepts });
+  }
+
   await uploadDocument(
     storeName,
     `session-${session.number}-${session.date}`,
     lines.join('\n'),
-    [
-      { key: 'type', string_value: 'session' },
-      { key: 'notebookId', string_value: notebookId },
-      { key: 'sessionNumber', numeric_value: session.number },
-    ],
+    metadata,
   );
+}
+
+/** Extract metadata signals from session entries. */
+function extractSessionSignals(
+  entries: Array<{ type: string; content?: string }>,
+): {
+  hasQuestions: boolean;
+  hasHypotheses: boolean;
+  thinkersMentioned: string;
+  keyConcepts: string;
+} {
+  let hasQuestions = false;
+  let hasHypotheses = false;
+  const allContent: string[] = [];
+
+  for (const e of entries) {
+    if (e.type === 'question') hasQuestions = true;
+    if (e.type === 'hypothesis') hasHypotheses = true;
+    if (e.content) allContent.push(e.content);
+  }
+
+  // Extract proper nouns (likely thinkers) — simple heuristic
+  const text = allContent.join(' ');
+  const properNouns = new Set<string>();
+  const namePattern = /\b([A-Z][a-z]+(?:\s[A-Z][a-z]+)+)\b/g;
+  let match;
+  while ((match = namePattern.exec(text)) !== null) {
+    if (match[1]) properNouns.add(match[1]);
+  }
+
+  // Extract quoted/emphasized terms as concepts
+  const concepts = new Set<string>();
+  const conceptPattern = /\*\*([^*]+)\*\*|`([^`]+)`/g;
+  while ((match = conceptPattern.exec(text)) !== null) {
+    const term = match[1] ?? match[2];
+    if (term) concepts.add(term);
+  }
+
+  return {
+    hasQuestions,
+    hasHypotheses,
+    thinkersMentioned: [...properNouns].slice(0, 10).join(', '),
+    keyConcepts: [...concepts].slice(0, 10).join(', '),
+  };
 }
 
 /** Index lexicon entries for a notebook. */
@@ -150,6 +213,11 @@ export async function indexLexicon(
     return parts.join('\n');
   });
 
+  // Compute mastery distribution for metadata
+  const mastered = entries.filter((e) => e.level === 'mastered').length;
+  const exploring = entries.filter((e) => e.level === 'exploring').length;
+  const terms = entries.map((e) => e.term).join(', ');
+
   await uploadDocument(
     storeName,
     `lexicon-${notebookId}`,
@@ -157,6 +225,10 @@ export async function indexLexicon(
     [
       { key: 'type', string_value: 'lexicon' },
       { key: 'notebookId', string_value: notebookId },
+      { key: 'termCount', numeric_value: entries.length },
+      { key: 'masteredCount', numeric_value: mastered },
+      { key: 'exploringCount', numeric_value: exploring },
+      { key: 'terms', string_value: terms },
     ],
   );
 }
@@ -179,6 +251,9 @@ export async function indexEncounters(
     `## ${e.thinker}\nTradition: ${e.tradition}\nCore idea: ${e.coreIdea}\nStatus: ${e.status}\nDate: ${e.date}`,
   );
 
+  const thinkerNames = encounters.map((e) => e.thinker).join(', ');
+  const activeCount = encounters.filter((e) => e.status === 'active').length;
+
   await uploadDocument(
     storeName,
     `encounters-${notebookId}`,
@@ -186,6 +261,9 @@ export async function indexEncounters(
     [
       { key: 'type', string_value: 'encounter' },
       { key: 'notebookId', string_value: notebookId },
+      { key: 'thinkerNames', string_value: thinkerNames },
+      { key: 'thinkerCount', numeric_value: encounters.length },
+      { key: 'activeCount', numeric_value: activeCount },
     ],
   );
 }
