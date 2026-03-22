@@ -1,7 +1,7 @@
 /**
  * Reflection — the tutor's synthesis of the session's intellectual movement.
  * Visually distinct from marginalia: more spacious, lighter, like a breath.
- * See: 08-touch-and-interaction-states.md
+ * Never renders if content is empty.
  */
 import { MarkdownContent } from '@/primitives/MarkdownContent';
 import styles from './Reflection.module.css';
@@ -11,6 +11,8 @@ interface ReflectionProps {
 }
 
 export function Reflection({ children }: ReflectionProps) {
+  if (!children.trim()) return null;
+
   return (
     <div className={styles.container}>
       <div className={styles.rule} />

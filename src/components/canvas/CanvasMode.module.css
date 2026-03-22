@@ -1,3 +1,5 @@
+/* CanvasMode (4.1) — spatial arrangement container */
+
 .container {
   border: 1px solid var(--rule);
   border-radius: 2px;
@@ -5,22 +7,41 @@
   position: relative;
   padding: 32px;
   margin-bottom: 28px;
-  /* Subtle dot grid — spatial reference without imposing structure */
+  /* Dot grid — spatial reference without imposing structure */
   background-image: radial-gradient(var(--rule-light) 0.75px, transparent 0.75px);
   background-size: 24px 24px;
-  overflow: hidden;
+  /* Scroll instead of clip — cards can extend beyond visible bounds */
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .label {
   font-family: var(--font-system);
   font-size: 10px;
   font-weight: 300;
-  color: var(--ink-ghost);
+  color: var(--ink-faint);
   letter-spacing: 1.5px;
   text-transform: lowercase;
   margin-bottom: 20px;
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
 .content {
   position: relative;
+  /* Ensure content area is tall enough for positioned cards */
+  min-height: 100%;
+}
+
+/* Mobile: reduce padding, ensure cards reflow */
+@media (max-width: 800px) {
+  .container {
+    padding: 16px;
+    margin-left: -8px;
+    margin-right: -8px;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
 }
