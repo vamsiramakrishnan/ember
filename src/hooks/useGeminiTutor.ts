@@ -20,6 +20,11 @@ import { getLexiconByNotebook } from '@/persistence/repositories/lexicon';
 import { getEncountersByNotebook } from '@/persistence/repositories/encounters';
 import { useSessionManager } from '@/hooks/useSessionManager';
 import { runBackgroundTasks } from '@/services/background-task-runner';
+import {
+  recordTutorTurn, setTutorActivity,
+  filterByComposition, addRelation,
+} from '@/state';
+import type { InteractionMode } from '@/state';
 import type { StudentProfile, NotebookContext } from '@/services/context-assembler';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
 
@@ -77,6 +82,7 @@ export function useGeminiTutor({
       if (!student || !notebook) return;
 
       setIsThinking(true);
+      setTutorActivity(true, false);
       const canStream = addEntryWithId && patchEntryContent;
 
       // Streaming path: the streaming-text entry itself is the
@@ -126,31 +132,49 @@ export function useGeminiTutor({
 
         lastSyncRef.current = Date.now();
 
+        // Composition guard: filter entries by grammar rules
+        const filtered = filterByComposition(result.entries, entries);
+
         if (streamingId && patchEntryContent) {
           // Replace streaming entry with the final parsed tutor entry
-          const firstEntry = result.entries[0];
+          const firstEntry = filtered[0];
           if (firstEntry) {
             patchEntryContent(streamingId, firstEntry);
+            // Record in entry graph: tutor response prompted by student
+            addRelation({
+              from: streamingId, to: streamingId,
+              type: 'prompted-by',
+              meta: studentEntry.content.slice(0, 80),
+            });
+            // Record turn in session state
+            recordTutorTurn(
+              inferTutorMode(firstEntry),
+              extractTopics(firstEntry),
+              firstEntry.type === 'thinker-card' ? firstEntry.thinker.name : undefined,
+            );
           }
 
           // Add remaining entries (enrichment, echoes, etc.)
-          for (let i = 1; i < result.entries.length; i++) {
-            const entry = result.entries[i];
+          for (let i = 1; i < filtered.length; i++) {
+            const entry = filtered[i];
             if (!entry) continue;
             await delay(600);
             addEntry(entry);
+            recordTutorTurn(inferTutorMode(entry));
           }
         } else {
           // Non-streaming fallback
-          for (let i = 0; i < result.entries.length; i++) {
-            const entry = result.entries[i];
+          for (let i = 0; i < filtered.length; i++) {
+            const entry = filtered[i];
             if (!entry) continue;
             if (i > 0) await delay(600);
             addEntry(entry);
+            recordTutorTurn(inferTutorMode(entry));
           }
         }
 
         setIsStreaming(false);
+        setTutorActivity(false, false);
 
         for (const action of result.deferredActions) {
           executeDeferredAction(action, student.id, notebook.id);
@@ -168,6 +192,7 @@ export function useGeminiTutor({
       } catch (err) {
         console.error('[Ember] Gemini tutor error:', err);
         setIsStreaming(false);
+        setTutorActivity(false, false);
       } finally {
         setIsThinking(false);
         abortRef.current = null;
@@ -182,6 +207,29 @@ export function useGeminiTutor({
 
 function delay(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
+}
+
+/** Infer the interaction mode from a tutor entry type. */
+function inferTutorMode(entry: NotebookEntry): InteractionMode {
+  switch (entry.type) {
+    case 'tutor-question': return 'socratic';
+    case 'tutor-connection': return 'connection';
+    case 'concept-diagram':
+    case 'visualization':
+    case 'illustration': return 'visual';
+    case 'silence': return 'silence';
+    default: return 'confirmation';
+  }
+}
+
+/** Extract topic keywords from a tutor entry. */
+function extractTopics(entry: NotebookEntry): string[] {
+  if (!('content' in entry) || typeof entry.content !== 'string') return [];
+  // Extract capitalized phrases as rough topic markers
+  const matches = entry.content.match(
+    /\b[A-Z][a-z]+(?:\s+[a-z]+){0,2}\b/g,
+  ) ?? [];
+  return matches.slice(0, 3);
 }
 
 function executeDeferredAction(

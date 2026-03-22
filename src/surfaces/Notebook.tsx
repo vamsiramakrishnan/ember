@@ -30,6 +30,7 @@ import { useStudent } from '@/contexts/StudentContext';
 import { NotebookEntryWrapper } from './NotebookEntryWrapper';
 import { NotebookEntryRenderer } from './NotebookEntryRenderer';
 import { NotebookCanvas } from './NotebookCanvas';
+import { recordStudentTurn, setStudentFocus, addRelation } from '@/state';
 import type { StudentEntryType, NotebookEntry } from '@/types/entries';
 import type { Surface } from '@/layout/Navigation';
 import styles from './Notebook.module.css';
@@ -102,6 +103,8 @@ export function Notebook({ onNavigate }: NotebookProps) {
 
   const submitEntry = useCallback((entry: NotebookEntry) => {
     void addEntry(entry);
+    recordStudentTurn(entry.type);
+    setStudentFocus({ type: 'writing' });
     respond(entry);
     void checkAndUpdate(entries);
   }, [addEntry, respond, checkAndUpdate, entries]);
@@ -163,8 +166,27 @@ export function Notebook({ onNavigate }: NotebookProps) {
       ? tutorContext.slice(0, 100) + '…'
       : tutorContext;
     const fullQuestion = `Regarding your note "${contextHint}" — ${question}`;
+
+    // Find the tutor entry being followed up on
+    const tutorEntry = entries.find(
+      (le) => 'content' in le.entry && le.entry.content === tutorContext,
+    );
     submitEntry({ type: 'question', content: fullQuestion });
-  }, [submitEntry]);
+
+    // Record in entry graph: follow-up chain
+    if (tutorEntry) {
+      // Use the latest entry ID as proxy (the question just submitted)
+      const questionId = entries[entries.length - 1]?.id;
+      if (questionId) {
+        addRelation({
+          from: questionId,
+          to: tutorEntry.id,
+          type: 'follow-up',
+          meta: question.slice(0, 80),
+        });
+      }
+    }
+  }, [submitEntry, entries]);
 
   const handleSketchSubmit = useCallback((dataUrl: string) => {
     void addEntry({ type: 'sketch', dataUrl });
