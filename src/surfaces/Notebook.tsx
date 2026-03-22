@@ -112,6 +112,13 @@ export function Notebook({ onNavigate }: NotebookProps) {
 
   const handleBranch = useCallback(async (_entryId: string, content: string) => {
     if (!student || !notebook) return;
+    const preview = content.slice(0, 80) + (content.length > 80 ? '…' : '');
+    // Confirmation dialog — branching is a commitment
+    const confirmed = window.confirm(
+      `Branch into a new notebook?\n\n"${preview}"\n\nThis creates a new exploration that inherits your current thinkers, vocabulary, and mastery.`,
+    );
+    if (!confirmed) return;
+
     const title = content.slice(0, 60) + (content.length > 60 ? '…' : '');
     const result = await branchNotebook({
       studentId: student.id,

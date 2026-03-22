@@ -19,6 +19,13 @@ import { createEncounter, getEncountersByNotebook } from '@/persistence/reposito
 import { createLexiconEntry, getLexiconByNotebook } from '@/persistence/repositories/lexicon';
 import { upsertMastery } from '@/persistence/repositories/mastery';
 import type { AgentConfig } from './agents';
+import type { ZodTypeAny } from 'zod';
+import {
+  taskSignalsSchema,
+  thinkerExtractionSchema,
+  vocabExtractionSchema,
+  masteryUpdateSchema,
+} from './schemas';
 import type { NotebookEntry } from '@/types/entries';
 
 // ─── Micro-agent (shared config for all background tasks) ────────────
@@ -32,8 +39,8 @@ const MICRO_AGENT: AgentConfig = {
   responseModalities: ['TEXT'],
 };
 
-function micro(instruction: string): AgentConfig {
-  return { ...MICRO_AGENT, systemInstruction: instruction };
+function micro(instruction: string, schema?: ZodTypeAny): AgentConfig {
+  return { ...MICRO_AGENT, systemInstruction: instruction, responseSchema: schema };
 }
 
 // ─── Task Assessment ─────────────────────────────────────────────────
@@ -47,11 +54,11 @@ export interface TaskSignals {
 
 const ASSESSOR = micro(
   `Given a tutor response and the student's entry, assess what background data needs updating.
-Return ONLY JSON: {"updateThinkers": bool, "updateVocabulary": bool, "updateMastery": bool, "updateCuriosities": bool}
 - updateThinkers: true if a new thinker/scientist/philosopher was mentioned BY NAME
 - updateVocabulary: true if a technical term was defined or used for the first time
 - updateMastery: true if the student demonstrated understanding or misconception of a concept
 - updateCuriosities: true if a new open question emerged`,
+  taskSignalsSchema,
 );
 
 export async function assessTasks(
@@ -83,9 +90,8 @@ function noTasks(): TaskSignals {
 // ─── Thinker Extractor (MINIMAL context) ─────────────────────────────
 
 const THINKER_EXTRACTOR = micro(
-  `Extract thinker mentions from this text. Return ONLY JSON:
-{"thinkers": [{"name": "Full Name", "tradition": "field", "coreIdea": "one sentence"}]}
-Only include real historical figures. If none mentioned, return {"thinkers": []}.`,
+  `Extract thinker mentions from this text. Only include real historical figures. If none mentioned, return empty thinkers array.`,
+  thinkerExtractionSchema,
 );
 
 export async function extractThinkers(
@@ -128,9 +134,8 @@ export async function extractThinkers(
 // ─── Vocabulary Extractor (MINIMAL context) ──────────────────────────
 
 const VOCAB_EXTRACTOR = micro(
-  `Extract technical vocabulary from this text. Return ONLY JSON:
-{"terms": [{"term": "word", "definition": "clear definition", "etymology": "origin if obvious"}]}
-Only include domain-specific terms a student would need to learn. Max 3. If none, return {"terms": []}.`,
+  `Extract technical vocabulary from this text. Only include domain-specific terms a student would need to learn. Max 3.`,
+  vocabExtractionSchema,
 );
 
 export async function extractVocabulary(
@@ -173,9 +178,8 @@ export async function extractVocabulary(
 // ─── Mastery Updater (FOCUSED context — needs existing mastery) ──────
 
 const MASTERY_UPDATER = micro(
-  `Given a student's entry and existing mastery levels, assess if any concept's mastery changed.
-Return ONLY JSON: {"updates": [{"concept": "name", "level": "exploring|developing|strong|mastered", "percentage": 0-100}]}
-Only include concepts where mastery CHANGED based on what the student demonstrated. If nothing changed, return {"updates": []}.`,
+  `Given a student's entry and existing mastery levels, assess if any concept's mastery changed. Only include concepts where mastery CHANGED based on what the student demonstrated.`,
+  masteryUpdateSchema,
 );
 
 export async function updateMasteryFromEntry(

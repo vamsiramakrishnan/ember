@@ -16,6 +16,7 @@ import { getMasteryByNotebook } from '@/persistence/repositories/mastery';
 import { createEncounter } from '@/persistence/repositories/encounters';
 import { createLexiconEntry } from '@/persistence/repositories/lexicon';
 import { upsertMastery } from '@/persistence/repositories/mastery';
+import { generateNotebookIcon, enrichNotebookMetadata } from './notebook-enrichment';
 import type { NotebookRecord } from '@/persistence/records';
 
 export interface BranchResult {
@@ -66,6 +67,10 @@ export async function branchNotebook(params: {
   await inheritConstellation(studentId, parentNotebookId, nb.id);
 
   notify(Store.Entries);
+
+  // 5. Async: generate icon + metadata for the branched notebook
+  void generateNotebookIcon(nb.id, branchTitle, branchQuestion).catch(() => null);
+  void enrichNotebookMetadata(nb.id, branchTitle, branchQuestion, [seedContent]).catch(() => null);
 
   return { notebook: nb };
 }

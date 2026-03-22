@@ -89,6 +89,10 @@ export async function orchestrate(
       // Proxy mode — fall back to simple text generation
       const result = await runTextAgent(TUTOR_AGENT, ctx.messages);
       agenticResult = { text: result.text, toolCalls: [], deferredActions: [] };
+      // Surface Google Search citations
+      if (result.citations.length > 0) {
+        results.push({ type: 'citation', sources: result.citations });
+      }
     }
 
     const entry = parseTutorResponse(agenticResult.text);
@@ -119,11 +123,23 @@ export async function orchestrate(
   const reflection = await generateReflection(entries);
   if (reflection) results.push(reflection);
 
+  // Collect any pending research citations
+  if (pendingCitations.length > 0) {
+    const unique = pendingCitations.filter(
+      (c, i, arr) => arr.findIndex((x) => x.url === c.url) === i,
+    );
+    results.push({ type: 'citation', sources: unique });
+    pendingCitations.length = 0; // Reset for next call
+  }
+
   return {
     entries: results,
     deferredActions: agenticResult?.deferredActions ?? [],
   };
 }
+
+/** Collected citations from research + tutor calls. */
+const pendingCitations: Array<{ title: string; url: string }> = [];
 
 async function fetchResearch(text: string): Promise<ResearchContext | null> {
   try {
@@ -133,6 +149,10 @@ async function fetchResearch(text: string): Promise<ResearchContext | null> {
         text: `Student asked: "${text}"\n\nFactual grounding, historical context, thinker connections. Max 200 words.`,
       }],
     }]);
+    // Collect research citations
+    if (result.citations.length > 0) {
+      pendingCitations.push(...result.citations);
+    }
     return result.text.trim() ? { facts: result.text } : null;
   } catch {
     return null;

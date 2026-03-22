@@ -1,10 +1,11 @@
 /**
  * runAgent — unified execution for any Gemini agent.
- * Uses the server-side proxy when no client-side API key is set,
- * or calls the Gemini SDK directly in development.
+ * Supports structured output (Zod schema → responseJsonSchema)
+ * and grounding metadata extraction (Google Search citations).
  */
 import { getGeminiClient } from './gemini';
 import { useProxy, proxyTextGeneration } from './proxy-client';
+import { toJSONSchema } from 'zod';
 import type { AgentConfig } from './agents';
 
 export interface AgentContentPart {
@@ -19,8 +20,16 @@ export interface AgentMessage {
   parts: AgentContentPart[];
 }
 
+/** Citation from Google Search grounding. */
+export interface GroundingCitation {
+  title: string;
+  url: string;
+}
+
 export interface AgentTextResult {
   text: string;
+  /** Citations from Google Search grounding, if any. */
+  citations: GroundingCitation[];
 }
 
 export interface AgentImageResult {
@@ -29,8 +38,8 @@ export interface AgentImageResult {
 }
 
 /**
- * Run a text-only agent. Routes through the proxy in production
- * or directly via SDK in development.
+ * Run a text-only agent. Supports structured output via Zod schema.
+ * Extracts Google Search grounding citations when available.
  */
 export async function runTextAgent(
   agent: AgentConfig,
@@ -44,14 +53,11 @@ export async function runTextAgent(
       thinkingLevel: agent.thinkingLevel,
       tools: agent.tools.length > 0 ? agent.tools : undefined,
     });
-    return { text };
+    return { text, citations: [] };
   }
 
-  // Direct SDK path (development with VITE_GEMINI_API_KEY)
   const client = getGeminiClient();
-  if (!client) {
-    throw new Error('Gemini API key not configured');
-  }
+  if (!client) throw new Error('Gemini API key not configured');
 
   const config: Record<string, unknown> = {
     thinkingConfig: { thinkingLevel: agent.thinkingLevel },
@@ -60,6 +66,12 @@ export async function runTextAgent(
 
   if (agent.tools.length > 0) {
     config.tools = agent.tools;
+  }
+
+  // Structured output: Zod schema → JSON schema (Zod v4 built-in)
+  if (agent.responseSchema) {
+    config.responseMimeType = 'application/json';
+    config.responseSchema = toJSONSchema(agent.responseSchema);
   }
 
   const response = await client.models.generateContentStream({
@@ -69,45 +81,53 @@ export async function runTextAgent(
   });
 
   const chunks: string[] = [];
+  const citations: GroundingCitation[] = [];
+
   for await (const chunk of response) {
-    const parts = chunk.candidates?.[0]?.content?.parts;
-    if (!parts) continue;
-    for (const part of parts) {
-      if ('text' in part && part.text) {
-        chunks.push(part.text);
+    const candidate = chunk.candidates?.[0];
+    const parts = candidate?.content?.parts;
+    if (parts) {
+      for (const part of parts) {
+        if ('text' in part && part.text) chunks.push(part.text);
+      }
+    }
+
+    // Extract grounding metadata (Google Search citations)
+    const grounding = candidate?.groundingMetadata as Record<string, unknown> | undefined;
+    if (grounding?.groundingChunks) {
+      const gChunks = grounding.groundingChunks as Array<Record<string, unknown>>;
+      for (const gc of gChunks) {
+        const web = gc.web as { uri?: string; title?: string } | undefined;
+        if (web?.uri) {
+          const exists = citations.some((c) => c.url === web.uri);
+          if (!exists) {
+            citations.push({ title: web.title ?? '', url: web.uri ?? '' });
+          }
+        }
       }
     }
   }
 
-  return { text: chunks.join('') };
+  return { text: chunks.join(''), citations };
 }
 
-/**
- * Run an image-capable agent. Returns images and text.
- */
+/** Run an image-capable agent. */
 export async function runImageAgent(
   agent: AgentConfig,
   messages: AgentMessage[],
 ): Promise<AgentImageResult> {
   const client = getGeminiClient();
-  if (!client) {
-    throw new Error('Gemini API key not configured');
-  }
+  if (!client) throw new Error('Gemini API key not configured');
 
   const config: Record<string, unknown> = {
     thinkingConfig: { thinkingLevel: agent.thinkingLevel },
     systemInstruction: agent.systemInstruction,
     responseModalities: agent.responseModalities,
   };
-
-  if (agent.tools.length > 0) {
-    config.tools = agent.tools;
-  }
+  if (agent.tools.length > 0) config.tools = agent.tools;
 
   const response = await client.models.generateContentStream({
-    model: agent.model,
-    config,
-    contents: messages,
+    model: agent.model, config, contents: messages,
   });
 
   const images: Array<{ data: string; mimeType: string }> = [];
@@ -116,13 +136,9 @@ export async function runImageAgent(
   for await (const chunk of response) {
     const parts = chunk.candidates?.[0]?.content?.parts;
     if (!parts) continue;
-
     for (const part of parts) {
       if ('inlineData' in part && part.inlineData) {
-        images.push({
-          data: part.inlineData.data ?? '',
-          mimeType: part.inlineData.mimeType ?? 'image/png',
-        });
+        images.push({ data: part.inlineData.data ?? '', mimeType: part.inlineData.mimeType ?? 'image/png' });
       } else if ('text' in part && part.text) {
         textChunks.push(part.text);
       }
@@ -132,15 +148,8 @@ export async function runImageAgent(
   return { images, text: textChunks.join('') };
 }
 
-/**
- * Convenience: run a text agent with a single user prompt.
- */
-export async function askAgent(
-  agent: AgentConfig,
-  prompt: string,
-): Promise<string> {
-  const result = await runTextAgent(agent, [
-    { role: 'user', parts: [{ text: prompt }] },
-  ]);
+/** Convenience: run a text agent with a single user prompt. */
+export async function askAgent(agent: AgentConfig, prompt: string): Promise<string> {
+  const result = await runTextAgent(agent, [{ role: 'user', parts: [{ text: prompt }] }]);
   return result.text;
 }

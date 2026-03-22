@@ -87,7 +87,8 @@ export type NotebookEntry =
   | { type: 'echo'; content: string }
   | { type: 'bridge-suggestion'; content: string }
   | { type: 'tutor-reflection'; content: string }
-  | { type: 'tutor-directive'; content: string; action?: string };
+  | { type: 'tutor-directive'; content: string; action?: string }
+  | { type: 'citation'; sources: Array<{ title: string; url: string }> };
 
 /** A notebook entry with metadata for live notebook interaction. */
 export interface LiveEntry {

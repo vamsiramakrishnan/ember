@@ -28,6 +28,7 @@ import { Visualization } from '@/components/tutor/Visualization';
 import { Illustration } from '@/components/tutor/Illustration';
 import { Reflection } from '@/components/tutor/Reflection';
 import { Directive } from '@/components/tutor/Directive';
+import { Citation } from '@/components/ambient/Citation';
 
 interface Props {
   entry: NotebookEntry;
@@ -124,5 +125,7 @@ export function NotebookEntryRenderer({ entry }: Props) {
       return <Reflection>{entry.content}</Reflection>;
     case 'tutor-directive':
       return <Directive action={entry.action}>{entry.content}</Directive>;
+    case 'citation':
+      return <Citation sources={entry.sources} />;
   }
 }

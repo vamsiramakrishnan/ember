@@ -14,6 +14,7 @@
  */
 import { isGeminiAvailable } from './gemini';
 import { runTextAgent } from './run-agent';
+import { routingSchema } from './schemas';
 import type { AgentConfig } from './agents';
 import type { LiveEntry } from '@/types/entries';
 
@@ -46,6 +47,7 @@ Be conservative with visualize, illustrate, and directive — they are expensive
   thinkingLevel: 'MINIMAL',
   tools: [],
   responseModalities: ['TEXT'],
+  responseSchema: routingSchema,
 };
 
 // ─── Routing decision ────────────────────────────────────────────────

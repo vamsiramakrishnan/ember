@@ -1,6 +1,7 @@
 /**
  * Shared agent configuration types and design context.
  */
+import type { ZodTypeAny } from 'zod';
 
 export const TOOLS = {
   googleSearch: { googleSearch: {} },
@@ -17,6 +18,8 @@ export interface AgentConfig {
   thinkingLevel: ThinkingLevel;
   tools: Record<string, unknown>[];
   responseModalities: string[];
+  /** Zod schema for structured output. When set, response is validated. */
+  responseSchema?: ZodTypeAny;
 }
 
 /** Ember design context injected into all agent prompts. */
