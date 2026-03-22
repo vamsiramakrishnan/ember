@@ -24,13 +24,13 @@ interface UseGeminiTutorOptions {
 export function useGeminiTutor({ addEntry, entries }: UseGeminiTutorOptions) {
   const [isThinking, setIsThinking] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
-  const { student } = useStudent();
+  const { student, notebook } = useStudent();
 
   const respond = useCallback(
     async (studentEntry: NotebookEntry) => {
       if (!isGeminiAvailable()) return;
       if (!('content' in studentEntry)) return;
-      if (!student) return;
+      if (!student || !notebook) return;
 
       const silence: NotebookEntry = { type: 'silence' };
       addEntry(silence);
@@ -43,6 +43,7 @@ export function useGeminiTutor({ addEntry, entries }: UseGeminiTutorOptions) {
           studentEntry.content,
           entries,
           student.id,
+          notebook.id,
         );
 
         // Add each entry with staggered timing for natural feel
@@ -63,7 +64,7 @@ export function useGeminiTutor({ addEntry, entries }: UseGeminiTutorOptions) {
         abortRef.current = null;
       }
     },
-    [addEntry, entries, student],
+    [addEntry, entries, student, notebook],
   );
 
   return { respond, isThinking };

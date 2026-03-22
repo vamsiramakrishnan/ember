@@ -1,20 +1,27 @@
 /**
  * Orchestrator — the multi-agent brain.
  *
- * When a student writes something, the orchestrator decides:
- * 1. Should the tutor respond? (almost always yes)
- * 2. Should we search past sessions for context? (File Search)
- * 3. Should we generate a visualization? (Visualiser)
- * 4. Should we generate an illustration? (Illustrator)
- * 5. Should we do deep research? (Researcher → Tutor)
+ * Every student entry triggers this pipeline:
+ * 1. File Search (always) — find relevant context from ALL indexed content
+ * 2. Researcher (when factual depth needed) — Google Search + URL grounding
+ * 3. Tutor (always) — Socratic response with enriched context
+ * 4. Visualiser (when diagrams/visuals requested) — HTML generation
+ * 5. Illustrator (when sketches requested) — image generation
  *
- * Decision is based on entry content analysis, not a separate LLM call.
- * Fast pattern matching keeps latency low.
+ * File Search is ALWAYS-ON: the tutor always has access to the student's
+ * full intellectual history (sessions, lexicon, encounters, library,
+ * mastery, curiosities). This enables natural cross-references without
+ * the student needing to say "remember when...".
  */
 import { TUTOR_AGENT, RESEARCHER_AGENT, ILLUSTRATOR_AGENT } from './agents';
 import { runTextAgent, runImageAgent } from './run-agent';
 import { generateHtml } from './gemini-html';
-import { getOrCreateStore, searchNotebooks, indexSession } from './gemini-file-search';
+import {
+  getOrCreateStore,
+  searchNotebook,
+  searchByType,
+  indexSession,
+} from './gemini-file-search';
 import { isGeminiAvailable, getGeminiClient } from './gemini';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
 import type { AgentMessage } from './run-agent';
@@ -25,17 +32,7 @@ export interface OrchestratorPlan {
   research: boolean;
   visualize: boolean;
   illustrate: boolean;
-  fileSearch: boolean;
-}
-
-/** Signals extracted from student input for routing decisions. */
-interface ContentSignals {
-  isQuestion: boolean;
-  isComplex: boolean;
-  requestsVisual: boolean;
-  requestsDiagram: boolean;
-  mentionsPastSession: boolean;
-  mentionsComparison: boolean;
+  deepMemory: boolean;
 }
 
 const VISUAL_TRIGGERS = [
@@ -51,38 +48,24 @@ const RESEARCH_TRIGGERS = [
   'the history of', 'in what century',
 ];
 
-const MEMORY_TRIGGERS = [
-  'last time', 'before', 'earlier', 'remember when',
-  'we talked about', 'you said', 'i wrote', 'my earlier',
-  'previous session', 'last session', 'went back to',
-];
-
-/** Analyse student input to determine routing. */
-function analyseContent(text: string): ContentSignals {
+/** Decide what agents to activate beyond the always-on baseline. */
+export function planResponse(text: string): OrchestratorPlan {
   const lower = text.toLowerCase();
-  return {
-    isQuestion: text.trim().endsWith('?'),
-    isComplex: text.length > 150 || (text.match(/\?/g) ?? []).length > 1,
-    requestsVisual: VISUAL_TRIGGERS.some((t) => lower.includes(t)),
-    requestsDiagram: lower.includes('diagram') || lower.includes('map') || lower.includes('timeline'),
-    mentionsPastSession: MEMORY_TRIGGERS.some((t) => lower.includes(t)),
-    mentionsComparison: lower.includes('compare') || lower.includes('difference between') || lower.includes('vs'),
-  };
-}
-
-/** Decide what agents to activate. */
-export function planResponse(
-  text: string,
-  entryCount: number,
-): OrchestratorPlan {
-  const signals = analyseContent(text);
 
   return {
-    tutor: true, // Always respond
-    research: signals.isComplex || RESEARCH_TRIGGERS.some((t) => text.toLowerCase().includes(t)),
-    visualize: signals.requestsVisual || signals.requestsDiagram || signals.mentionsComparison,
-    illustrate: text.toLowerCase().includes('sketch') || text.toLowerCase().includes('draw'),
-    fileSearch: signals.mentionsPastSession && entryCount > 5,
+    tutor: true,
+    research: RESEARCH_TRIGGERS.some((t) => lower.includes(t))
+      || text.length > 150
+      || (text.match(/\?/g) ?? []).length > 1,
+    visualize: VISUAL_TRIGGERS.some((t) => lower.includes(t))
+      || lower.includes('compare')
+      || lower.includes('difference between'),
+    illustrate: lower.includes('sketch') || lower.includes('draw me'),
+    // Deep memory: explicitly reference past context or ask about mastery
+    deepMemory: lower.includes('what do i know')
+      || lower.includes('what have i learned')
+      || lower.includes('my vocabulary')
+      || lower.includes('which thinkers'),
   };
 }
 
@@ -166,32 +149,59 @@ export interface OrchestratorResult {
 
 /**
  * Execute the full orchestration pipeline.
- * Returns entries to add to the notebook (in order).
+ * File Search is ALWAYS consulted for context enrichment.
  */
 export async function orchestrate(
   studentText: string,
   entries: LiveEntry[],
   studentId: string,
+  notebookId: string,
 ): Promise<OrchestratorResult> {
   if (!isGeminiAvailable()) {
     return { entries: [] };
   }
 
-  const plan = planResponse(studentText, entries.length);
+  const plan = planResponse(studentText);
   const results: NotebookEntry[] = [];
 
-  // Step 1: File Search for cross-session memory (if needed)
+  // Step 1: Always query File Search for relevant context
   let memoryContext: string | undefined;
-  if (plan.fileSearch && getGeminiClient()) {
+  if (getGeminiClient()) {
     try {
       const storeName = await getOrCreateStore(studentId);
-      const search = await searchNotebooks(
+
+      // Query across all content in this notebook
+      const search = await searchNotebook(
         storeName,
-        studentText,
-        'Find relevant context from the student\'s past sessions.',
+        `The student just wrote: "${studentText}"\n\nFind relevant context from their past sessions, vocabulary, thinker encounters, and mastery data that would help the tutor respond.`,
+        notebookId,
+        'You are retrieving context for a Socratic tutor. Return relevant facts, past discussions, vocabulary the student has learned, and thinker connections. Be concise.',
       );
+
       if (search.text.trim()) {
-        memoryContext = `[Context from past sessions]: ${search.text}`;
+        memoryContext = `[Student's intellectual history — from File Search]:\n${search.text}`;
+        if (search.citations.length > 0) {
+          memoryContext += `\n[Sources: ${search.citations.join(', ')}]`;
+        }
+      }
+
+      // Deep memory: also query specific content types
+      if (plan.deepMemory) {
+        const [masteryResult, lexiconResult] = await Promise.allSettled([
+          searchByType(storeName, studentText, 'mastery', notebookId),
+          searchByType(storeName, studentText, 'lexicon', notebookId),
+        ]);
+
+        const parts: string[] = [];
+        if (masteryResult.status === 'fulfilled' && masteryResult.value.text) {
+          parts.push(`[Mastery data]: ${masteryResult.value.text}`);
+        }
+        if (lexiconResult.status === 'fulfilled' && lexiconResult.value.text) {
+          parts.push(`[Vocabulary data]: ${lexiconResult.value.text}`);
+        }
+        if (parts.length > 0) {
+          memoryContext = (memoryContext ?? '') + '\n' + parts.join('\n');
+        }
       }
     } catch {
       // File search failed — continue without memory
@@ -202,21 +212,21 @@ export async function orchestrate(
   let researchContext: string | undefined;
   if (plan.research) {
     try {
-      const researchResult = await runTextAgent(RESEARCHER_AGENT, [{
+      const result = await runTextAgent(RESEARCHER_AGENT, [{
         role: 'user',
         parts: [{
           text: `The student asked: "${studentText}"\n\nProvide factual grounding, historical context, and relevant thinker connections. Be specific with names, dates, and ideas.`,
         }],
       }]);
-      if (researchResult.text.trim()) {
-        researchContext = `[Research context]: ${researchResult.text}`;
+      if (result.text.trim()) {
+        researchContext = `[Research — verified facts]:\n${result.text}`;
       }
     } catch {
       // Research failed — tutor responds without it
     }
   }
 
-  // Step 3: Tutor response (always — with enriched context)
+  // Step 3: Tutor response (always — enriched with all available context)
   const contextParts = [memoryContext, researchContext].filter(Boolean);
   const contextPrefix = contextParts.length > 0
     ? contextParts.join('\n\n')
@@ -231,7 +241,7 @@ export async function orchestrate(
     console.error('[Ember] Tutor response error:', err);
   }
 
-  // Step 4: Visualization (parallel with tutor, if requested)
+  // Step 4: Visualization (if requested)
   if (plan.visualize) {
     try {
       const html = await generateHtml({
@@ -282,10 +292,10 @@ export async function orchestrate(
 
 /**
  * Index the current session for future File Search retrieval.
- * Call this when a session ends or periodically.
  */
 export async function indexCurrentSession(
   studentId: string,
+  notebookId: string,
   session: { number: number; date: string; topic: string },
   sessionEntries: LiveEntry[],
 ): Promise<void> {
@@ -293,7 +303,7 @@ export async function indexCurrentSession(
 
   try {
     const storeName = await getOrCreateStore(studentId);
-    await indexSession(storeName, {
+    await indexSession(storeName, notebookId, {
       ...session,
       entries: sessionEntries.map((le) => ({
         type: le.entry.type,
