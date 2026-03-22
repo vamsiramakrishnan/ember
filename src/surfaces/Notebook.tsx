@@ -130,6 +130,29 @@ export function Notebook({ onNavigate }: NotebookProps) {
     setNotebook(result.notebook);
   }, [student, notebook, setNotebook]);
 
+  /** Handle selection toolbar actions: link, annotate, highlight, ask. */
+  const handleSelectionAction = useCallback((entryId: string, actionType: string, selectedText: string) => {
+    switch (actionType) {
+      case 'link':
+        // Trigger mention popup with the selected text as query
+        popup.handleMentionTrigger(selectedText.slice(0, 20));
+        break;
+      case 'annotate':
+        // Create a span-targeted annotation on this entry
+        void annotate(entryId, `Note on: "${selectedText}"`);
+        break;
+      case 'highlight': {
+        // Create an insight annotation marking this span
+        void annotate(entryId, `"${selectedText}"`);
+        break;
+      }
+      case 'ask':
+        // Submit the selected text as a question to the tutor
+        submitEntry({ type: 'question', content: selectedText });
+        break;
+    }
+  }, [annotate, submitEntry, popup]);
+
   const handleSketchSubmit = useCallback((dataUrl: string) => {
     void addEntry({ type: 'sketch', dataUrl });
     setTimeout(scrollToBottom, 50);
@@ -180,6 +203,7 @@ export function Notebook({ onNavigate }: NotebookProps) {
                   onToggleBookmark={toggleBookmark}
                   onTogglePin={togglePin}
                   onAnnotate={annotate}
+                  onSelectionAction={handleSelectionAction}
                   onBranch={handleBranch}
                   onDragStart={reorder.onDragStart}
                   onDragOver={reorder.onDragOver}
