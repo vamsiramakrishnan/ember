@@ -24,12 +24,20 @@ export interface Thinker {
   bridge: string;
 }
 
-/** Annotation that can be attached to any entry. */
+/** Annotation that can be attached to any entry — optionally targeting a text span. */
 export interface EntryAnnotation {
   id: string;
   author: 'student' | 'tutor';
   content: string;
   timestamp: number;
+  /** Character offset: start of the highlighted span in the entry's content. */
+  spanStart?: number;
+  /** Character offset: end of the highlighted span. */
+  spanEnd?: number;
+  /** Category of annotation for visual treatment. */
+  kind?: 'insight' | 'trivia' | 'question' | 'connection' | 'correction';
+  /** If this annotation references another entry, its ID. */
+  sourceEntryId?: string;
 }
 
 /** Code cell execution result. */

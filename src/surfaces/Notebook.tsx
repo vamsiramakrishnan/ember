@@ -26,6 +26,8 @@ import { useContentDrop } from '@/hooks/useContentDrop';
 import { useEntryReorder } from '@/hooks/useEntryReorder';
 import { usePopupState } from '@/hooks/usePopupState';
 import { createStudentEntry } from '@/hooks/useEntryInference';
+import { branchNotebook } from '@/services/notebook-branch';
+import { useStudent } from '@/contexts/StudentContext';
 import { NotebookEntryWrapper } from './NotebookEntryWrapper';
 import { NotebookEntryRenderer } from './NotebookEntryRenderer';
 import { NotebookCanvas } from './NotebookCanvas';
@@ -40,6 +42,7 @@ interface NotebookProps {
 }
 
 export function Notebook({ onNavigate }: NotebookProps) {
+  const { student, notebook, setNotebook } = useStudent();
   const { current, past, startNewSession, loading: sessionsLoading } = useSessionManager();
 
   // Auto-create Session 1 when a notebook has no sessions
@@ -107,6 +110,19 @@ export function Notebook({ onNavigate }: NotebookProps) {
     submitEntry({ type, content: text });
   }, [submitEntry]);
 
+  const handleBranch = useCallback(async (_entryId: string, content: string) => {
+    if (!student || !notebook) return;
+    const title = content.slice(0, 60) + (content.length > 60 ? '…' : '');
+    const result = await branchNotebook({
+      studentId: student.id,
+      parentNotebookId: notebook.id,
+      branchTitle: title,
+      branchQuestion: content.slice(0, 200),
+      seedContent: content,
+    });
+    setNotebook(result.notebook);
+  }, [student, notebook, setNotebook]);
+
   const handleSketchSubmit = useCallback((dataUrl: string) => {
     void addEntry({ type: 'sketch', dataUrl });
     setTimeout(scrollToBottom, 50);
@@ -157,6 +173,7 @@ export function Notebook({ onNavigate }: NotebookProps) {
                   onToggleBookmark={toggleBookmark}
                   onTogglePin={togglePin}
                   onAnnotate={annotate}
+                  onBranch={handleBranch}
                   onDragStart={reorder.onDragStart}
                   onDragOver={reorder.onDragOver}
                   onDragLeave={reorder.onDragLeave}

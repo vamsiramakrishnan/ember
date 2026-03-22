@@ -123,6 +123,7 @@ export function useGeminiTutor({ addEntry, entries }: UseGeminiTutorOptions) {
           notebook.id,
           current?.topic ?? '',
           entries,
+          notebook.title,
         );
       } catch (err) {
         console.error('[Ember] Gemini tutor error:', err);

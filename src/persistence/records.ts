@@ -78,6 +78,8 @@ export interface LexiconRecord extends BaseRecord {
   percentage: number;
   etymology: string;
   crossReferences: string[];
+  /** The entry where this term was first encountered. */
+  sourceEntryId?: string;
 }
 
 export interface EncounterRecord extends BaseRecord {
@@ -91,6 +93,8 @@ export interface EncounterRecord extends BaseRecord {
   date: string;
   status: 'active' | 'dormant' | 'bridged' | 'pending';
   bridgedTo?: string;
+  /** The entry that introduced this thinker. */
+  sourceEntryId?: string;
 }
 
 export interface LibraryRecord extends BaseRecord {
@@ -109,6 +113,8 @@ export interface MasteryRecord extends BaseRecord {
   concept: string;
   level: MasteryLevel;
   percentage: number;
+  /** The entry that first introduced this concept. */
+  sourceEntryId?: string;
 }
 
 export interface CuriosityRecord extends BaseRecord {

@@ -19,6 +19,7 @@ interface Props {
   onTogglePin: (id: string) => void;
   onAnnotate?: (id: string, content: string) => void;
   onSelectionAction?: (entryId: string, type: string, text: string) => void;
+  onBranch?: (id: string, content: string) => void;
   onDragStart?: (id: string, e: React.DragEvent) => void;
   onDragOver?: (id: string, e: React.DragEvent) => void;
   onDragLeave?: (id: string) => void;
@@ -31,8 +32,8 @@ interface Props {
 
 export function NotebookEntryWrapper({
   liveEntry, onCrossOut, onToggleBookmark, onTogglePin,
-  onAnnotate, onSelectionAction, onDragStart, onDragOver, onDragLeave,
-  onDrop, onDragEnd, isDragOver, isDragging, style,
+  onAnnotate, onSelectionAction, onBranch, onDragStart, onDragOver,
+  onDragLeave, onDrop, onDragEnd, isDragOver, isDragging, style,
 }: Props) {
   const { id, entry, crossedOut, bookmarked, pinned, annotations } = liveEntry;
   const canPin = entry.type === 'question';
@@ -91,6 +92,8 @@ export function NotebookEntryWrapper({
         bookmarked={bookmarked} canPin={canPin} pinned={pinned}
         onCrossOut={onCrossOut} onToggleBookmark={onToggleBookmark}
         onTogglePin={onTogglePin}
+        onBranch={onBranch && 'content' in entry
+          ? () => onBranch(id, (entry as { content: string }).content) : undefined}
       />
       {onAnnotate && (
         <AnnotationMargin
@@ -103,13 +106,14 @@ export function NotebookEntryWrapper({
 }
 
 function EntryActions({ id, canCrossOut, crossedOut, bookmarked, canPin, pinned,
-  onCrossOut, onToggleBookmark, onTogglePin,
+  onCrossOut, onToggleBookmark, onTogglePin, onBranch,
 }: {
   id: string; canCrossOut: boolean; crossedOut: boolean;
   bookmarked: boolean; canPin: boolean; pinned: boolean;
   onCrossOut: (id: string) => void;
   onToggleBookmark: (id: string) => void;
   onTogglePin: (id: string) => void;
+  onBranch?: () => void;
 }) {
   return (
     <div className={styles.actions} aria-label="Entry actions">
@@ -131,6 +135,12 @@ function EntryActions({ id, canCrossOut, crossedOut, bookmarked, canPin, pinned,
           onClick={() => onTogglePin(id)}
           aria-label={pinned ? 'Unpin' : 'Pin'}>
           ⌃
+        </button>
+      )}
+      {onBranch && (
+        <button className={styles.action} onClick={onBranch}
+          aria-label="Branch into new notebook">
+          ⑂
         </button>
       )}
     </div>

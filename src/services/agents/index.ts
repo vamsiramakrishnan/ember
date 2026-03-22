@@ -11,6 +11,7 @@ export { READER_AGENT } from './reader';
 export { BOOTSTRAP_AGENT } from './bootstrap';
 export { ECHO_AGENT } from './echo';
 export { REFLECTION_AGENT } from './reflection';
+export { ANNOTATOR_AGENT } from './annotator';
 
 import { TUTOR_AGENT } from './tutor';
 import { RESEARCHER_AGENT } from './researcher';
@@ -20,6 +21,7 @@ import { READER_AGENT } from './reader';
 import { BOOTSTRAP_AGENT } from './bootstrap';
 import { ECHO_AGENT } from './echo';
 import { REFLECTION_AGENT } from './reflection';
+import { ANNOTATOR_AGENT } from './annotator';
 
 export const AGENTS = {
   tutor: TUTOR_AGENT,
@@ -30,6 +32,7 @@ export const AGENTS = {
   bootstrap: BOOTSTRAP_AGENT,
   echo: ECHO_AGENT,
   reflection: REFLECTION_AGENT,
+  annotator: ANNOTATOR_AGENT,
 } as const;
 
 export type AgentName = keyof typeof AGENTS;
