@@ -1,12 +1,12 @@
 /**
- * useSessionManager — manages session lifecycle.
- * Creates new sessions, switches between them, tracks current session.
- * Bridges persistence layer to the Notebook surface.
+ * useSessionManager — manages session lifecycle within a notebook.
+ * Creates new sessions, tracks current/past sessions.
+ * Scoped to the current student and notebook from context.
  */
 import { useCallback } from 'react';
-import { Store, notify } from '@/persistence';
-import { createSession } from '@/persistence/repositories/sessions';
-import { usePersistedSessions } from './usePersistedSession';
+import { Store, notify, useStoreQuery } from '@/persistence';
+import { createSession, getSessionsByNotebook } from '@/persistence/repositories/sessions';
+import { useStudent } from '@/contexts/StudentContext';
 import type { SessionRecord } from '@/persistence/records';
 
 function getTimeOfDay(): string {
@@ -25,13 +25,36 @@ function formatDate(): string {
 }
 
 export function useSessionManager() {
-  const { sessions, current, past, loading } = usePersistedSessions();
+  const { student, notebook } = useStudent();
+  const notebookId = notebook?.id ?? null;
+  const studentId = student?.id ?? null;
+
+  const { data: sessions, loading } = useStoreQuery<SessionRecord[]>(
+    Store.Sessions,
+    async () => {
+      if (!notebookId) return [];
+      return getSessionsByNotebook(notebookId);
+    },
+    [],
+    [notebookId],
+  );
+
+  const current = sessions.length > 0
+    ? sessions[sessions.length - 1] ?? null
+    : null;
+
+  const past = sessions.length > 1
+    ? sessions.slice(0, -1)
+    : [];
 
   const startNewSession = useCallback(async (
     topic?: string,
-  ): Promise<SessionRecord> => {
+  ): Promise<SessionRecord | null> => {
+    if (!studentId || !notebookId) return null;
     const nextNumber = (current?.number ?? 0) + 1;
     const session = await createSession({
+      studentId,
+      notebookId,
       number: nextNumber,
       date: formatDate(),
       timeOfDay: getTimeOfDay(),
@@ -39,7 +62,7 @@ export function useSessionManager() {
     });
     notify(Store.Sessions);
     return session;
-  }, [current]);
+  }, [studentId, notebookId, current]);
 
   return {
     sessions,

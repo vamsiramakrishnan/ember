@@ -15,6 +15,8 @@ export { notify, notifyStores, subscribe } from './emitter';
 export { reactivePut, reactiveDel, reactiveTransact } from './reactive';
 
 // Repositories
+export * as students from './repositories/students';
+export * as notebooks from './repositories/notebooks';
 export * as sessions from './repositories/sessions';
 export * as entries from './repositories/entries';
 export * as lexicon from './repositories/lexicon';
@@ -30,6 +32,8 @@ export { useSyncStatus } from './sync/useSyncStatus';
 
 // Record types
 export type {
+  StudentRecord,
+  NotebookRecord,
   SessionRecord,
   EntryRecord,
   LexiconRecord,

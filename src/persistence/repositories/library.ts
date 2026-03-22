@@ -8,6 +8,7 @@ import { createId } from '../ids';
 import type { LibraryRecord } from '../records';
 
 export async function createLibraryEntry(params: {
+  studentId: string;
   title: string;
   author: string;
   isCurrent: boolean;

@@ -10,6 +10,7 @@ import type { LexiconRecord } from '../records';
 import type { MasteryLevel } from '@/types/mastery';
 
 export async function createLexiconEntry(params: {
+  studentId: string;
   number: number;
   term: string;
   pronunciation: string;

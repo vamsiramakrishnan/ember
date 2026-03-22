@@ -1,28 +1,17 @@
 /**
- * Ember DB Schema — the complete persistence model.
+ * Ember DB Schema — v3: multi-student, multi-notebook.
  *
- * Architecture inspired by Notion's block model:
- * - Every piece of content has identity (id), lineage (parentId), and time
- * - Entries are ordered within sessions via a fractional index
- * - Blobs are content-addressed (SHA-256 hash as key)
- * - All stores support indexed queries
- *
- * Stores:
- *   sessions    — Session containers (the "pages")
- *   entries     — Notebook entries within sessions (the "blocks")
- *   lexicon     — Personal vocabulary (Constellation → Lexicon)
- *   encounters  — Thinker encounters (Constellation → Encounters)
- *   library     — Primary texts (Constellation → Library)
- *   mastery     — Concept mastery state
- *   curiosities — Open questions / threads
- *   blobs       — Content-addressed binary storage
- *   canvas      — Spatial layout per session
+ * New stores: students, notebooks
+ * All domain stores now indexed by studentId for isolation.
+ * Sessions scoped to notebooks. Entries scoped to sessions.
  */
 
 export const DB_NAME = 'ember-notebook';
-export const DB_VERSION = 2;
+export const DB_VERSION = 3;
 
 export const Store = {
+  Students: 'students',
+  Notebooks: 'notebooks',
   Sessions: 'sessions',
   Entries: 'entries',
   Lexicon: 'lexicon',
@@ -48,13 +37,31 @@ interface StoreDef {
   indexes: IndexDef[];
 }
 
-/** Every store, its key, and its queryable indexes. */
 export const stores: StoreDef[] = [
+  {
+    name: Store.Students,
+    keyPath: 'id',
+    indexes: [
+      { name: 'by-name', keyPath: 'name' },
+      { name: 'by-created', keyPath: 'createdAt' },
+    ],
+  },
+  {
+    name: Store.Notebooks,
+    keyPath: 'id',
+    indexes: [
+      { name: 'by-student', keyPath: 'studentId' },
+      { name: 'by-active', keyPath: ['studentId', 'isActive'] },
+      { name: 'by-created', keyPath: 'createdAt' },
+    ],
+  },
   {
     name: Store.Sessions,
     keyPath: 'id',
     indexes: [
-      { name: 'by-number', keyPath: 'number', unique: true },
+      { name: 'by-student', keyPath: 'studentId' },
+      { name: 'by-notebook', keyPath: 'notebookId' },
+      { name: 'by-number', keyPath: ['notebookId', 'number'] },
       { name: 'by-created', keyPath: 'createdAt' },
     ],
   },
@@ -73,7 +80,8 @@ export const stores: StoreDef[] = [
     name: Store.Lexicon,
     keyPath: 'id',
     indexes: [
-      { name: 'by-term', keyPath: 'term', unique: true },
+      { name: 'by-student', keyPath: 'studentId' },
+      { name: 'by-term', keyPath: ['studentId', 'term'], unique: true },
       { name: 'by-level', keyPath: 'level' },
     ],
   },
@@ -81,7 +89,8 @@ export const stores: StoreDef[] = [
     name: Store.Encounters,
     keyPath: 'id',
     indexes: [
-      { name: 'by-ref', keyPath: 'ref', unique: true },
+      { name: 'by-student', keyPath: 'studentId' },
+      { name: 'by-ref', keyPath: ['studentId', 'ref'], unique: true },
       { name: 'by-thinker', keyPath: 'thinker' },
       { name: 'by-status', keyPath: 'status' },
     ],
@@ -90,21 +99,25 @@ export const stores: StoreDef[] = [
     name: Store.Library,
     keyPath: 'id',
     indexes: [
-      { name: 'by-title', keyPath: 'title', unique: true },
+      { name: 'by-student', keyPath: 'studentId' },
+      { name: 'by-title', keyPath: ['studentId', 'title'], unique: true },
     ],
   },
   {
     name: Store.Mastery,
     keyPath: 'id',
     indexes: [
-      { name: 'by-concept', keyPath: 'concept', unique: true },
+      { name: 'by-student', keyPath: 'studentId' },
+      { name: 'by-concept', keyPath: ['studentId', 'concept'], unique: true },
       { name: 'by-level', keyPath: 'level' },
     ],
   },
   {
     name: Store.Curiosities,
     keyPath: 'id',
-    indexes: [],
+    indexes: [
+      { name: 'by-student', keyPath: 'studentId' },
+    ],
   },
   {
     name: Store.Blobs,

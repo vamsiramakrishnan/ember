@@ -6,16 +6,19 @@
 import { useCallback, useRef } from 'react';
 import { Store, notify } from '@/persistence';
 import { getAllMastery, upsertMastery } from '@/persistence/repositories/mastery';
+import { useStudent } from '@/contexts/StudentContext';
 import { extractMasterySignals } from '@/services/mastery-extractor';
 import type { LiveEntry } from '@/types/entries';
 
 const UPDATE_INTERVAL = 5;
 
 export function useMasteryUpdater() {
+  const { student } = useStudent();
   const entryCountRef = useRef(0);
   const runningRef = useRef(false);
 
   const checkAndUpdate = useCallback(async (entries: LiveEntry[]) => {
+    if (!student) return;
     entryCountRef.current++;
     if (entryCountRef.current % UPDATE_INTERVAL !== 0) return;
     if (runningRef.current) return;
@@ -30,10 +33,11 @@ export function useMasteryUpdater() {
       const signals = await extractMasterySignals(recent);
       if (!signals) return;
 
-      await getAllMastery(); // warm the cache
+      await getAllMastery();
 
       for (const concept of signals.concepts) {
         await upsertMastery({
+          studentId: student.id,
           concept: concept.concept,
           level: concept.level,
           percentage: concept.percentage,
@@ -46,7 +50,7 @@ export function useMasteryUpdater() {
     } finally {
       runningRef.current = false;
     }
-  }, []);
+  }, [student]);
 
   return { checkAndUpdate };
 }
