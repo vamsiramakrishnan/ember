@@ -55,12 +55,14 @@ export function Notebook({ onNavigate }: NotebookProps) {
   const sessionId = current?.id ?? null;
 
   const {
-    entries, addEntry, crossOut,
+    entries, addEntry, addEntryWithId, patchEntryContent, crossOut,
     toggleBookmark, togglePin, annotate, pinnedEntries,
   } = usePersistedNotebook(sessionId);
 
   const addEntries = useCallback((_e: unknown[]) => {}, []);
-  const { respond } = useTutorResponse(addEntry, addEntries, entries);
+  const { respond } = useTutorResponse(
+    addEntry, addEntries, entries, addEntryWithId, patchEntryContent,
+  );
   const { analyseSketch } = useSketchAnalysis(addEntry);
   const { checkAndUpdate } = useMasteryUpdater();
   useConstellationSync(entries);

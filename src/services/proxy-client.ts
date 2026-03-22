@@ -79,6 +79,70 @@ export async function proxyTextGeneration(body: {
 }
 
 /**
+ * Stream text from the /api/gemini-text endpoint, yielding chunks.
+ */
+export async function proxyTextGenerationStream(
+  body: {
+    messages: Array<{ role: string; parts: Array<{ text?: string }> }>;
+    model?: string;
+    systemInstruction?: string;
+    thinkingLevel?: string;
+    tools?: Record<string, unknown>[];
+  },
+  onChunk: (chunk: string, accumulated: string) => void,
+): Promise<string> {
+  const res = await fetch(`${API_BASE}/api/gemini-text`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText })) as { error: string };
+    throw new Error(`Proxy error: ${err.error}`);
+  }
+
+  const reader = res.body?.getReader();
+  if (!reader) throw new Error('No response body');
+
+  const decoder = new TextDecoder();
+  let accumulated = '';
+  let buffer = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() ?? '';
+
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      try {
+        const parsed = JSON.parse(line) as { text?: string };
+        if (parsed.text) {
+          accumulated += parsed.text;
+          onChunk(parsed.text, accumulated);
+        }
+      } catch { /* skip malformed */ }
+    }
+  }
+
+  if (buffer.trim()) {
+    try {
+      const parsed = JSON.parse(buffer) as { text?: string };
+      if (parsed.text) {
+        accumulated += parsed.text;
+        onChunk(parsed.text, accumulated);
+      }
+    } catch { /* skip */ }
+  }
+
+  return accumulated;
+}
+
+/**
  * Generate images via /api/gemini-image.
  */
 export async function proxyImageGeneration(body: {

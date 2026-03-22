@@ -7,8 +7,8 @@
  * It decides what context it needs, not us.
  */
 import { TUTOR_AGENT, RESEARCHER_AGENT } from './agents';
-import { runTextAgent } from './run-agent';
-import { runAgenticLoop, type AgenticResult } from './agentic-loop';
+import { runTextAgent, runTextAgentStreaming } from './run-agent';
+import { runAgenticLoop, runAgenticLoopStreaming, type AgenticResult } from './agentic-loop';
 import { classifyImmediate } from './router-agent';
 import { assembleContext, type StudentProfile, type NotebookContext, type ResearchContext } from './context-assembler';
 import { parseTutorResponse } from './tutor-response-parser';
@@ -157,6 +157,116 @@ async function fetchResearch(text: string): Promise<ResearchContext | null> {
   } catch {
     return null;
   }
+}
+
+/** Streaming callback shape. */
+export type StreamChunkCallback = (chunk: string, accumulated: string) => void;
+
+/**
+ * Streaming orchestrate — same pipeline as orchestrate(), but the tutor's
+ * text response streams token-by-token via the onChunk callback.
+ * Non-tutor entries (echo, bridge, reflection, enrichment) are returned
+ * in the final result after the stream completes.
+ */
+export async function streamOrchestrate(
+  studentText: string,
+  entries: LiveEntry[],
+  studentId: string,
+  notebookId: string,
+  onChunk: StreamChunkCallback,
+  profile?: StudentProfile | null,
+  notebookCtx?: NotebookContext | null,
+  lastSyncTimestamp?: number,
+): Promise<OrchestratorResult> {
+  if (!isGeminiAvailable()) return { entries: [], deferredActions: [] };
+
+  incrementReflectionCounter();
+  const routing = await classifyImmediate(studentText, entries);
+  const results: NotebookEntry[] = [];
+
+  const echoPromise = generateEcho(studentText, entries);
+
+  let graphContext = '';
+  let graph = null;
+  try {
+    graph = await buildGraph(notebookId);
+    if (lastSyncTimestamp) {
+      const delta = getDelta(graph, lastSyncTimestamp);
+      if (delta.nodes.length > 0) {
+        graphContext = `\n\n[Recent changes in knowledge graph]:\n${serializeSubgraph(delta)}`;
+      }
+    }
+  } catch { /* continue without graph */ }
+
+  const research = routing.research ? await fetchResearch(studentText) : null;
+
+  const directiveHint = routing.directive
+    ? '\n\n[SYSTEM: The student is ready for an exploration directive. Respond with a tutor-directive type — send them to search, read, try, observe, or compare something specific outside the notebook.]'
+    : '';
+
+  const ctx = assembleContext({
+    studentText: studentText + graphContext + directiveHint,
+    entries,
+    profile: profile ?? null,
+    notebook: notebookCtx ?? null,
+    memory: null,
+    research,
+  });
+
+  let agenticResult: AgenticResult | null = null;
+  try {
+    if (getGeminiClient()) {
+      agenticResult = await runAgenticLoopStreaming(
+        TUTOR_AGENT, ctx.messages,
+        { studentId, notebookId, graph },
+        onChunk,
+      );
+    } else {
+      const result = await runTextAgentStreaming(
+        TUTOR_AGENT, ctx.messages, onChunk,
+      );
+      agenticResult = { text: result.text, toolCalls: [], deferredActions: [] };
+      if (result.citations.length > 0) {
+        results.push({ type: 'citation', sources: result.citations });
+      }
+    }
+
+    const entry = parseTutorResponse(agenticResult.text);
+    if (entry) results.push(entry);
+  } catch (err) {
+    console.error('[Ember] Streaming tutor error:', err);
+  }
+
+  if (routing.visualize) {
+    const viz = await generateVisualization(studentText, entries);
+    if (viz) results.push(viz);
+  }
+  if (routing.illustrate) {
+    const ill = await generateIllustration(studentText);
+    if (ill) results.push(ill);
+  }
+
+  const echo = await echoPromise;
+  if (echo) results.unshift(echo);
+
+  const bridge = await generateBridge(notebookId, studentText);
+  if (bridge) results.push(bridge);
+
+  const reflection = await generateReflection(entries);
+  if (reflection) results.push(reflection);
+
+  if (pendingCitations.length > 0) {
+    const unique = pendingCitations.filter(
+      (c, i, arr) => arr.findIndex((x) => x.url === c.url) === i,
+    );
+    results.push({ type: 'citation', sources: unique });
+    pendingCitations.length = 0;
+  }
+
+  return {
+    entries: results,
+    deferredActions: agenticResult?.deferredActions ?? [],
+  };
 }
 
 // Re-export for backward compatibility

@@ -9,6 +9,7 @@ import {
   createEntry,
   getEntriesBySession,
   updateEntry,
+  updateEntryContent,
 } from '@/persistence/repositories/entries';
 import { getBlobAsDataUrl } from '@/persistence/repositories/blobs';
 import { createId } from '@/persistence/ids';
@@ -52,6 +53,20 @@ export function usePersistedNotebook(sessionId: string | null) {
     await createEntry(sessionId, entry);
     notify(Store.Entries);
   }, [sessionId]);
+
+  /** Add an entry and return its persisted ID (for streaming updates). */
+  const addEntryWithId = useCallback(async (entry: NotebookEntry): Promise<string> => {
+    if (!sessionId) return '';
+    const record = await createEntry(sessionId, entry);
+    notify(Store.Entries);
+    return record.id;
+  }, [sessionId]);
+
+  /** Update an entry's content in-place (streaming text updates). */
+  const patchEntryContent = useCallback(async (id: string, entry: NotebookEntry) => {
+    await updateEntryContent(id, entry);
+    notify(Store.Entries);
+  }, []);
 
   const crossOut = useCallback(async (id: string) => {
     const live = entries.find((e) => e.id === id);
@@ -106,6 +121,8 @@ export function usePersistedNotebook(sessionId: string | null) {
     entries,
     loading,
     addEntry,
+    addEntryWithId,
+    patchEntryContent,
     crossOut,
     toggleBookmark,
     togglePin,

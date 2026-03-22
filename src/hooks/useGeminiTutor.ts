@@ -5,7 +5,7 @@
  * 1. Router Agent classifies → which agents to invoke
  * 2. Context Assembler builds layered context (profile + memory + research)
  * 3. File Search retrieves relevant history (always-on)
- * 4. Tutor responds with enriched context
+ * 4. Tutor responds with streaming text (tokens appear in real-time)
  * 5. Visualiser/Illustrator produce rich content (when warranted)
  *
  * Falls back gracefully when no API key is configured.
@@ -13,7 +13,7 @@
 import { useCallback, useRef, useState } from 'react';
 import type { DeferredAction } from '@/services/tool-executor';
 import { isGeminiAvailable } from '@/services/gemini';
-import { orchestrate } from '@/services/orchestrator';
+import { streamOrchestrate } from '@/services/orchestrator';
 import { useStudent } from '@/contexts/StudentContext';
 import { getMasteryByNotebook, getCuriositiesByNotebook } from '@/persistence/repositories/mastery';
 import { getLexiconByNotebook } from '@/persistence/repositories/lexicon';
@@ -25,26 +25,28 @@ import type { NotebookEntry, LiveEntry } from '@/types/entries';
 
 interface UseGeminiTutorOptions {
   addEntry: (entry: NotebookEntry) => void;
+  addEntryWithId?: (entry: NotebookEntry) => string | Promise<string>;
+  patchEntryContent?: (id: string, entry: NotebookEntry) => void;
   entries: LiveEntry[];
 }
 
-export function useGeminiTutor({ addEntry, entries }: UseGeminiTutorOptions) {
+export function useGeminiTutor({
+  addEntry, addEntryWithId, patchEntryContent, entries,
+}: UseGeminiTutorOptions) {
   const [isThinking, setIsThinking] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const lastSyncRef = useRef(Date.now());
   const { student, notebook } = useStudent();
   const { current } = useSessionManager();
 
-  /** Build student profile from persisted data. */
   const buildProfile = useCallback(async (): Promise<StudentProfile | null> => {
     if (!student || !notebook) return null;
-
     const [mastery, lexicon, curiosities] = await Promise.all([
       getMasteryByNotebook(notebook.id),
       getLexiconByNotebook(notebook.id),
       getCuriositiesByNotebook(notebook.id),
     ]);
-
     return {
       name: student.displayName,
       masterySnapshot: mastery.map((m) => ({
@@ -56,12 +58,9 @@ export function useGeminiTutor({ addEntry, entries }: UseGeminiTutorOptions) {
     };
   }, [student, notebook]);
 
-  /** Build notebook context from current state. */
   const buildNotebookCtx = useCallback(async (): Promise<NotebookContext | null> => {
     if (!notebook || !current) return null;
-
     const encounters = await getEncountersByNotebook(notebook.id);
-
     return {
       title: notebook.title,
       description: notebook.description,
@@ -84,17 +83,38 @@ export function useGeminiTutor({ addEntry, entries }: UseGeminiTutorOptions) {
       try {
         abortRef.current = new AbortController();
 
-        // Build profile and notebook context in parallel
         const [profile, notebookCtx] = await Promise.all([
           buildProfile(),
           buildNotebookCtx(),
         ]);
 
-        const result = await orchestrate(
+        // Create a streaming entry that will update in-place
+        let streamingId: string | null = null;
+        const canStream = addEntryWithId && patchEntryContent;
+
+        if (canStream) {
+          const streamEntry: NotebookEntry = {
+            type: 'streaming-text', content: '', done: false,
+          };
+          const id = addEntryWithId(streamEntry);
+          streamingId = typeof id === 'string' ? id : await id;
+          setIsStreaming(true);
+        }
+
+        const onChunk = (_chunk: string, accumulated: string) => {
+          if (streamingId && patchEntryContent) {
+            patchEntryContent(streamingId, {
+              type: 'streaming-text', content: accumulated, done: false,
+            });
+          }
+        };
+
+        const result = await streamOrchestrate(
           studentEntry.content,
           entries,
           student.id,
           notebook.id,
+          onChunk,
           profile,
           notebookCtx,
           lastSyncRef.current,
@@ -102,20 +122,47 @@ export function useGeminiTutor({ addEntry, entries }: UseGeminiTutorOptions) {
 
         lastSyncRef.current = Date.now();
 
-        // Stagger entry additions for natural feel
-        for (let i = 0; i < result.entries.length; i++) {
-          const entry = result.entries[i];
-          if (!entry) continue;
-          if (i > 0) await delay(800);
-          addEntry(entry);
+        // Mark streaming as done, then replace with parsed entry
+        if (streamingId && patchEntryContent) {
+          // First mark done so the cursor fades out
+          patchEntryContent(streamingId, {
+            type: 'streaming-text',
+            content: result.entries[0]
+              ? ('content' in result.entries[0] ? result.entries[0].content : '')
+              : '',
+            done: true,
+          });
+
+          // After a brief pause, replace with the final parsed entry
+          await delay(400);
+          const firstEntry = result.entries[0];
+          if (firstEntry) {
+            patchEntryContent(streamingId, firstEntry);
+          }
+
+          // Add remaining entries (enrichment, echoes, etc.)
+          for (let i = 1; i < result.entries.length; i++) {
+            const entry = result.entries[i];
+            if (!entry) continue;
+            await delay(800);
+            addEntry(entry);
+          }
+        } else {
+          // Fallback: non-streaming path
+          for (let i = 0; i < result.entries.length; i++) {
+            const entry = result.entries[i];
+            if (!entry) continue;
+            if (i > 0) await delay(800);
+            addEntry(entry);
+          }
         }
 
-        // Execute deferred actions (annotations, lexicon adds)
+        setIsStreaming(false);
+
         for (const action of result.deferredActions) {
           executeDeferredAction(action, student.id, notebook.id);
         }
 
-        // Background tasks: assess what needs updating, then dispatch
         void runBackgroundTasks(
           studentEntry.content,
           result.entries,
@@ -127,30 +174,28 @@ export function useGeminiTutor({ addEntry, entries }: UseGeminiTutorOptions) {
         );
       } catch (err) {
         console.error('[Ember] Gemini tutor error:', err);
+        setIsStreaming(false);
       } finally {
         setIsThinking(false);
         abortRef.current = null;
       }
     },
-    [addEntry, entries, student, notebook, buildProfile, buildNotebookCtx],
+    [addEntry, addEntryWithId, patchEntryContent, entries,
+     student, notebook, buildProfile, buildNotebookCtx, current],
   );
 
-  return { respond, isThinking };
+  return { respond, isThinking, isStreaming };
 }
 
 function delay(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-/** Execute deferred write actions from the agentic loop. */
 function executeDeferredAction(
   action: DeferredAction,
   _studentId: string,
   _notebookId: string,
 ): void {
-  // These are fire-and-forget — executed via the persistence layer
-  // by the constellation sync and mastery updater hooks.
-  // Logging for now; full persistence wiring is in the hooks.
   if (action.type === 'annotate') {
     console.log('[Ember] Agent annotation:', action.args);
   }

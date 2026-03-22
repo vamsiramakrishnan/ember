@@ -4,7 +4,7 @@
  * and grounding metadata extraction (Google Search citations).
  */
 import { getGeminiClient } from './gemini';
-import { useProxy, proxyTextGeneration } from './proxy-client';
+import { useProxy, proxyTextGeneration, proxyTextGenerationStream } from './proxy-client';
 import { toJSONSchema } from 'zod';
 import type { AgentConfig } from './agents';
 
@@ -146,6 +146,68 @@ export async function runImageAgent(
   }
 
   return { images, text: textChunks.join('') };
+}
+
+/**
+ * Run a text agent with streaming. Yields chunks via onChunk callback.
+ * Extracts grounding citations on completion.
+ */
+export async function runTextAgentStreaming(
+  agent: AgentConfig,
+  messages: AgentMessage[],
+  onChunk: (chunk: string, accumulated: string) => void,
+): Promise<AgentTextResult> {
+  if (useProxy()) {
+    const text = await proxyTextGenerationStream({
+      messages,
+      model: agent.model,
+      systemInstruction: agent.systemInstruction,
+      thinkingLevel: agent.thinkingLevel,
+      tools: agent.tools.length > 0 ? agent.tools : undefined,
+    }, onChunk);
+    return { text, citations: [] };
+  }
+
+  const client = getGeminiClient();
+  if (!client) throw new Error('Gemini API key not configured');
+
+  const config: Record<string, unknown> = {
+    thinkingConfig: { thinkingLevel: agent.thinkingLevel },
+    systemInstruction: agent.systemInstruction,
+  };
+  if (agent.tools.length > 0) config.tools = agent.tools;
+
+  const response = await client.models.generateContentStream({
+    model: agent.model, config, contents: messages,
+  });
+
+  let accumulated = '';
+  const citations: GroundingCitation[] = [];
+
+  for await (const chunk of response) {
+    const candidate = chunk.candidates?.[0];
+    const parts = candidate?.content?.parts;
+    if (parts) {
+      for (const part of parts) {
+        if ('text' in part && part.text) {
+          accumulated += part.text;
+          onChunk(part.text, accumulated);
+        }
+      }
+    }
+    const grounding = candidate?.groundingMetadata as Record<string, unknown> | undefined;
+    if (grounding?.groundingChunks) {
+      const gChunks = grounding.groundingChunks as Array<Record<string, unknown>>;
+      for (const gc of gChunks) {
+        const web = gc.web as { uri?: string; title?: string } | undefined;
+        if (web?.uri && !citations.some((c) => c.url === web.uri)) {
+          citations.push({ title: web.title ?? '', url: web.uri ?? '' });
+        }
+      }
+    }
+  }
+
+  return { text: accumulated, citations };
 }
 
 /** Convenience: run a text agent with a single user prompt. */
