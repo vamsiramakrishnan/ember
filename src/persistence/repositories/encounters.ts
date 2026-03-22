@@ -11,6 +11,7 @@ import type { EncounterRecord } from '../records';
 type EncounterStatus = EncounterRecord['status'];
 
 export async function createEncounter(params: {
+  studentId: string;
   ref: string;
   thinker: string;
   tradition: string;

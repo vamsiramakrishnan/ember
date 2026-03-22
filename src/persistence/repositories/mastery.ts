@@ -1,6 +1,6 @@
 /**
  * Mastery Repository — concept mastery tracking and curiosity threads.
- * Supports the MasteryBar (5.3) and Constellation mastery views.
+ * Now scoped by studentId for multi-student support.
  */
 import { Store } from '../schema';
 import { getAll, put, getByIndex, putBatch } from '../engine';
@@ -9,12 +9,13 @@ import type { MasteryRecord, CuriosityRecord } from '../records';
 import type { MasteryLevel } from '@/types/mastery';
 
 export async function upsertMastery(params: {
+  studentId: string;
   concept: string;
   level: MasteryLevel;
   percentage: number;
 }): Promise<MasteryRecord> {
   const existing = await getByIndex<MasteryRecord>(
-    Store.Mastery, 'by-concept', params.concept,
+    Store.Mastery, 'by-concept', [params.studentId, params.concept],
   );
   const now = Date.now();
 
@@ -44,13 +45,15 @@ export async function getMasteryByLevel(
   return getByIndex<MasteryRecord>(Store.Mastery, 'by-level', level);
 }
 
-export async function createCuriosity(
-  question: string,
-): Promise<CuriosityRecord> {
+export async function createCuriosity(params: {
+  studentId: string;
+  question: string;
+}): Promise<CuriosityRecord> {
   const now = Date.now();
   const record: CuriosityRecord = {
     id: createId(),
-    question,
+    studentId: params.studentId,
+    question: params.question,
     createdAt: now,
     updatedAt: now,
   };
@@ -63,11 +66,13 @@ export async function getAllCuriosities(): Promise<CuriosityRecord[]> {
 }
 
 export async function seedMastery(
+  studentId: string,
   items: { concept: string; level: MasteryLevel; percentage: number }[],
 ): Promise<void> {
   const now = Date.now();
   const records = items.map((item, i) => ({
     id: createId(),
+    studentId,
     createdAt: now + i,
     updatedAt: now + i,
     ...item,

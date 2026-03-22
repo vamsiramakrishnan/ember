@@ -1,15 +1,18 @@
 /**
  * App — Root component.
- * Wires the three surfaces to tab navigation within the shell.
- * Initialises persistence, seeds demo data, and starts background sync.
+ * Flow: Landing (pick student) → NotebookSelect (pick notebook) → Surfaces.
+ * Initialises persistence and seeds demo data on first run.
  */
 import { useState, useEffect } from 'react';
 import { Shell } from '@/layout/Shell';
 import { Header } from '@/layout/Header';
 import { Footer } from '@/layout/Footer';
+import { Landing } from '@/surfaces/Landing';
+import { NotebookSelect } from '@/surfaces/NotebookSelect';
 import { Notebook } from '@/surfaces/Notebook';
 import { Constellation } from '@/surfaces/Constellation';
 import { Philosophy } from '@/surfaces/Philosophy';
+import { StudentProvider, useStudent } from '@/contexts/StudentContext';
 import { openDB } from '@/persistence';
 import { seedIfEmpty } from '@/persistence/seed';
 import { registerAdapter, startSync } from '@/persistence/sync';
@@ -27,8 +30,45 @@ function ActiveSurface({ surface }: { surface: Surface }) {
   }
 }
 
-export function App() {
+function AppContent() {
+  const { student, notebook } = useStudent();
   const [surface, setSurface] = useState<Surface>('notebook');
+
+  // No student selected → show landing
+  if (!student) {
+    return (
+      <Shell>
+        <Landing />
+      </Shell>
+    );
+  }
+
+  // Student selected but no notebook → show notebook picker
+  if (!notebook) {
+    return (
+      <Shell>
+        <Header activeSurface={surface} onNavigate={setSurface} />
+        <main style={{ minHeight: '80vh' }}>
+          <NotebookSelect />
+        </main>
+        <Footer />
+      </Shell>
+    );
+  }
+
+  // Full experience
+  return (
+    <Shell>
+      <Header activeSurface={surface} onNavigate={setSurface} />
+      <main style={{ minHeight: '80vh' }}>
+        <ActiveSurface surface={surface} />
+      </main>
+      <Footer />
+    </Shell>
+  );
+}
+
+export function App() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -51,12 +91,8 @@ export function App() {
   if (!ready) return null;
 
   return (
-    <Shell>
-      <Header activeSurface={surface} onNavigate={setSurface} />
-      <main style={{ minHeight: '80vh' }}>
-        <ActiveSurface surface={surface} />
-      </main>
-      <Footer />
-    </Shell>
+    <StudentProvider>
+      <AppContent />
+    </StudentProvider>
   );
 }

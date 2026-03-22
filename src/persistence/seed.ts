@@ -1,10 +1,12 @@
 /**
  * Seed — populates the database with demo data on first run.
- * Checks if sessions exist; if not, seeds everything.
+ * Creates a demo student, notebook, and sessions.
  * Idempotent — safe to call on every app start.
  */
 import { count } from './engine';
 import { Store } from './schema';
+import { createStudent } from './repositories/students';
+import { createNotebook } from './repositories/notebooks';
 import { createSession } from './repositories/sessions';
 import { createEntries } from './repositories/entries';
 import { putBatch } from './engine';
@@ -18,10 +20,26 @@ import { demoMastery } from '@/data/demo-mastery';
 import { demoCuriosities } from '@/data/demo-curiosities';
 
 export async function seedIfEmpty(): Promise<void> {
-  const sessionCount = await count(Store.Sessions);
-  if (sessionCount > 0) return;
+  const studentCount = await count(Store.Students);
+  if (studentCount > 0) return;
 
+  // Seed a demo student
+  const student = await createStudent({
+    name: 'Arjun',
+    displayName: 'Arjun',
+  });
+
+  // Create a notebook
+  const notebook = await createNotebook({
+    studentId: student.id,
+    title: 'Music & Mathematics',
+    description: 'Why is music mathematical? What did Kepler hear in the orbits?',
+  });
+
+  // Past session
   const past = await createSession({
+    studentId: student.id,
+    notebookId: notebook.id,
     number: demoPastSessionMeta.sessionNumber,
     date: demoPastSessionMeta.date,
     timeOfDay: demoPastSessionMeta.timeOfDay,
@@ -29,7 +47,10 @@ export async function seedIfEmpty(): Promise<void> {
   });
   await createEntries(past.id, demoPastSession);
 
+  // Current session
   const current = await createSession({
+    studentId: student.id,
+    notebookId: notebook.id,
     number: demoSessionMeta.sessionNumber,
     date: demoSessionMeta.date,
     timeOfDay: demoSessionMeta.timeOfDay,
@@ -37,17 +58,18 @@ export async function seedIfEmpty(): Promise<void> {
   });
   await createEntries(current.id, demoSession);
 
-  await seedLexicon();
-  await seedEncounters();
-  await seedLibrary();
-  await seedMastery();
-  await seedCuriosities();
+  await seedLexicon(student.id);
+  await seedEncounters(student.id);
+  await seedLibrary(student.id);
+  await seedMastery(student.id);
+  await seedCuriosities(student.id);
 }
 
-async function seedLexicon(): Promise<void> {
+async function seedLexicon(studentId: string): Promise<void> {
   const now = Date.now();
   const records = demoLexicon.map((entry, i) => ({
     id: createId(),
+    studentId,
     createdAt: now + i,
     updatedAt: now + i,
     ...entry,
@@ -55,10 +77,11 @@ async function seedLexicon(): Promise<void> {
   await putBatch(Store.Lexicon, records);
 }
 
-async function seedEncounters(): Promise<void> {
+async function seedEncounters(studentId: string): Promise<void> {
   const now = Date.now();
   const records = demoEncounters.map((enc, i) => ({
     id: createId(),
+    studentId,
     createdAt: now + i,
     updatedAt: now + i,
     ...enc,
@@ -66,10 +89,11 @@ async function seedEncounters(): Promise<void> {
   await putBatch(Store.Encounters, records);
 }
 
-async function seedLibrary(): Promise<void> {
+async function seedLibrary(studentId: string): Promise<void> {
   const now = Date.now();
   const records = demoLibrary.map((lib, i) => ({
     id: createId(),
+    studentId,
     createdAt: now + i,
     updatedAt: now + i,
     ...lib,
@@ -77,21 +101,25 @@ async function seedLibrary(): Promise<void> {
   await putBatch(Store.Library, records);
 }
 
-async function seedMastery(): Promise<void> {
+async function seedMastery(studentId: string): Promise<void> {
   const now = Date.now();
   const records = demoMastery.map((m, i) => ({
     id: createId(),
+    studentId,
+    concept: m.concept,
+    level: m.level,
+    percentage: m.percentage,
     createdAt: now + i,
     updatedAt: now + i,
-    ...m,
   }));
   await putBatch(Store.Mastery, records);
 }
 
-async function seedCuriosities(): Promise<void> {
+async function seedCuriosities(studentId: string): Promise<void> {
   const now = Date.now();
   const records = demoCuriosities.map((q, i) => ({
     id: createId(),
+    studentId,
     question: q,
     createdAt: now + i,
     updatedAt: now + i,

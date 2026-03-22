@@ -1,12 +1,15 @@
 /**
- * useTutorResponse — simulates tutor responses after student entries.
+ * useTutorResponse — orchestrates tutor responses after student entries.
+ * Uses Gemini AI when an API key is configured, otherwise falls back
+ * to curated static responses.
  * Follows the Socratic sequence: student writes → silence → tutor responds.
- * In production this would call the AI. Here we use curated responses.
  */
 import { useCallback, useRef } from 'react';
-import type { NotebookEntry } from '@/types/entries';
+import { isGeminiAvailable } from '@/services/gemini';
+import { useGeminiTutor } from '@/hooks/useGeminiTutor';
+import type { NotebookEntry, LiveEntry } from '@/types/entries';
 
-/** Pre-written tutor responses keyed by pattern. */
+/** Pre-written tutor responses keyed by pattern (fallback mode). */
 const questionResponses: NotebookEntry[] = [
   {
     type: 'tutor-question',
@@ -56,13 +59,12 @@ const hypothesisResponses: NotebookEntry[] = [
   },
 ];
 
-export function useTutorResponse(
+function useStaticFallback(
   addEntry: (entry: NotebookEntry) => void,
-  addEntries: (entries: NotebookEntry[]) => void,
 ) {
   const responseIndex = useRef({ q: 0, p: 0, h: 0 });
 
-  const respond = useCallback(
+  return useCallback(
     (studentEntry: NotebookEntry) => {
       const idx = responseIndex.current;
       let responses: NotebookEntry[];
@@ -96,8 +98,31 @@ export function useTutorResponse(
         }
       }, silenceDelay);
     },
-    [addEntry, addEntries],
+    [addEntry],
+  );
+}
+
+export function useTutorResponse(
+  addEntry: (entry: NotebookEntry) => void,
+  _addEntries: (entries: NotebookEntry[]) => void,
+  entries?: LiveEntry[],
+) {
+  const gemini = useGeminiTutor({
+    addEntry,
+    entries: entries ?? [],
+  });
+  const staticRespond = useStaticFallback(addEntry);
+
+  const respond = useCallback(
+    (studentEntry: NotebookEntry) => {
+      if (isGeminiAvailable()) {
+        void gemini.respond(studentEntry);
+      } else {
+        staticRespond(studentEntry);
+      }
+    },
+    [gemini, staticRespond],
   );
 
-  return { respond };
+  return { respond, isThinking: gemini.isThinking };
 }
