@@ -4,7 +4,7 @@
  * Now persistence-backed — entries survive refresh, sessions accumulate.
  * See: 04-information-architecture.md, Surface one.
  */
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { Column } from '@/primitives/Column';
 import { MarginZone } from '@/primitives/MarginZone';
 import { SessionHeader } from '@/components/peripheral/SessionHeader';
@@ -32,7 +32,15 @@ import styles from './Notebook.module.css';
 type NotebookMode = 'linear' | 'canvas';
 
 export function Notebook() {
-  const { current, past } = useSessionManager();
+  const { current, past, startNewSession, loading: sessionsLoading } = useSessionManager();
+
+  // Auto-create Session 1 when a notebook has no sessions
+  useEffect(() => {
+    if (!sessionsLoading && !current && past.length === 0) {
+      void startNewSession('');
+    }
+  }, [sessionsLoading, current, past.length, startNewSession]);
+
   const sessionId = current?.id ?? null;
 
   const {

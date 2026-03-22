@@ -84,6 +84,13 @@
   white-space: nowrap;
 }
 
+/* Tinted type tags: hypothesis/question (indigo), tutor entries (margin) */
+.typeTagTinted {
+  composes: typeTag;
+  color: var(--margin);
+  opacity: 0.5;
+}
+
 /* ─── Content ─────────────────────────────────────── */
 
 .content {

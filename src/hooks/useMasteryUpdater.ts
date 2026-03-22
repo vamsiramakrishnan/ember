@@ -16,6 +16,7 @@ import { createLexiconEntry, getLexiconByNotebook } from '@/persistence/reposito
 import { createEncounter, getEncountersByNotebook } from '@/persistence/repositories/encounters';
 import { useStudent } from '@/contexts/StudentContext';
 import { extractMasterySignals } from '@/services/mastery-extractor';
+import { enrichNotebookMetadata } from '@/services/notebook-enrichment';
 import type { LiveEntry } from '@/types/entries';
 
 const UPDATE_INTERVAL = 5;
@@ -104,6 +105,15 @@ export function useMasteryUpdater() {
           added++;
         }
         if (added > 0) notify(Store.Encounters);
+      }
+      // Enrich notebook metadata after first cycle (async, non-blocking)
+      if (entryCountRef.current === UPDATE_INTERVAL) {
+        const textEntries = entries
+          .filter((le) => 'content' in le.entry)
+          .map((le) => ('content' in le.entry ? le.entry.content : ''));
+        void enrichNotebookMetadata(
+          notebook.id, notebook.title, notebook.description, textEntries,
+        );
       }
     } catch (err) {
       console.error('[Ember] Mastery update error:', err);

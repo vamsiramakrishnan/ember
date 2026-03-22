@@ -13,6 +13,7 @@ import { BridgeSuggestion } from '@/components/peripheral/BridgeSuggestion';
 import { ThinkerCard } from '@/components/tutor/ThinkerCard';
 import { PinnedThread } from '@/components/student/PinnedThread';
 import { useMasteryData } from '@/hooks/useMasteryData';
+import { useStudent } from '@/contexts/StudentContext';
 import { spacing } from '@/tokens/spacing';
 import { ConstellationLexicon } from './ConstellationLexicon';
 import { ConstellationEncounters } from './ConstellationEncounters';
@@ -31,6 +32,7 @@ const viewTabs: { id: ConstellationView; label: string }[] = [
 export function Constellation() {
   const { concepts, threads, thinkers, lexicon, encounters, library } =
     useMasteryData();
+  const { notebook } = useStudent();
   const hasMastered = concepts.some((c) => c.level === 'mastered');
   const [view, setView] = useState<ConstellationView>('overview');
 
@@ -40,10 +42,19 @@ export function Constellation() {
         <Text
           variant="pageTitle"
           as="h1"
-          style={{ marginBottom: 16 }}
+          style={{ marginBottom: 4 }}
         >
-          Constellation
+          {notebook?.title ?? 'Constellation'}
         </Text>
+        {notebook?.description && (
+          <Text
+            variant="bodySecondary"
+            as="p"
+            style={{ marginBottom: 16, fontStyle: 'italic' }}
+          >
+            {notebook.description}
+          </Text>
+        )}
         <nav className={styles.subNav} aria-label="Constellation views">
           {viewTabs.map((tab) => (
             <button

@@ -1,10 +1,4 @@
-/**
- * InputZone (7.4)
- * The student's writing area — continuous with the notebook above.
- * Supports text, sketch mode, forced entry types, @ mentions,
- * and / slash commands. No border, no placeholder, just a cursor.
- * See: 06-component-inventory.md, Family 7
- */
+/** InputZone (7.4) — student's writing area. See: 06-component-inventory.md */
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { inferEntryType } from '@/hooks/useEntryInference';
 import { SketchInput } from './SketchInput';
@@ -20,11 +14,8 @@ interface InputZoneProps {
   onSubmit?: (content: string) => void;
   onSubmitTyped?: (content: string, type: StudentEntryType) => void;
   onSketchSubmit?: (dataUrl: string) => void;
-  /** Triggered when @ is typed — parent shows MentionPopup. */
   onMentionTrigger?: (query: string) => void;
-  /** Triggered when / is typed — parent shows SlashCommandPopup. */
   onSlashTrigger?: (query: string) => void;
-  /** Called when mention/slash popups should close. */
   onPopupClose?: () => void;
 }
 
@@ -38,14 +29,10 @@ export function InputZone({
   const [forcedType, setForcedType] = useState<StudentEntryType | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const autoGrow = useCallback(() => {
+  useEffect(() => {
     const el = textareaRef.current;
-    if (!el) return;
-    el.style.height = 'auto';
-    el.style.height = `${el.scrollHeight}px`;
-  }, []);
-
-  useEffect(() => { autoGrow(); }, [value, autoGrow]);
+    if (el) { el.style.height = 'auto'; el.style.height = `${el.scrollHeight}px`; }
+  }, [value]);
 
   const submit = useCallback((text: string, type?: StudentEntryType) => {
     const resolved = type ?? forcedType;
@@ -63,21 +50,10 @@ export function InputZone({
     const text = e.target.value;
     setValue(text);
 
-    // Detect @ mention trigger
     const atMatch = text.match(/@(\w*)$/);
-    if (atMatch) {
-      onMentionTrigger?.(atMatch[1] ?? '');
-      return;
-    }
-
-    // Detect / slash command trigger (only at start of line)
+    if (atMatch) { onMentionTrigger?.(atMatch[1] ?? ''); return; }
     const slashMatch = text.match(/^\/(\w*)$/);
-    if (slashMatch) {
-      onSlashTrigger?.(slashMatch[1] ?? '');
-      return;
-    }
-
-    // Close popups if no trigger
+    if (slashMatch) { onSlashTrigger?.(slashMatch[1] ?? ''); return; }
     onPopupClose?.();
   }, [onMentionTrigger, onSlashTrigger, onPopupClose]);
 

@@ -45,7 +45,10 @@ export async function getNotebooksByStudent(
 
 export async function updateNotebook(
   id: string,
-  updates: Partial<Pick<NotebookRecord, 'title' | 'description' | 'isActive' | 'sessionCount'>>,
+  updates: Partial<Pick<NotebookRecord,
+    'title' | 'description' | 'isActive' | 'sessionCount' |
+    'iconDataUrl' | 'tags' | 'summary' | 'discipline'
+  >>,
 ): Promise<void> {
   const existing = await get<NotebookRecord>(Store.Notebooks, id);
   if (!existing) return;

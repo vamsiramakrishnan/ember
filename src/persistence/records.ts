@@ -35,6 +35,14 @@ export interface NotebookRecord extends BaseRecord {
   sessionCount: number;
   /** Whether this is the currently active notebook. */
   isActive: boolean;
+  /** AI-generated icon (base64 data URL, 64x64 PNG). */
+  iconDataUrl?: string;
+  /** AI-generated tags for categorisation. */
+  tags?: string[];
+  /** AI-generated one-line summary of the exploration so far. */
+  summary?: string;
+  /** Primary discipline detected by AI (e.g. "mathematics", "philosophy"). */
+  discipline?: string;
 }
 
 export interface SessionRecord extends BaseRecord {

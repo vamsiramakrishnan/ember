@@ -57,11 +57,51 @@
   background: var(--paper-warm);
 }
 
+.notebookRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.notebookIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 2px;
+  opacity: 0.7;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.notebookContent {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .notebookTitle {
   font-family: 'Cormorant Garamond', serif;
   font-size: 20px;
   font-weight: 400;
   color: var(--ink);
+}
+
+.notebookTags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.tag {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.5px;
+  color: var(--ink-ghost);
+  border: 1px solid var(--rule-light);
+  border-radius: 2px;
+  padding: 2px 6px;
 }
 
 .notebookDesc {
@@ -158,4 +198,66 @@
   background: var(--ink);
   color: var(--paper);
   border-color: var(--ink);
+}
+
+.formButtonPrimary:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.formHint {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--ink-ghost);
+  letter-spacing: 0.5px;
+  line-height: 1.5;
+}
+
+/* ─── Bootstrap progress ──────────────────────────── */
+
+.bootstrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 32px 0;
+}
+
+.bootstrapDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--margin);
+  animation: bootstrapPulse 1.2s ease-in-out infinite;
+}
+
+.bootstrapLabel {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+@keyframes bootstrapPulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+.notebookCard:focus-visible,
+.newButton:focus-visible,
+.formButton:focus-visible,
+.formButtonPrimary:focus-visible {
+  outline: 2px solid var(--margin);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bootstrapDot {
+    animation: none;
+    opacity: 0.6;
+  }
+  .notebookCard,
+  .newButton {
+    transition: none;
+  }
 }
