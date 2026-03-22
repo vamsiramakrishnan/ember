@@ -9,6 +9,17 @@
   border-bottom: 1px solid var(--rule-light);
 }
 
+/* Entry rows with inline inserters between them */
+.entryRow {
+  position: relative;
+}
+
+.inserterRow {
+  position: relative;
+  height: 8px;
+  margin: 0 0 0 var(--text-indent);
+}
+
 /* Mode toggle — linear vs canvas */
 .modeToggle {
   display: flex;

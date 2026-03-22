@@ -35,6 +35,41 @@
   animation: emberCursorBlink var(--cursor-cycle) ease infinite;
 }
 
+/* Forced type indicator — shows when block inserter selected a type */
+.forcedTypeBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.forcedTypeLabel {
+  font-family: var(--font-system);
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--margin);
+  border-bottom: 1px solid var(--margin);
+  padding-bottom: 1px;
+}
+
+.forcedTypeClear {
+  font-family: var(--font-system);
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--ink-ghost);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s ease;
+}
+
+.forcedTypeClear:hover {
+  color: var(--ink-faint);
+}
+
 .bottomRow {
   display: flex;
   align-items: center;

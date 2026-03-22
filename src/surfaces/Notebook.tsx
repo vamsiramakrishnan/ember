@@ -11,6 +11,7 @@ import { SessionHeader } from '@/components/peripheral/SessionHeader';
 import { SessionDivider } from '@/components/peripheral/SessionDivider';
 import { PinnedThread } from '@/components/student/PinnedThread';
 import { MarginalReference } from '@/components/ambient/MarginalReference';
+import { BlockInserter } from '@/components/student/BlockInserter';
 import { InputZone } from '@/components/student/InputZone';
 import { usePersistedNotebook } from '@/hooks/usePersistedNotebook';
 import { useSessionManager } from '@/hooks/useSessionManager';
@@ -21,6 +22,7 @@ import { createStudentEntry } from '@/hooks/useEntryInference';
 import { NotebookEntryWrapper } from './NotebookEntryWrapper';
 import { NotebookEntryRenderer } from './NotebookEntryRenderer';
 import { NotebookCanvas } from './NotebookCanvas';
+import type { StudentEntryType, NotebookEntry } from '@/types/entries';
 import styles from './Notebook.module.css';
 
 type NotebookMode = 'linear' | 'canvas';
@@ -45,13 +47,29 @@ export function Notebook() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, []);
 
-  const handleSubmit = useCallback((text: string) => {
-    const studentEntry = createStudentEntry(text);
-    void addEntry(studentEntry);
+  const submitEntry = useCallback((entry: NotebookEntry) => {
+    void addEntry(entry);
     setTimeout(scrollToBottom, 50);
-    respond(studentEntry);
+    respond(entry);
     void checkAndUpdate(entries);
   }, [addEntry, respond, scrollToBottom, checkAndUpdate, entries]);
+
+  const handleSubmit = useCallback((text: string) => {
+    submitEntry(createStudentEntry(text));
+  }, [submitEntry]);
+
+  const handleSubmitTyped = useCallback((text: string, type: StudentEntryType) => {
+    submitEntry({ type, content: text });
+  }, [submitEntry]);
+
+  const handleInlineInsert = useCallback((_type: StudentEntryType) => {
+    // Scroll to the InputZone — the type will be set there
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, []);
+
+  const handleInlinePaste = useCallback((text: string, type: StudentEntryType) => {
+    submitEntry({ type, content: text });
+  }, [submitEntry]);
 
   const handleSketchSubmit = useCallback((dataUrl: string) => {
     void addEntry({ type: 'sketch', dataUrl });
@@ -92,17 +110,31 @@ export function Notebook() {
                 but he arrived at it through pure number theory, not observation.
               </MarginalReference>
             </MarginZone>
-            {entries.map((le) => (
-              <NotebookEntryWrapper
-                key={le.id}
-                liveEntry={le}
-                onCrossOut={crossOut}
-                onToggleBookmark={toggleBookmark}
-                onTogglePin={togglePin}
-              />
+            {entries.map((le, i) => (
+              <div key={le.id} className={styles.entryRow}>
+                <NotebookEntryWrapper
+                  liveEntry={le}
+                  onCrossOut={crossOut}
+                  onToggleBookmark={toggleBookmark}
+                  onTogglePin={togglePin}
+                />
+                {/* Inserter between entries — appears on hover */}
+                {i < entries.length - 1 && (
+                  <div className={styles.inserterRow}>
+                    <BlockInserter
+                      onSelect={handleInlineInsert}
+                      onPaste={handleInlinePaste}
+                    />
+                  </div>
+                )}
+              </div>
             ))}
           </div>
-          <InputZone onSubmit={handleSubmit} onSketchSubmit={handleSketchSubmit} />
+          <InputZone
+            onSubmit={handleSubmit}
+            onSubmitTyped={handleSubmitTyped}
+            onSketchSubmit={handleSketchSubmit}
+          />
           <div ref={bottomRef} />
         </>
       ) : (
