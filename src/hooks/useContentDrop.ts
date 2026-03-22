@@ -3,19 +3,19 @@
  * Processes dropped/pasted content into notebook entries:
  *
  * - Images (png, jpg, gif, webp) → image entry + Reader agent analysis
- * - PDFs / documents → document entry + text extraction + File Search indexing
+ * - PDFs / documents → document entry + raw upload to File Search
  * - Code files → code-cell entry
- * - URLs (pasted text) → embed entry with metadata fetch
- * - Other files → file-upload entry + AI summary
+ * - URLs (pasted text) → embed entry
+ * - Other files → file-upload entry
  *
  * All files are stored via the blob repository (content-addressed).
- * Documents are indexed into File Search for the tutor to reference.
+ * Documents uploaded directly to File Search — Gemini handles
+ * PDF chunking and embedding natively. No text extraction needed.
  */
 import { useCallback, useRef } from 'react';
 import { storeBlob } from '@/persistence/repositories/blobs';
 import { isGeminiAvailable } from '@/services/gemini';
-import { extractTextFromImage } from '@/services/gemini-multimodal';
-import { getOrCreateStore, indexSession } from '@/services/gemini-file-search';
+import { getOrCreateStore, uploadRawFile } from '@/services/gemini-file-search';
 import { useStudent } from '@/contexts/StudentContext';
 import type { NotebookEntry, FileAttachment } from '@/types/entries';
 
@@ -44,7 +44,6 @@ export function useContentDrop({ addEntry }: UseContentDropOptions) {
   const { student, notebook } = useStudent();
   const processingRef = useRef(false);
 
-  /** Process a single file into a notebook entry. */
   const processFile = useCallback(async (file: File): Promise<void> => {
     if (processingRef.current) return;
     processingRef.current = true;
@@ -60,41 +59,25 @@ export function useContentDrop({ addEntry }: UseContentDropOptions) {
         blobHash: hash,
       };
 
-      // Image → image entry
+      // Image → image entry + Reader agent analysis
       if (IMAGE_TYPES.includes(file.type)) {
         const dataUrl = await blobToDataUrl(blob);
         addEntry({ type: 'image', dataUrl, alt: file.name });
-
-        // Analyse with Reader agent if available
         if (isGeminiAvailable()) {
-          analyseUploadedImage(dataUrl, file.type, addEntry);
+          void analyseImage(dataUrl, file.type, addEntry);
+        }
+        // Also upload raw image to File Search for visual grounding
+        if (student && notebook) {
+          void rawUpload(blob, file.name, student.id, notebook.id);
         }
         return;
       }
 
-      // Document (PDF, DOCX) → document entry
+      // Document → entry + raw upload to File Search
       if (DOC_TYPES.includes(file.type)) {
-        let extractedText: string | undefined;
-
-        // Try text extraction via multimodal
-        if (isGeminiAvailable() && file.type === 'application/pdf') {
-          try {
-            const base64 = await blobToBase64(blob);
-            extractedText = await extractTextFromImage(base64, file.type);
-          } catch {
-            // Extraction failed — show file without extract
-          }
-        }
-
-        addEntry({
-          type: 'document',
-          file: attachment,
-          extractedText,
-        });
-
-        // Index document content into File Search
-        if (extractedText && student && notebook) {
-          indexDocumentContent(student.id, notebook.id, file.name, extractedText);
+        addEntry({ type: 'document', file: attachment });
+        if (student && notebook) {
+          void rawUpload(blob, file.name, student.id, notebook.id);
         }
         return;
       }
@@ -103,25 +86,24 @@ export function useContentDrop({ addEntry }: UseContentDropOptions) {
       const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
       if (CODE_EXTENSIONS[ext]) {
         const text = await file.text();
-        addEntry({
-          type: 'code-cell',
-          language: CODE_EXTENSIONS[ext] ?? 'text',
-          source: text,
-        });
+        addEntry({ type: 'code-cell', language: CODE_EXTENSIONS[ext] ?? 'text', source: text });
+        // Also upload to File Search for code search
+        if (student && notebook) {
+          void rawUpload(blob, file.name, student.id, notebook.id);
+        }
         return;
       }
 
-      // Text files → prose entry
+      // Text files → prose or code-cell
       if (file.type.startsWith('text/') || file.type === 'application/json') {
         const text = await file.text();
         if (ext === 'md') {
           addEntry({ type: 'prose', content: text });
         } else {
-          addEntry({
-            type: 'code-cell',
-            language: ext || 'text',
-            source: text,
-          });
+          addEntry({ type: 'code-cell', language: ext || 'text', source: text });
+        }
+        if (student && notebook) {
+          void rawUpload(blob, file.name, student.id, notebook.id);
         }
         return;
       }
@@ -133,39 +115,25 @@ export function useContentDrop({ addEntry }: UseContentDropOptions) {
     }
   }, [addEntry, student, notebook]);
 
-  /** Process pasted text — detect URLs and create embed entries. */
   const processPastedText = useCallback((text: string): boolean => {
     const trimmed = text.trim();
     if (URL_PATTERN.test(trimmed)) {
-      addEntry({
-        type: 'embed',
-        url: trimmed,
-        title: undefined,
-        description: undefined,
-      });
-      return true; // Handled
+      addEntry({ type: 'embed', url: trimmed });
+      return true;
     }
-    return false; // Let InputZone handle as normal text
+    return false;
   }, [addEntry]);
 
-  /** Handle drag-drop events. */
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-
     const files = Array.from(e.dataTransfer.files);
     if (files.length > 0) {
-      for (const file of files) {
-        void processFile(file);
-      }
+      for (const file of files) void processFile(file);
       return;
     }
-
-    // Check for dropped text (URL)
     const text = e.dataTransfer.getData('text/plain');
-    if (text) {
-      processPastedText(text);
-    }
+    if (text) processPastedText(text);
   }, [processFile, processPastedText]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -173,11 +141,8 @@ export function useContentDrop({ addEntry }: UseContentDropOptions) {
     e.dataTransfer.dropEffect = 'copy';
   }, []);
 
-  /** Handle clipboard paste (images). */
   const handlePaste = useCallback((e: React.ClipboardEvent): boolean => {
     const items = Array.from(e.clipboardData.items);
-
-    // Check for pasted images
     const imageItem = items.find((item) => item.type.startsWith('image/'));
     if (imageItem) {
       const file = imageItem.getAsFile();
@@ -187,27 +152,16 @@ export function useContentDrop({ addEntry }: UseContentDropOptions) {
         return true;
       }
     }
-
-    // Check for pasted files
     const files = Array.from(e.clipboardData.files);
     if (files.length > 0) {
       e.preventDefault();
-      for (const file of files) {
-        void processFile(file);
-      }
+      for (const file of files) void processFile(file);
       return true;
     }
-
-    return false; // Not handled — let default paste occur
+    return false;
   }, [processFile]);
 
-  return {
-    processFile,
-    processPastedText,
-    handleDrop,
-    handleDragOver,
-    handlePaste,
-  };
+  return { processFile, processPastedText, handleDrop, handleDragOver, handlePaste };
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────
@@ -221,72 +175,48 @@ function blobToDataUrl(blob: Blob): Promise<string> {
   });
 }
 
-function blobToBase64(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string;
-      resolve(result.split(',')[1] ?? '');
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
+/** Upload raw file directly to File Search. Gemini handles chunking natively. */
+async function rawUpload(
+  blob: Blob, name: string, studentId: string, notebookId: string,
+): Promise<void> {
+  try {
+    const store = await getOrCreateStore(studentId);
+    await uploadRawFile(store, blob, name, notebookId);
+  } catch (err) {
+    console.error('[Ember] File Search upload error:', err);
+  }
 }
 
-/** Fire-and-forget: analyse an uploaded image with the Reader agent. */
-function analyseUploadedImage(
-  dataUrl: string,
-  mimeType: string,
-  addEntry: (entry: NotebookEntry) => void,
-): void {
-  import('@/services/run-agent').then(async ({ runTextAgent }) => {
+/** Analyse uploaded image with Reader agent. */
+async function analyseImage(
+  dataUrl: string, mimeType: string, addEntry: (e: NotebookEntry) => void,
+): Promise<void> {
+  try {
+    const { runTextAgent } = await import('@/services/run-agent');
     const { READER_AGENT } = await import('@/services/agents');
     const base64 = dataUrl.split(',')[1] ?? '';
 
+    const result = await runTextAgent(READER_AGENT, [{
+      role: 'user',
+      parts: [
+        { inlineData: { mimeType, data: base64 } },
+        { text: 'The student uploaded this image. What does it show? How does it connect to what they are learning?' },
+      ],
+    }]);
+
+    const cleaned = result.text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
     try {
-      const result = await runTextAgent(READER_AGENT, [{
-        role: 'user',
-        parts: [
-          { inlineData: { mimeType, data: base64 } },
-          { text: 'The student uploaded this image. What does it show? How does it connect to what they are learning?' },
-        ],
-      }]);
-
-      const cleaned = result.text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
-      try {
-        const parsed = JSON.parse(cleaned) as Record<string, unknown>;
-        if (typeof parsed.content === 'string') {
-          addEntry({
-            type: parsed.type === 'tutor-question' ? 'tutor-question' : 'tutor-marginalia',
-            content: parsed.content,
-          } as NotebookEntry);
-        }
-      } catch {
-        if (result.text.trim()) {
-          addEntry({ type: 'tutor-marginalia', content: result.text.trim() });
-        }
+      const parsed = JSON.parse(cleaned) as Record<string, unknown>;
+      if (typeof parsed.content === 'string') {
+        const type = parsed.type === 'tutor-question' ? 'tutor-question' : 'tutor-marginalia';
+        addEntry({ type, content: parsed.content } as NotebookEntry);
       }
-    } catch (err) {
-      console.error('[Ember] Image analysis error:', err);
+    } catch {
+      if (result.text.trim()) {
+        addEntry({ type: 'tutor-marginalia', content: result.text.trim() });
+      }
     }
-  });
-}
-
-/** Fire-and-forget: index document content into File Search. */
-function indexDocumentContent(
-  studentId: string,
-  notebookId: string,
-  fileName: string,
-  text: string,
-): void {
-  getOrCreateStore(studentId).then((storeName) => {
-    indexSession(storeName, notebookId, {
-      number: 0,
-      date: new Date().toLocaleDateString(),
-      topic: `Uploaded document: ${fileName}`,
-      entries: [{ type: 'document', content: text }],
-    });
-  }).catch((err) => {
-    console.error('[Ember] Document indexing error:', err);
-  });
+  } catch (err) {
+    console.error('[Ember] Image analysis error:', err);
+  }
 }

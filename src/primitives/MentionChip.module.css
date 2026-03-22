@@ -1,0 +1,27 @@
+/* MentionChip — inline reference on warm paper */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: var(--paper-warm);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 0 5px;
+  margin: 0 1px;
+  cursor: default;
+  vertical-align: baseline;
+  line-height: inherit;
+}
+
+.prefix {
+  font-family: var(--font-system);
+  font-size: 0.75em;
+  color: var(--margin);
+}
+
+.name {
+  font-family: inherit;
+  font-size: inherit;
+  color: var(--ink);
+  font-weight: 500;
+}

@@ -65,12 +65,14 @@ export async function getOrCreateStore(
 
 // ─── Content indexing ────────────────────────────────────────────────
 
+type MetadataEntry = { key: string; string_value?: string; numeric_value?: number };
+
 /** Upload a text document to the store with metadata. */
 async function uploadDocument(
   storeName: string,
   displayName: string,
   content: string,
-  metadata: Array<{ key: string; string_value?: string; numeric_value?: number }>,
+  metadata: MetadataEntry[],
 ): Promise<void> {
   const client = getGeminiClient();
   if (!client) return;
@@ -79,6 +81,40 @@ async function uploadDocument(
 
   await client.fileSearchStores.uploadToFileSearchStore({
     file: blob,
+    fileSearchStoreName: storeName,
+    config: {
+      displayName,
+      customMetadata: metadata,
+    },
+  });
+}
+
+/**
+ * Upload a raw file directly to File Search.
+ * PDFs, images, code files — Gemini handles chunking and
+ * embedding natively. No text extraction needed.
+ *
+ * Supported: PDF, DOCX, PPTX, images (via OCR), code files,
+ * JSON, HTML, Markdown, CSV, and 200+ MIME types.
+ */
+export async function uploadRawFile(
+  storeName: string,
+  file: Blob,
+  displayName: string,
+  notebookId: string,
+  extraMetadata?: MetadataEntry[],
+): Promise<void> {
+  const client = getGeminiClient();
+  if (!client) return;
+
+  const metadata: MetadataEntry[] = [
+    { key: 'type', string_value: 'uploaded-file' },
+    { key: 'notebookId', string_value: notebookId },
+    ...(extraMetadata ?? []),
+  ];
+
+  await client.fileSearchStores.uploadToFileSearchStore({
+    file,
     fileSearchStoreName: storeName,
     config: {
       displayName,
