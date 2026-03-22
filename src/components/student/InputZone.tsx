@@ -18,11 +18,16 @@ interface InputZoneProps {
   onSlashTrigger?: (query: string) => void;
   onPopupClose?: () => void;
   onPaste?: (e: React.ClipboardEvent) => void;
+  /** Text to insert at the current @ or / trigger position. */
+  insertText?: string | null;
+  /** Called after insertText is consumed. */
+  onInsertConsumed?: () => void;
 }
 
 export function InputZone({
   onSubmit, onSubmitTyped, onSketchSubmit,
   onMentionTrigger, onSlashTrigger, onPopupClose, onPaste,
+  insertText, onInsertConsumed,
 }: InputZoneProps) {
   const [value, setValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
@@ -34,6 +39,18 @@ export function InputZone({
     const el = textareaRef.current;
     if (el) { el.style.height = 'auto'; el.style.height = `${el.scrollHeight}px`; }
   }, [value]);
+
+  // Insert text from mention/slash selection
+  useEffect(() => {
+    if (!insertText) return;
+    setValue((prev) => {
+      // Replace @query or /query at end of text with the insertion
+      const replaced = prev.replace(/@\w*$/, insertText).replace(/^\/\w*$/, insertText);
+      return replaced === prev ? prev + insertText : replaced;
+    });
+    onInsertConsumed?.();
+    textareaRef.current?.focus();
+  }, [insertText, onInsertConsumed]);
 
   const submit = useCallback((text: string, type?: StudentEntryType) => {
     const resolved = type ?? forcedType;

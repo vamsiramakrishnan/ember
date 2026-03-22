@@ -30,11 +30,16 @@ import { NotebookEntryWrapper } from './NotebookEntryWrapper';
 import { NotebookEntryRenderer } from './NotebookEntryRenderer';
 import { NotebookCanvas } from './NotebookCanvas';
 import type { StudentEntryType, NotebookEntry } from '@/types/entries';
+import type { Surface } from '@/layout/Navigation';
 import styles from './Notebook.module.css';
 
 type NotebookMode = 'linear' | 'canvas';
 
-export function Notebook() {
+interface NotebookProps {
+  onNavigate?: (surface: Surface) => void;
+}
+
+export function Notebook({ onNavigate }: NotebookProps) {
   const { current, past, startNewSession, loading: sessionsLoading } = useSessionManager();
 
   // Auto-create Session 1 when a notebook has no sessions
@@ -59,7 +64,7 @@ export function Notebook() {
   useSessionIndexer(past);
   const contentDrop = useContentDrop({ addEntry });
   const reorder = useEntryReorder();
-  const popup = usePopupState();
+  const popup = usePopupState(onNavigate);
   const [mode, setMode] = useState<NotebookMode>('linear');
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -197,6 +202,8 @@ export function Notebook() {
               onSlashTrigger={popup.handleSlashTrigger}
               onPopupClose={popup.handlePopupClose}
               onPaste={contentDrop.handlePaste}
+              insertText={popup.pendingInsert}
+              onInsertConsumed={popup.handleInsertConsumed}
             />
           </div>
           <div ref={bottomRef} />
