@@ -8,9 +8,13 @@ import { useCallback, useRef, useState, useEffect } from 'react';
 import { isGeminiAvailable } from '@/services/gemini';
 import { streamOrchestrate } from '@/services/orchestrator';
 import { runBackgroundTasks } from '@/services/background-task-runner';
-import { recordTutorTurn, setTutorActivity, filterByComposition, addRelation } from '@/state';
-import { useTutorProfile } from './useTutorProfile';
-import { delay, inferTutorMode, extractTopics, executeDeferredAction } from './tutor-helpers';
+import { updateWorkingMemory } from '@/services/working-memory';
+import {
+  recordTutorTurn, setTutorActivity,
+  filterByComposition, addRelation,
+} from '@/state';
+import type { InteractionMode } from '@/state';
+import type { StudentProfile, NotebookContext } from '@/services/context-assembler';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
 
 interface UseGeminiTutorOptions {
@@ -93,6 +97,19 @@ export function useGeminiTutor({
             current?.topic ?? '', entriesRef.current, notebook.title,
           );
         }
+
+        void runBackgroundTasks(
+          studentEntry.content,
+          result.entries,
+          student.id,
+          notebook.id,
+          current?.topic ?? '',
+          entries,
+          notebook.title,
+        );
+
+        // Compress session context into working memory (fire-and-forget)
+        void updateWorkingMemory(notebook.id, entries);
       } catch (err) {
         if ((err as Error)?.name !== 'AbortError') console.error('[Ember] Gemini tutor error:', err);
         setIsStreaming(false);

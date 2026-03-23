@@ -66,6 +66,8 @@ export {
   subscribeGraph,
   getAllRelations,
   clearGraph,
+  setNotebookContext,
+  loadFromPersistence,
 } from './entry-graph';
 export type { EntryRelation, RelationType } from './entry-graph';
 

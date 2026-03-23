@@ -56,8 +56,14 @@ export function assembleContext(opts: {
   notebook: NotebookContext | null;
   memory: SemanticMemory | null;
   research: ResearchContext | null;
+  workingMemory?: string;
 }): AssembledContext {
   const preambleParts: string[] = [];
+
+  // Layer 0: Working Memory (compressed session summary)
+  if (opts.workingMemory) {
+    preambleParts.push(`[SESSION SUMMARY — compressed context]\n${opts.workingMemory}`);
+  }
 
   // Layer 1: Student Profile
   if (opts.profile) {
