@@ -13,8 +13,8 @@ import {
   recordTutorTurn, setTutorActivity,
   filterByComposition, addRelation,
 } from '@/state';
-import type { InteractionMode } from '@/state';
-import type { StudentProfile, NotebookContext } from '@/services/context-assembler';
+import { useTutorProfile } from './useTutorProfile';
+import { delay, inferTutorMode, extractTopics, executeDeferredAction } from './tutor-helpers';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
 
 interface UseGeminiTutorOptions {
@@ -96,20 +96,9 @@ export function useGeminiTutor({
             studentEntry.content, result.entries, student.id, notebook.id,
             current?.topic ?? '', entriesRef.current, notebook.title,
           );
+          // Compress session context into working memory (fire-and-forget)
+          void updateWorkingMemory(notebook.id, entriesRef.current);
         }
-
-        void runBackgroundTasks(
-          studentEntry.content,
-          result.entries,
-          student.id,
-          notebook.id,
-          current?.topic ?? '',
-          entries,
-          notebook.title,
-        );
-
-        // Compress session context into working memory (fire-and-forget)
-        void updateWorkingMemory(notebook.id, entries);
       } catch (err) {
         if ((err as Error)?.name !== 'AbortError') console.error('[Ember] Gemini tutor error:', err);
         setIsStreaming(false);
