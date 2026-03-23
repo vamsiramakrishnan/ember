@@ -13,6 +13,7 @@ import { ILLUSTRATOR_AGENT, VISUALISER_AGENT } from './agents';
 import { runImageAgent, runTextAgent } from './run-agent';
 import { EMBER_VIZ_KIT } from './viz-components';
 import { refineArtifact } from './artifact-refiner';
+import { refineIllustration } from './image-refiner';
 import type { ChangeContract } from './artifact-refiner';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
 
@@ -55,7 +56,7 @@ export async function generateVisualization(
   return null;
 }
 
-/** Generate a hand-drawn illustration for a concept. */
+/** Generate a hand-drawn illustration with iterative critique→edit refinement. */
 export async function generateIllustration(
   prompt: string,
 ): Promise<NotebookEntry | null> {
@@ -67,16 +68,19 @@ export async function generateIllustration(
       }],
     }]);
 
-    if (result.images.length > 0) {
-      const img = result.images[0];
-      if (img) {
-        return {
-          type: 'illustration',
-          dataUrl: `data:${img.mimeType};base64,${img.data}`,
-          caption: result.text || undefined,
-        };
-      }
-    }
+    const img = result.images[0];
+    if (!img) return null;
+
+    // Iterative image refinement: critique → edit instructions → redraw
+    const refined = await refineIllustration(
+      img.data, img.mimeType, prompt, result.text || '',
+    );
+
+    return {
+      type: 'illustration',
+      dataUrl: `data:${refined.mimeType};base64,${refined.imageData}`,
+      caption: refined.caption || undefined,
+    };
   } catch {
     // Illustration failed — not critical
   }
