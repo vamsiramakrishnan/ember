@@ -124,12 +124,14 @@ async function executeSearch(
       const r = await searchAll(store, query);
       return r.text || '(no results)';
     }
-    if (['sessions', 'lexicon', 'encounters', 'mastery'].includes(scope)) {
-      const r = await searchByType(
-        store, query,
-        scope as 'session' | 'lexicon' | 'encounter' | 'mastery',
-        ctx.notebookId,
-      );
+    // Map scope aliases to File Search document types
+    const scopeMap: Record<string, string> = {
+      sessions: 'session', lexicon: 'lexicon', encounters: 'encounter',
+      mastery: 'mastery', files: 'uploaded-file', flashcards: 'flashcard',
+      exercises: 'exercise', reading: 'reading-material',
+    };
+    if (scopeMap[scope]) {
+      const r = await searchByType(store, query, scopeMap[scope], ctx.notebookId);
       return r.text || '(no results)';
     }
 

@@ -34,7 +34,7 @@ export async function searchNotebook(
 export async function searchByType(
   storeName: string,
   query: string,
-  type: 'session' | 'lexicon' | 'encounter' | 'library' | 'mastery' | 'curiosity',
+  type: string,
   notebookId?: string,
 ): Promise<SearchResult> {
   let filter = `type="${type}"`;

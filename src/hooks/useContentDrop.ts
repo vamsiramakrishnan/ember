@@ -184,13 +184,29 @@ function blobToDataUrl(blob: Blob): Promise<string> {
   });
 }
 
-/** Upload raw file directly to File Search. */
+/** Upload raw file to File Search with rich metadata for discovery. */
 async function rawUpload(
   blob: Blob, name: string, studentId: string, notebookId: string,
 ): Promise<void> {
   try {
     const store = await getOrCreateStore(studentId);
-    await uploadRawFile(store, blob, name, notebookId);
+    const ext = name.split('.').pop()?.toLowerCase() ?? '';
+    const mime = blob.type || 'application/octet-stream';
+
+    // Classify file for metadata
+    const isImage = mime.startsWith('image/');
+    const isPdf = mime === 'application/pdf';
+    const isCode = ['py', 'js', 'ts', 'java', 'cpp', 'c', 'rs', 'go', 'rb'].includes(ext);
+    const isData = ['csv', 'json', 'xml', 'tsv'].includes(ext);
+    const category = isImage ? 'image' : isPdf ? 'document' : isCode ? 'code' : isData ? 'data' : 'file';
+
+    await uploadRawFile(store, blob, name, notebookId, [
+      { key: 'fileName', string_value: name },
+      { key: 'mimeType', string_value: mime },
+      { key: 'fileSize', numeric_value: blob.size },
+      { key: 'category', string_value: category },
+      { key: 'extension', string_value: ext },
+    ]);
   } catch (err) {
     console.error('[Ember] File Search upload error:', err);
   }

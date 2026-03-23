@@ -34,8 +34,8 @@ export const AGENT_TOOL_DECLARATIONS = [
             },
             scope: {
               type: 'string',
-              enum: ['notebook', 'all', 'sessions', 'lexicon', 'encounters', 'mastery'],
-              description: 'Where to search. "notebook" = current notebook. "all" = across all notebooks.',
+              enum: ['notebook', 'all', 'sessions', 'lexicon', 'encounters', 'mastery', 'files', 'flashcards', 'exercises', 'reading'],
+              description: 'Where to search. "notebook" = current notebook. "files" = uploaded files/documents. "flashcards"/"exercises"/"reading" = teaching content.',
             },
           },
           required: ['query'],
