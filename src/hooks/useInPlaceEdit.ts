@@ -35,7 +35,7 @@ interface UseInPlaceEditReturn {
   /** Cancel the current edit. */
   cancelEdit: () => void;
   /** Save the edited content. */
-  saveEdit: (entryId: string, newContent: string) => Promise<void>;
+  saveEdit: (entryId: string, newContent: string, entryType?: string) => Promise<void>;
   /** Whether a given entry is currently being edited. */
   isEditing: (entryId: string) => boolean;
   /** Whether a given entry type is editable. */

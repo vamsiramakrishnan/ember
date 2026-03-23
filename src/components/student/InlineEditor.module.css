@@ -1,0 +1,61 @@
+/* InlineEditor — textarea styled to match entry typography.
+ * The goal: it looks like the text became editable, not like
+ * a different element replaced it. */
+
+.editor {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--rule);
+  outline: none;
+  resize: none;
+  padding: 0;
+  padding-left: var(--text-indent);
+  margin: 0;
+  color: var(--ink);
+  transition: border-color 0.2s ease;
+}
+
+.editor:focus {
+  border-bottom-color: var(--margin);
+}
+
+/* Match ProseEntry typography */
+.prose {
+  font-family: var(--font-student);
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.80;
+  letter-spacing: 0;
+}
+
+/* Match QuestionBubble typography */
+.question {
+  font-family: var(--font-student);
+  font-size: 17px;
+  font-weight: 400;
+  font-style: italic;
+  line-height: 1.70;
+}
+
+/* Match ScratchNote typography */
+.scratch {
+  font-family: var(--font-student);
+  font-size: 15px;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--ink-soft);
+  line-height: 1.60;
+}
+
+/* Match HypothesisMarker typography */
+.hypothesis {
+  font-family: var(--font-student);
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.80;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .editor { transition: none; }
+}
