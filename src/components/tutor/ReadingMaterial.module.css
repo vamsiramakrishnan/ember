@@ -1,0 +1,312 @@
+/* ReadingMaterial — paginated teaching deck */
+
+.container {
+  margin: 16px 0;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: var(--paper);
+  transition: margin 0.3s ease;
+  overflow: hidden;
+}
+
+.expanded {
+  margin-left: calc(-1 * var(--column-padding, 24px));
+  margin-right: calc(-1 * var(--column-padding, 24px));
+}
+
+/* ─── Header (clickable in thumbnail mode) ─────────── */
+.header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--rule-light);
+}
+
+.header[role="button"] {
+  cursor: pointer;
+}
+
+.header[role="button"]:hover {
+  background: var(--paper-warm);
+}
+
+.titleRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.icon {
+  font-family: var(--font-tutor);
+  font-size: 20px;
+  color: var(--amber);
+  line-height: 1.3;
+  flex-shrink: 0;
+}
+
+.titles {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-tutor);
+  font-size: 19px;
+  font-weight: 400;
+  color: var(--ink);
+  letter-spacing: -0.2px;
+  line-height: 1.35;
+}
+
+.subtitle {
+  margin: 2px 0 0;
+  font-family: var(--font-student);
+  font-size: 14px;
+  font-weight: 300;
+  color: var(--ink-faint);
+  line-height: 1.5;
+}
+
+.badge {
+  font-family: var(--font-system);
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--ink-ghost);
+  border: 1px solid var(--rule-light);
+  border-radius: 2px;
+  padding: 2px 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.thumbHint {
+  font-family: var(--font-system);
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--ink-ghost);
+  margin: 8px 0 0;
+  text-align: center;
+}
+
+/* ─── Slide area ───────────────────────────────────── */
+.slideArea {
+  padding: 0 20px 16px;
+}
+
+/* ─── Individual slide ─────────────────────────────── */
+.slide {
+  padding: 24px 0 16px;
+  min-height: 180px;
+  animation: slideIn 0.4s ease both;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.slideRule {
+  width: 32px;
+  height: 2px;
+  background: var(--rule);
+  margin-bottom: 16px;
+  transition: background 0.3s ease;
+}
+
+.slideHeading {
+  margin: 0 0 12px;
+  font-family: var(--font-tutor);
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--ink);
+  letter-spacing: -0.2px;
+  line-height: 1.4;
+}
+
+.slideBody {
+  font-family: var(--font-student);
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--ink-soft);
+  line-height: 1.75;
+}
+
+.slideBody p { margin: 0 0 10px; }
+.slideBody p:last-child { margin-bottom: 0; }
+
+/* ─── Layout variants ──────────────────────────────── */
+.layout_title .slideHeading {
+  font-size: 24px;
+  font-weight: 300;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.layout_title .slideBody {
+  text-align: center;
+  color: var(--ink-faint);
+  font-size: 16px;
+}
+
+.layout_title .slideRule {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.layout_quote .slideBody {
+  font-family: var(--font-tutor);
+  font-size: 18px;
+  font-style: italic;
+  color: var(--ink);
+  line-height: 1.75;
+  padding-left: 20px;
+  border-left: 2px solid var(--margin);
+}
+
+.layout_two_column .slideBody {
+  columns: 2;
+  column-gap: 24px;
+}
+
+.layout_summary .slideHeading {
+  font-weight: 500;
+  font-size: 17px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.layout_summary .slideBody {
+  font-size: 16px;
+  color: var(--ink);
+  line-height: 1.8;
+}
+
+.layout_diagram .slideBody {
+  font-family: var(--font-system);
+  font-size: 13px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+/* ─── Accent colours on slide rule ─────────────────── */
+.accentSage .slideRule { background: var(--sage); }
+.accentIndigo .slideRule { background: var(--indigo); }
+.accentAmber .slideRule { background: var(--amber); }
+.accentMargin .slideRule { background: var(--margin); }
+
+/* ─── Navigation ───────────────────────────────────── */
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 12px 0 4px;
+  border-top: 1px solid var(--rule-light);
+}
+
+.navBtn {
+  font-family: var(--font-system);
+  font-size: 13px;
+  color: var(--ink-faint);
+  background: none;
+  border: 1px solid var(--rule-light);
+  border-radius: 2px;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.navBtn:hover:not(:disabled) {
+  color: var(--ink-soft);
+  border-color: var(--ink-ghost);
+}
+
+.navBtn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.pageIndicator {
+  font-family: var(--font-system);
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--ink-ghost);
+  min-width: 48px;
+  text-align: center;
+}
+
+/* ─── Toolbar ──────────────────────────────────────── */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 8px 20px 12px;
+  border-top: 1px solid var(--rule-light);
+}
+
+.actionBtn {
+  font-family: var(--font-system);
+  font-size: 9px;
+  letter-spacing: 0.5px;
+  color: var(--ink-ghost);
+  background: none;
+  border: 1px solid var(--rule-light);
+  border-radius: 2px;
+  padding: 2px 8px;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.actionBtn:hover:not(:disabled) {
+  color: var(--ink-faint);
+  border-color: var(--ink-ghost);
+}
+
+.actionBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* ─── Modal ────────────────────────────────────────── */
+.modalContent {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.modalHeader {
+  text-align: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.modalTitle {
+  margin: 0;
+  font-family: var(--font-tutor);
+  font-size: 26px;
+  font-weight: 300;
+  color: var(--ink);
+  letter-spacing: -0.3px;
+  line-height: 1.3;
+}
+
+.modalSubtitle {
+  margin: 4px 0 0;
+  font-family: var(--font-student);
+  font-size: 15px;
+  font-weight: 300;
+  color: var(--ink-faint);
+  line-height: 1.5;
+}
+
+/* ─── Reduced motion ───────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .container, .slideRule { transition: none; }
+  .slide { animation: none; }
+  .actionBtn, .navBtn { transition: none; }
+}

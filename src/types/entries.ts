@@ -81,6 +81,20 @@ export interface FileAttachment {
   blobHash: string;
 }
 
+/** A single slide/page in a reading material deck. */
+export interface ReadingSlide {
+  /** Slide heading. */
+  heading: string;
+  /** Markdown body content. */
+  body: string;
+  /** Optional speaker/tutor notes (not shown in main view). */
+  notes?: string;
+  /** Layout variant for visual treatment. */
+  layout: 'title' | 'content' | 'two-column' | 'quote' | 'diagram' | 'summary';
+  /** Optional accent for the slide's decorative rule. */
+  accent?: 'sage' | 'indigo' | 'amber' | 'margin';
+}
+
 export type NotebookEntry =
   // ─── Student blocks ──────────────────────────────────────────
   | { type: 'prose'; content: string }
@@ -106,6 +120,7 @@ export type NotebookEntry =
   // ─── AI-generated blocks ─────────────────────────────────────
   | { type: 'visualization'; html: string; caption?: string }
   | { type: 'illustration'; dataUrl: string; caption?: string }
+  | { type: 'reading-material'; title: string; subtitle?: string; slides: ReadingSlide[] }
 
   // ─── System blocks ──────────────────────────────────────────
   | { type: 'silence'; text?: string }

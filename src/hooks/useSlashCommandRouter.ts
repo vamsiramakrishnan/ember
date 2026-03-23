@@ -7,6 +7,7 @@ import { useCallback, useRef } from 'react';
 import { isGeminiAvailable } from '@/services/gemini';
 import { useResearcher } from './useResearcher';
 import { generateIllustration } from '@/services/enrichment';
+import { generateReadingMaterial } from '@/services/reading-material-gen';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
 import type { SlashCommand } from '@/components/student/SlashCommandPopup';
 
@@ -63,6 +64,13 @@ export function useSlashCommandRouter({
         addEntry({ type: 'silence', text: 'sketching…' });
         const ill = await generateIllustration(query);
         if (ill) addEntry(ill);
+        return true;
+      }
+
+      case 'teach': {
+        addEntry({ type: 'silence', text: 'preparing reading material…' });
+        const deck = await generateReadingMaterial(query, entriesRef.current);
+        if (deck) addEntry(deck);
         return true;
       }
 

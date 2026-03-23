@@ -28,6 +28,7 @@ import { Echo } from '@/components/ambient/Echo';
 import { BridgeSuggestion } from '@/components/peripheral/BridgeSuggestion';
 import { Visualization } from '@/components/tutor/Visualization';
 import { Illustration } from '@/components/tutor/Illustration';
+import { ReadingMaterial } from '@/components/tutor/ReadingMaterial';
 import { Reflection } from '@/components/tutor/Reflection';
 import { Directive } from '@/components/tutor/Directive';
 import { Citation } from '@/components/ambient/Citation';
@@ -99,6 +100,9 @@ export function NotebookEntryRenderer({ entry }: Props) {
       return <Visualization html={entry.html} caption={entry.caption} />;
     case 'illustration':
       return <Illustration dataUrl={entry.dataUrl} caption={entry.caption} />;
+    case 'reading-material':
+      return <ReadingMaterial title={entry.title} subtitle={entry.subtitle}
+        slides={entry.slides} />;
 
     // System blocks
     case 'silence':
