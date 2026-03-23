@@ -1,11 +1,4 @@
-/**
- * TutorSessionState — shared reactive state between the tutor pipeline
- * and the learner's UI. This is the collaboration substrate.
- *
- * Architecture: A single in-memory store with fire-and-forget persistence
- * to IndexedDB events. The in-memory store is the fast path for React
- * subscriptions; events are the durable persistence layer.
- */
+/** Session state — in-memory store with fire-and-forget IndexedDB persistence. */
 
 import {
   persistStudentTurn,
@@ -25,11 +18,8 @@ import type {
   TutorActivityDetail, ActiveConcept, SessionState,
 } from './session-state-types';
 
-// ─── Store implementation ──────────────────────────────────
-
 type Listener = () => void;
 const listeners = new Set<Listener>();
-
 let state: SessionState = createInitialState();
 
 function createInitialState(): SessionState {
@@ -51,28 +41,16 @@ function createInitialState(): SessionState {
   };
 }
 
-function emit() {
-  for (const l of listeners) l();
-}
+function emit() { for (const l of listeners) l(); }
 
-// ─── Public API ────────────────────────────────────────────
+export function getSessionState(): SessionState { return state; }
 
-/** Get the current session state (snapshot). */
-export function getSessionState(): SessionState {
-  return state;
-}
-
-/** Subscribe to state changes. Returns unsubscribe function. */
 export function subscribeSessionState(listener: Listener): () => void {
   listeners.add(listener);
   return () => listeners.delete(listener);
 }
 
-/** Reset state for a new session. */
-export function resetSession(): void {
-  state = createInitialState();
-  emit();
-}
+export function resetSession(): void { state = createInitialState(); emit(); }
 
 /** Restore session state from persisted events. */
 export async function restoreSession(
@@ -130,27 +108,20 @@ export function recordTutorTurn(
   persistTutorTurn(mode, topics, thinker);
 }
 
-/** Update what the student is focused on. */
 export function setStudentFocus(focus: StudentFocus): void {
-  state = { ...state, focus };
-  emit();
+  state = { ...state, focus }; emit();
 }
 
-/** Set active concepts (extracted from recent entries). */
 export function setActiveConcepts(concepts: ActiveConcept[]): void {
-  state = { ...state, activeConcepts: concepts };
-  emit();
+  state = { ...state, activeConcepts: concepts }; emit();
 }
 
-/** Update mastery snapshot (from useMasteryUpdater). */
 export function setMasterySnapshot(
   snapshot: Array<{ concept: string; level: string; percentage: number }>,
 ): void {
-  state = { ...state, masterySnapshot: snapshot };
-  emit();
+  state = { ...state, masterySnapshot: snapshot }; emit();
 }
 
-/** Set thinking/streaming state with optional granular detail. */
 export function setTutorActivity(
   isThinking: boolean,
   isStreaming: boolean,
@@ -166,13 +137,9 @@ export function setTutorActivity(
   persistTutorActivity(isThinking, isStreaming);
 }
 
-/** Update just the activity detail (doesn't change thinking/streaming flags). */
 export function setActivityDetail(detail: TutorActivityDetail | null): void {
-  state = { ...state, activityDetail: detail };
-  emit();
+  state = { ...state, activityDetail: detail }; emit();
 }
-
-// ─── Phase inference ───────────────────────────────────────
 
 function inferPhase(studentCount: number, tutorCount: number): SessionPhase {
   const total = studentCount + tutorCount;
