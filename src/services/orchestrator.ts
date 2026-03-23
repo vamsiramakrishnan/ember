@@ -2,17 +2,12 @@
  * Orchestrator — wires the full tutor pipeline.
  * See orchestrator-pipeline.ts for shared stage implementations.
  */
-import { TUTOR_AGENT, RESEARCHER_AGENT } from './agents';
-import { runTextAgent } from './run-agent';
+import { TUTOR_AGENT } from './agents';
 import { resilientTextAgent, resilientStreamingAgent } from './resilient-agent';
 import { runAgenticLoop, runAgenticLoopStreaming, type AgenticResult } from './agentic-loop';
 import { getGeminiClient, isGeminiAvailable } from './gemini';
 import { parseTutorResponse } from './tutor-response-parser';
-import { generateVisualization, generateIllustration } from './enrichment';
-import { buildGraph, getDelta, serializeSubgraph } from './knowledge-graph';
-import { buildGraphContext } from './graph-context';
-import { isGeminiAvailable, getGeminiClient } from './gemini';
-import { getWorkingMemory } from './working-memory';
+import { setActivityDetail } from '@/state';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
 import type { DeferredAction } from './tool-executor';
 import type { GraphDeferredAction } from './graph-tools';
@@ -75,44 +70,7 @@ export async function orchestrate(
   );
   const results: NotebookEntry[] = [];
 
-  // Temporal layer: Echo (backward — runs in parallel with tutor)
-  const echoPromise = generateEcho(studentText, entries);
-
-  // Build knowledge graph context in parallel with research
-  const [graphCtxLayer, legacyGraph, research] = await Promise.all([
-    buildGraphContext(notebookId, studentText).catch(() => null),
-    buildGraph(notebookId).catch(() => null),
-    routing.research ? fetchResearch(studentText) : Promise.resolve(null),
-  ]);
-
-  // Compose context additions
-  let graphContext = '';
-  if (graphCtxLayer?.serialized) {
-    graphContext = `\n\n${graphCtxLayer.serialized}`;
-  } else if (legacyGraph && lastSyncTimestamp) {
-    const delta = getDelta(legacyGraph, lastSyncTimestamp);
-    if (delta.nodes.length > 0) {
-      graphContext = `\n\n[Recent changes in knowledge graph]:\n${serializeSubgraph(delta)}`;
-    }
-  }
-
-  const directiveHint = routing.directive
-    ? '\n\n[SYSTEM: The student is ready for an exploration directive. Respond with a tutor-directive type — send them to search, read, try, observe, or compare something specific outside the notebook.]'
-    : '';
-
-  // Assemble context (the agent will fetch more via tools)
-  const wm = getWorkingMemory(notebookId);
-  const ctx = assembleContext({
-    studentText: studentText + graphContext + directiveHint,
-    entries,
-    profile: profile ?? null,
-    notebook: notebookCtx ?? null,
-    memory: null,
-    research,
-    workingMemory: wm?.summary ?? undefined,
-  });
-
-  // Run tutor with agentic loop (function calling + graph tools)
+  setActivityDetail({ step: 'thinking', label: 'thinking...' });
   let agenticResult: AgenticResult | null = null;
   try {
     if (getGeminiClient()) {
@@ -121,8 +79,7 @@ export async function orchestrate(
         { studentId, notebookId, graph: setup.legacyGraph },
       );
     } else {
-      // Proxy mode — resilient fallback with retry + cheaper model
-      const result = await resilientTextAgent(TUTOR_AGENT, ctx.messages);
+      const result = await resilientTextAgent(TUTOR_AGENT, setup.contextMessages);
       agenticResult = { text: result.text, toolCalls: [], deferredActions: [] };
       if (result.citations.length > 0) {
         results.push({ type: 'citation', sources: result.citations });
@@ -159,40 +116,7 @@ export async function streamOrchestrate(
   );
   const results: NotebookEntry[] = [];
 
-  const echoPromise = generateEcho(studentText, entries);
-
-  // Build graph context + research in parallel
-  const [graphCtxLayerS, legacyGraphS, researchS] = await Promise.all([
-    buildGraphContext(notebookId, studentText).catch(() => null),
-    buildGraph(notebookId).catch(() => null),
-    routing.research ? fetchResearch(studentText) : Promise.resolve(null),
-  ]);
-
-  let graphContextS = '';
-  if (graphCtxLayerS?.serialized) {
-    graphContextS = `\n\n${graphCtxLayerS.serialized}`;
-  } else if (legacyGraphS && lastSyncTimestamp) {
-    const delta = getDelta(legacyGraphS, lastSyncTimestamp);
-    if (delta.nodes.length > 0) {
-      graphContextS = `\n\n[Recent changes in knowledge graph]:\n${serializeSubgraph(delta)}`;
-    }
-  }
-
-  const directiveHintS = routing.directive
-    ? '\n\n[SYSTEM: The student is ready for an exploration directive. Respond with a tutor-directive type — send them to search, read, try, observe, or compare something specific outside the notebook.]'
-    : '';
-
-  const wmS = getWorkingMemory(notebookId);
-  const ctx = assembleContext({
-    studentText: studentText + graphContextS + directiveHintS,
-    entries,
-    profile: profile ?? null,
-    notebook: notebookCtx ?? null,
-    memory: null,
-    research: researchS,
-    workingMemory: wmS?.summary ?? undefined,
-  });
-
+  setActivityDetail({ step: 'streaming', label: 'writing...' });
   let agenticResult: AgenticResult | null = null;
   try {
     if (getGeminiClient()) {
@@ -203,7 +127,7 @@ export async function streamOrchestrate(
       );
     } else {
       const result = await resilientStreamingAgent(
-        TUTOR_AGENT, ctx.messages, onChunk,
+        TUTOR_AGENT, setup.contextMessages, onChunk,
       );
       agenticResult = { text: result.text, toolCalls: [], deferredActions: [] };
       if (result.citations.length > 0) {
