@@ -117,15 +117,18 @@ export function Notebook({ onNavigate }: NotebookProps) {
   }, [addEntry, respond, checkAndUpdate]);
 
   const handleSubmit = useCallback((text: string) => {
-    // Check if a slash command was just selected — route to agent
+    // Check if a slash command was just selected — route to agent only.
+    // Don't call submitEntry (which triggers the orchestrator/tutor),
+    // otherwise both the slash router AND the orchestrator fire.
     const cmd = popup.consumeSlashCommand();
-    if (cmd && text.startsWith('/')) {
-      submitEntry({ type: 'prose', content: text });
+    if (cmd && text.includes(`/${cmd.label}`)) {
+      void addEntry({ type: 'prose', content: text });
+      recordStudentTurn('prose');
       void slashRouter.route(cmd, text);
       return;
     }
     submitEntry(createStudentEntry(text));
-  }, [submitEntry, popup, slashRouter]);
+  }, [submitEntry, addEntry, popup, slashRouter]);
 
   const handleSubmitTyped = useCallback((text: string, type: string) => {
     submitEntry({ type: type as 'prose', content: text });

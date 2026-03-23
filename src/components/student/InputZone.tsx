@@ -2,6 +2,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { inferEntryType } from '@/hooks/useEntryInference';
 import { MENTION_PATTERN } from '@/primitives/MentionChip';
+import { detectTrigger, replaceTrigger } from './trigger-detect';
 import { SketchInput } from './SketchInput';
 import { BlockInserter } from './BlockInserter';
 import { InputAffordances } from './InputAffordances';
@@ -36,6 +37,7 @@ export function InputZone({
   const [sketchMode, setSketchMode] = useState(false);
   const [forcedType, setForcedType] = useState<StudentEntryType | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const triggerPos = useRef(-1);
 
   useEffect(() => {
     const el = textareaRef.current;
@@ -43,50 +45,52 @@ export function InputZone({
   }, [value]);
 
   useEffect(() => {
-    if (!insertText) return;
-    setValue((prev) => {
-      const replaced = prev.replace(/@\w*$/, insertText).replace(/\/\w*$/, insertText);
-      return replaced === prev ? prev + insertText : replaced;
+    if (!insertText || triggerPos.current < 0) return;
+    const pos = triggerPos.current;
+    setValue((prev) => replaceTrigger(prev, pos, insertText));
+    const newPos = pos + insertText.length;
+    requestAnimationFrame(() => {
+      textareaRef.current?.setSelectionRange(newPos, newPos);
+      textareaRef.current?.focus();
     });
+    triggerPos.current = -1;
     onInsertConsumed?.();
-    textareaRef.current?.focus();
   }, [insertText, onInsertConsumed]);
 
   const submit = useCallback((text: string, type?: StudentEntryType) => {
     const resolved = type ?? forcedType;
-    if (resolved && onSubmitTyped) {
-      onSubmitTyped(text, resolved);
-    } else {
-      onSubmit?.(text);
-    }
-    setValue('');
-    setForcedType(null);
-    onPopupClose?.();
+    if (resolved && onSubmitTyped) onSubmitTyped(text, resolved);
+    else onSubmit?.(text);
+    setValue(''); setForcedType(null); triggerPos.current = -1; onPopupClose?.();
   }, [forcedType, onSubmit, onSubmitTyped, onPopupClose]);
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const text = e.target.value;
+    const cursor = e.target.selectionStart ?? text.length;
     setValue(text);
-    const atMatch = text.match(/@(\w*)$/);
-    if (atMatch) { onMentionTrigger?.(atMatch[1] ?? ''); return; }
-    const slashMatch = text.match(/\/(\w*)$/);
-    if (slashMatch) { onSlashTrigger?.(slashMatch[1] ?? ''); return; }
+    const trigger = detectTrigger(text, cursor);
+    if (trigger.type === 'mention') {
+      triggerPos.current = trigger.position;
+      onMentionTrigger?.(trigger.query); return;
+    }
+    if (trigger.type === 'slash') {
+      triggerPos.current = trigger.position;
+      onSlashTrigger?.(trigger.query); return;
+    }
+    triggerPos.current = -1;
     onPopupClose?.();
   }, [onMentionTrigger, onSlashTrigger, onPopupClose]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       if (e.key === 'Enter' && !e.shiftKey && value.trim()) {
-        e.preventDefault();
-        submit(value.trim());
+        e.preventDefault(); submit(value.trim());
       }
       if (e.key === 'Escape') {
         if (forcedType) setForcedType(null);
         onPopupClose?.();
       }
-    },
-    [value, submit, forcedType, onPopupClose],
-  );
+    }, [value, submit, forcedType, onPopupClose]);
 
   const handleBlockSelect = useCallback(
     (type: StudentEntryType) => { setForcedType(type); textareaRef.current?.focus(); }, []);
@@ -101,10 +105,9 @@ export function InputZone({
   const displayType = forcedType ? typeLabels[forcedType] || forcedType
     : value.trim() ? typeLabels[inferEntryType(value.trim())] : '';
 
-  // Show chip overlay when the value contains @mentions or /commands
   const hasChips = useMemo(() => {
     const mentionRe = new RegExp(MENTION_PATTERN.source);
-    return mentionRe.test(value) || /^\/\w+\s/.test(value);
+    return mentionRe.test(value) || /(?:^|\s)\/\w+\s/.test(value);
   }, [value]);
 
   return (
@@ -116,20 +119,13 @@ export function InputZone({
           onClick={(e) => { e.stopPropagation(); setForcedType(null); }}>esc</button>
       </div>}
       <div className={styles.textareaWrap}>
-        <textarea
-          ref={textareaRef}
+        <textarea ref={textareaRef}
           className={hasChips ? styles.textareaHidden : styles.textarea}
-          value={value}
-          onChange={handleChange}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-          onKeyDown={handleKeyDown}
-          onPaste={onPaste}
-          rows={1}
-          disabled={disabled}
-          aria-label="Write your thoughts"
-          aria-busy={disabled}
-        />
+          value={value} onChange={handleChange}
+          onFocus={() => setIsFocused(true)} onBlur={() => setIsFocused(false)}
+          onKeyDown={handleKeyDown} onPaste={onPaste}
+          rows={1} disabled={disabled}
+          aria-label="Write your thoughts" aria-busy={disabled} />
         <InputPreview value={value} visible={hasChips} />
       </div>
       {!isFocused && !value && !forcedType && (

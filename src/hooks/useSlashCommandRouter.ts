@@ -16,9 +16,9 @@ interface SlashRouterOptions {
   entries: LiveEntry[];
 }
 
-/** Strip the /command prefix from user text. */
+/** Extract the query by stripping the /command from anywhere in text. */
 function stripCommand(text: string): string {
-  return text.replace(/^\/\w+\s*/, '').trim();
+  return text.replace(/\/\w+\s*/, '').trim();
 }
 
 export function useSlashCommandRouter({

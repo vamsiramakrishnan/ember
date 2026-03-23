@@ -16,7 +16,7 @@ interface InputPreviewProps {
   visible: boolean;
 }
 
-const SLASH_RE = /^(\/\w+)\s/;
+const SLASH_RE = /(?:^|\s)(\/\w+)\s/;
 
 const TYPE_ICONS: Record<string, string> = {
   notebook: '◉', session: '§', thinker: '◈', concept: '◇',
@@ -52,13 +52,13 @@ function tokenize(text: string): Segment[] {
 
   if (lastIdx < text.length) {
     const rest = text.slice(lastIdx);
-    const slashMatch = lastIdx === 0 ? rest.match(SLASH_RE) : null;
-    if (slashMatch) {
-      segments.push({
-        type: 'slash',
-        value: slashMatch[1] ?? '',
-      });
-      segments.push({ type: 'text', value: rest.slice(slashMatch[0].length) });
+    const slashMatch = rest.match(SLASH_RE);
+    if (slashMatch && slashMatch.index !== undefined) {
+      const pre = rest.slice(0, slashMatch.index + slashMatch[0].length - (slashMatch[1]?.length ?? 0) - 1);
+      if (pre) segments.push({ type: 'text', value: pre });
+      segments.push({ type: 'slash', value: slashMatch[1] ?? '' });
+      const afterSlash = rest.slice(slashMatch.index + slashMatch[0].length);
+      if (afterSlash) segments.push({ type: 'text', value: afterSlash });
     } else {
       segments.push({ type: 'text', value: rest });
     }
