@@ -2,13 +2,33 @@
   margin-bottom: 18px;
 }
 
+/* Clickable — navigates to where this concept appears in notebook */
 .concept {
   font-family: var(--font-student);
   font-size: 15px;
   font-weight: 400;
   color: var(--ink-soft);
   margin-bottom: 8px;
-  letter-spacing: 0.005em;
+  letter-spacing: 0;
+  display: block;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  border-bottom: 1px solid transparent;
+  transition: border-bottom-color 0.2s ease, color 0.2s ease;
+}
+
+.concept:hover {
+  color: var(--ink);
+  border-bottom-color: var(--rule);
+}
+
+.concept:focus-visible {
+  outline: 1.5px solid var(--margin);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
 .barRow {

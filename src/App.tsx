@@ -13,6 +13,8 @@ import { Notebook } from '@/surfaces/Notebook';
 import { Constellation } from '@/surfaces/Constellation';
 import { Philosophy } from '@/surfaces/Philosophy';
 import { StudentProvider, useStudent } from '@/contexts/StudentContext';
+import { EntityNavigationProvider } from '@/hooks/useEntityNavigation';
+import { useEntityResolver } from '@/hooks/useEntityResolver';
 import { openDB } from '@/persistence';
 import { seedIfEmpty } from '@/persistence/seed';
 import { registerAdapter, startSync } from '@/persistence/sync';
@@ -33,6 +35,7 @@ function ActiveSurface({ surface, onNavigate }: { surface: Surface; onNavigate: 
 function AppContent() {
   const { student, notebook } = useStudent();
   const [surface, setSurface] = useState<Surface>('notebook');
+  const { resolveEntity, resolveByName } = useEntityResolver();
 
   // No student selected → show landing
   if (!student) {
@@ -56,15 +59,21 @@ function AppContent() {
     );
   }
 
-  // Full experience
+  // Full experience — wrapped in entity navigation for deep linking
   return (
-    <Shell>
-      <Header activeSurface={surface} onNavigate={setSurface} />
-      <main style={{ minHeight: '80vh' }}>
-        <ActiveSurface surface={surface} onNavigate={setSurface} />
-      </main>
-      <Footer />
-    </Shell>
+    <EntityNavigationProvider
+      onSurfaceChange={setSurface}
+      resolveEntity={resolveEntity}
+      resolveByName={resolveByName}
+    >
+      <Shell>
+        <Header activeSurface={surface} onNavigate={setSurface} />
+        <main style={{ minHeight: '80vh' }}>
+          <ActiveSurface surface={surface} onNavigate={setSurface} />
+        </main>
+        <Footer />
+      </Shell>
+    </EntityNavigationProvider>
   );
 }
 

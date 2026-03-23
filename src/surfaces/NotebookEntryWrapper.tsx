@@ -12,6 +12,7 @@ import { SelectionToolbar } from '@/components/student/SelectionToolbar';
 import { FollowUp } from '@/components/tutor/FollowUp';
 import { NotebookEntryRenderer } from './NotebookEntryRenderer';
 import { TYPE_META, isStudentEntry } from './entryTypeMeta';
+import { useEntryAnchor } from '@/hooks/useEntryAnchor';
 import styles from './NotebookEntryWrapper.module.css';
 
 const TUTOR_TYPES = new Set([
@@ -49,6 +50,9 @@ export const NotebookEntryWrapper = memo(function NotebookEntryWrapper({
   const meta = TYPE_META[entry.type] ?? { label: entry.type };
   const tagCls = meta.tinted ? styles.typeTagTinted : styles.typeTag;
 
+  // Register this entry in the scroll-to-entry registry
+  const { ref: anchorRef, isHighlighted } = useEntryAnchor(id);
+
   const [touched, setTouched] = useState(false);
   const touchTimer = useRef<ReturnType<typeof setTimeout>>();
   const contentRef = useRef<HTMLDivElement>(null);
@@ -66,11 +70,14 @@ export const NotebookEntryWrapper = memo(function NotebookEntryWrapper({
     isDragOver ? styles.dragOver : '',
     isDragging ? styles.dragging : '',
     touched ? styles.touched : '',
+    isHighlighted ? styles.highlighted : '',
   ].filter(Boolean).join(' ');
 
   return (
     <div
+      ref={anchorRef}
       className={cls} style={style}
+      data-entry-id={id}
       draggable={Boolean(onDragStart)}
       onDragStart={onDragStart ? (e) => onDragStart(id, e) : undefined}
       onDragOver={onDragOver ? (e) => onDragOver(id, e) : undefined}

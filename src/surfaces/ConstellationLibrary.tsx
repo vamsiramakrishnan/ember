@@ -5,10 +5,23 @@
  */
 import { Text } from '@/primitives/Text';
 import { spacing } from '@/tokens/spacing';
+import { useEntityNavigation } from '@/hooks/useEntityNavigation';
 import type { PrimaryText } from '@/types/lexicon';
 import styles from './ConstellationLibrary.module.css';
 
 function TextCard({ text }: { text: PrimaryText }) {
+  const { navigateTo } = useEntityNavigation();
+
+  const handleAnnotationClick = () => {
+    if (text.annotationCount === 0) return;
+    // Navigate to the notebook to see annotations in context
+    navigateTo({
+      target: { type: 'lexicon-term', term: text.title },
+      surface: 'notebook',
+      highlight: true,
+    });
+  };
+
   return (
     <div className={`${styles.card} ${text.isCurrent ? styles.current : ''}`}>
       {text.isCurrent && (
@@ -17,9 +30,16 @@ function TextCard({ text }: { text: PrimaryText }) {
       <h3 className={styles.title}>{text.title}</h3>
       <span className={styles.author}>{text.author}</span>
       <p className={styles.quote}>{text.quote}</p>
-      <span className={styles.annotations}>
+      <button
+        className={styles.annotations}
+        onClick={handleAnnotationClick}
+        disabled={text.annotationCount === 0}
+        title={text.annotationCount > 0
+          ? `View ${text.annotationCount} annotation${text.annotationCount !== 1 ? 's' : ''} in notebook`
+          : 'No annotations yet'}
+      >
         {text.annotationCount} annotation{text.annotationCount !== 1 ? 's' : ''}
-      </span>
+      </button>
     </div>
   );
 }

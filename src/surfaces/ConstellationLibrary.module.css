@@ -60,11 +60,34 @@
   margin-bottom: 12px;
 }
 
+/* Clickable when count > 0 — navigates to notebook to see annotations */
 .annotations {
   font-family: var(--font-system);
   font-size: 10px;
   color: var(--ink-ghost);
   text-transform: lowercase;
   border-bottom: 1px solid var(--rule-light);
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  padding: 0;
+  cursor: pointer;
+  transition: color 0.2s ease, border-bottom-color 0.2s ease;
+}
+
+.annotations:hover:not(:disabled) {
+  color: var(--ink-faint);
+  border-bottom-color: var(--ink-ghost);
+}
+
+.annotations:disabled {
   cursor: default;
+  opacity: 0.6;
+}
+
+.annotations:focus-visible {
+  outline: 1.5px solid var(--margin);
+  outline-offset: 2px;
+  border-radius: 2px;
 }

@@ -5,6 +5,7 @@
  */
 import { Text } from '@/primitives/Text';
 import { spacing } from '@/tokens/spacing';
+import { useEntityNavigation } from '@/hooks/useEntityNavigation';
 import type { Encounter } from '@/types/lexicon';
 import styles from './ConstellationEncounters.module.css';
 
@@ -16,15 +17,30 @@ const statusLabels: Record<Encounter['status'], string> = {
 };
 
 function EncounterRow({ encounter }: { encounter: Encounter }) {
+  const { navigateTo } = useEntityNavigation();
   const statusText = encounter.status === 'bridged' && encounter.bridgedTo
     ? `Bridged to ${encounter.bridgedTo}`
     : statusLabels[encounter.status];
+
+  const handleThinkerClick = () => {
+    navigateTo({
+      target: { type: 'thinker', thinkerName: encounter.thinker },
+      surface: 'notebook',
+      highlight: true,
+    });
+  };
 
   return (
     <div className={styles.row}>
       <span className={styles.ref}>{encounter.ref}</span>
       <div className={styles.thinkerCol}>
-        <span className={styles.thinkerName}>{encounter.thinker}</span>
+        <button
+          className={styles.thinkerName}
+          onClick={handleThinkerClick}
+          title={`Navigate to ${encounter.thinker} in notebook`}
+        >
+          {encounter.thinker}
+        </button>
         <span className={styles.tradition}>{encounter.tradition}</span>
       </div>
       <p className={styles.coreIdea}>{encounter.coreIdea}</p>

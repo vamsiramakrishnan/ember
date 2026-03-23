@@ -7,6 +7,7 @@ import { Text } from '@/primitives/Text';
 import { Rule } from '@/primitives/Rule';
 import { spacing } from '@/tokens/spacing';
 import { colors } from '@/tokens/colors';
+import { useEntityNavigation } from '@/hooks/useEntityNavigation';
 import type { LexiconEntry } from '@/types/lexicon';
 import type { MasteryLevel } from '@/types/mastery';
 import styles from './ConstellationLexicon.module.css';
@@ -23,13 +24,37 @@ interface LexiconEntryRowProps {
 }
 
 function LexiconEntryRow({ entry }: LexiconEntryRowProps) {
+  const { navigateTo } = useEntityNavigation();
+
+  const handleTermClick = () => {
+    navigateTo({
+      target: { type: 'lexicon-term', term: entry.term },
+      surface: 'notebook',
+      highlight: true,
+    });
+  };
+
+  const handleCrossRefClick = (ref: string) => {
+    // Navigate within lexicon — scroll to the referenced term
+    const el = document.querySelector(`[data-term="${ref}"]`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
+
   return (
-    <div className={styles.entry}>
+    <div className={styles.entry} data-term={entry.term}>
       <div className={styles.entryHeader}>
         <span className={styles.entryNumber}>
           {String(entry.number).padStart(3, '0')}
         </span>
-        <h3 className={styles.term}>{entry.term}</h3>
+        <button
+          className={styles.term}
+          onClick={handleTermClick}
+          title={`See where "${entry.term}" first appeared in notebook`}
+        >
+          {entry.term}
+        </button>
         <span className={styles.pronunciation}>{entry.pronunciation}</span>
       </div>
       <p className={styles.definition}>{entry.definition}</p>
@@ -43,7 +68,14 @@ function LexiconEntryRow({ entry }: LexiconEntryRowProps) {
             <span className={styles.metaLabel}>Cross-references</span>
             <div className={styles.refList}>
               {entry.crossReferences.map((ref) => (
-                <span key={ref} className={styles.refLink}>{ref}</span>
+                <button
+                  key={ref}
+                  className={styles.refLink}
+                  onClick={() => handleCrossRefClick(ref)}
+                  title={`Jump to "${ref}"`}
+                >
+                  {ref}
+                </button>
               ))}
             </div>
           </div>
