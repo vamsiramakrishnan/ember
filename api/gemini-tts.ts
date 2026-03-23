@@ -1,11 +1,17 @@
 /**
- * /api/gemini-tts — Vercel Edge Function proxy for Gemini TTS.
- * Converts a multi-speaker dialogue script to speech audio.
- * Returns base64-encoded PCM audio data.
+ * /api/gemini-tts — Vercel Serverless Function proxy for Gemini TTS.
+ *
+ * Uses Node.js runtime (NOT Edge) because the Gemini TTS SDK returns
+ * a single blocking response (no streaming). Edge Functions require the
+ * first byte within 25s, which TTS cannot guarantee. Node.js serverless
+ * functions support maxDuration without that constraint.
+ *
+ * Returns base64-encoded PCM audio data as JSON.
  */
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { GoogleGenAI } from '@google/genai';
 
-export const config = { runtime: 'edge', maxDuration: 120 };
+export const config = { maxDuration: 120 };
 
 interface TtsRequestBody {
   script: string;
@@ -13,34 +19,25 @@ interface TtsRequestBody {
   model?: string;
 }
 
-export default async function handler(req: Request): Promise<Response> {
+export default async function handler(
+  req: VercelRequest,
+  res: VercelResponse,
+): Promise<void> {
   if (req.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 });
+    res.status(405).json({ error: 'Method not allowed' });
+    return;
   }
 
   const apiKey = process.env['GEMINI_API_KEY'];
   if (!apiKey) {
-    return new Response(
-      JSON.stringify({ error: 'GEMINI_API_KEY not configured' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } },
-    );
+    res.status(500).json({ error: 'GEMINI_API_KEY not configured' });
+    return;
   }
 
-  let body: TtsRequestBody;
-  try {
-    body = await req.json() as TtsRequestBody;
-  } catch {
-    return new Response(
-      JSON.stringify({ error: 'Invalid JSON body' }),
-      { status: 400, headers: { 'Content-Type': 'application/json' } },
-    );
-  }
-
-  if (!body.script || !body.speakers?.length) {
-    return new Response(
-      JSON.stringify({ error: 'Missing script or speakers' }),
-      { status: 400, headers: { 'Content-Type': 'application/json' } },
-    );
+  const body = req.body as TtsRequestBody;
+  if (!body?.script || !body?.speakers?.length) {
+    res.status(400).json({ error: 'Missing script or speakers' });
+    return;
   }
 
   try {
@@ -56,7 +53,9 @@ export default async function handler(req: Request): Promise<Response> {
           multiSpeakerVoiceConfig: {
             speakerVoiceConfigs: body.speakers.map((s) => ({
               speaker: s.speaker,
-              voiceConfig: { prebuiltVoiceConfig: { voiceName: s.voiceName } },
+              voiceConfig: {
+                prebuiltVoiceConfig: { voiceName: s.voiceName },
+              },
             })),
           },
         },
@@ -64,27 +63,21 @@ export default async function handler(req: Request): Promise<Response> {
     });
 
     const part = response.candidates?.[0]?.content?.parts?.[0];
-    const audio = part && 'inlineData' in part ? part.inlineData : null;
+    const audio = part && 'inlineData' in part
+      ? part.inlineData : null;
 
     if (!audio?.data) {
-      return new Response(
-        JSON.stringify({ error: 'No audio data in response' }),
-        { status: 502, headers: { 'Content-Type': 'application/json' } },
-      );
+      res.status(502).json({ error: 'No audio data in response' });
+      return;
     }
 
-    return new Response(
-      JSON.stringify({
-        audioData: audio.data,
-        mimeType: audio.mimeType ?? 'audio/L16;rate=24000',
-      }),
-      { headers: { 'Content-Type': 'application/json' } },
-    );
+    res.status(200).json({
+      audioData: audio.data,
+      mimeType: audio.mimeType ?? 'audio/L16;rate=24000',
+    });
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'TTS generation failed';
-    return new Response(
-      JSON.stringify({ error: message }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } },
-    );
+    const message = err instanceof Error ? err.message : 'TTS failed';
+    console.error('[gemini-tts] Error:', message);
+    res.status(500).json({ error: message });
   }
 }
