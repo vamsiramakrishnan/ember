@@ -50,20 +50,19 @@ export default async function handler(req: Request): Promise<Response> {
     tools.push({ googleSearch: { searchTypes: { webSearch: {} } } });
   }
 
+  const imageConfig: Record<string, unknown> = {};
+  if (body.aspectRatio) imageConfig.aspectRatio = body.aspectRatio;
+  if (body.imageSize) imageConfig.imageSize = body.imageSize;
+
   const geminiConfig: Record<string, unknown> = {
-    imageConfig: {
-      aspectRatio: body.aspectRatio ?? '',
-      imageSize: body.imageSize ?? '1K',
-      personGeneration: '',
-    },
     responseModalities: ['IMAGE', 'TEXT'],
   };
-  if (tools.length > 0) {
-    geminiConfig.tools = tools;
-  }
+  if (Object.keys(imageConfig).length > 0) geminiConfig.imageConfig = imageConfig;
+  if (tools.length > 0) geminiConfig.tools = tools;
 
   try {
-    const response = await client.models.generateContentStream({
+    // Use generateContent (not stream) — image responses are atomic blobs.
+    const response = await client.models.generateContent({
       model: 'gemini-3.1-flash-image-preview',
       config: geminiConfig,
       contents: [
@@ -74,9 +73,8 @@ export default async function handler(req: Request): Promise<Response> {
     const images: Array<{ data: string; mimeType: string }> = [];
     const textChunks: string[] = [];
 
-    for await (const chunk of response) {
-      const parts = chunk.candidates?.[0]?.content?.parts;
-      if (!parts) continue;
+    const parts = response.candidates?.[0]?.content?.parts;
+    if (parts) {
       for (const part of parts) {
         if ('inlineData' in part && part.inlineData) {
           images.push({

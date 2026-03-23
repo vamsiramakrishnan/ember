@@ -51,17 +51,15 @@ export async function generateImage(
     });
   }
 
+  const imageConfig: Record<string, unknown> = {};
+  if (options.aspectRatio) imageConfig.aspectRatio = options.aspectRatio;
+  if (options.imageSize) imageConfig.imageSize = options.imageSize;
+
   const config: Record<string, unknown> = {
-    imageConfig: {
-      aspectRatio: options.aspectRatio ?? '',
-      imageSize: options.imageSize ?? '1K',
-      personGeneration: '',
-    },
     responseModalities: ['IMAGE', 'TEXT'],
   };
-  if (tools.length > 0) {
-    config.tools = tools;
-  }
+  if (Object.keys(imageConfig).length > 0) config.imageConfig = imageConfig;
+  if (tools.length > 0) config.tools = tools;
 
   const contents = [
     {
@@ -70,7 +68,8 @@ export async function generateImage(
     },
   ];
 
-  const response = await client.models.generateContentStream({
+  // Use generateContent (not stream) — image responses are atomic blobs.
+  const response = await client.models.generateContent({
     model: MODELS.image,
     config,
     contents,
@@ -79,10 +78,8 @@ export async function generateImage(
   const images: GeneratedImage[] = [];
   const textChunks: string[] = [];
 
-  for await (const chunk of response) {
-    const parts = chunk.candidates?.[0]?.content?.parts;
-    if (!parts) continue;
-
+  const parts = response.candidates?.[0]?.content?.parts;
+  if (parts) {
     for (const part of parts) {
       if ('inlineData' in part && part.inlineData) {
         images.push({

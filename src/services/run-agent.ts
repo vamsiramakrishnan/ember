@@ -113,7 +113,7 @@ export async function runTextAgent(
   return { text: chunks.join(''), citations };
 }
 
-/** Run an image-capable agent. */
+/** Run an image-capable agent (non-streaming — image models return complete). */
 export async function runImageAgent(
   agent: AgentConfig,
   messages: AgentMessage[],
@@ -121,23 +121,24 @@ export async function runImageAgent(
   const client = getGeminiClient();
   if (!client) throw new Error('Gemini API key not configured');
 
+  // Image models have thinking enabled by default and it cannot be
+  // configured, so we omit thinkingConfig entirely.
   const config: Record<string, unknown> = {
-    thinkingConfig: { thinkingLevel: agent.thinkingLevel },
     systemInstruction: agent.systemInstruction,
     responseModalities: agent.responseModalities,
   };
   if (agent.tools.length > 0) config.tools = agent.tools;
 
-  const response = await client.models.generateContentStream({
+  // Use generateContent (not stream) — image responses are atomic blobs.
+  const response = await client.models.generateContent({
     model: agent.model, config, contents: messages,
   });
 
   const images: Array<{ data: string; mimeType: string }> = [];
   const textChunks: string[] = [];
 
-  for await (const chunk of response) {
-    const parts = chunk.candidates?.[0]?.content?.parts;
-    if (!parts) continue;
+  const parts = response.candidates?.[0]?.content?.parts;
+  if (parts) {
     for (const part of parts) {
       if ('inlineData' in part && part.inlineData) {
         images.push({ data: part.inlineData.data ?? '', mimeType: part.inlineData.mimeType ?? 'image/png' });
