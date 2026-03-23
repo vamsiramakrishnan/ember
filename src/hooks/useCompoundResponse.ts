@@ -27,6 +27,7 @@ import { parseTutorResponse } from '@/services/tutor-response-parser';
 import { TUTOR_AGENT } from '@/services/agents';
 import { runTextAgent, runTextAgentStreaming } from '@/services/run-agent';
 import { inferTutorMode, extractTopics } from './tutor-helpers';
+import { resolveCommandContext } from '@/services/command-context';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
 import type { ResponsePlan } from './useResponseOrchestrator';
 
@@ -89,7 +90,20 @@ async function executeNode(
     return { nodeId: node.id, entries: [{ type: 'silence' }], success: true };
   }
 
-  const prompt = buildNodePrompt(node, dag, priorResults);
+  const basePrompt = buildNodePrompt(node, dag, priorResults);
+
+  // Enrich with graph context (mastery, gaps, threads, thinkers)
+  const analyticalActions = new Set([
+    'research', 'teach', 'flashcards', 'exercise', 'quiz', 'podcast',
+  ]);
+  const tier = analyticalActions.has(node.action) ? 2 : 1;
+  const cmdCtx = await resolveCommandContext(
+    node.content, refs.entries, tier as 0 | 1 | 2, node.action, refs.notebookId,
+  );
+  const prompt = cmdCtx.formatted
+    ? `${basePrompt}\n\n${cmdCtx.formatted}`
+    : basePrompt;
+
   const messages = [{ role: 'user' as const, parts: [{ text: prompt }] }];
 
   // Map DAG action to valid TutorActivityStep

@@ -11,8 +11,6 @@ import type { DeferredAction } from './tool-executor';
 import type { GraphDeferredAction } from './graph-tools';
 import type { AgentConfig } from './agents';
 import type { AgentMessage } from './run-agent';
-import type { Subgraph } from './knowledge-graph';
-
 const DEFAULT_MAX_ITERATIONS = 8;
 
 export interface AgenticResult {
@@ -21,10 +19,9 @@ export interface AgenticResult {
   deferredActions: Array<DeferredAction | GraphDeferredAction>;
 }
 
-interface LoopContext {
+export interface LoopContext {
   studentId: string;
   notebookId: string;
-  graph: Subgraph | null;
 }
 
 type FunctionCallPart = {

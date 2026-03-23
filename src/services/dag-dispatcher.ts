@@ -16,6 +16,7 @@ import { TUTOR_AGENT } from './agents';
 import { runTextAgent, runTextAgentStreaming } from './run-agent';
 import { parseTutorResponse } from './tutor-response-parser';
 import { generateIllustration } from './enrichment';
+import { resolveCommandContext } from './command-context';
 import { setActivityDetail } from '@/state';
 
 // ─── Activity labels for each action ───────────────────────
@@ -131,12 +132,17 @@ function buildPrompt(node: IntentNode, context: string): string {
 /**
  * Dispatch a single DAG node to the appropriate agent.
  * Returns typed NotebookEntry results.
+ *
+ * @param notebookId — when provided, enriches the prompt with
+ *   graph context (active concepts, gaps, threads) via the
+ *   shared command-context resolver.
  */
 export async function dispatchNode(
   node: IntentNode,
   dag: IntentDAG,
   priorResults: Map<string, NodeResult>,
   onChunk?: StreamChunkCallback,
+  notebookId?: string,
 ): Promise<NodeResult> {
   // Silence is a no-op
   if (node.action === 'silence') {
@@ -147,7 +153,20 @@ export async function dispatchNode(
     };
   }
 
-  const context = buildContext(node, dag, priorResults);
+  const priorContext = buildContext(node, dag, priorResults);
+
+  // Enrich with graph context when notebookId is available.
+  // Tier 1 for creative actions, tier 2 for analytical actions.
+  const analyticalActions = new Set([
+    'research', 'teach', 'flashcards', 'exercise', 'quiz', 'podcast',
+  ]);
+  const tier = analyticalActions.has(node.action) ? 2 : 1;
+  const cmdCtx = await resolveCommandContext(
+    node.content, [], tier as 0 | 1 | 2, node.action, notebookId,
+  );
+  const graphBlock = cmdCtx.formatted;
+  const context = [priorContext, graphBlock].filter(Boolean).join('\n\n');
+
   const prompt = buildPrompt(node, context);
 
   // Map DAG action to valid TutorActivityStep
@@ -214,4 +233,18 @@ export async function dispatchNode(
     console.error(`[DAG] Node ${node.id} (${node.action}) failed:`, error);
     return { nodeId: node.id, entries: [], success: false, error };
   }
+}
+
+/**
+ * Create a dispatcher bound to a notebook — gives every DAG node
+ * access to graph context (mastery, gaps, threads, thinkers).
+ * Returns a NodeDispatcher compatible with executeDAG().
+ */
+export function createDispatcher(notebookId?: string) {
+  return (
+    node: IntentNode,
+    dag: IntentDAG,
+    priorResults: Map<string, NodeResult>,
+    onChunk?: StreamChunkCallback,
+  ) => dispatchNode(node, dag, priorResults, onChunk, notebookId);
 }

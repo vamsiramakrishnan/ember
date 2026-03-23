@@ -16,6 +16,7 @@ interface RawDeck {
 export async function generateFlashcards(
   topic: string,
   entries: LiveEntry[],
+  enrichedContext?: string,
 ): Promise<NotebookEntry | null> {
   return generateStructured<RawDeck>(topic, entries, {
     systemPrompt: SYSTEM_PROMPT,
@@ -36,7 +37,7 @@ export async function generateFlashcards(
         sourceTopics: parsed.sourceTopics?.map(String),
       };
     },
-  });
+  }, enrichedContext);
 }
 
 const SYSTEM_PROMPT = `You are Ember's tutor creating a flashcard deck for active recall.

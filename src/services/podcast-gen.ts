@@ -24,9 +24,10 @@ export async function generatePodcast(
   topic: string,
   entries: LiveEntry[],
   onSegmentReady?: (index: number, url: string) => void,
+  enrichedContext?: string,
 ): Promise<NotebookEntry | null> {
   try {
-    const context = recentContext(entries, 6, 500);
+    const context = enrichedContext || recentContext(entries, 6, 500);
     const scripts = await generateScripts(topic, context);
     if (!scripts.length) {
       return errorEntry('Could not generate dialogue script. Try again.');

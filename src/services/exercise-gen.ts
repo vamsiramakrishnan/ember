@@ -17,6 +17,7 @@ interface RawSet {
 export async function generateExercises(
   topic: string,
   entries: LiveEntry[],
+  enrichedContext?: string,
 ): Promise<NotebookEntry | null> {
   return generateStructured<RawSet>(topic, entries, {
     systemPrompt: SYSTEM_PROMPT,
@@ -34,7 +35,7 @@ export async function generateExercises(
       const diff = VALID_DIFFS.has(parsed.difficulty) ? parsed.difficulty : 'intermediate';
       return { type: 'exercise-set', title: String(parsed.title), exercises, difficulty: diff };
     },
-  });
+  }, enrichedContext);
 }
 
 const SYSTEM_PROMPT = `You are Ember's tutor creating Socratic exercises.

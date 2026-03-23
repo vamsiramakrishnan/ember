@@ -39,7 +39,8 @@ export interface ToolContext {
   studentId: string;
   notebookId: string;
   sessionId?: string;
-  graph: Subgraph | null;
+  /** Optional in-memory graph snapshot; tools fall back to buildGraph() if absent. */
+  graph?: Subgraph | null;
 }
 
 /**

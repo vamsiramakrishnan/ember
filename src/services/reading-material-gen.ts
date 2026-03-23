@@ -20,6 +20,7 @@ interface RawDeck {
 export async function generateReadingMaterial(
   topic: string,
   entries: LiveEntry[],
+  enrichedContext?: string,
 ): Promise<NotebookEntry | null> {
   return generateStructured<RawDeck>(topic, entries, {
     systemPrompt: SYSTEM_PROMPT,
@@ -52,7 +53,7 @@ export async function generateReadingMaterial(
         slides,
       };
     },
-  });
+  }, enrichedContext);
 }
 
 const SYSTEM_PROMPT = `You are Ember's tutor creating a visually rich reading material deck.

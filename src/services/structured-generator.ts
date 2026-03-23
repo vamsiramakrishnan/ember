@@ -26,21 +26,25 @@ export interface GenerationContract<T> {
 /**
  * Generate structured content from the tutor agent.
  * Handles: context building, agent call, JSON extraction, validation.
+ *
+ * @param enrichedContext — optional pre-built context from resolveCommandContext().
+ *   When provided, replaces the default recentContext() extraction.
  */
 export async function generateStructured<T>(
   topic: string,
   entries: LiveEntry[],
   contract: GenerationContract<T>,
+  enrichedContext?: string,
 ): Promise<NotebookEntry | null> {
   try {
-    const context = recentContext(entries);
+    const context = enrichedContext || recentContext(entries);
     const agent = contract.agent ?? VISUALISER_AGENT;
 
     const prompt = [
       `${contract.systemPrompt}`,
       '',
       `Topic: ${topic}`,
-      context ? `\nStudent's recent exploration:\n${context}` : '',
+      context ? `\nStudent context:\n${context}` : '',
       '\nOutput JSON only.',
     ].join('\n');
 
