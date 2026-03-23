@@ -1,12 +1,33 @@
 /**
  * Context Assembler — builds a layered context window for the tutor agent.
  * Five layers: Profile, Notebook, Conversation, Semantic Memory, Research.
- * Each layer is tagged and budget-capped. See context-conversation.ts for
- * the conversation message builder and context-layers.ts for layer formatters.
+ * Each layer is tagged and budget-capped. See context-layers.ts for layer
+ * formatters and context-conversation.ts for the conversation builder.
  */
 import type { LiveEntry } from '@/types/entries';
 import type { AgentMessage } from './run-agent';
-import { consumeBackgroundResults, type BackgroundResults } from './background-results';
+import { consumeBackgroundResults } from './background-results';
+import { buildConversationMessages } from './context-conversation';
+import {
+  buildProfileLayer, buildNotebookLayer, buildMemoryLayer,
+  buildResearchLayer, buildBackgroundResultsLayer,
+} from './context-layers';
+
+// ─── Token budgeting ─────────────────────────────────────────────────
+
+const LAYER_BUDGETS = {
+  profile: 400,
+  notebook: 200,
+  memory: 2000,
+  research: 1000,
+  conversation: 2400,
+} as const;
+
+function truncateToTokens(text: string, maxTokens: number): string {
+  const maxChars = maxTokens * 4;
+  if (text.length <= maxChars) return text;
+  return text.slice(0, maxChars) + '\n[...truncated]';
+}
 
 // ─── Layer types ─────────────────────────────────────────────────────
 
@@ -102,112 +123,4 @@ export function assembleContext(opts: {
   );
 
   return { systemPreamble, messages };
-}
-
-// ─── Layer builders ──────────────────────────────────────────────────
-
-function buildProfileLayer(p: StudentProfile): string {
-  const masteryLines = p.masterySnapshot
-    .slice(0, 8) // Top 8 concepts
-    .map((m) => `  - ${m.concept}: ${m.level} (${m.percentage}%)`)
-    .join('\n');
-
-  const curiosityLines = p.activeCuriosities
-    .slice(0, 4)
-    .map((q) => `  - ${q}`)
-    .join('\n');
-
-  return `[STUDENT PROFILE — ${p.name}]
-Time invested: ${Math.round(p.totalMinutes / 60)} hours
-Vocabulary: ${p.vocabularyCount} terms
-Concept mastery:
-${masteryLines || '  (no mastery data yet)'}
-Active questions:
-${curiosityLines || '  (no open questions yet)'}`;
-}
-
-function buildNotebookLayer(n: NotebookContext): string {
-  const thinkers = n.thinkersMet.length > 0
-    ? `Thinkers encountered: ${n.thinkersMet.join(', ')}`
-    : 'No thinker encounters yet.';
-
-  return `[NOTEBOOK — "${n.title}"]
-Guiding question: ${n.description}
-Session ${n.sessionNumber}: ${n.sessionTopic}
-${thinkers}`;
-}
-
-function buildMemoryLayer(m: SemanticMemory): string | null {
-  const parts: string[] = [];
-
-  if (m.relevantHistory) {
-    parts.push(`[PAST SESSIONS — relevant context]\n${m.relevantHistory}`);
-  }
-  if (m.relevantVocabulary) {
-    parts.push(`[VOCABULARY — terms the student knows]\n${m.relevantVocabulary}`);
-  }
-  if (m.relevantThinkers) {
-    parts.push(`[THINKERS — past encounters]\n${m.relevantThinkers}`);
-  }
-
-  if (parts.length === 0) return null;
-
-  let text = parts.join('\n\n');
-  if (m.citations.length > 0) {
-    text += `\n[Sources: ${m.citations.join(', ')}]`;
-  }
-  return text;
-}
-
-function buildResearchLayer(r: ResearchContext): string {
-  return `[RESEARCH — verified facts]\n${r.facts}`;
-}
-
-function buildBackgroundResultsLayer(bg: BackgroundResults): string {
-  const parts: string[] = ['[RECENT UPDATES — from your last response]'];
-  if (bg.newThinkers.length > 0) {
-    parts.push(`New thinkers discovered: ${bg.newThinkers.join(', ')}`);
-  }
-  if (bg.newTerms.length > 0) {
-    parts.push(`New vocabulary: ${bg.newTerms.join(', ')}`);
-  }
-  if (bg.masteryChanges.length > 0) {
-    parts.push(
-      'Mastery changes: ' +
-        bg.masteryChanges
-          .map((c) => `${c.concept}: ${c.from}% → ${c.to}%`)
-          .join(', '),
-    );
-  }
-  return parts.join('\n');
-}
-
-function buildConversationMessages(
-  entries: LiveEntry[],
-  latestText: string,
-  contextPrefix?: string,
-): AgentMessage[] {
-  const recent = entries.slice(-12);
-  const messages: AgentMessage[] = [];
-
-  for (const le of recent) {
-    const e = le.entry;
-    const isStudent = ['prose', 'question', 'hypothesis', 'scratch'].includes(e.type);
-    const isTutor = e.type.startsWith('tutor-');
-
-    if (isStudent && 'content' in e) {
-      messages.push({ role: 'user', parts: [{ text: `[${e.type}]: ${e.content}` }] });
-    } else if (isTutor && 'content' in e) {
-      messages.push({ role: 'model', parts: [{ text: e.content }] });
-    }
-  }
-
-  // Inject context as the first user message if we have context
-  // and no prior messages, or prepend to the latest
-  const fullText = contextPrefix
-    ? `${contextPrefix}\n\n[Student writes]: ${latestText}`
-    : latestText;
-
-  messages.push({ role: 'user', parts: [{ text: fullText }] });
-  return messages;
 }
