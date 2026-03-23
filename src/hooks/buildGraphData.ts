@@ -51,10 +51,8 @@ export function buildGraphData(
     if (STRUCTURAL_TYPES.has(r.type)) continue;
     if (!nodeMap.has(r.from) || !nodeMap.has(r.to)) continue;
     edges.push({
-      id: r.id,
       from: r.from,
       to: r.to,
-      type: r.type,
       weight: r.weight ?? 1,
       label: r.meta,
     });
@@ -76,14 +74,12 @@ function makeNode(
   label: string,
   source?: NodeSource,
 ): GraphNode {
+  const detail = source?.tradition ?? source?.status;
   return {
     id,
     kind,
     label,
     mastery: source?.percentage,
-    masteryLevel: source?.level as GraphNode['masteryLevel'],
-    tradition: source?.tradition,
-    status: source?.status as GraphNode['status'],
-    x: 0, y: 0, vx: 0, vy: 0, pinned: false,
+    detail,
   };
 }

@@ -18,19 +18,14 @@ import { usePopupState } from '@/hooks/usePopupState';
 import { useSlashCommandRouter } from '@/hooks/useSlashCommandRouter';
 import { createStudentEntry } from '@/hooks/useEntryInference';
 import { useStudent } from '@/contexts/StudentContext';
-import { NotebookEntryWrapper } from './NotebookEntryWrapper';
-import { NotebookEntryRenderer } from './NotebookEntryRenderer';
-import { NotebookCanvas } from './NotebookCanvas';
-import { KnowledgeCanvas } from '@/components/canvas/KnowledgeCanvas';
-import { recordStudentTurn, setStudentFocus, addRelation } from '@/state';
-import type { StudentEntryType, NotebookEntry } from '@/types/entries';
+import { recordStudentTurn, setStudentFocus } from '@/state';
+import { NotebookContent } from './NotebookContent';
+import { handleBranch, handleSelectionAction, handleFollowUp, deriveMarginalRef } from './notebook-handlers';
+import type { NotebookMode } from './NotebookModeToggle';
+import type { NotebookEntry } from '@/types/entries';
 import type { Surface } from '@/layout/Navigation';
 
-type NotebookMode = 'linear' | 'canvas' | 'graph';
-
-interface NotebookProps {
-  onNavigate?: (surface: Surface) => void;
-}
+interface NotebookProps { onNavigate?: (surface: Surface) => void }
 
 export function Notebook({ onNavigate }: NotebookProps) {
   const { student, notebook, setNotebook } = useStudent();
@@ -123,118 +118,11 @@ export function Notebook({ onNavigate }: NotebookProps) {
     void analyseSketch(dataUrl);
   }, [addEntry, analyseSketch]);
 
-  return (
-    <Column>
-      {past.map((session) => (
-        <PastSession key={session.id} session={session} />
-      ))}
-      {past.length > 0 && <SessionDivider />}
-      {current && (
-        <SessionHeader
-          sessionNumber={current.number}
-          date={current.date}
-          timeOfDay={current.timeOfDay}
-          topic={current.topic}
-        />
-      )}
-      <ModeToggle mode={mode} setMode={setMode} />
-      {pinnedEntries.length > 0 && (
-        <div className={styles.pinZone} role="complementary" aria-label="Pinned threads">
-          {pinnedEntries.map((pe) => (
-            <PinnedThread key={pe.id}>
-              {'content' in pe.entry ? pe.entry.content : ''}
-            </PinnedThread>
-          ))}
-        </div>
-      )}
-      {mode === 'linear' && (
-        <>
-          <div
-            className={styles.entryContainer}
-            onDrop={contentDrop.handleDrop}
-            onDragOver={contentDrop.handleDragOver}
-            aria-live="polite"
-            aria-relevant="additions"
-          >
-            {marginalRef && (
-              <MarginZone>
-                <MarginalReference>{marginalRef}</MarginalReference>
-              </MarginZone>
-            )}
-            {entries.map((le) => (
-              <div key={le.id} className={styles.entryRow}>
-                <NotebookEntryWrapper
-                  liveEntry={le}
-                  onCrossOut={crossOut}
-                  onToggleBookmark={toggleBookmark}
-                  onTogglePin={togglePin}
-                  onAnnotate={annotate}
-                  onSelectionAction={handleSelectionAction}
-                  onBranch={handleBranch}
-                  onFollowUp={handleFollowUp}
-                  isEditing={inPlaceEdit.isEditing(le.id)}
-                  onStartEdit={inPlaceEdit.startEdit}
-                  onSaveEdit={(id, content, type) => inPlaceEdit.saveEdit(id, content, type)}
-                  onCancelEdit={inPlaceEdit.cancelEdit}
-                  onDragStart={reorder.onDragStart}
-                  onDragOver={reorder.onDragOver}
-                  onDragLeave={reorder.onDragLeave}
-                  onDrop={reorder.onDrop}
-                  onDragEnd={reorder.onDragEnd}
-                  isDragOver={reorder.overId === le.id}
-                  isDragging={reorder.dragId === le.id}
-                />
-                {/* Inline inserters removed — use InputZone at bottom
-                   or + button in the margin */}
-              </div>
-            ))}
-          </div>
-          <div style={{ position: 'relative' }}>
-            {popup.mentionQuery !== null && (
-              <MentionPopup
-                query={popup.mentionQuery}
-                results={popup.mentionResults}
-                onSelect={(e) => popup.handleMentionSelect(e)}
-                onClose={popup.handlePopupClose}
-              />
-            )}
-            {popup.slashQuery !== null && (
-              <SlashCommandPopup
-                query={popup.slashQuery}
-                onSelect={(c) => popup.handleSlashSelect(c)}
-                onClose={popup.handlePopupClose}
-              />
-            )}
-            <InputZone
-              onSubmit={handleSubmit}
-              onSubmitTyped={handleSubmitTyped}
-              onSketchSubmit={handleSketchSubmit}
-              onMentionTrigger={popup.handleMentionTrigger}
-              onSlashTrigger={popup.handleSlashTrigger}
-              onPopupClose={popup.handlePopupClose}
-              onPaste={contentDrop.handlePaste}
-              insertText={popup.pendingInsert}
-              onInsertConsumed={popup.handleInsertConsumed}
-              disabled={isThinking}
-            />
-          </div>
-          <div ref={bottomRef} />
-        </>
-      )}
-      {mode === 'canvas' && (
-        <NotebookCanvas sessionId={sessionId} entries={entries} />
-      )}
-      {mode === 'graph' && (
-        <KnowledgeCanvas />
-      )}
-    </Column>
-  );
-}
-
-function PastSession({ session }: {
-  session: { id: string; number: number; date: string; timeOfDay: string; topic: string };
-}) {
-  const { entries } = usePersistedNotebook(session.id);
+  const drag = useMemo(() => ({ dragId: reorder.dragId, overId: reorder.overId }), [reorder.dragId, reorder.overId]);
+  const dragHandlers = useMemo(() => ({
+    onDragStart: reorder.onDragStart, onDragOver: reorder.onDragOver,
+    onDragLeave: reorder.onDragLeave, onDrop: reorder.onDrop, onDragEnd: reorder.onDragEnd,
+  }), [reorder.onDragStart, reorder.onDragOver, reorder.onDragLeave, reorder.onDrop, reorder.onDragEnd]);
 
   return (
     <NotebookProvider
@@ -256,36 +144,6 @@ function PastSession({ session }: {
         contentDrop={contentDrop} popup={popup} isThinking={isThinking} bottomRef={bottomRef}
         handleSubmit={onSubmit} handleSubmitTyped={onSubmitTyped} handleSketchSubmit={onSketchSubmit}
       />
-      <div style={{ opacity: 0.55 }}>
-        {entries.map((le) => (
-          <NotebookEntryRenderer key={le.id} entry={le.entry} />
-        ))}
-      </div>
-    </>
-  );
-}
-
-function ModeToggle({ mode, setMode }: {
-  mode: NotebookMode;
-  setMode: (m: NotebookMode) => void;
-}) {
-  return (
-    <div className={styles.modeToggle}>
-      <button
-        className={mode === 'linear' ? styles.modeActive : styles.modeButton}
-        onClick={() => setMode('linear')}
-        aria-current={mode === 'linear' ? 'page' : undefined}
-      >Linear</button>
-      <button
-        className={mode === 'canvas' ? styles.modeActive : styles.modeButton}
-        onClick={() => setMode('canvas')}
-        aria-current={mode === 'canvas' ? 'page' : undefined}
-      >Canvas</button>
-      <button
-        className={mode === 'graph' ? styles.modeActive : styles.modeButton}
-        onClick={() => setMode('graph')}
-        aria-current={mode === 'graph' ? 'page' : undefined}
-      >Graph</button>
-    </div>
+    </NotebookProvider>
   );
 }

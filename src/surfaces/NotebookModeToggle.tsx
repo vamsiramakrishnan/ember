@@ -4,7 +4,7 @@
  */
 import styles from './Notebook.module.css';
 
-export type NotebookMode = 'linear' | 'canvas';
+export type NotebookMode = 'linear' | 'canvas' | 'graph';
 
 interface ModeToggleProps {
   mode: NotebookMode;
@@ -24,6 +24,11 @@ export function NotebookModeToggle({ mode, setMode }: ModeToggleProps) {
         onClick={() => setMode('canvas')}
         aria-current={mode === 'canvas' ? 'page' : undefined}
       >Canvas</button>
+      <button
+        className={mode === 'graph' ? styles.modeActive : styles.modeButton}
+        onClick={() => setMode('graph')}
+        aria-current={mode === 'graph' ? 'page' : undefined}
+      >Graph</button>
     </div>
   );
 }

@@ -18,6 +18,7 @@ import { NotebookPastSession } from './NotebookPastSession';
 import { NotebookModeToggle } from './NotebookModeToggle';
 import { NotebookEntryWrapper } from './NotebookEntryWrapper';
 import { NotebookCanvas } from './NotebookCanvas';
+import { KnowledgeCanvas } from '@/components/canvas/KnowledgeCanvas';
 import type { NotebookMode } from './NotebookModeToggle';
 import type { LiveEntry } from '@/types/entries';
 import type { SessionRecord } from '@/persistence/records';
@@ -125,8 +126,10 @@ export function NotebookContent({
           </div>
           <div ref={bottomRef} />
         </>
-      ) : (
+      ) : mode === 'canvas' ? (
         <NotebookCanvas sessionId={sessionId} entries={entries} />
+      ) : (
+        <KnowledgeCanvas />
       )}
     </Column>
   );
