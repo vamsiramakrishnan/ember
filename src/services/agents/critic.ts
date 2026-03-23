@@ -42,4 +42,7 @@ export const CRITIC_AGENT: AgentConfig = {
   thinkingLevel: 'HIGH',
   tools: [TOOLS.googleSearch, TOOLS.urlContext],
   responseModalities: ['TEXT'],
+  maxTurns: 3,
+  maxTimeMs: 20_000,
+  constraint: 'search-only',
 };

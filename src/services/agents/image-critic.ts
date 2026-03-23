@@ -35,4 +35,7 @@ export const IMAGE_CRITIC_AGENT: AgentConfig = {
   thinkingLevel: 'HIGH',
   tools: [TOOLS.googleSearch],
   responseModalities: ['TEXT'],
+  maxTurns: 3,
+  maxTimeMs: 20_000,
+  constraint: 'search-only',
 };

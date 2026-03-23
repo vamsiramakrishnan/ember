@@ -53,7 +53,8 @@ export async function refineArtifact(
     };
     setActivityDetail(detail);
 
-    const critique = await evaluateArtifact(currentHtml, originalPrompt, context, contract);
+    const isLastPass = i === MAX_ITERATIONS - 1;
+    const critique = await evaluateArtifact(currentHtml, originalPrompt, context, contract, isLastPass);
     finalScore = critique.score;
     history.push({
       iteration: i + 1,
@@ -76,10 +77,14 @@ interface CritiqueResult {
 }
 
 async function evaluateArtifact(
-  html: string, prompt: string, context?: string, contract?: ChangeContract,
+  html: string, prompt: string, context?: string,
+  contract?: ChangeContract, isLastPass = false,
 ): Promise<CritiqueResult> {
   try {
     const contractHints = buildContractHints(contract);
+    const graceNote = isLastPass
+      ? '\n\nFINAL PASS: Focus on the single most impactful fix only.'
+      : '';
     const critiquePrompt = [
       `Original request: "${prompt}"`,
       context ? `Context: ${context}` : '',
@@ -87,7 +92,7 @@ async function evaluateArtifact(
       '', 'Evaluate this HTML visualization:', '```html',
       html.slice(0, 8000), '```', '',
       'Check facts with Google Search. Return JSON: {score, issues, patches}.',
-      'Each patch: {search, replace} for exact match, or {selector, replace} for CSS selector.',
+      `Each patch: {search, replace} for exact match, or {selector, replace} for CSS selector.${graceNote}`,
     ].filter(Boolean).join('\n');
 
     const result = await runTextAgent(CRITIC_AGENT, [{

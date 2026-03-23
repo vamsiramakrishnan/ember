@@ -153,4 +153,7 @@ export const VISUALISER_AGENT: AgentConfig = {
   thinkingLevel: 'HIGH',
   tools: [TOOLS.googleSearch],
   responseModalities: ['TEXT'],
+  maxTurns: 5,
+  maxTimeMs: 45_000,
+  constraint: 'search-only',
 };

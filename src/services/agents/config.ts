@@ -20,6 +20,12 @@ export interface AgentConfig {
   responseModalities: string[];
   /** Zod schema for structured output. When set, response is validated. */
   responseSchema?: ZodTypeAny;
+  /** Max turns for agentic loops (default: unlimited). From Gemini CLI. */
+  maxTurns?: number;
+  /** Max execution time in ms (default: unlimited). Grace period on final turn. */
+  maxTimeMs?: number;
+  /** Explicit constraint label for documentation and logging. */
+  constraint?: 'read-only' | 'search-only' | 'no-tools' | 'full';
 }
 
 /** Ember design context injected into all agent prompts. */
