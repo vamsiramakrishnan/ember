@@ -80,6 +80,14 @@ export function Notebook({ onNavigate }: NotebookProps) {
   const reorder = useEntryReorder();
   const inPlaceEdit = useInPlaceEdit();
   const popup = usePopupState(onNavigate);
+
+  // Register entries for universal @ referencing
+  useEffect(() => {
+    if (notebook && entries.length > 0) {
+      popup.registerEntries(entries, notebook.id);
+    }
+  }, [entries, notebook, popup.registerEntries]);
+
   const slashRouter = useSlashCommandRouter({
     addEntry, respond, entries,
     studentId: student?.id, notebookId: notebook?.id,

@@ -13,6 +13,13 @@
   line-height: inherit;
 }
 
+.clickable {
+  cursor: pointer;
+}
+.clickable:hover {
+  background: var(--rule-light);
+}
+
 .prefix {
   font-family: var(--font-system);
   font-size: 0.75em;
@@ -25,3 +32,26 @@
   color: var(--ink);
   font-weight: 500;
 }
+
+/* Meta label — quiet badge showing context (e.g., "slide 3", "python") */
+.meta {
+  font-family: var(--font-mono, 'IBM Plex Mono', monospace);
+  font-size: 0.65em;
+  color: var(--ink-faint);
+  background: var(--rule-light);
+  border-radius: 2px;
+  padding: 1px 4px;
+  margin-left: 2px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+/* Accent color variants */
+.accentAmber .prefix { color: var(--amber); }
+.accentIndigo .prefix { color: var(--indigo); }
+.accentSage .prefix { color: var(--sage); }
+.accentMono .prefix { color: var(--ink-soft); }
+
+.accentAmber { border-color: var(--amber-dim, rgba(180, 130, 60, 0.15)); }
+.accentIndigo { border-color: var(--indigo-dim, rgba(90, 100, 140, 0.15)); }
+.accentSage { border-color: var(--sage-dim, rgba(100, 130, 100, 0.15)); }

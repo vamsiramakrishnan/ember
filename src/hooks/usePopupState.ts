@@ -10,7 +10,7 @@ import type { SlashCommand } from '@/components/student/SlashCommandPopup';
 import type { Surface } from '@/layout/Navigation';
 
 export function usePopupState(onNavigate?: (surface: Surface) => void) {
-  const { search } = useEntityIndex();
+  const { search, registerEntries } = useEntityIndex();
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const [slashQuery, setSlashQuery] = useState<string | null>(null);
   const [mentionResults, setMentionResults] = useState<Entity[]>([]);
@@ -80,5 +80,6 @@ export function usePopupState(onNavigate?: (surface: Surface) => void) {
     handleSlashSelect,
     handleInsertConsumed,
     consumeSlashCommand,
+    registerEntries,
   };
 }

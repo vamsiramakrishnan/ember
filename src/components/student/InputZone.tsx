@@ -38,21 +38,27 @@ export function InputZone({
   const [forcedType, setForcedType] = useState<StudentEntryType | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const triggerPos = useRef(-1);
+  const pendingCursorPos = useRef<number | null>(null);
 
   useEffect(() => {
     const el = textareaRef.current;
     if (el) { el.style.height = 'auto'; el.style.height = `${el.scrollHeight}px`; }
+    // After React commits the new value to the DOM, apply any pending cursor position
+    if (pendingCursorPos.current !== null && el) {
+      const pos = pendingCursorPos.current;
+      pendingCursorPos.current = null;
+      requestAnimationFrame(() => {
+        el.setSelectionRange(pos, pos);
+        el.focus();
+      });
+    }
   }, [value]);
 
   useEffect(() => {
     if (!insertText || triggerPos.current < 0) return;
     const pos = triggerPos.current;
+    pendingCursorPos.current = pos + insertText.length;
     setValue((prev) => replaceTrigger(prev, pos, insertText));
-    const newPos = pos + insertText.length;
-    requestAnimationFrame(() => {
-      textareaRef.current?.setSelectionRange(newPos, newPos);
-      textareaRef.current?.focus();
-    });
     triggerPos.current = -1;
     onInsertConsumed?.();
   }, [insertText, onInsertConsumed]);

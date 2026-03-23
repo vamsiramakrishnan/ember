@@ -90,6 +90,19 @@
   text-overflow: ellipsis;
 }
 
+/* ─── Meta label — contextual badge (slide 3, python, card 2) ── */
+.meta {
+  font-family: var(--font-mono, 'IBM Plex Mono', monospace);
+  font-size: 9px;
+  color: var(--ink-faint);
+  background: var(--rule-light);
+  border-radius: 2px;
+  padding: 1px 5px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
 /* ─── Entity type badge ──────────────────────────── */
 .type {
   font-family: var(--font-system);

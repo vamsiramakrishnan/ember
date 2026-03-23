@@ -18,6 +18,9 @@ interface MentionPopupProps {
 const TYPE_ICONS: Record<EntityType, string> = {
   notebook: '◉', session: '§', thinker: '◈', concept: '◇',
   term: '≡', text: '▤', question: '?',
+  entry: '¶', slide: '▸', card: '⬡', exercise: '◆',
+  code: '⟨⟩', diagram: '⊞', image: '▣', file: '⎙',
+  'tutor-note': '✎',
 };
 
 /** Map entity types to accent color classes. */
@@ -26,11 +29,19 @@ const TYPE_ACCENT: Record<EntityType, string> = {
   thinker: styles.iconAmber ?? '', concept: styles.iconIndigo ?? '',
   term: styles.iconSage ?? '', text: styles.iconMargin ?? '',
   question: styles.iconDefault ?? '',
+  entry: styles.iconDefault ?? '', slide: styles.iconIndigo ?? '',
+  card: styles.iconSage ?? '', exercise: styles.iconAmber ?? '',
+  code: styles.iconDefault ?? '', diagram: styles.iconIndigo ?? '',
+  image: styles.iconDefault ?? '', file: styles.iconDefault ?? '',
+  'tutor-note': styles.iconAmber ?? '',
 };
 
 const TYPE_LABELS: Record<EntityType, string> = {
   notebook: 'notebook', session: 'session', thinker: 'thinker',
   concept: 'concept', term: 'term', text: 'text', question: 'question',
+  entry: 'entry', slide: 'slide', card: 'card', exercise: 'exercise',
+  code: 'code', diagram: 'diagram', image: 'image', file: 'file',
+  'tutor-note': 'tutor',
 };
 
 export function MentionPopup({
@@ -108,6 +119,7 @@ export function MentionPopup({
             <span className={styles.name}>{entity.name}</span>
             {entity.detail && <span className={styles.detail}>{entity.detail}</span>}
           </div>
+          {entity.meta && <span className={styles.meta}>{entity.meta}</span>}
           <span className={styles.type}>{TYPE_LABELS[entity.type]}</span>
         </button>
       ))}
