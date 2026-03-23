@@ -20,7 +20,10 @@ import {
 } from './background-tasks';
 import { annotateRecentEntries } from './inline-annotations';
 import { getMasteryByNotebook } from '@/persistence/repositories/mastery';
+import { getEncountersByNotebook } from '@/persistence/repositories/encounters';
+import { getLexiconByNotebook } from '@/persistence/repositories/lexicon';
 import { createRelation } from '@/persistence/repositories/graph';
+import { setBackgroundResults } from './background-results';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
 
 export async function runBackgroundTasks(
@@ -47,15 +50,31 @@ export async function runBackgroundTasks(
 
   if (signals.updateThinkers) {
     tasks.push(
-      extractThinkers(combinedText, studentId, notebookId, sessionTopic)
-        .catch((err) => console.error('[Ember] Thinker extraction:', err)),
+      (async () => {
+        const before = await getEncountersByNotebook(notebookId);
+        const beforeNames = new Set(before.map((e) => e.thinker));
+        const added = await extractThinkers(combinedText, studentId, notebookId, sessionTopic);
+        if (added > 0) {
+          const after = await getEncountersByNotebook(notebookId);
+          const newNames = after.map((e) => e.thinker).filter((n) => !beforeNames.has(n));
+          setBackgroundResults({ newThinkers: newNames });
+        }
+      })().catch((err) => console.error('[Ember] Thinker extraction:', err)),
     );
   }
 
   if (signals.updateVocabulary) {
     tasks.push(
-      extractVocabulary(combinedText, studentId, notebookId)
-        .catch((err) => console.error('[Ember] Vocab extraction:', err)),
+      (async () => {
+        const before = await getLexiconByNotebook(notebookId);
+        const beforeTerms = new Set(before.map((e) => e.term));
+        const added = await extractVocabulary(combinedText, studentId, notebookId);
+        if (added > 0) {
+          const after = await getLexiconByNotebook(notebookId);
+          const newTerms = after.map((e) => e.term).filter((t) => !beforeTerms.has(t));
+          setBackgroundResults({ newTerms });
+        }
+      })().catch((err) => console.error('[Ember] Vocab extraction:', err)),
     );
   }
 
@@ -64,9 +83,18 @@ export async function runBackgroundTasks(
     const masteryStr = mastery.length > 0
       ? mastery.map((m) => `${m.concept}: ${m.level} (${m.percentage}%)`).join('\n')
       : '(no concepts tracked yet)';
+    const masteryBefore = new Map(mastery.map((m) => [m.concept, m.percentage]));
     tasks.push(
-      updateMasteryFromEntry(studentText, masteryStr, studentId, notebookId)
-        .catch((err) => console.error('[Ember] Mastery update:', err)),
+      (async () => {
+        const count = await updateMasteryFromEntry(studentText, masteryStr, studentId, notebookId);
+        if (count > 0) {
+          const after = await getMasteryByNotebook(notebookId);
+          const changes = after
+            .filter((m) => masteryBefore.has(m.concept) && masteryBefore.get(m.concept) !== m.percentage)
+            .map((m) => ({ concept: m.concept, from: masteryBefore.get(m.concept) ?? 0, to: m.percentage }));
+          if (changes.length > 0) setBackgroundResults({ masteryChanges: changes });
+        }
+      })().catch((err) => console.error('[Ember] Mastery update:', err)),
     );
   }
 

@@ -2,8 +2,9 @@
  * Orchestrator — wires the full tutor pipeline.
  * See orchestrator-pipeline.ts for shared stage implementations.
  */
-import { TUTOR_AGENT } from './agents';
-import { runTextAgent, runTextAgentStreaming } from './run-agent';
+import { TUTOR_AGENT, RESEARCHER_AGENT } from './agents';
+import { runTextAgent } from './run-agent';
+import { resilientTextAgent, resilientStreamingAgent } from './resilient-agent';
 import { runAgenticLoop, runAgenticLoopStreaming, type AgenticResult } from './agentic-loop';
 import { getGeminiClient, isGeminiAvailable } from './gemini';
 import { parseTutorResponse } from './tutor-response-parser';
@@ -79,7 +80,8 @@ export async function orchestrate(
         { studentId, notebookId, graph: setup.legacyGraph },
       );
     } else {
-      const result = await runTextAgent(TUTOR_AGENT, setup.contextMessages);
+      // Proxy mode — resilient fallback with retry + cheaper model
+      const result = await resilientTextAgent(TUTOR_AGENT, ctx.messages);
       agenticResult = { text: result.text, toolCalls: [], deferredActions: [] };
       if (result.citations.length > 0) {
         results.push({ type: 'citation', sources: result.citations });
@@ -126,8 +128,8 @@ export async function streamOrchestrate(
         onChunk,
       );
     } else {
-      const result = await runTextAgentStreaming(
-        TUTOR_AGENT, setup.contextMessages, onChunk,
+      const result = await resilientStreamingAgent(
+        TUTOR_AGENT, ctx.messages, onChunk,
       );
       agenticResult = { text: result.text, toolCalls: [], deferredActions: [] };
       if (result.citations.length > 0) {
