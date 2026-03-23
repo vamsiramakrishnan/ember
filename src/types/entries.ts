@@ -151,6 +151,7 @@ export type NotebookEntry =
   | { type: 'document'; file: FileAttachment; pages?: number; extractedText?: string }
 
   // ─── AI-generated blocks ─────────────────────────────────────
+  | { type: 'podcast'; topic: string; audioUrl: string; transcript: string; duration?: number }
   | { type: 'visualization'; html: string; caption?: string }
   | { type: 'illustration'; dataUrl: string; caption?: string }
   | { type: 'reading-material'; title: string; subtitle?: string; slides: ReadingSlide[] }

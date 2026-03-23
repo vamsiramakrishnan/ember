@@ -1,0 +1,134 @@
+/**
+ * PodcastPlayer — SoundCloud-inspired waveform audio player.
+ * Quiet, warm, notebook-native. No chrome, no loudness.
+ */
+
+.container {
+  margin: 20px 0;
+  padding: 20px 24px;
+  background: var(--paper-deep);
+  border: 1px solid var(--rule-light);
+  border-radius: 2px;
+}
+
+.label {
+  font-family: var(--font-system);
+  font-size: 9px;
+  font-weight: 300;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink-ghost);
+  margin-bottom: 8px;
+}
+
+.topic {
+  font-family: var(--font-tutor);
+  font-size: 20px;
+  font-weight: 300;
+  color: var(--ink);
+  line-height: 1.3;
+  margin: 0 0 16px;
+}
+
+/* ─── Controls row ────────────────────────────────────────── */
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.playButton {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  color: var(--ink-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color 0.3s ease, color 0.3s ease;
+}
+
+.playButton:hover {
+  border-color: var(--ink-ghost);
+  color: var(--ink);
+}
+
+.playButton:focus-visible {
+  outline: 2px solid var(--indigo);
+  outline-offset: 2px;
+}
+
+/* ─── Waveform + progress ──────────────────────────────── */
+
+.waveformWrap {
+  flex: 1;
+  position: relative;
+  height: 48px;
+  cursor: pointer;
+}
+
+.waveformCanvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ─── Time display ─────────────────────────────────────── */
+
+.time {
+  font-family: var(--font-system);
+  font-size: 10px;
+  font-weight: 300;
+  color: var(--ink-faint);
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+  min-width: 68px;
+  text-align: right;
+}
+
+/* ─── Transcript toggle ───────────────────────────────── */
+
+.transcriptToggle {
+  font-family: var(--font-system);
+  font-size: 10px;
+  font-weight: 300;
+  letter-spacing: 1px;
+  color: var(--ink-faint);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 0;
+  transition: color 0.3s ease;
+}
+
+.transcriptToggle:hover {
+  color: var(--ink-soft);
+}
+
+.transcript {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--rule-light);
+  font-family: var(--font-student);
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--ink-soft);
+  white-space: pre-wrap;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* ─── Reduced motion ───────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .playButton,
+  .transcriptToggle {
+    transition: none;
+  }
+}

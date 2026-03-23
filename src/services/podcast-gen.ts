@@ -13,8 +13,6 @@ import { useProxy, proxyTtsGeneration } from './proxy-client';
 import { VISUALISER_AGENT } from './agents';
 import { runTextAgent } from './run-agent';
 import { recentContext } from './entry-utils';
-import { colors } from '@/tokens/colors';
-import { fontFamily } from '@/tokens/typography';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
 
 const TTS_MODEL = 'gemini-2.5-flash-preview-tts';
@@ -42,16 +40,18 @@ export async function generatePodcast(
     if (!audioDataUrl) {
       // Return script-only fallback so the work isn't lost
       return {
-        type: 'visualization',
-        html: buildTranscriptOnlyHtml(topic, script),
-        caption: `podcast transcript: ${topic.slice(0, 50)}`,
+        type: 'podcast',
+        topic,
+        audioUrl: '',
+        transcript: script,
       };
     }
 
     return {
-      type: 'visualization',
-      html: buildAudioPlayerHtml(topic, script, audioDataUrl),
-      caption: `podcast: ${topic.slice(0, 50)}`,
+      type: 'podcast',
+      topic,
+      audioUrl: audioDataUrl,
+      transcript: script,
     };
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Unknown error';
@@ -164,47 +164,6 @@ function pcmToWav(
 /** Error entry visible to the student. */
 function errorEntry(message: string): NotebookEntry {
   return { type: 'tutor-marginalia', content: message };
-}
-
-function buildAudioPlayerHtml(
-  topic: string, script: string, audioUrl: string,
-): string {
-  const esc = script.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  return `<!DOCTYPE html><html><head>
-<meta charset="utf-8"><style>
-body { margin: 0; padding: 20px; font-family: ${fontFamily.student}; color: ${colors.ink}; background: ${colors.paper}; }
-h2 { font-family: ${fontFamily.tutor}; font-weight: 300; font-size: 22px; margin: 0 0 12px; }
-.label { font-family: ${fontFamily.system}; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: ${colors.inkFaint}; margin-bottom: 12px; }
-audio { width: 100%; margin: 8px 0 16px; border-radius: 2px; }
-.script { font-size: 14px; line-height: 1.7; color: ${colors.inkSoft}; white-space: pre-wrap; max-height: 200px; overflow-y: auto; border-top: 1px solid ${colors.rule}; padding-top: 12px; }
-details summary { cursor: pointer; font-family: ${fontFamily.system}; font-size: 10px; color: ${colors.inkFaint}; letter-spacing: 1px; }
-</style></head><body>
-<div class="label">podcast</div>
-<h2>${topic}</h2>
-<audio controls src="${audioUrl}"></audio>
-<details><summary>show transcript</summary>
-<div class="script">${esc}</div>
-</details>
-</body></html>`;
-}
-
-function buildTranscriptOnlyHtml(
-  topic: string, script: string,
-): string {
-  const esc = script.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  return `<!DOCTYPE html><html><head>
-<meta charset="utf-8"><style>
-body { margin: 0; padding: 20px; font-family: ${fontFamily.student}; color: ${colors.ink}; background: ${colors.paper}; }
-h2 { font-family: ${fontFamily.tutor}; font-weight: 300; font-size: 22px; margin: 0 0 12px; }
-.label { font-family: ${fontFamily.system}; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: ${colors.inkFaint}; margin-bottom: 12px; }
-.note { font-family: ${fontFamily.system}; font-size: 11px; color: ${colors.inkFaint}; margin-bottom: 16px; padding: 8px 12px; background: rgba(155,149,144,0.07); border-radius: 2px; }
-.script { font-size: 14px; line-height: 1.7; color: ${colors.inkSoft}; white-space: pre-wrap; border-top: 1px solid ${colors.rule}; padding-top: 12px; }
-</style></head><body>
-<div class="label">podcast transcript</div>
-<h2>${topic}</h2>
-<div class="note">Audio generation unavailable — showing transcript only.</div>
-<div class="script">${esc}</div>
-</body></html>`;
 }
 
 function SCRIPT_PROMPT(topic: string, context: string): string {

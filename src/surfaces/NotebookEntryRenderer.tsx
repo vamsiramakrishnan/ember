@@ -26,6 +26,7 @@ import { SilenceMarker } from '@/components/tutor/SilenceMarker';
 import { Divider } from '@/components/student/Divider';
 import { Echo } from '@/components/ambient/Echo';
 import { BridgeSuggestion } from '@/components/peripheral/BridgeSuggestion';
+import { PodcastPlayer } from '@/components/tutor/PodcastPlayer';
 import { Visualization } from '@/components/tutor/Visualization';
 import { Illustration } from '@/components/tutor/Illustration';
 import { ReadingMaterial } from '@/components/tutor/ReadingMaterial';
@@ -98,6 +99,9 @@ export function NotebookEntryRenderer({ entry }: Props) {
       return <ThinkerCard thinker={entry.thinker} />;
 
     // AI-generated blocks
+    case 'podcast':
+      return <PodcastPlayer topic={entry.topic} audioUrl={entry.audioUrl}
+        transcript={entry.transcript} duration={entry.duration} />;
     case 'visualization':
       return <Visualization html={entry.html} caption={entry.caption} />;
     case 'illustration':
