@@ -10,6 +10,7 @@ import { classifyImmediate, type RoutingDecision } from './router-agent';
 import { setActivityDetail } from '@/state';
 import { buildSemanticMemory } from './semantic-memory';
 import { appendDiversityHints } from './diversity-hints';
+import { getWorkingMemory } from './working-memory';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
 import type { ChangeContract } from './artifact-refiner';
 import type { Subgraph } from './knowledge-graph';
@@ -88,6 +89,7 @@ export async function runPipelineSetup(
     ? '\n\n[SYSTEM: The student is ready for an exploration directive. Respond with a tutor-directive type — send them to search, read, try, observe, or compare something specific outside the notebook.]'
     : '';
 
+  const wm = getWorkingMemory(notebookId);
   const ctx = assembleContext({
     studentText: studentText + graphContext + directiveHint,
     entries,
@@ -95,6 +97,7 @@ export async function runPipelineSetup(
     notebook: notebookCtx,
     memory,
     research,
+    workingMemory: wm?.summary ?? undefined,
   });
 
   appendDiversityHints(ctx.messages);
