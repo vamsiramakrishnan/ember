@@ -105,10 +105,10 @@ export async function getEntry(
   return get<EntryRecord>(Store.Entries, id);
 }
 
-/** Update entry metadata (cross-out, bookmark, pin). */
+/** Update entry metadata (cross-out, bookmark, pin, order, annotations). */
 export async function updateEntry(
   id: string,
-  updates: Partial<Pick<EntryRecord, 'crossedOut' | 'bookmarked' | 'pinned'>>,
+  updates: Partial<Pick<EntryRecord, 'crossedOut' | 'bookmarked' | 'pinned' | 'order' | 'annotations'>>,
 ): Promise<void> {
   const existing = await get<EntryRecord>(Store.Entries, id);
   if (!existing) return;
