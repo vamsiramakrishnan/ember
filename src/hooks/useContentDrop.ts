@@ -11,8 +11,13 @@
  * All files are stored via the blob repository (content-addressed).
  * Documents uploaded directly to File Search — Gemini handles
  * PDF chunking and embedding natively. No text extraction needed.
+ *
+ * Fixes:
+ * - Supports multiple concurrent file uploads (removed single-file guard)
+ * - Uses a Set to track in-flight uploads for dedup
+ * - Aborts background uploads on unmount
  */
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useEffect } from 'react';
 import { storeBlob } from '@/persistence/repositories/blobs';
 import { isGeminiAvailable } from '@/services/gemini';
 import { getOrCreateStore, uploadRawFile } from '@/services/file-search';
@@ -42,11 +47,22 @@ interface UseContentDropOptions {
 
 export function useContentDrop({ addEntry }: UseContentDropOptions) {
   const { student, notebook } = useStudent();
-  const processingRef = useRef(false);
+  const activeUploads = useRef(new Set<string>());
+  const abortRef = useRef<AbortController>(new AbortController());
+
+  // Abort background tasks on unmount
+  useEffect(() => {
+    const controller = abortRef.current;
+    return () => {
+      controller.abort();
+    };
+  }, []);
 
   const processFile = useCallback(async (file: File): Promise<void> => {
-    if (processingRef.current) return;
-    processingRef.current = true;
+    // Dedup by file name + size
+    const fileKey = `${file.name}:${file.size}`;
+    if (activeUploads.current.has(fileKey)) return;
+    activeUploads.current.add(fileKey);
 
     try {
       const blob = new Blob([await file.arrayBuffer()], { type: file.type });
@@ -59,42 +75,36 @@ export function useContentDrop({ addEntry }: UseContentDropOptions) {
         blobHash: hash,
       };
 
-      // Image → image entry + Reader agent analysis
       if (IMAGE_TYPES.includes(file.type)) {
         const dataUrl = await blobToDataUrl(blob);
         addEntry({ type: 'image', dataUrl, alt: file.name });
-        if (isGeminiAvailable()) {
+        if (isGeminiAvailable() && !abortRef.current.signal.aborted) {
           void analyseImage(dataUrl, file.type, addEntry);
         }
-        // Also upload raw image to File Search for visual grounding
-        if (student && notebook) {
+        if (student && notebook && !abortRef.current.signal.aborted) {
           void rawUpload(blob, file.name, student.id, notebook.id);
         }
         return;
       }
 
-      // Document → entry + raw upload to File Search
       if (DOC_TYPES.includes(file.type)) {
         addEntry({ type: 'document', file: attachment });
-        if (student && notebook) {
+        if (student && notebook && !abortRef.current.signal.aborted) {
           void rawUpload(blob, file.name, student.id, notebook.id);
         }
         return;
       }
 
-      // Code file → code-cell
       const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
       if (CODE_EXTENSIONS[ext]) {
         const text = await file.text();
         addEntry({ type: 'code-cell', language: CODE_EXTENSIONS[ext] ?? 'text', source: text });
-        // Also upload to File Search for code search
-        if (student && notebook) {
+        if (student && notebook && !abortRef.current.signal.aborted) {
           void rawUpload(blob, file.name, student.id, notebook.id);
         }
         return;
       }
 
-      // Text files → prose or code-cell
       if (file.type.startsWith('text/') || file.type === 'application/json') {
         const text = await file.text();
         if (ext === 'md') {
@@ -102,16 +112,15 @@ export function useContentDrop({ addEntry }: UseContentDropOptions) {
         } else {
           addEntry({ type: 'code-cell', language: ext || 'text', source: text });
         }
-        if (student && notebook) {
+        if (student && notebook && !abortRef.current.signal.aborted) {
           void rawUpload(blob, file.name, student.id, notebook.id);
         }
         return;
       }
 
-      // Everything else → generic file upload
       addEntry({ type: 'file-upload', file: attachment });
     } finally {
-      processingRef.current = false;
+      activeUploads.current.delete(fileKey);
     }
   }, [addEntry, student, notebook]);
 
@@ -175,7 +184,7 @@ function blobToDataUrl(blob: Blob): Promise<string> {
   });
 }
 
-/** Upload raw file directly to File Search. Gemini handles chunking natively. */
+/** Upload raw file directly to File Search. */
 async function rawUpload(
   blob: Blob, name: string, studentId: string, notebookId: string,
 ): Promise<void> {

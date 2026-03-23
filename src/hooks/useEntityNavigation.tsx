@@ -11,16 +11,10 @@
  * 4. Cross-surface navigation switches surface then scrolls.
  * 5. Same-surface navigation scrolls directly.
  *
- * Navigation targets:
- * - Concept → entry where concept was first explored
- * - Thinker → thinker-card entry where they were introduced
- * - Term → entry where term was first used
- * - Session → session header in notebook
- * - Entry → direct scroll to that entry
- * - Annotation → expand that entry's annotation margin
- *
- * The protocol is a React context so any component in the tree
- * can trigger navigation without prop drilling.
+ * Fixes:
+ * - Scroll waits for DOM element to appear (polling with timeout)
+ *   instead of a fixed 100ms delay that races with render.
+ * - AbortController cancels pending navigations on new navigate calls.
  */
 import React, { createContext, useContext, useCallback, useRef } from 'react';
 import type { Surface } from '@/layout/Navigation';
@@ -38,9 +32,7 @@ export type NavigationTarget =
 
 export interface NavigationRequest {
   target: NavigationTarget;
-  /** Which surface to switch to (null = stay on current). */
   surface?: Surface | null;
-  /** Whether to highlight the target after scrolling. */
   highlight?: boolean;
 }
 
@@ -51,15 +43,10 @@ type ScrollRegistry = Map<string, HTMLElement>;
 // ─── Context ──────────────────────────────────────────
 
 interface EntityNavigationContextValue {
-  /** Navigate to any target. The primary API. */
   navigateTo: (request: NavigationRequest) => void;
-  /** Register a DOM element for scroll targeting. */
   registerAnchor: (id: string, element: HTMLElement) => void;
-  /** Unregister when unmounting. */
   unregisterAnchor: (id: string) => void;
-  /** Current highlight target (entry ID being flashed). */
   highlightId: string | null;
-  /** Clear the highlight after animation. */
   clearHighlight: () => void;
 }
 
@@ -80,14 +67,35 @@ export function useEntityNavigation() {
 interface ProviderProps {
   children: React.ReactNode;
   onSurfaceChange: (surface: Surface) => void;
-  /** Resolve entity → entry ID. */
   resolveEntity?: (
     entityId: string, entityKind: string,
   ) => Promise<string | null>;
-  /** Resolve concept/thinker name → entry ID. */
   resolveByName?: (
     name: string, kind: 'concept' | 'thinker' | 'term',
   ) => Promise<string | null>;
+}
+
+/** Wait for an element to appear in the registry, with timeout. */
+function waitForElement(
+  registry: React.RefObject<ScrollRegistry>,
+  id: string,
+  signal: AbortSignal,
+  maxWait = 2000,
+): Promise<HTMLElement | null> {
+  return new Promise((resolve) => {
+    const el = registry.current?.get(id);
+    if (el) { resolve(el); return; }
+
+    const start = Date.now();
+    const check = () => {
+      if (signal.aborted) { resolve(null); return; }
+      const found = registry.current?.get(id);
+      if (found) { resolve(found); return; }
+      if (Date.now() - start > maxWait) { resolve(null); return; }
+      requestAnimationFrame(check);
+    };
+    requestAnimationFrame(check);
+  });
 }
 
 export function EntityNavigationProvider({
@@ -98,6 +106,7 @@ export function EntityNavigationProvider({
 }: ProviderProps) {
   const registryRef = useRef<ScrollRegistry>(new Map());
   const [highlightId, setHighlightId] = React.useState<string | null>(null);
+  const navAbortRef = useRef<AbortController | null>(null);
 
   const registerAnchor = useCallback((id: string, el: HTMLElement) => {
     registryRef.current.set(id, el);
@@ -111,24 +120,26 @@ export function EntityNavigationProvider({
     setHighlightId(null);
   }, []);
 
-  const scrollToEntry = useCallback((entryId: string, highlight: boolean) => {
-    // Wait for surface switch + render
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        const el = registryRef.current.get(entryId);
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          if (highlight) {
-            setHighlightId(entryId);
-            setTimeout(() => setHighlightId(null), 2000);
-          }
-        }
-      }, 100);
-    });
+  const scrollToEntry = useCallback(async (
+    entryId: string, highlight: boolean, signal: AbortSignal,
+  ) => {
+    const el = await waitForElement(registryRef, entryId, signal);
+    if (!el || signal.aborted) return;
+
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (highlight) {
+      setHighlightId(entryId);
+      setTimeout(() => setHighlightId(null), 2000);
+    }
   }, []);
 
   const navigateTo = useCallback(async (request: NavigationRequest) => {
     const { target, surface, highlight = true } = request;
+
+    // Cancel any in-flight navigation
+    navAbortRef.current?.abort();
+    const controller = new AbortController();
+    navAbortRef.current = controller;
 
     // Switch surface if needed
     if (surface) {
@@ -141,33 +152,27 @@ export function EntityNavigationProvider({
       case 'entry':
         entryId = target.entryId;
         break;
-
       case 'session':
         entryId = target.sessionId;
         break;
-
       case 'annotation':
         entryId = target.entryId;
         break;
-
       case 'entity':
         entryId = await resolveEntity?.(
           target.entityId, target.entityKind,
         ) ?? null;
         break;
-
       case 'concept':
         entryId = await resolveByName?.(
           target.conceptName, 'concept',
         ) ?? null;
         break;
-
       case 'thinker':
         entryId = await resolveByName?.(
           target.thinkerName, 'thinker',
         ) ?? null;
         break;
-
       case 'lexicon-term':
         entryId = await resolveByName?.(
           target.term, 'term',
@@ -175,8 +180,8 @@ export function EntityNavigationProvider({
         break;
     }
 
-    if (entryId) {
-      scrollToEntry(entryId, highlight);
+    if (entryId && !controller.signal.aborted) {
+      await scrollToEntry(entryId, highlight, controller.signal);
     }
   }, [onSurfaceChange, resolveEntity, resolveByName, scrollToEntry]);
 

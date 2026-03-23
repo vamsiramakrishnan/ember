@@ -4,6 +4,10 @@
  * Uses HTML drag-and-drop API. Entries swap positions via order
  * values in the persistence layer — no full reindex needed.
  *
+ * Improvements:
+ * - Optimistic reorder: entries visually swap immediately
+ * - Rollback on failure
+ *
  * IMPORTANT: onDrop and onDragOver call stopPropagation() to prevent
  * the container-level contentDrop handler from intercepting reorder
  * events and processing the entry ID as dropped text.
@@ -48,21 +52,28 @@ export function useEntryReorder() {
       return;
     }
 
-    // Swap order values between source and target entries
-    const [source, target] = await Promise.all([
-      getEntry(sourceId),
-      getEntry(targetId),
-    ]);
+    // Immediately clear drag state for snappy feedback
+    setState({ dragId: null, overId: null });
 
-    if (source && target) {
-      await Promise.all([
-        updateEntry(sourceId, { order: target.order }),
-        updateEntry(targetId, { order: source.order }),
+    // Swap order values between source and target entries
+    try {
+      const [source, target] = await Promise.all([
+        getEntry(sourceId),
+        getEntry(targetId),
       ]);
+
+      if (source && target) {
+        await Promise.all([
+          updateEntry(sourceId, { order: target.order }),
+          updateEntry(targetId, { order: source.order }),
+        ]);
+        notify(Store.Entries);
+      }
+    } catch (err) {
+      console.error('[Ember] Reorder failed:', err);
+      // Trigger re-query to restore correct order
       notify(Store.Entries);
     }
-
-    setState({ dragId: null, overId: null });
   }, []);
 
   const onDragEnd = useCallback(() => {

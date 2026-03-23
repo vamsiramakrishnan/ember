@@ -2,6 +2,9 @@
  * EntryActions — hover-revealed action buttons for notebook entries.
  * Edit, cross-out, bookmark, pin, branch.
  * Extracted from NotebookEntryWrapper to keep files under 150 lines.
+ *
+ * Callbacks are pre-bound to the entry ID by the parent — no id
+ * parameter needed here, preventing unnecessary re-renders.
  */
 import styles from './NotebookEntryWrapper.module.css';
 
@@ -13,15 +16,15 @@ interface EntryActionsProps {
   canPin: boolean;
   pinned: boolean;
   canEdit?: boolean;
-  onCrossOut: (id: string) => void;
-  onToggleBookmark: (id: string) => void;
-  onTogglePin: (id: string) => void;
+  onCrossOut: () => void;
+  onToggleBookmark: () => void;
+  onTogglePin: () => void;
   onEdit?: () => void;
   onBranch?: () => void;
 }
 
 export function EntryActions({
-  id, canCrossOut, crossedOut, bookmarked, canPin, pinned,
+  id: _id, canCrossOut, crossedOut, bookmarked, canPin, pinned,
   canEdit, onCrossOut, onToggleBookmark, onTogglePin, onEdit, onBranch,
 }: EntryActionsProps) {
   return (
@@ -33,21 +36,21 @@ export function EntryActions({
         </button>
       )}
       {canCrossOut && (
-        <button className={styles.action} onClick={() => onCrossOut(id)}
+        <button className={styles.action} onClick={onCrossOut}
           aria-label={crossedOut ? 'Restore' : 'Cross out'}>
           {crossedOut ? '↺' : '—'}
         </button>
       )}
       <button
         className={`${styles.action} ${bookmarked ? styles.actionActive : ''}`}
-        onClick={() => onToggleBookmark(id)}
+        onClick={onToggleBookmark}
         aria-label={bookmarked ? 'Remove bookmark' : 'Bookmark'}>
         ◇
       </button>
       {canPin && (
         <button
           className={`${styles.action} ${pinned ? styles.actionActive : ''}`}
-          onClick={() => onTogglePin(id)}
+          onClick={onTogglePin}
           aria-label={pinned ? 'Unpin' : 'Pin'}>
           ⌃
         </button>

@@ -125,7 +125,7 @@ export function useTutorResponse(
         staticRespond(studentEntry);
       }
     },
-    [gemini, staticRespond],
+    [gemini.respond, staticRespond],
   );
 
   return {

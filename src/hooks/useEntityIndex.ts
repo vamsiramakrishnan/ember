@@ -9,8 +9,13 @@
  * with fuzzy matching — zero API calls, sub-millisecond results.
  *
  * Powers the @ mention popup and / slash commands.
+ *
+ * Improvements:
+ * - Caches results per notebook ID to avoid redundant rebuilds
+ * - Only rebuilds constellation data when notebook changes
+ * - Memoized search function with stable reference
  */
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useStudent } from '@/contexts/StudentContext';
 import { getNotebooksByStudent } from '@/persistence/repositories/notebooks';
 import { getSessionsByNotebook } from '@/persistence/repositories/sessions';
@@ -60,7 +65,6 @@ function fuzzyScore(query: string, target: string): number {
 
   for (let ti = 0; ti < t.length && qi < q.length; ti++) {
     if (t[ti] === q[qi]) {
-      // Bonus for consecutive matches
       score += lastMatchIdx === ti - 1 ? 2 : 1;
       lastMatchIdx = ti;
       qi++;
@@ -76,15 +80,23 @@ export function useEntityIndex() {
   const { student, notebook } = useStudent();
   const [entities, setEntities] = useState<Entity[]>([]);
   const [ready, setReady] = useState(false);
+  const cacheKeyRef = useRef<string>('');
+  const buildingRef = useRef(false);
 
-  // Build the index from IndexedDB
+  // Build the index from IndexedDB — cached per student+notebook pair
   useEffect(() => {
     if (!student) return;
+
+    const cacheKey = `${student.id}:${notebook?.id ?? ''}`;
+    if (cacheKey === cacheKeyRef.current) return;
+    if (buildingRef.current) return;
+
+    buildingRef.current = true;
+    cacheKeyRef.current = cacheKey;
 
     const build = async () => {
       const all: Entity[] = [];
 
-      // All notebooks for this student
       const notebooks = await getNotebooksByStudent(student.id);
       for (const nb of notebooks) {
         all.push({
@@ -94,7 +106,6 @@ export function useEntityIndex() {
           detail: nb.description,
         });
 
-        // Sessions in each notebook
         const sessions = await getSessionsByNotebook(nb.id);
         for (const s of sessions) {
           all.push({
@@ -106,7 +117,7 @@ export function useEntityIndex() {
           });
         }
 
-        // Constellation data for the current notebook
+        // Constellation data only for current notebook
         if (nb.id === notebook?.id) {
           const [lexicon, encounters, library, mastery, curiosities] = await Promise.all([
             getLexiconByNotebook(nb.id),
@@ -118,51 +129,34 @@ export function useEntityIndex() {
 
           for (const l of lexicon) {
             all.push({
-              id: l.id,
-              type: 'term',
-              name: l.term,
-              detail: l.definition,
-              notebookId: nb.id,
+              id: l.id, type: 'term', name: l.term,
+              detail: l.definition, notebookId: nb.id,
             });
           }
-
           for (const e of encounters) {
             all.push({
-              id: e.id,
-              type: 'thinker',
-              name: e.thinker,
-              detail: e.coreIdea,
-              notebookId: nb.id,
+              id: e.id, type: 'thinker', name: e.thinker,
+              detail: e.coreIdea, notebookId: nb.id,
             });
           }
-
           for (const lib of library) {
             all.push({
-              id: lib.id,
-              type: 'text',
+              id: lib.id, type: 'text',
               name: `${lib.title} by ${lib.author}`,
-              detail: lib.quote,
-              notebookId: nb.id,
+              detail: lib.quote, notebookId: nb.id,
             });
           }
-
           for (const m of mastery) {
             all.push({
-              id: m.id,
-              type: 'concept',
-              name: m.concept,
+              id: m.id, type: 'concept', name: m.concept,
               detail: `${m.level} (${m.percentage}%)`,
               notebookId: nb.id,
             });
           }
-
           for (const c of curiosities) {
             all.push({
-              id: c.id,
-              type: 'question',
-              name: c.question,
-              detail: '',
-              notebookId: nb.id,
+              id: c.id, type: 'question', name: c.question,
+              detail: '', notebookId: nb.id,
             });
           }
         }
@@ -170,42 +164,48 @@ export function useEntityIndex() {
 
       setEntities(all);
       setReady(true);
+      buildingRef.current = false;
     };
 
     void build();
   }, [student, notebook]);
 
+  // Use ref for entities to keep search callback stable
+  const entitiesRef = useRef(entities);
+  entitiesRef.current = entities;
+
   /**
    * Search the index with a query string.
    * Returns top N matches sorted by relevance.
+   * Stable callback — doesn't recreate when entities change.
    */
   const search = useCallback((
     query: string,
     opts?: { type?: EntityType; limit?: number },
   ): Entity[] => {
+    const currentEntities = entitiesRef.current;
     if (!query.trim()) {
-      // No query: return recent/important entities
       const limit = opts?.limit ?? 8;
       const filtered = opts?.type
-        ? entities.filter((e) => e.type === opts.type)
-        : entities;
+        ? currentEntities.filter((e) => e.type === opts.type)
+        : currentEntities;
       return filtered.slice(0, limit);
     }
 
-    const scored = entities
+    const scored = currentEntities
       .filter((e) => !opts?.type || e.type === opts.type)
       .map((e) => ({
         entity: e,
         score: Math.max(
           fuzzyScore(query, e.name),
-          fuzzyScore(query, e.detail) * 0.5, // Detail matches worth less
+          fuzzyScore(query, e.detail) * 0.5,
         ),
       }))
       .filter((s) => s.score > 0)
       .sort((a, b) => b.score - a.score);
 
     return scored.slice(0, opts?.limit ?? 8).map((s) => s.entity);
-  }, [entities]);
+  }, []);
 
   return { entities, search, ready };
 }

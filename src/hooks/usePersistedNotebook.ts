@@ -3,9 +3,10 @@
  * Reads entries from persistence, writes back on every mutation.
  * Supports cross-out, bookmark, pin, annotations, and streaming.
  *
- * Streaming optimization: patchEntryContent updates local state
- * immediately (optimistic) and debounces IndexedDB writes to
- * avoid re-querying the full entry list on every token.
+ * Improvements:
+ * - Debounce timer cleaned up on unmount (no stale writes)
+ * - Optimistic local updates for crossOut/bookmark/pin (instant UI)
+ * - Reconciliation only clears patches when DB has caught up
  */
 import { useCallback, useRef, useState, useEffect } from 'react';
 import { Store, useStoreQuery, notify } from '@/persistence';
@@ -40,6 +41,15 @@ async function recordToLiveEntry(rec: EntryRecord): Promise<LiveEntry> {
   };
 }
 
+// ─── Optimistic update types ─────────────────────────────────────
+
+interface OptimisticPatch {
+  crossedOut?: boolean;
+  bookmarked?: boolean;
+  pinned?: boolean;
+  annotations?: EntryAnnotation[];
+}
+
 export function usePersistedNotebook(sessionId: string | null) {
   const { data: dbEntries, loading } = useStoreQuery<LiveEntry[]>(
     Store.Entries,
@@ -53,21 +63,35 @@ export function usePersistedNotebook(sessionId: string | null) {
   );
 
   // Local overlay for optimistic streaming updates.
-  // Maps entry ID → patched NotebookEntry. Cleared on DB sync.
   const [localPatches, setLocalPatches] = useState<
     Map<string, NotebookEntry>
   >(new Map());
+
+  // Optimistic metadata patches (crossOut, bookmark, pin, annotations)
+  const [metaPatches, setMetaPatches] = useState<
+    Map<string, OptimisticPatch>
+  >(new Map());
+
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
-  // Merge DB entries with local patches
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
+  // Merge DB entries with local patches AND meta patches
   const entries = dbEntries.map((le) => {
-    const patch = localPatches.get(le.id);
-    return patch ? { ...le, entry: patch } : le;
+    const contentPatch = localPatches.get(le.id);
+    const meta = metaPatches.get(le.id);
+    let result = le;
+    if (contentPatch) result = { ...result, entry: contentPatch };
+    if (meta) result = { ...result, ...meta };
+    return result;
   });
 
-  // Reconcile local patches with DB: only clear a patch when the DB
-  // version has caught up (content matches or exceeds the local patch).
-  // This prevents flicker during streaming where DB lags behind.
+  // Reconcile content patches with DB
   useEffect(() => {
     if (localPatches.size === 0) return;
     setLocalPatches((prev) => {
@@ -75,12 +99,31 @@ export function usePersistedNotebook(sessionId: string | null) {
       for (const [id, patch] of prev) {
         const dbEntry = dbEntries.find((e) => e.id === id);
         if (!dbEntry) { next.set(id, patch); continue; }
-        // If DB has caught up (content matches), drop the patch
         const dbContent = 'content' in dbEntry.entry ? dbEntry.entry.content : '';
         const patchContent = 'content' in patch ? patch.content : '';
         if (dbContent !== patchContent) {
-          next.set(id, patch); // DB still behind — keep local patch
+          next.set(id, patch);
         }
+      }
+      return next.size === prev.size ? prev : next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dbEntries]);
+
+  // Clear meta patches when DB catches up
+  useEffect(() => {
+    if (metaPatches.size === 0) return;
+    setMetaPatches((prev) => {
+      const next = new Map<string, OptimisticPatch>();
+      for (const [id, patch] of prev) {
+        const dbEntry = dbEntries.find((e) => e.id === id);
+        if (!dbEntry) { next.set(id, patch); continue; }
+        // Check if DB has caught up to our optimistic state
+        let stale = false;
+        if (patch.crossedOut !== undefined && dbEntry.crossedOut !== patch.crossedOut) stale = true;
+        if (patch.bookmarked !== undefined && dbEntry.bookmarked !== patch.bookmarked) stale = true;
+        if (patch.pinned !== undefined && dbEntry.pinned !== patch.pinned) stale = true;
+        if (stale) next.set(id, patch);
       }
       return next.size === prev.size ? prev : next;
     });
@@ -104,21 +147,18 @@ export function usePersistedNotebook(sessionId: string | null) {
 
   /**
    * Update an entry's content in-place. Optimistic: updates local
-   * state immediately. IndexedDB write + notify are debounced
-   * to avoid re-querying the full list on every streaming token.
+   * state immediately. IndexedDB write + notify are debounced.
    */
   const patchEntryContent = useCallback((
     id: string,
     entry: NotebookEntry,
   ) => {
-    // Optimistic local update — renders instantly
     setLocalPatches((prev) => {
       const next = new Map(prev);
       next.set(id, entry);
       return next;
     });
 
-    // Debounced persistence (300ms) — batches rapid streaming updates
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       void (async () => {
@@ -128,28 +168,45 @@ export function usePersistedNotebook(sessionId: string | null) {
     }, 300);
   }, []);
 
+  // ─── Optimistic mutation helpers ──────────────────────────────────
+
+  const applyMetaPatch = useCallback((id: string, patch: OptimisticPatch) => {
+    setMetaPatches((prev) => {
+      const next = new Map(prev);
+      const existing = prev.get(id) ?? {};
+      next.set(id, { ...existing, ...patch });
+      return next;
+    });
+  }, []);
+
   const crossOut = useCallback(async (id: string) => {
     const live = entries.find((e) => e.id === id);
     if (!live) return;
-    await updateEntry(id, { crossedOut: !live.crossedOut });
+    const newVal = !live.crossedOut;
+    applyMetaPatch(id, { crossedOut: newVal });
+    await updateEntry(id, { crossedOut: newVal });
     notify(Store.Entries);
-  }, [entries]);
+  }, [entries, applyMetaPatch]);
 
   const toggleBookmark = useCallback(async (id: string) => {
     const live = entries.find((e) => e.id === id);
     if (!live) return;
-    await updateEntry(id, { bookmarked: !live.bookmarked });
+    const newVal = !live.bookmarked;
+    applyMetaPatch(id, { bookmarked: newVal });
+    await updateEntry(id, { bookmarked: newVal });
     notify(Store.Entries);
-  }, [entries]);
+  }, [entries, applyMetaPatch]);
 
   const togglePin = useCallback(async (id: string) => {
     const live = entries.find((e) => e.id === id);
     if (!live) return;
     const pinCount = entries.filter((e) => e.pinned).length;
     if (!live.pinned && pinCount >= 3) return;
-    await updateEntry(id, { pinned: !live.pinned });
+    const newVal = !live.pinned;
+    applyMetaPatch(id, { pinned: newVal });
+    await updateEntry(id, { pinned: newVal });
     notify(Store.Entries);
-  }, [entries]);
+  }, [entries, applyMetaPatch]);
 
   const annotate = useCallback(async (
     entryId: string,
@@ -165,12 +222,11 @@ export function usePersistedNotebook(sessionId: string | null) {
       timestamp: Date.now(),
     };
 
-    const existing = live.annotations ?? [];
-    await updateEntry(entryId, {
-      annotations: [...existing, annotation],
-    });
+    const updated = [...(live.annotations ?? []), annotation];
+    applyMetaPatch(entryId, { annotations: updated });
+    await updateEntry(entryId, { annotations: updated });
     notify(Store.Entries);
-  }, [entries]);
+  }, [entries, applyMetaPatch]);
 
   const pinnedEntries = entries.filter(
     (e) => e.pinned && e.entry.type === 'question',

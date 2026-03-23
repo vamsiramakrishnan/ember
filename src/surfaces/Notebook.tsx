@@ -2,6 +2,9 @@
  * Notebook — Surface 1: The Desk
  * The active session. The student writes, the tutor annotates.
  * Now persistence-backed — entries survive refresh, sessions accumulate.
+ *
+ * State management: all entry actions are centralised through
+ * NotebookContext, eliminating the 20+ prop chain to EntryWrapper.
  * See: 04-information-architecture.md, Surface one.
  */
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
@@ -14,6 +17,7 @@ import { MarginalReference } from '@/components/ambient/MarginalReference';
 import { InputZone } from '@/components/student/InputZone';
 import { MentionPopup } from '@/components/student/MentionPopup';
 import { SlashCommandPopup } from '@/components/student/SlashCommandPopup';
+import { NotebookProvider } from '@/contexts/NotebookContext';
 import { usePersistedNotebook } from '@/hooks/usePersistedNotebook';
 import { useSessionManager } from '@/hooks/useSessionManager';
 import { useTutorResponse } from '@/hooks/useTutorResponse';
@@ -32,7 +36,7 @@ import { NotebookEntryWrapper } from './NotebookEntryWrapper';
 import { NotebookEntryRenderer } from './NotebookEntryRenderer';
 import { NotebookCanvas } from './NotebookCanvas';
 import { recordStudentTurn, setStudentFocus, addRelation } from '@/state';
-import type { StudentEntryType, NotebookEntry } from '@/types/entries';
+import type { NotebookEntry } from '@/types/entries';
 import type { Surface } from '@/layout/Navigation';
 import styles from './Notebook.module.css';
 
@@ -46,7 +50,6 @@ export function Notebook({ onNavigate }: NotebookProps) {
   const { student, notebook, setNotebook } = useStudent();
   const { current, past, startNewSession, loading: sessionsLoading } = useSessionManager();
 
-  // Auto-create Session 1 when a notebook has no sessions
   useEffect(() => {
     if (!sessionsLoading && !current && past.length === 0) {
       void startNewSession('');
@@ -59,6 +62,9 @@ export function Notebook({ onNavigate }: NotebookProps) {
     entries, addEntry, addEntryWithId, patchEntryContent, crossOut,
     toggleBookmark, togglePin, annotate, pinnedEntries,
   } = usePersistedNotebook(sessionId);
+
+  const entriesRef = useRef(entries);
+  entriesRef.current = entries;
 
   const addEntries = useCallback((_e: unknown[]) => {}, []);
   const { respond, isThinking } = useTutorResponse(
@@ -75,7 +81,6 @@ export function Notebook({ onNavigate }: NotebookProps) {
   const [mode, setMode] = useState<NotebookMode>('linear');
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  // Derive marginal reference from tutor connections or echoes
   const marginalRef = useMemo(() => {
     for (let i = entries.length - 1; i >= 0; i--) {
       const e = entries[i]?.entry;
@@ -87,47 +92,44 @@ export function Notebook({ onNavigate }: NotebookProps) {
   }, [entries]);
 
   const scrollToBottom = useCallback(() => {
-    // Use requestAnimationFrame to wait for the next paint, ensuring
-    // the new entry is in the DOM before scrolling.
     requestAnimationFrame(() => {
       bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
     });
   }, []);
 
-  // Auto-scroll when new entries arrive (handles async addEntry + streaming)
   const prevEntryCount = useRef(entries.length);
   useEffect(() => {
-    if (entries.length > prevEntryCount.current) {
-      scrollToBottom();
-    }
+    if (entries.length > prevEntryCount.current) scrollToBottom();
     prevEntryCount.current = entries.length;
   }, [entries.length, scrollToBottom]);
+
+  // ─── Unified entry submission ─────────────────────────────────────
 
   const submitEntry = useCallback((entry: NotebookEntry) => {
     void addEntry(entry);
     recordStudentTurn(entry.type);
     setStudentFocus({ type: 'writing' });
     respond(entry);
-    void checkAndUpdate(entries);
-  }, [addEntry, respond, checkAndUpdate, entries]);
+    void checkAndUpdate(entriesRef.current);
+  }, [addEntry, respond, checkAndUpdate]);
 
   const handleSubmit = useCallback((text: string) => {
     submitEntry(createStudentEntry(text));
   }, [submitEntry]);
 
-  const handleSubmitTyped = useCallback((text: string, type: StudentEntryType) => {
-    submitEntry({ type, content: text });
+  const handleSubmitTyped = useCallback((text: string, type: string) => {
+    submitEntry({ type: type as 'prose', content: text });
   }, [submitEntry]);
 
-  const handleBranch = useCallback(async (_entryId: string, content: string) => {
+  // ─── Action handlers for NotebookContext ──────────────────────────
+
+  const handleBranch = useCallback(async (_id: string, content: string) => {
     if (!student || !notebook) return;
     const preview = content.slice(0, 80) + (content.length > 80 ? '…' : '');
-    // Confirmation dialog — branching is a commitment
     const confirmed = window.confirm(
       `Branch into a new notebook?\n\n"${preview}"\n\nThis creates a new exploration that inherits your current thinkers, vocabulary, and mastery.`,
     );
     if (!confirmed) return;
-
     const title = content.slice(0, 60) + (content.length > 60 ? '…' : '');
     const result = await branchNotebook({
       studentId: student.id,
@@ -139,53 +141,32 @@ export function Notebook({ onNavigate }: NotebookProps) {
     setNotebook(result.notebook);
   }, [student, notebook, setNotebook]);
 
-  /** Handle selection toolbar actions: link, annotate, highlight, ask. */
   const handleSelectionAction = useCallback((entryId: string, actionType: string, selectedText: string) => {
     switch (actionType) {
       case 'link':
-        // Trigger mention popup with the selected text as query
         popup.handleMentionTrigger(selectedText.slice(0, 20));
         break;
       case 'annotate':
-        // Create a span-targeted annotation on this entry
         void annotate(entryId, `Note on: "${selectedText}"`);
         break;
-      case 'highlight': {
-        // Create an insight annotation marking this span
+      case 'highlight':
         void annotate(entryId, `"${selectedText}"`);
         break;
-      }
       case 'ask':
-        // Submit the selected text as a question to the tutor
         submitEntry({ type: 'question', content: selectedText });
         break;
     }
   }, [annotate, submitEntry, popup]);
 
-  /** Handle inline follow-up on a tutor entry. */
   const handleFollowUp = useCallback((question: string, tutorContext: string) => {
-    const contextHint = tutorContext.length > 100
-      ? tutorContext.slice(0, 100) + '…'
-      : tutorContext;
+    const contextHint = tutorContext.length > 100 ? tutorContext.slice(0, 100) + '…' : tutorContext;
     const fullQuestion = `Regarding your note "${contextHint}" — ${question}`;
-
-    // Find the tutor entry being followed up on
-    const tutorEntry = entries.find(
-      (le) => 'content' in le.entry && le.entry.content === tutorContext,
-    );
+    const tutorEntry = entries.find((le) => 'content' in le.entry && le.entry.content === tutorContext);
     submitEntry({ type: 'question', content: fullQuestion });
-
-    // Record in entry graph: follow-up chain
     if (tutorEntry) {
-      // Use the latest entry ID as proxy (the question just submitted)
       const questionId = entries[entries.length - 1]?.id;
       if (questionId) {
-        addRelation({
-          from: questionId,
-          to: tutorEntry.id,
-          type: 'follow-up',
-          meta: question.slice(0, 80),
-        });
+        addRelation({ from: questionId, to: tutorEntry.id, type: 'follow-up', meta: question.slice(0, 80) });
       }
     }
   }, [submitEntry, entries]);
@@ -195,6 +176,83 @@ export function Notebook({ onNavigate }: NotebookProps) {
     void analyseSketch(dataUrl);
   }, [addEntry, analyseSketch]);
 
+  // ─── Drag state for context ───────────────────────────────────────
+
+  const drag = useMemo(() => ({
+    dragId: reorder.dragId,
+    overId: reorder.overId,
+  }), [reorder.dragId, reorder.overId]);
+
+  const dragHandlers = useMemo(() => ({
+    onDragStart: reorder.onDragStart,
+    onDragOver: reorder.onDragOver,
+    onDragLeave: reorder.onDragLeave,
+    onDrop: reorder.onDrop,
+    onDragEnd: reorder.onDragEnd,
+  }), [reorder.onDragStart, reorder.onDragOver, reorder.onDragLeave, reorder.onDrop, reorder.onDragEnd]);
+
+  return (
+    <NotebookProvider
+      crossOut={crossOut}
+      toggleBookmark={toggleBookmark}
+      togglePin={togglePin}
+      annotate={annotate}
+      onBranch={handleBranch}
+      onFollowUp={handleFollowUp}
+      onSelectionAction={handleSelectionAction}
+      startEdit={inPlaceEdit.startEdit}
+      saveEdit={inPlaceEdit.saveEdit}
+      cancelEdit={inPlaceEdit.cancelEdit}
+      editingId={inPlaceEdit.editingId}
+      drag={drag}
+      dragHandlers={dragHandlers}
+    >
+      <NotebookContent
+        entries={entries}
+        pinnedEntries={pinnedEntries}
+        past={past}
+        current={current}
+        sessionId={sessionId}
+        mode={mode}
+        setMode={setMode}
+        marginalRef={marginalRef}
+        contentDrop={contentDrop}
+        popup={popup}
+        isThinking={isThinking}
+        bottomRef={bottomRef}
+        handleSubmit={handleSubmit}
+        handleSubmitTyped={handleSubmitTyped}
+        handleSketchSubmit={handleSketchSubmit}
+      />
+    </NotebookProvider>
+  );
+}
+
+// ─── Inner content (kept separate for 150-line discipline) ─────────
+
+interface ContentProps {
+  entries: import('@/types/entries').LiveEntry[];
+  pinnedEntries: import('@/types/entries').LiveEntry[];
+  past: import('@/persistence/records').SessionRecord[];
+  current: import('@/persistence/records').SessionRecord | null;
+  sessionId: string | null;
+  mode: NotebookMode;
+  setMode: (m: NotebookMode) => void;
+  marginalRef: string | null;
+  contentDrop: ReturnType<typeof useContentDrop>;
+  popup: ReturnType<typeof usePopupState>;
+  isThinking: boolean;
+  bottomRef: React.RefObject<HTMLDivElement>;
+  handleSubmit: (text: string) => void;
+  handleSubmitTyped: (text: string, type: string) => void;
+  handleSketchSubmit: (dataUrl: string) => void;
+}
+
+function NotebookContent({
+  entries, pinnedEntries, past, current, sessionId, mode, setMode,
+  marginalRef, contentDrop, popup, isThinking, bottomRef,
+  handleSubmit, handleSubmitTyped, handleSketchSubmit,
+}: ContentProps) {
   return (
     <Column>
       {past.map((session) => (
@@ -235,29 +293,7 @@ export function Notebook({ onNavigate }: NotebookProps) {
             )}
             {entries.map((le) => (
               <div key={le.id} className={styles.entryRow}>
-                <NotebookEntryWrapper
-                  liveEntry={le}
-                  onCrossOut={crossOut}
-                  onToggleBookmark={toggleBookmark}
-                  onTogglePin={togglePin}
-                  onAnnotate={annotate}
-                  onSelectionAction={handleSelectionAction}
-                  onBranch={handleBranch}
-                  onFollowUp={handleFollowUp}
-                  isEditing={inPlaceEdit.isEditing(le.id)}
-                  onStartEdit={inPlaceEdit.startEdit}
-                  onSaveEdit={(id, content, type) => inPlaceEdit.saveEdit(id, content, type)}
-                  onCancelEdit={inPlaceEdit.cancelEdit}
-                  onDragStart={reorder.onDragStart}
-                  onDragOver={reorder.onDragOver}
-                  onDragLeave={reorder.onDragLeave}
-                  onDrop={reorder.onDrop}
-                  onDragEnd={reorder.onDragEnd}
-                  isDragOver={reorder.overId === le.id}
-                  isDragging={reorder.dragId === le.id}
-                />
-                {/* Inline inserters removed — use InputZone at bottom
-                   or + button in the margin */}
+                <NotebookEntryWrapper liveEntry={le} />
               </div>
             ))}
           </div>

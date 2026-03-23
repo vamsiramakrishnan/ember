@@ -9,8 +9,13 @@
  * 5. Visualiser/Illustrator produce rich content (when warranted)
  *
  * Falls back gracefully when no API key is configured.
+ *
+ * State management fixes:
+ * - `entries` accessed via ref to avoid dependency cascade
+ * - AbortController properly passed and cleaned up on unmount
+ * - Guard against concurrent responses via `activeRef`
  */
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef, useState, useEffect } from 'react';
 import type { DeferredAction } from '@/services/tool-executor';
 import { isGeminiAvailable } from '@/services/gemini';
 import { streamOrchestrate } from '@/services/orchestrator';
@@ -42,8 +47,30 @@ export function useGeminiTutor({
   const [isStreaming, setIsStreaming] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const lastSyncRef = useRef(Date.now());
+  const activeRef = useRef(false);
   const { student, notebook } = useStudent();
   const { current } = useSessionManager();
+
+  // Use refs for values that change frequently but shouldn't
+  // recreate the respond callback (breaks the dependency cascade).
+  const entriesRef = useRef(entries);
+  entriesRef.current = entries;
+
+  const addEntryRef = useRef(addEntry);
+  addEntryRef.current = addEntry;
+
+  const addEntryWithIdRef = useRef(addEntryWithId);
+  addEntryWithIdRef.current = addEntryWithId;
+
+  const patchRef = useRef(patchEntryContent);
+  patchRef.current = patchEntryContent;
+
+  // Abort in-flight request on unmount
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort();
+    };
+  }, []);
 
   const buildProfile = useCallback(async (): Promise<StudentProfile | null> => {
     if (!student || !notebook) return null;
@@ -81,37 +108,45 @@ export function useGeminiTutor({
       if (!('content' in studentEntry)) return;
       if (!student || !notebook) return;
 
+      // Guard: don't start a new response while one is active
+      if (activeRef.current) {
+        abortRef.current?.abort();
+      }
+      activeRef.current = true;
+
       setIsThinking(true);
       setTutorActivity(true, false);
-      const canStream = addEntryWithId && patchEntryContent;
 
-      // Streaming path: the streaming-text entry itself is the
-      // thinking indicator — no separate silence marker needed.
-      // Non-streaming fallback: add a compact silence marker.
+      const canStream = addEntryWithIdRef.current && patchRef.current;
       let streamingId: string | null = null;
 
       if (canStream) {
         const streamEntry: NotebookEntry = {
           type: 'streaming-text', content: '', done: false,
         };
-        const id = addEntryWithId(streamEntry);
+        const id = addEntryWithIdRef.current!(streamEntry);
         streamingId = typeof id === 'string' ? id : await id;
         setIsStreaming(true);
       } else {
-        addEntry({ type: 'silence' });
+        addEntryRef.current({ type: 'silence' });
       }
 
       try {
         abortRef.current = new AbortController();
+        const signal = abortRef.current.signal;
 
         const [profile, notebookCtx] = await Promise.all([
           buildProfile(),
           buildNotebookCtx(),
         ]);
 
+        // Check if aborted during profile build
+        if (signal.aborted) return;
+
         const onChunk = (_chunk: string, accumulated: string) => {
-          if (streamingId && patchEntryContent) {
-            patchEntryContent(streamingId, {
+          if (signal.aborted) return;
+          if (streamingId && patchRef.current) {
+            patchRef.current(streamingId, {
               type: 'streaming-text',
               content: accumulated,
               done: false,
@@ -121,7 +156,7 @@ export function useGeminiTutor({
 
         const result = await streamOrchestrate(
           studentEntry.content,
-          entries,
+          entriesRef.current,
           student.id,
           notebook.id,
           onChunk,
@@ -130,23 +165,21 @@ export function useGeminiTutor({
           lastSyncRef.current,
         );
 
+        if (signal.aborted) return;
+
         lastSyncRef.current = Date.now();
 
-        // Composition guard: filter entries by grammar rules
-        const filtered = filterByComposition(result.entries, entries);
+        const filtered = filterByComposition(result.entries, entriesRef.current);
 
-        if (streamingId && patchEntryContent) {
-          // Replace streaming entry with the final parsed tutor entry
+        if (streamingId && patchRef.current) {
           const firstEntry = filtered[0];
           if (firstEntry) {
-            patchEntryContent(streamingId, firstEntry);
-            // Record in entry graph: tutor response prompted by student
+            patchRef.current(streamingId, firstEntry);
             addRelation({
               from: streamingId, to: streamingId,
               type: 'prompted-by',
               meta: studentEntry.content.slice(0, 80),
             });
-            // Record turn in session state
             recordTutorTurn(
               inferTutorMode(firstEntry),
               extractTopics(firstEntry),
@@ -154,21 +187,21 @@ export function useGeminiTutor({
             );
           }
 
-          // Add remaining entries (enrichment, echoes, etc.)
           for (let i = 1; i < filtered.length; i++) {
+            if (signal.aborted) break;
             const entry = filtered[i];
             if (!entry) continue;
             await delay(600);
-            addEntry(entry);
+            addEntryRef.current(entry);
             recordTutorTurn(inferTutorMode(entry));
           }
         } else {
-          // Non-streaming fallback
           for (let i = 0; i < filtered.length; i++) {
+            if (signal.aborted) break;
             const entry = filtered[i];
             if (!entry) continue;
             if (i > 0) await delay(600);
-            addEntry(entry);
+            addEntryRef.current(entry);
             recordTutorTurn(inferTutorMode(entry));
           }
         }
@@ -176,30 +209,35 @@ export function useGeminiTutor({
         setIsStreaming(false);
         setTutorActivity(false, false);
 
-        for (const action of result.deferredActions) {
-          executeDeferredAction(action, student.id, notebook.id);
-        }
+        if (!signal.aborted) {
+          for (const action of result.deferredActions) {
+            executeDeferredAction(action, student.id, notebook.id);
+          }
 
-        void runBackgroundTasks(
-          studentEntry.content,
-          result.entries,
-          student.id,
-          notebook.id,
-          current?.topic ?? '',
-          entries,
-          notebook.title,
-        );
+          void runBackgroundTasks(
+            studentEntry.content,
+            result.entries,
+            student.id,
+            notebook.id,
+            current?.topic ?? '',
+            entriesRef.current,
+            notebook.title,
+          );
+        }
       } catch (err) {
-        console.error('[Ember] Gemini tutor error:', err);
+        if ((err as Error)?.name !== 'AbortError') {
+          console.error('[Ember] Gemini tutor error:', err);
+        }
         setIsStreaming(false);
         setTutorActivity(false, false);
       } finally {
         setIsThinking(false);
+        activeRef.current = false;
         abortRef.current = null;
       }
     },
-    [addEntry, addEntryWithId, patchEntryContent, entries,
-     student, notebook, buildProfile, buildNotebookCtx, current],
+    // Stable deps only — entries/addEntry/patch accessed via refs
+    [student, notebook, buildProfile, buildNotebookCtx, current],
   );
 
   return { respond, isThinking, isStreaming };
@@ -225,7 +263,6 @@ function inferTutorMode(entry: NotebookEntry): InteractionMode {
 /** Extract topic keywords from a tutor entry. */
 function extractTopics(entry: NotebookEntry): string[] {
   if (!('content' in entry) || typeof entry.content !== 'string') return [];
-  // Extract capitalized phrases as rough topic markers
   const matches = entry.content.match(
     /\b[A-Z][a-z]+(?:\s+[a-z]+){0,2}\b/g,
   ) ?? [];

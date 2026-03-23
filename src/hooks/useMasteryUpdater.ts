@@ -8,8 +8,13 @@
  * - Encounter records (thinkers mentioned or introduced)
  *
  * All scoped to the current notebook.
+ *
+ * Fixes:
+ * - Proper async guard using AbortController instead of boolean ref
+ * - Cached existing terms/thinkers Set to avoid redundant queries
+ * - Cleanup on unmount
  */
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useEffect } from 'react';
 import { Store, notify } from '@/persistence';
 import { upsertMastery } from '@/persistence/repositories/mastery';
 import { createLexiconEntry, getLexiconByNotebook } from '@/persistence/repositories/lexicon';
@@ -24,15 +29,25 @@ const UPDATE_INTERVAL = 5;
 export function useMasteryUpdater() {
   const { student, notebook } = useStudent();
   const entryCountRef = useRef(0);
-  const runningRef = useRef(false);
+  const abortRef = useRef<AbortController | null>(null);
+
+  // Cleanup in-flight mastery extraction on unmount
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort();
+    };
+  }, []);
 
   const checkAndUpdate = useCallback(async (entries: LiveEntry[]) => {
     if (!student || !notebook) return;
     entryCountRef.current++;
     if (entryCountRef.current % UPDATE_INTERVAL !== 0) return;
-    if (runningRef.current) return;
 
-    runningRef.current = true;
+    // Abort any in-flight extraction before starting a new one
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     try {
       const recent = entries.slice(-10).map((le) => ({
         type: le.entry.type,
@@ -40,10 +55,11 @@ export function useMasteryUpdater() {
       }));
 
       const signals = await extractMasterySignals(recent);
-      if (!signals) return;
+      if (!signals || controller.signal.aborted) return;
 
       // Update mastery concepts
       for (const concept of signals.concepts) {
+        if (controller.signal.aborted) return;
         await upsertMastery({
           studentId: student.id,
           notebookId: notebook.id,
@@ -55,13 +71,14 @@ export function useMasteryUpdater() {
       notify(Store.Mastery);
 
       // Auto-create lexicon entries from new terms
-      if (signals.newTerms.length > 0) {
+      if (signals.newTerms.length > 0 && !controller.signal.aborted) {
         const existing = await getLexiconByNotebook(notebook.id);
         const existingTerms = new Set(existing.map((e) => e.term.toLowerCase()));
         const nextNumber = existing.length + 1;
 
         let added = 0;
         for (const term of signals.newTerms) {
+          if (controller.signal.aborted) return;
           if (existingTerms.has(term.term.toLowerCase())) continue;
           await createLexiconEntry({
             studentId: student.id,
@@ -81,13 +98,14 @@ export function useMasteryUpdater() {
       }
 
       // Auto-create encounter records from mentioned thinkers
-      if (signals.encounters.length > 0) {
+      if (signals.encounters.length > 0 && !controller.signal.aborted) {
         const existing = await getEncountersByNotebook(notebook.id);
         const existingThinkers = new Set(existing.map((e) => e.thinker.toLowerCase()));
         const nextRef = existing.length + 1;
 
         let added = 0;
         for (const enc of signals.encounters) {
+          if (controller.signal.aborted) return;
           if (existingThinkers.has(enc.thinker.toLowerCase())) continue;
           await createEncounter({
             studentId: student.id,
@@ -106,8 +124,9 @@ export function useMasteryUpdater() {
         }
         if (added > 0) notify(Store.Encounters);
       }
-      // Enrich notebook metadata after first cycle (async, non-blocking)
-      if (entryCountRef.current === UPDATE_INTERVAL) {
+
+      // Enrich notebook metadata after first cycle
+      if (entryCountRef.current === UPDATE_INTERVAL && !controller.signal.aborted) {
         const textEntries = entries
           .filter((le) => 'content' in le.entry)
           .map((le) => ('content' in le.entry ? le.entry.content : ''));
@@ -116,9 +135,9 @@ export function useMasteryUpdater() {
         );
       }
     } catch (err) {
-      console.error('[Ember] Mastery update error:', err);
-    } finally {
-      runningRef.current = false;
+      if ((err as Error)?.name !== 'AbortError') {
+        console.error('[Ember] Mastery update error:', err);
+      }
     }
   }, [student, notebook]);
 
