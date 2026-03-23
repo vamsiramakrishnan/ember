@@ -94,16 +94,17 @@ export async function proxyHtmlGeneration(body: {
 }
 
 /**
- * Generate speech audio via /api/gemini-tts.
- * Returns base64-encoded PCM audio data.
+ * Stream speech audio via /api/gemini-tts.
+ * Returns the raw streaming Response for the caller to read with
+ * readAudioStream(). This keeps the connection alive and avoids
+ * buffering the entire audio in memory on the proxy side.
  */
-export async function proxyTtsGeneration(body: {
+export async function proxyTtsStream(body: {
   script: string;
   speakers: Array<{ speaker: string; voiceName: string }>;
   model?: string;
-}): Promise<{ audioData: string; mimeType: string }> {
-  const res = await postJson('/api/gemini-tts', body);
-  return res.json() as Promise<{ audioData: string; mimeType: string }>;
+}): Promise<Response> {
+  return postJson('/api/gemini-tts', body);
 }
 
 /** Analyse an image via /api/gemini-multimodal. */

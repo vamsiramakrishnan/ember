@@ -15,6 +15,8 @@ import type { SlashCommand } from '@/components/student/SlashCommandPopup';
 
 interface SlashRouterOptions {
   addEntry: (entry: NotebookEntry) => void;
+  addEntryWithId: (entry: NotebookEntry) => string | Promise<string>;
+  patchEntryContent: (id: string, entry: NotebookEntry) => void;
   respond: (entry: NotebookEntry) => void;
   entries: LiveEntry[];
   studentId?: string;
@@ -27,7 +29,8 @@ function stripCommand(text: string): string {
 }
 
 export function useSlashCommandRouter({
-  addEntry, respond, entries, studentId, notebookId,
+  addEntry, addEntryWithId, patchEntryContent, respond,
+  entries, studentId, notebookId,
 }: SlashRouterOptions) {
   const { research } = useResearcher();
   const entriesRef = useRef(entries);
@@ -113,8 +116,19 @@ export function useSlashCommandRouter({
 
       case 'podcast': {
         addEntry({ type: 'silence', text: 'recording podcast…' });
-        const pod = await generatePodcast(query, entriesRef.current);
-        if (pod) addEntry(pod);
+        const ref: { id?: string } = {};
+        const pod = await generatePodcast(
+          query, entriesRef.current,
+          (_segIdx, segUrl) => {
+            if (!ref.id) return;
+            const prev = entriesRef.current.find((e) => e.id === ref.id);
+            if (prev && prev.entry.type === 'podcast') {
+              const segs = [...(prev.entry.segments ?? []), segUrl];
+              patchEntryContent(ref.id, { ...prev.entry, segments: segs });
+            }
+          },
+        );
+        if (pod) ref.id = await addEntryWithId(pod);
         return true;
       }
 

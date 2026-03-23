@@ -62,7 +62,8 @@ export function Notebook({ onNavigate }: NotebookProps) {
   }, [entries, notebook, popup.registerEntries]);
 
   const slashRouter = useSlashCommandRouter({
-    addEntry, respond, entries, studentId: student?.id, notebookId: notebook?.id,
+    addEntry, addEntryWithId, patchEntryContent, respond,
+    entries, studentId: student?.id, notebookId: notebook?.id,
   });
   const [mode, setMode] = useState<NotebookMode>('linear');
   const bottomRef = useRef<HTMLDivElement>(null);

@@ -1,46 +1,50 @@
 /**
  * Podcast Generation — creates NotebookLM-style audio discussions.
  *
- * Two-step pipeline:
- * 1. Generate a concise two-speaker dialogue script via a lightweight agent
- * 2. Convert script to speech via Gemini TTS with structured prompt
+ * Architecture:
+ * 1. Generate a multi-segment dialogue script (~1000 words, 5 parts)
+ * 2. Stream-synthesize segment 1 → start playback immediately
+ * 3. Background-synthesize segments 2-5 while user listens
+ * 4. Segments are stitched into a sequential playlist
  *
- * Supports both direct Gemini SDK (dev) and proxy (production).
- * Returns a structured podcast entry for the PodcastPlayer component.
+ * Uses generateContentStream on the server for incremental audio delivery
+ * (avoids Edge Function 25s initial-response timeout).
  */
-import { getGeminiClient } from './gemini';
-import { useProxy, proxyTtsGeneration } from './proxy-client';
 import { micro } from './agents';
 import { runTextAgent } from './run-agent';
 import { recentContext } from './entry-utils';
-import { pcmToWav } from './pcm-to-wav';
+import { synthesizeSegment } from './tts-synthesize';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
 
-const TTS_MODEL = 'gemini-2.5-flash-preview-tts';
+/** Number of dialogue segments. Each ~200 words ≈ 60-90s audio. */
+const SEGMENT_COUNT = 5;
 
-const SPEAKERS = [
-  { speaker: 'Tutor', voiceName: 'Kore' },
-  { speaker: 'Student', voiceName: 'Puck' },
-];
-
-/** Generate a podcast-style audio discussion about a topic. */
+/** Generate a podcast. Returns the entry once segment 1 is ready. */
 export async function generatePodcast(
   topic: string,
   entries: LiveEntry[],
+  onSegmentReady?: (index: number, url: string) => void,
 ): Promise<NotebookEntry | null> {
   try {
     const context = recentContext(entries, 6, 500);
-    const script = await generateScript(topic, context);
-    if (!script) {
+    const scripts = await generateScripts(topic, context);
+    if (!scripts.length) {
       return errorEntry('Could not generate dialogue script. Try again.');
     }
 
-    const audioDataUrl = await synthesizeSpeech(script, topic);
-    if (!audioDataUrl) {
-      return { type: 'podcast', topic, audioUrl: '', transcript: script };
+    const seg1Url = await synthesizeSegment(scripts[0]!, topic);
+    const transcript = scripts.join('\n\n');
+
+    if (!seg1Url) {
+      return { type: 'podcast', topic, audioUrl: '', transcript };
     }
 
-    return { type: 'podcast', topic, audioUrl: audioDataUrl, transcript: script };
+    // Remaining segments synthesize in background while user listens
+    if (scripts.length > 1) {
+      void synthesizeRemaining(scripts.slice(1), topic, onSegmentReady);
+    }
+
+    return { type: 'podcast', topic, audioUrl: seg1Url, transcript };
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Unknown error';
     console.error('[Ember] Podcast generation failed:', err);
@@ -48,99 +52,61 @@ export async function generatePodcast(
   }
 }
 
-/** Step 1: Generate a concise dialogue script via a lightweight micro-agent. */
-async function generateScript(
+// ─── Script generation ───────────────────────────────────────────
+
+async function generateScripts(
   topic: string, context: string,
-): Promise<string | null> {
+): Promise<string[]> {
   const agent = micro(SCRIPT_SYSTEM);
   const result = await runTextAgent(agent, [{
     role: 'user',
-    parts: [{ text: SCRIPT_PROMPT(topic, context) }],
+    parts: [{ text: scriptPrompt(topic, context) }],
   }]);
 
-  const text = result.text.trim();
-  if (!text || text.length < 80) return null;
-  return text.replace(/^```\w*\s*/i, '').replace(/```\s*$/i, '').trim();
+  const text = result.text.trim()
+    .replace(/^```\w*\s*/i, '').replace(/```\s*$/i, '').trim();
+  if (!text || text.length < 80) return [];
+
+  const segments = text.split(/\[Part \d+\]\s*/i).filter((s) => s.trim());
+  return segments.length > 0 ? segments : [text];
 }
 
-/** Step 2: Convert dialogue to speech with a structured TTS prompt. */
-async function synthesizeSpeech(
-  script: string, topic: string,
-): Promise<string | null> {
-  const ttsPrompt = buildTtsPrompt(script, topic);
-  let audioBase64: string;
+// ─── Background synthesis ────────────────────────────────────────
 
-  if (useProxy()) {
-    const result = await proxyTtsGeneration({
-      script: ttsPrompt,
-      speakers: SPEAKERS,
-      model: TTS_MODEL,
-    });
-    audioBase64 = result.audioData;
-  } else {
-    const client = getGeminiClient();
-    if (!client) {
-      throw new Error('No Gemini API key — TTS requires either a key or the server proxy.');
+async function synthesizeRemaining(
+  scripts: string[], topic: string,
+  onReady?: (index: number, url: string) => void,
+): Promise<void> {
+  for (let i = 0; i < scripts.length; i++) {
+    try {
+      const url = await synthesizeSegment(scripts[i]!, topic);
+      if (url) onReady?.(i + 1, url);
+    } catch (err) {
+      console.warn(`[Ember] Segment ${i + 2} failed:`, err);
     }
-
-    const response = await client.models.generateContent({
-      model: TTS_MODEL,
-      contents: [{ parts: [{ text: ttsPrompt }] }],
-      config: {
-        responseModalities: ['AUDIO'],
-        speechConfig: {
-          multiSpeakerVoiceConfig: {
-            speakerVoiceConfigs: SPEAKERS.map((s) => ({
-              speaker: s.speaker,
-              voiceConfig: {
-                prebuiltVoiceConfig: { voiceName: s.voiceName },
-              },
-            })),
-          },
-        },
-      },
-    });
-
-    const part = response.candidates?.[0]?.content?.parts?.[0];
-    const audio = part && 'inlineData' in part ? part.inlineData : null;
-    if (!audio?.data) return null;
-    audioBase64 = audio.data;
   }
-
-  const pcmBytes = Uint8Array.from(atob(audioBase64), (c) => c.charCodeAt(0));
-  const wav = pcmToWav(pcmBytes, 24000, 1, 16);
-  const blob = new Blob([wav], { type: 'audio/wav' });
-  return URL.createObjectURL(blob);
 }
 
-// ─── TTS prompt construction ───────────────────────────────────────
-
-/**
- * Build a structured TTS prompt following the Gemini prompting guide:
- * Audio profile → Scene → Director's notes → Transcript.
- */
-function buildTtsPrompt(script: string, topic: string): string {
-  return [
-    `Audio Profile: Warm, intimate podcast. Two people at a quiet desk in a library discussing "${topic}".`,
-    `Director's Notes:`,
-    `- Tutor (Kore): Measured pace, gentle emphasis on key concepts. Brief pauses before important ideas.`,
-    `- Student (Puck): Curious, genuine reactions. Slightly faster when excited by an insight.`,
-    `- Pacing: Conversational, natural beats between turns. No urgency.`,
-    ``,
-    `Transcript:`,
-    script,
-  ].join('\n');
-}
+// ─── Helpers & prompts ───────────────────────────────────────────
 
 function errorEntry(message: string): NotebookEntry {
   return { type: 'tutor-marginalia', content: message };
 }
 
-const SCRIPT_SYSTEM = `You write short podcast dialogue scripts. Output ONLY the dialogue. Format: "Speaker: text". Two speakers: "Tutor" and "Student". 150-250 words max.`;
+const SCRIPT_SYSTEM = `You write podcast dialogue scripts. Output ONLY dialogue lines. Format: "Speaker: text". Two speakers: "Tutor" and "Student". Write ${SEGMENT_COUNT} parts of ~200 words each, labeled [Part 1] through [Part ${SEGMENT_COUNT}]. Each part is self-contained but builds on the previous. Total ~1000 words.`;
 
-function SCRIPT_PROMPT(topic: string, context: string): string {
-  return `Write a short podcast dialogue (150-250 words) about: ${topic}
+function scriptPrompt(topic: string, context: string): string {
+  return `Write a ${SEGMENT_COUNT}-part podcast dialogue (~1000 words total) about: ${topic}
 
-Format: Tutor: [line] / Student: [line]
-Style: Warm, curious, natural. Build to one insight. End with a question.${context ? `\nContext:\n${context}` : ''}`;
+Label each: [Part 1], [Part 2], ... [Part ${SEGMENT_COUNT}]
+Each part: ~200 words. Format: Tutor: / Student:
+
+Narrative arc:
+- Part 1: Hook — introduce the topic with a surprising angle
+- Part 2: Foundations — build the core concepts
+- Part 3: Depth — explore nuance, tensions, or counterexamples
+- Part 4: Connections — link to broader ideas or other fields
+- Part 5: Open end — synthesis + a genuinely provocative question
+
+Style: Warm, curious, intellectually rigorous. Natural reactions.${context ? `\nContext:\n${context}` : ''}`;
 }

@@ -101,7 +101,8 @@ export function NotebookEntryRenderer({ entry }: Props) {
     // AI-generated blocks
     case 'podcast':
       return <PodcastPlayer topic={entry.topic} audioUrl={entry.audioUrl}
-        transcript={entry.transcript} duration={entry.duration} />;
+        segments={entry.segments} transcript={entry.transcript}
+        duration={entry.duration} />;
     case 'visualization':
       return <Visualization html={entry.html} caption={entry.caption} />;
     case 'illustration':
