@@ -3,6 +3,7 @@
  * blocks for the tutor's system preamble.
  */
 import type { StudentProfile, NotebookContext, SemanticMemory, ResearchContext } from './context-assembler';
+import type { BackgroundResults } from './background-results';
 
 export function buildProfileLayer(p: StudentProfile): string {
   const masteryLines = p.masterySnapshot
@@ -59,4 +60,23 @@ export function buildMemoryLayer(m: SemanticMemory): string | null {
 
 export function buildResearchLayer(r: ResearchContext): string {
   return `[RESEARCH — verified facts]\n${r.facts}`;
+}
+
+export function buildBackgroundResultsLayer(bg: BackgroundResults): string {
+  const parts: string[] = ['[RECENT UPDATES — from your last response]'];
+  if (bg.newThinkers.length > 0) {
+    parts.push(`New thinkers discovered: ${bg.newThinkers.join(', ')}`);
+  }
+  if (bg.newTerms.length > 0) {
+    parts.push(`New vocabulary: ${bg.newTerms.join(', ')}`);
+  }
+  if (bg.masteryChanges.length > 0) {
+    parts.push(
+      'Mastery changes: ' +
+        bg.masteryChanges
+          .map((c) => `${c.concept}: ${c.from}% → ${c.to}%`)
+          .join(', '),
+    );
+  }
+  return parts.join('\n');
 }
