@@ -23,6 +23,18 @@ const QUALITY_THRESHOLD = 7;
 interface SearchReplaceBlock { search: string; replace: string }
 interface CritiqueResult { score: number; issues: string[]; patches: SearchReplaceBlock[] }
 
+/** What the routing decision expects from the change. */
+export interface ChangeContract {
+  /** Was research invoked? Critic should verify facts. */
+  researchGrounded?: boolean;
+  /** Were thinkers referenced? Critic should verify names/dates. */
+  thinkersMentioned?: string[];
+  /** Were concepts mapped? Critic should verify relationships. */
+  conceptsMapped?: string[];
+  /** URL sources to verify against. */
+  sourceUrls?: string[];
+}
+
 export interface RefinementResult {
   html: string;
   iterations: number;
@@ -32,11 +44,13 @@ export interface RefinementResult {
 /**
  * Refine an HTML artifact through iterative critique→patch cycles.
  * The critic uses Google Search + URL context for factual grounding.
+ * The change contract tells the critic what to specifically verify.
  */
 export async function refineArtifact(
   html: string,
   originalPrompt: string,
   context?: string,
+  contract?: ChangeContract,
 ): Promise<RefinementResult> {
   let currentHtml = html;
   let finalScore = 0;
@@ -52,7 +66,7 @@ export async function refineArtifact(
     };
     setActivityDetail(detail);
 
-    const critique = await evaluateArtifact(currentHtml, originalPrompt, context);
+    const critique = await evaluateArtifact(currentHtml, originalPrompt, context, contract);
     finalScore = critique.score;
 
     if (critique.score >= QUALITY_THRESHOLD || critique.patches.length === 0) break;
@@ -63,12 +77,14 @@ export async function refineArtifact(
 }
 
 async function evaluateArtifact(
-  html: string, prompt: string, context?: string,
+  html: string, prompt: string, context?: string, contract?: ChangeContract,
 ): Promise<CritiqueResult> {
   try {
+    const contractHints = buildContractHints(contract);
     const critiquePrompt = [
       `Original request: "${prompt}"`,
       context ? `Context: ${context}` : '',
+      contractHints,
       '', 'Evaluate this HTML visualization:', '```html',
       html.slice(0, 8000), '```', '',
       'Check facts with Google Search. Return JSON with score, issues, and patches.',
@@ -110,4 +126,23 @@ function applyPatches(html: string, patches: SearchReplaceBlock[]): string {
     }
   }
   return result;
+}
+
+/** Build critique hints from the change contract. */
+function buildContractHints(contract?: ChangeContract): string {
+  if (!contract) return '';
+  const hints: string[] = ['VERIFICATION CONTRACT:'];
+  if (contract.researchGrounded) {
+    hints.push('- This artifact was research-grounded. Verify ALL dates, names, and factual claims via Google Search.');
+  }
+  if (contract.thinkersMentioned?.length) {
+    hints.push(`- Thinkers referenced: ${contract.thinkersMentioned.join(', ')}. Verify attributions and quotes.`);
+  }
+  if (contract.conceptsMapped?.length) {
+    hints.push(`- Concepts mapped: ${contract.conceptsMapped.join(', ')}. Verify relationships are accurate.`);
+  }
+  if (contract.sourceUrls?.length) {
+    hints.push(`- Source URLs to check: ${contract.sourceUrls.join(', ')}. Use URL context to verify content matches.`);
+  }
+  return hints.length > 1 ? hints.join('\n') : '';
 }

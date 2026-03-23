@@ -33,6 +33,7 @@ import type { DeferredAction } from './tool-executor';
 import type { GraphDeferredAction } from './graph-tools';
 import { generateEcho, generateBridge, generateReflection, incrementReflectionCounter } from './temporal-layers';
 import { setActivityDetail } from '@/state';
+import type { ChangeContract } from './artifact-refiner';
 
 export interface OrchestratorResult {
   entries: NotebookEntry[];
@@ -124,7 +125,11 @@ export async function orchestrate(
   // Enrichment (if router says so)
   if (routing.visualize) {
     setActivityDetail({ step: 'visualizing', label: 'composing a visualization…' });
-    const viz = await generateVisualization(studentText, entries);
+    const vizContract: ChangeContract = {
+      researchGrounded: routing.research,
+      sourceUrls: pendingCitations.map((c) => c.url),
+    };
+    const viz = await generateVisualization(studentText, entries, vizContract);
     if (viz) results.push(viz);
   }
   if (routing.illustrate) {
@@ -271,7 +276,11 @@ export async function streamOrchestrate(
 
   if (routing.visualize) {
     setActivityDetail({ step: 'visualizing', label: 'composing a visualization…' });
-    const viz = await generateVisualization(studentText, entries);
+    const vizContract: ChangeContract = {
+      researchGrounded: routing.research,
+      sourceUrls: pendingCitations.map((c) => c.url),
+    };
+    const viz = await generateVisualization(studentText, entries, vizContract);
     if (viz) results.push(viz);
   }
   if (routing.illustrate) {

@@ -13,12 +13,14 @@ import { runImageAgent } from './run-agent';
 import { generateHtml } from './gemini-html';
 import { EMBER_VIZ_KIT } from './viz-components';
 import { refineArtifact } from './artifact-refiner';
+import type { ChangeContract } from './artifact-refiner';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
 
 /** Generate an HTML visualization for a concept, with iterative refinement. */
 export async function generateVisualization(
   prompt: string,
   entries: LiveEntry[],
+  contract?: ChangeContract,
 ): Promise<NotebookEntry | null> {
   try {
     const recentContext = entries.slice(-5)
@@ -35,7 +37,7 @@ export async function generateVisualization(
     if (!rawHtml.trim()) return null;
 
     // Run critique→refine loop for factual accuracy
-    const refined = await refineArtifact(rawHtml, prompt, recentContext);
+    const refined = await refineArtifact(rawHtml, prompt, recentContext, contract);
 
     const fullHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${EMBER_VIZ_KIT}</head><body>${refined.html}</body></html>`;
     return {
