@@ -33,8 +33,10 @@
   transition: border-color 0.15s ease;
 }
 
-.source:hover {
+.source:hover,
+.source:focus-visible {
   border-color: var(--ink-ghost);
+  outline: none;
 }
 
 .domain {
