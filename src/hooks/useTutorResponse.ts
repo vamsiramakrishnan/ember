@@ -108,12 +108,22 @@ export function useTutorResponse(
   entries?: LiveEntry[],
   addEntryWithId?: (entry: NotebookEntry) => string | Promise<string>,
   patchEntryContent?: (id: string, entry: NotebookEntry) => void,
+  pinnedEntries?: LiveEntry[],
+  sessionTopic?: string | null,
+  studentId?: string,
+  notebookId?: string,
+  onPlanUpdate?: (plans: import('./useResponseOrchestrator').ResponsePlan[]) => void,
 ) {
   const gemini = useGeminiTutor({
     addEntry,
     addEntryWithId,
     patchEntryContent,
     entries: entries ?? [],
+    pinnedEntries,
+    sessionTopic,
+    studentId,
+    notebookId,
+    onPlanUpdate,
   });
   const staticRespond = useStaticFallback(addEntry);
 

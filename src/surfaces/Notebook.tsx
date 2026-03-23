@@ -19,6 +19,7 @@ import { useSlashCommandRouter } from '@/hooks/useSlashCommandRouter';
 import { createStudentEntry } from '@/hooks/useEntryInference';
 import { useStudent } from '@/contexts/StudentContext';
 import { recordStudentTurn, setStudentFocus } from '@/state';
+import type { ResponsePlan } from '@/hooks/useResponseOrchestrator';
 import { NotebookContent } from './NotebookContent';
 import { handleBranch, handleSelectionAction, handleFollowUp, deriveMarginalRef } from './notebook-handlers';
 import type { NotebookMode } from './NotebookModeToggle';
@@ -44,9 +45,11 @@ export function Notebook({ onNavigate }: NotebookProps) {
   const entriesRef = useRef(entries);
   entriesRef.current = entries;
 
+  const [responsePlans, setResponsePlans] = useState<ResponsePlan[]>([]);
   const addEntries = useCallback((_e: unknown[]) => {}, []);
   const { respond, isThinking } = useTutorResponse(
     addEntry, addEntries, entries, addEntryWithId, patchEntryContent,
+    pinnedEntries, current?.topic ?? null, student?.id, notebook?.id, setResponsePlans,
   );
   const { analyseSketch } = useSketchAnalysis(addEntry);
   const { checkAndUpdate } = useMasteryUpdater();
@@ -142,7 +145,8 @@ export function Notebook({ onNavigate }: NotebookProps) {
       <NotebookContent
         entries={entries} pinnedEntries={pinnedEntries} past={past} current={current}
         sessionId={sessionId} mode={mode} setMode={setMode} marginalRef={marginalRef}
-        contentDrop={contentDrop} popup={popup} isThinking={isThinking} bottomRef={bottomRef}
+        contentDrop={contentDrop} popup={popup} isThinking={isThinking}
+        responsePlans={responsePlans} bottomRef={bottomRef}
         handleSubmit={onSubmit} handleSubmitTyped={onSubmitTyped} handleSketchSubmit={onSketchSubmit}
       />
     </NotebookProvider>

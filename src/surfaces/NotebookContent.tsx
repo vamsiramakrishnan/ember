@@ -26,6 +26,8 @@ import type { useContentDrop } from '@/hooks/useContentDrop';
 import type { usePopupState } from '@/hooks/usePopupState';
 import { isStudentEntry as isStudentType } from './entryTypeMeta';
 import { useEntryKeyboardNav } from '@/hooks/useEntryKeyboardNav';
+import { ResponsePlanPreview } from '@/components/tutor/ResponsePlanPreview';
+import type { ResponsePlan } from '@/hooks/useResponseOrchestrator';
 import styles from './Notebook.module.css';
 
 export interface NotebookContentProps {
@@ -40,6 +42,7 @@ export interface NotebookContentProps {
   contentDrop: ReturnType<typeof useContentDrop>;
   popup: ReturnType<typeof usePopupState>;
   isThinking: boolean;
+  responsePlans?: ResponsePlan[];
   bottomRef: React.RefObject<HTMLDivElement>;
   handleSubmit: (text: string) => void;
   handleSubmitTyped: (text: string, type: string) => void;
@@ -48,7 +51,7 @@ export interface NotebookContentProps {
 
 export function NotebookContent({
   entries, pinnedEntries, past, current, sessionId, mode, setMode,
-  marginalRef, contentDrop, popup, isThinking, bottomRef,
+  marginalRef, contentDrop, popup, isThinking, responsePlans, bottomRef,
   handleSubmit, handleSubmitTyped, handleSketchSubmit,
 }: NotebookContentProps) {
   const { containerRef: kbNavRef, handleKeyDown: handleKbNav } = useEntryKeyboardNav();
@@ -122,6 +125,9 @@ export function NotebookContent({
                 onSelect={(c) => popup.handleSlashSelect(c)}
                 onClose={popup.handlePopupClose}
               />
+            )}
+            {responsePlans && responsePlans.length > 0 && (
+              <ResponsePlanPreview plans={responsePlans} />
             )}
             <TutorActivity />
             <InputZone

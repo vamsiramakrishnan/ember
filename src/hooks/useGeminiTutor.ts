@@ -14,18 +14,26 @@ import {
   filterByComposition, addRelation,
 } from '@/state';
 import { useTutorProfile } from './useTutorProfile';
+import { useCompoundResponse } from './useCompoundResponse';
 import { delay, inferTutorMode, extractTopics, executeDeferredAction } from './tutor-helpers';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
+import type { ResponsePlan } from './useResponseOrchestrator';
 
 interface UseGeminiTutorOptions {
   addEntry: (entry: NotebookEntry) => void;
   addEntryWithId?: (entry: NotebookEntry) => string | Promise<string>;
   patchEntryContent?: (id: string, entry: NotebookEntry) => void;
   entries: LiveEntry[];
+  pinnedEntries?: LiveEntry[];
+  sessionTopic?: string | null;
+  studentId?: string;
+  notebookId?: string;
+  onPlanUpdate?: (plans: ResponsePlan[]) => void;
 }
 
 export function useGeminiTutor({
   addEntry, addEntryWithId, patchEntryContent, entries,
+  pinnedEntries, sessionTopic, studentId, notebookId, onPlanUpdate,
 }: UseGeminiTutorOptions) {
   const [isThinking, setIsThinking] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -33,6 +41,7 @@ export function useGeminiTutor({
   const lastSyncRef = useRef(Date.now());
   const activeRef = useRef(false);
   const { buildProfile, buildNotebookCtx, student, notebook, current } = useTutorProfile();
+  const compound = useCompoundResponse();
 
   const entriesRef = useRef(entries);
   entriesRef.current = entries;
@@ -42,6 +51,10 @@ export function useGeminiTutor({
   addEntryWithIdRef.current = addEntryWithId;
   const patchRef = useRef(patchEntryContent);
   patchRef.current = patchEntryContent;
+  const pinnedRef = useRef(pinnedEntries ?? []);
+  pinnedRef.current = pinnedEntries ?? [];
+  const planCallbackRef = useRef(onPlanUpdate);
+  planCallbackRef.current = onPlanUpdate;
 
   useEffect(() => {
     return () => { abortRef.current?.abort(); };
@@ -54,6 +67,36 @@ export function useGeminiTutor({
       activeRef.current = true;
       setIsThinking(true);
       setTutorActivity(true, false);
+
+      // ─── Compound path: detect multi-intent and delegate to DAG ───
+      const text = (studentEntry as { content: string }).content;
+      if (compound.isLikelyCompound(text) && addEntryWithIdRef.current && patchRef.current) {
+        try {
+          const dag = await compound.executeCompound(text, {
+            addEntry: addEntryRef.current,
+            addEntryWithId: addEntryWithIdRef.current,
+            patchEntryContent: patchRef.current,
+            entries: entriesRef.current,
+            pinnedEntries: pinnedRef.current,
+            sessionTopic: sessionTopic ?? current?.topic ?? null,
+            studentId: student.id,
+            notebookId: notebook.id,
+          }, (plans) => planCallbackRef.current?.(plans));
+
+          if (dag) {
+            // DAG handled it — skip single-response path
+            setIsThinking(false);
+            setTutorActivity(false, false);
+            activeRef.current = false;
+            void runBackgroundTasks(text, [], student.id, notebook.id, current?.topic ?? '', entriesRef.current, notebook.title);
+            void updateWorkingMemory(notebook.id, entriesRef.current);
+            return;
+          }
+          // DAG returned null (not compound) — fall through to normal path
+        } catch (err) {
+          console.warn('[Ember] Compound parse failed, using single path:', err);
+        }
+      }
 
       const canStream = addEntryWithIdRef.current && patchRef.current;
       let streamingId: string | null = null;

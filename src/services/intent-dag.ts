@@ -15,6 +15,7 @@
 import { z } from 'zod';
 import { micro } from './agents';
 import { runTextAgent } from './run-agent';
+import type { SpatialContext } from './spatial-context';
 import type { LiveEntry } from '@/types/entries';
 
 // ─── Zod Schema: the DAG contract ─────────────────────────────
@@ -84,6 +85,11 @@ const DAG_AGENT = micro(
 
 Given a student's input text (which may contain @mentions like @[Kepler](thinker:kepler-1) and /commands like /visualize), decompose it into a directed acyclic graph (DAG) of action nodes.
 
+You also receive "Spatial context" — the entries visible on screen above the student's input, plus any pinned threads. Use this to resolve implicit references:
+- "this" / "that" / "the concept above" → look at the most recent entry
+- "help me research this" → "this" is whatever concept the recent entries discuss
+- "can you explain it differently?" → "it" is the topic of the tutor's last response
+
 Rules:
 1. Every input has exactly one root node — the student's core intent (usually "respond").
 2. /commands become separate nodes that depend on the root (they need the answer first).
@@ -95,6 +101,7 @@ Rules:
 8. dependsOn lists the IDs of nodes that must complete before this node starts.
 9. For /connect: the root should be "connect" if connecting IS the primary intent.
 10. Strip @mention syntax from content — use the entity name directly.
+11. When resolving implicit references, expand "this"/"that" into the actual concept from spatial context. Put the resolved concept in the node's content field.
 
 Examples:
 
@@ -139,21 +146,39 @@ Output:
 // ─── Public API ─────────────────────────────────────────────────
 
 /**
+ * Quick check: does this input likely need DAG parsing?
+ * Avoids a Flash Lite call for simple single-intent inputs.
+ */
+export function likelyCompound(text: string): boolean {
+  const slashCount = (text.match(/\/(?:draw|visualize|research|explain|summarize|quiz|timeline|connect|define|teach|podcast|flashcards|exercise)\b/g) ?? []).length;
+  if (slashCount >= 2) return true;
+  if (slashCount >= 1 && text.includes('?')) return true;
+  if (slashCount >= 1 && text.includes(' and /')) return true;
+  return false;
+}
+
+/**
  * Parse student input into an IntentDAG using Gemini Flash Lite.
  * Returns a Zod-validated, deterministically executable DAG.
+ *
+ * @param studentText — the raw input
+ * @param recentEntries — recent session entries (for basic context)
+ * @param spatial — spatial context (surrounding entries, pinned threads,
+ *   implicit references like "this", "that", "the concept above")
  */
 export async function parseIntentDAG(
   studentText: string,
   recentEntries: LiveEntry[],
+  spatial?: SpatialContext,
 ): Promise<IntentDAG> {
-  const context = recentEntries.slice(-4).map((le) => {
+  const context = spatial?.prompt ?? recentEntries.slice(-4).map((le) => {
     const e = le.entry;
     if ('content' in e) return `[${e.type}]: ${e.content}`;
     return `[${e.type}]`;
   }).join('\n');
 
   const prompt = context
-    ? `Recent context:\n${context}\n\nStudent input:\n${studentText}`
+    ? `Spatial context (what the student sees on screen):\n${context}\n\nStudent input:\n${studentText}`
     : `Student input:\n${studentText}`;
 
   try {
