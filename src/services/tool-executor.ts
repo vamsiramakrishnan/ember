@@ -5,17 +5,33 @@
  * When the tutor agent calls search_history(), lookup_concept(),
  * or get_connections(), this module executes the call and returns
  * the result as a function response to continue generation.
+ *
+ * Updated: also routes graph tools (traverse_graph, find_path,
+ * discover_gaps, etc.) to the persistent knowledge graph.
  */
 import { getOrCreateStore, searchNotebook, searchByType, searchAll } from './file-search';
 import { buildGraph, getNeighbors, getDelta, serializeSubgraph } from './knowledge-graph';
 import { getLexiconByNotebook } from '@/persistence/repositories/lexicon';
 import { getEncountersByNotebook } from '@/persistence/repositories/encounters';
 import { getMasteryByNotebook } from '@/persistence/repositories/mastery';
+import {
+  executeGraphTool,
+  extractGraphDeferred,
+  type GraphDeferredAction,
+} from './graph-tools';
 import type { Subgraph } from './knowledge-graph';
+
+/** Graph tool names that should be routed to the persistent graph. */
+const GRAPH_TOOLS = new Set([
+  'traverse_graph', 'find_path', 'discover_gaps',
+  'get_concept_journey', 'read_attachment', 'suggest_bridge',
+  'link_entities', 'get_entity_neighborhood',
+]);
 
 interface ToolContext {
   studentId: string;
   notebookId: string;
+  sessionId?: string;
   graph: Subgraph | null;
 }
 
@@ -28,6 +44,15 @@ export async function executeTool(
   args: Record<string, unknown>,
   ctx: ToolContext,
 ): Promise<string> {
+  // Route persistent graph tools to the new graph executor
+  if (GRAPH_TOOLS.has(functionName)) {
+    return executeGraphTool(functionName, args, {
+      studentId: ctx.studentId,
+      notebookId: ctx.notebookId,
+      sessionId: ctx.sessionId ?? '',
+    });
+  }
+
   switch (functionName) {
     case 'search_history':
       return executeSearch(args, ctx);
@@ -59,13 +84,20 @@ export interface DeferredAction {
 export function extractDeferredActions(
   functionName: string,
   args: Record<string, unknown>,
-): DeferredAction | null {
+  notebookId?: string,
+): DeferredAction | GraphDeferredAction | null {
   if (functionName === 'create_annotation') {
     return { type: 'annotate', args };
   }
   if (functionName === 'add_to_lexicon') {
     return { type: 'add_lexicon', args };
   }
+  // Route graph write tools
+  const graphDeferred = extractGraphDeferred(
+    functionName, args, notebookId ?? '',
+  );
+  if (graphDeferred) return graphDeferred;
+
   return null;
 }
 

@@ -5,11 +5,12 @@
  * 1. Assesses which constellation data needs updating (flash-lite, ~50ms)
  * 2. Dispatches targeted extractors in parallel (flash-lite, ~100ms each)
  * 3. Runs inline annotation agent on student + tutor entries
+ * 4. Creates knowledge graph relations for new entities
  *
  * Context tiers:
  * - MINIMAL (~50 tokens): assessor, thinker extractor, vocab extractor
  * - FOCUSED (~200 tokens): mastery updater, inline annotator
- * - FULL (~800 tokens): tutor/researcher agents (not used here)
+ * - GRAPH (~0 tokens): relation creation from extracted entities
  */
 import {
   assessTasks,
@@ -19,6 +20,7 @@ import {
 } from './background-tasks';
 import { annotateRecentEntries } from './inline-annotations';
 import { getMasteryByNotebook } from '@/persistence/repositories/mastery';
+import { createRelation } from '@/persistence/repositories/graph';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
 
 export async function runBackgroundTasks(
@@ -95,5 +97,24 @@ export async function runBackgroundTasks(
 
   if (tasks.length > 0) {
     await Promise.allSettled(tasks);
+  }
+
+  // Step 4: Create graph relations between the student's entry and tutor response
+  if (studentEntry) {
+    const tutorEntry = allEntries.length > 1
+      ? [...allEntries].reverse().find((e) => e.entry.type.startsWith('tutor-'))
+      : null;
+
+    if (tutorEntry) {
+      await createRelation({
+        notebookId,
+        from: tutorEntry.id,
+        fromKind: 'entry',
+        to: studentEntry.id,
+        toKind: 'entry',
+        type: 'prompted-by',
+        weight: 1.0,
+      }).catch(() => { /* relation may already exist */ });
+    }
   }
 }

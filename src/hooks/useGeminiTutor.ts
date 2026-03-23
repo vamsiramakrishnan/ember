@@ -233,14 +233,19 @@ function extractTopics(entry: NotebookEntry): string[] {
 }
 
 function executeDeferredAction(
-  action: DeferredAction,
+  action: DeferredAction | import('@/services/graph-tools').GraphDeferredAction,
   _studentId: string,
-  _notebookId: string,
+  notebookId: string,
 ): void {
-  if (action.type === 'annotate') {
+  if ('type' in action && action.type === 'annotate') {
     console.log('[Ember] Agent annotation:', action.args);
   }
-  if (action.type === 'add_lexicon') {
+  if ('type' in action && action.type === 'add_lexicon') {
     console.log('[Ember] Agent lexicon add:', action.args);
+  }
+  if ('type' in action && action.type === 'link_entities') {
+    void import('@/services/graph-tools').then(({ executeGraphDeferred }) => {
+      executeGraphDeferred({ ...action, notebookId });
+    });
   }
 }

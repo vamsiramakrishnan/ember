@@ -1,7 +1,24 @@
-/* ConstellationLexicon — ledger-style vocabulary entries */
+/* ConstellationLexicon — incremental reveal vocabulary entries.
+ *
+ * Layer 0: term + definition (always visible)
+ * Layer 1: mastery bar (always visible, quiet)
+ * Layer 3: etymology + cross-refs (expanded on click)
+ */
+
 .entry {
-  margin-bottom: 12px;
-  padding: 16px 0;
+  margin-bottom: 0;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--rule-light);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.entry:hover {
+  background-color: var(--paper-warm);
+}
+
+.entryExpanded {
+  background-color: var(--paper-warm);
 }
 
 .entryHeader {
@@ -18,14 +35,29 @@
   letter-spacing: 1px;
 }
 
+/* Clickable — navigates to first appearance in notebook */
 .term {
   font-family: var(--font-tutor);
   font-size: 22px;
   font-weight: 500;
   font-style: italic;
   color: var(--ink);
-  letter-spacing: -0.2px;
+  letter-spacing: 0;
   line-height: 1.3;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  border-bottom: 1px solid transparent;
+  transition: border-bottom-color 0.2s ease;
+}
+
+.term:hover { border-bottom-color: var(--rule); }
+
+.term:focus-visible {
+  outline: 1.5px solid var(--margin);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
 .pronunciation {
@@ -35,29 +67,71 @@
   font-style: italic;
 }
 
+/* Expand hint — ghost-quiet + / - indicator */
+.expandHint {
+  font-family: var(--font-system);
+  font-size: 11px;
+  color: var(--ink-ghost);
+  margin-left: auto;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.entry:hover .expandHint { opacity: 1; }
+
 .definition {
   font-family: var(--font-student);
   font-size: 16px;
-  color: var(--ink-soft);
-  line-height: 1.78;
-  letter-spacing: 0.005em;
-  margin-bottom: 16px;
+  color: var(--ink);
+  line-height: 1.75;
+  letter-spacing: 0;
+  margin-bottom: 12px;
   max-width: 520px;
 }
 
-.meta {
+/* Layer 1: mastery bar — always visible, quiet */
+.masteryRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.track {
+  flex: 1;
+  height: 2px;
+  background-color: var(--rule-light);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.fill {
+  height: 100%;
+  background-color: var(--sage);
+  transition: var(--mastery-transition);
+  border-radius: 1px;
+}
+
+.masteryLabel {
+  font-family: var(--font-system);
+  font-size: 10px;
+  color: var(--ink-faint);
+  min-width: 28px;
+  text-align: right;
+}
+
+/* ─── Layer 3: expanded detail ───────────────────── */
+
+.detail {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--rule-light);
   display: flex;
   gap: 24px;
-  margin-bottom: 12px;
+  animation: detailReveal 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.etymology {
-  flex: 1;
-}
-
-.crossRefs {
-  flex: 0 0 auto;
-}
+.etymology { flex: 1; }
+.crossRefs { flex: 0 0 auto; }
 
 .metaLabel {
   font-family: var(--font-system);
@@ -87,34 +161,29 @@
   font-size: 11px;
   color: var(--margin);
   border-bottom: 1px solid var(--margin-dim);
-  cursor: default;
+  cursor: pointer;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  padding: 0;
+  transition: border-bottom-color 0.2s ease;
 }
 
-.masteryRow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.refLink:hover { border-bottom-color: var(--margin); }
+
+.refLink:focus-visible {
+  outline: 1.5px solid var(--margin);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
-.track {
-  flex: 1;
-  height: 2px;
-  background-color: var(--rule-light);
-  border-radius: 1px;
-  overflow: hidden;
+@keyframes detailReveal {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.fill {
-  height: 100%;
-  background-color: var(--sage);
-  transition: var(--mastery-transition);
-  border-radius: 1px;
-}
-
-.masteryLabel {
-  font-family: var(--font-system);
-  font-size: 10px;
-  color: var(--ink-faint);
-  min-width: 28px;
-  text-align: right;
+@media (prefers-reduced-motion: reduce) {
+  .entry, .expandHint { transition: none; }
+  .detail { animation: none; }
 }

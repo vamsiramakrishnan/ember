@@ -1,5 +1,12 @@
 /* Ember global styles — material, resets, reduced-motion */
 
+/* ─── Font Loading ────────────────────────────────────
+ * font-display: block for body text (wait for fonts)
+ * font-display: swap for metadata (show fallback fast)
+ * Spec: "No fallback to system serif in the visible UI"
+ */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400&family=IBM+Plex+Mono:wght@300;400&display=block');
+
 *,
 *::before,
 *::after {
@@ -18,26 +25,28 @@ body {
   padding: 0;
   background-color: var(--paper);
   color: var(--ink);
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-student);
+  font-size: 18px;
+  font-weight: 400;
   min-height: 100vh;
   line-height: 1.80;
 }
 
+/* Selection: warm terracotta tint — the tutor's colour */
 ::selection {
   background-color: rgba(184, 86, 79, 0.12);
   color: var(--ink);
 }
 
+/* Focus rings: warm, not blue. Margin colour. */
 :focus-visible {
-  outline: 1.5px solid var(--ink-ghost);
+  outline: 1.5px solid var(--margin);
   outline-offset: 3px;
   border-radius: 2px;
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  html {
-    scroll-behavior: smooth;
-  }
+  html { scroll-behavior: smooth; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -50,12 +59,14 @@ body {
   }
 }
 
+/* Cursor blink: 1.2s, opacity fades between 0.3 and 0 per spec */
 @keyframes emberCursorBlink {
-  0%, 100% { opacity: var(--cursor-opacity-max); }
+  0%, 100% { opacity: 0.3; }
   50% { opacity: 0; }
 }
 
+/* Entry reveal: 6-8px vertical, 0.6-0.8s ease per spec */
 @keyframes emberFadeIn {
-  from { opacity: 0; transform: translateY(6px); }
+  from { opacity: 0; transform: translateY(7px); }
   to { opacity: 1; transform: translateY(0); }
 }

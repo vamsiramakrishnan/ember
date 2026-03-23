@@ -11,19 +11,38 @@
  * The agent can traverse File Search, query the knowledge graph,
  * look up specific concepts/thinkers/terms, and create new data.
  */
+/**
+ * Agentic Loop — runs a Gemini agent with function calling.
+ *
+ * The loop has two tool sets:
+ * 1. AGENT_TOOL_DECLARATIONS — original tools (search, lookup, create)
+ * 2. GRAPH_TOOL_DECLARATIONS — persistent graph traversal tools
+ *
+ * Both are available to the agent in every turn. The agent decides
+ * which to call based on what it needs to know.
+ *
+ * Loop control:
+ * - Max 8 iterations (up from 5 — graph exploration needs more room)
+ * - Tool calls execute in parallel within a turn
+ * - Deferred writes are collected but not executed until post-response
+ * - Streaming mode: tool turns are non-streaming, final turn streams
+ */
 import { getGeminiClient } from './gemini';
 import { AGENT_TOOL_DECLARATIONS } from './agent-tools';
-import { executeTool, extractDeferredActions, type DeferredAction } from './tool-executor';
+import { GRAPH_TOOL_DECLARATIONS } from './graph-tools';
+import { executeTool, extractDeferredActions } from './tool-executor';
+import type { DeferredAction } from './tool-executor';
+import type { GraphDeferredAction } from './graph-tools';
 import type { AgentConfig } from './agents';
 import type { AgentMessage } from './run-agent';
 import type { Subgraph } from './knowledge-graph';
 
-const MAX_ITERATIONS = 5;
+const MAX_ITERATIONS = 8;
 
 export interface AgenticResult {
   text: string;
   toolCalls: string[];
-  deferredActions: DeferredAction[];
+  deferredActions: Array<DeferredAction | GraphDeferredAction>;
 }
 
 /**
@@ -45,6 +64,7 @@ export async function runAgenticLoop(
   const tools = [
     ...agent.tools,
     ...AGENT_TOOL_DECLARATIONS,
+    ...GRAPH_TOOL_DECLARATIONS,
   ];
 
   const config: Record<string, unknown> = {
@@ -54,7 +74,7 @@ export async function runAgenticLoop(
   };
 
   const toolCalls: string[] = [];
-  const deferredActions: DeferredAction[] = [];
+  const deferredActions: Array<DeferredAction | GraphDeferredAction> = [];
   let currentMessages = [...messages];
 
   for (let iter = 0; iter < MAX_ITERATIONS; iter++) {
@@ -82,41 +102,32 @@ export async function runAgenticLoop(
       return { text, toolCalls, deferredActions };
     }
 
-    // Execute each function call
-    const functionResponses: Array<{
-      functionResponse: { name: string; response: { result: string } };
-    }> = [];
-
+    // Execute tool calls in parallel for speed
     for (const part of functionCalls) {
       const { name, args } = part.functionCall;
       toolCalls.push(`${name}(${JSON.stringify(args)})`);
-
-      // Check for deferred write actions
       const deferred = extractDeferredActions(name, args);
       if (deferred) deferredActions.push(deferred);
-
-      // Execute the tool
-      const result = await executeTool(name, args, context);
-
-      functionResponses.push({
-        functionResponse: {
-          name,
-          response: { result },
-        },
-      });
     }
+
+    const results = await Promise.all(
+      functionCalls.map((part) =>
+        executeTool(part.functionCall.name, part.functionCall.args, context),
+      ),
+    );
+
+    const functionResponses = functionCalls.map((part, i) => ({
+      functionResponse: {
+        name: part.functionCall.name,
+        response: { result: results[i]! },
+      },
+    }));
 
     // Feed results back and continue
     currentMessages = [
       ...currentMessages,
-      {
-        role: 'model' as const,
-        parts: functionCalls,
-      },
-      {
-        role: 'user' as const,
-        parts: functionResponses,
-      },
+      { role: 'model' as const, parts: functionCalls },
+      { role: 'user' as const, parts: functionResponses },
     ];
   }
 
@@ -142,7 +153,7 @@ export async function runAgenticLoopStreaming(
   const client = getGeminiClient();
   if (!client) throw new Error('Gemini API key not configured');
 
-  const tools = [...agent.tools, ...AGENT_TOOL_DECLARATIONS];
+  const tools = [...agent.tools, ...AGENT_TOOL_DECLARATIONS, ...GRAPH_TOOL_DECLARATIONS];
   const config: Record<string, unknown> = {
     thinkingConfig: { thinkingLevel: agent.thinkingLevel },
     systemInstruction: agent.systemInstruction,
@@ -150,7 +161,7 @@ export async function runAgenticLoopStreaming(
   };
 
   const toolCalls: string[] = [];
-  const deferredActions: DeferredAction[] = [];
+  const deferredActions: Array<DeferredAction | GraphDeferredAction> = [];
   let currentMessages = [...messages];
 
   for (let iter = 0; iter < MAX_ITERATIONS; iter++) {
@@ -186,21 +197,26 @@ export async function runAgenticLoopStreaming(
       return { text: accumulated, toolCalls, deferredActions };
     }
 
-    // Execute tool calls (same as non-streaming loop)
-    const functionResponses: Array<{
-      functionResponse: { name: string; response: { result: string } };
-    }> = [];
-
+    // Execute tool calls in parallel
     for (const part of functionCalls) {
       const { name, args } = part.functionCall;
       toolCalls.push(`${name}(${JSON.stringify(args)})`);
       const deferred = extractDeferredActions(name, args);
       if (deferred) deferredActions.push(deferred);
-      const result = await executeTool(name, args, context);
-      functionResponses.push({
-        functionResponse: { name, response: { result } },
-      });
     }
+
+    const results = await Promise.all(
+      functionCalls.map((part) =>
+        executeTool(part.functionCall.name, part.functionCall.args, context),
+      ),
+    );
+
+    const functionResponses = functionCalls.map((part, i) => ({
+      functionResponse: {
+        name: part.functionCall.name,
+        response: { result: results[i]! },
+      },
+    }));
 
     currentMessages = [
       ...currentMessages,

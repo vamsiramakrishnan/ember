@@ -4,6 +4,7 @@
  * See: 06-component-inventory.md, Family 5.
  */
 import { colors } from '@/tokens/colors';
+import { useEntityNavigation } from '@/hooks/useEntityNavigation';
 import type { MasteryLevel } from '@/types/mastery';
 import styles from './MasteryBar.module.css';
 
@@ -21,9 +22,25 @@ const levelColors: Record<MasteryLevel, string> = {
 };
 
 export function MasteryBar({ concept, level, percentage }: MasteryBarProps) {
+  const { navigateTo } = useEntityNavigation();
+
+  const handleClick = () => {
+    navigateTo({
+      target: { type: 'concept', conceptName: concept },
+      surface: 'notebook',
+      highlight: true,
+    });
+  };
+
   return (
     <div className={styles.container}>
-      <div className={styles.concept}>{concept}</div>
+      <button
+        className={styles.concept}
+        onClick={handleClick}
+        title={`See "${concept}" in notebook`}
+      >
+        {concept}
+      </button>
       <div className={styles.barRow}>
         <div className={styles.track}>
           <div

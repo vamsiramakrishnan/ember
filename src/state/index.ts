@@ -64,7 +64,7 @@ export {
 } from './entry-graph';
 export type { EntryRelation, RelationType } from './entry-graph';
 
-// Constellation projection
+// Constellation projection (legacy — use entity-projector for new code)
 export {
   projectEntry,
   projectEntries,
@@ -76,6 +76,38 @@ export type {
   CuriosityProjection,
   LexiconProjection,
 } from './constellation-projection';
+
+// Entity projector (new — atomic, command-based projections)
+export {
+  projectEntry as projectEntityCommands,
+  projectEntries as projectEntityCommandsBatch,
+} from './entity-projector';
+export type {
+  ProjectionCommand,
+  CreateEntityCommand,
+  CreateRelationCommand,
+  UpdateEntityCommand,
+} from './entity-projector';
+
+// Learning intelligence
+export {
+  findLearningGaps,
+  computeTrajectories,
+  suggestExplorations,
+  trackThreads,
+  findConceptClusters,
+} from './learning-intelligence';
+export type {
+  LearningGap,
+  MasteryTrajectory,
+  ExplorationSuggestion,
+  TrackedThread,
+  ConceptCluster,
+} from './learning-intelligence';
+
+// Cross-notebook bridges
+export { findCrossNotebookBridges } from './cross-notebook-bridge';
+export type { CrossNotebookBridge } from './cross-notebook-bridge';
 
 // React hooks
 export { useSessionState } from './useSessionState';

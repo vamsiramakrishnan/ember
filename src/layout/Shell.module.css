@@ -1,12 +1,18 @@
+/* Shell — The warm paper surface. The reading lamp.
+ * "a well-worn notebook on a wooden desk, under a reading lamp,
+ * in a quiet library, in the late afternoon."
+ */
+
 .shell {
   min-height: 100vh;
   background-color: var(--paper);
-  /* Reading-lamp warmth pooling at top center */
+  /* Reading-lamp warmth — subtle pool of warm light from above,
+   * as if an angled desk lamp casts its glow across the top of the page */
   background-image:
     radial-gradient(
-      ellipse 80% 50% at 50% 0%,
+      ellipse 70% 40% at 50% 0%,
       var(--paper-warm) 0%,
-      transparent 70%
+      transparent 60%
     );
   background-attachment: fixed;
 }

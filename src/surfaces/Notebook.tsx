@@ -23,6 +23,7 @@ import { useConstellationSync } from '@/hooks/useConstellationSync';
 import { useSessionIndexer } from '@/hooks/useSessionIndexer';
 import { useContentDrop } from '@/hooks/useContentDrop';
 import { useEntryReorder } from '@/hooks/useEntryReorder';
+import { useInPlaceEdit } from '@/hooks/useInPlaceEdit';
 import { usePopupState } from '@/hooks/usePopupState';
 import { createStudentEntry } from '@/hooks/useEntryInference';
 import { branchNotebook } from '@/services/notebook-branch';
@@ -69,6 +70,7 @@ export function Notebook({ onNavigate }: NotebookProps) {
   useSessionIndexer(past);
   const contentDrop = useContentDrop({ addEntry });
   const reorder = useEntryReorder();
+  const inPlaceEdit = useInPlaceEdit();
   const popup = usePopupState(onNavigate);
   const [mode, setMode] = useState<NotebookMode>('linear');
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -242,6 +244,10 @@ export function Notebook({ onNavigate }: NotebookProps) {
                   onSelectionAction={handleSelectionAction}
                   onBranch={handleBranch}
                   onFollowUp={handleFollowUp}
+                  isEditing={inPlaceEdit.isEditing(le.id)}
+                  onStartEdit={inPlaceEdit.startEdit}
+                  onSaveEdit={(id, content, type) => inPlaceEdit.saveEdit(id, content, type)}
+                  onCancelEdit={inPlaceEdit.cancelEdit}
                   onDragStart={reorder.onDragStart}
                   onDragOver={reorder.onDragOver}
                   onDragLeave={reorder.onDragLeave}

@@ -55,10 +55,11 @@ export function parseTutorResponse(raw: string): NotebookEntry | null {
     if (type === 'concept-diagram' && Array.isArray(parsed.items)) {
       return {
         type: 'concept-diagram',
-        items: (parsed.items as Record<string, unknown>[]).map((item) => ({
-          label: String(item.label ?? ''),
-          subLabel: item.subLabel ? String(item.subLabel) : undefined,
-        })),
+        items: parseDiagramNodes(parsed.items as Record<string, unknown>[]),
+        edges: Array.isArray(parsed.edges)
+          ? parseDiagramEdges(parsed.edges as Record<string, unknown>[])
+          : undefined,
+        title: typeof parsed.title === 'string' ? parsed.title : undefined,
       };
     }
     // Fallback: if it has content, treat as marginalia
@@ -76,4 +77,74 @@ export function parseTutorResponse(raw: string): NotebookEntry | null {
 
 function isObject(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null;
+}
+
+/** Recursively parse DiagramNode items, including children. */
+function parseDiagramNodes(
+  items: Record<string, unknown>[],
+): import('@/types/entries').DiagramNode[] {
+  return items.map((item) => {
+    const node: import('@/types/entries').DiagramNode = {
+      label: String(item.label ?? ''),
+      subLabel: item.subLabel ? String(item.subLabel) : undefined,
+      entityId: item.entityId ? String(item.entityId) : undefined,
+      entityKind: validEntityKind(item.entityKind),
+      accent: validAccent(item.accent),
+      detail: typeof item.detail === 'string' ? item.detail : undefined,
+    };
+
+    // Mastery data
+    if (isObject(item.mastery)) {
+      const m = item.mastery as Record<string, unknown>;
+      node.mastery = {
+        level: String(m.level ?? ''),
+        percentage: typeof m.percentage === 'number' ? m.percentage : 0,
+      };
+    }
+
+    // Recursive children
+    if (Array.isArray(item.children) && item.children.length > 0) {
+      node.children = parseDiagramNodes(
+        item.children as Record<string, unknown>[],
+      );
+    }
+
+    return node;
+  });
+}
+
+/** Parse edge definitions. */
+function parseDiagramEdges(
+  edges: Record<string, unknown>[],
+): import('@/types/entries').DiagramEdge[] {
+  return edges
+    .filter((e) => typeof e.from === 'number' && typeof e.to === 'number')
+    .map((e) => ({
+      from: e.from as number,
+      to: e.to as number,
+      label: typeof e.label === 'string' ? e.label : undefined,
+      type: validEdgeType(e.type),
+      weight: typeof e.weight === 'number' ? e.weight : undefined,
+    }));
+}
+
+const ENTITY_KINDS = new Set(['concept', 'thinker', 'term', 'question']);
+function validEntityKind(v: unknown): 'concept' | 'thinker' | 'term' | 'question' | undefined {
+  return typeof v === 'string' && ENTITY_KINDS.has(v)
+    ? v as 'concept' | 'thinker' | 'term' | 'question'
+    : undefined;
+}
+
+const ACCENTS = new Set(['sage', 'indigo', 'amber', 'margin']);
+function validAccent(v: unknown): 'sage' | 'indigo' | 'amber' | 'margin' | undefined {
+  return typeof v === 'string' && ACCENTS.has(v)
+    ? v as 'sage' | 'indigo' | 'amber' | 'margin'
+    : undefined;
+}
+
+const EDGE_TYPES = new Set(['causes', 'enables', 'contrasts', 'extends', 'requires', 'bridges']);
+function validEdgeType(v: unknown): 'causes' | 'enables' | 'contrasts' | 'extends' | 'requires' | 'bridges' | undefined {
+  return typeof v === 'string' && EDGE_TYPES.has(v)
+    ? v as 'causes' | 'enables' | 'contrasts' | 'extends' | 'requires' | 'bridges'
+    : undefined;
 }

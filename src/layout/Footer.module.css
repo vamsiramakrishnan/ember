@@ -1,8 +1,12 @@
+/* Footer — nearly invisible. Present, not demanding.
+ * Like the small light on a well-designed device.
+ */
+
 .footer {
-  padding-bottom: 48px;
-  padding-top: 40px;
+  padding-bottom: 56px;
+  padding-top: 48px;
   border-top: 1px solid var(--rule-light);
-  margin-top: 24px;
+  margin-top: 32px;
 }
 
 .row {
@@ -21,22 +25,19 @@
   text-align: center;
   text-transform: lowercase;
   margin: 0;
-  opacity: 0.7;
+  opacity: 0.6;
 }
 
-/* The quiet sync indicator — a 5px dot that shifts colour.
-   Synced = sage (green), offline = ghost, syncing = amber, error = margin. */
+/* The quiet sync indicator — 5px dot */
 .syncDot {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  opacity: 0.5;
+  opacity: 0.4;
   transition: background-color 1.5s ease, opacity 1.5s ease;
   flex-shrink: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .syncDot {
-    transition: none;
-  }
+  .syncDot { transition: none; }
 }

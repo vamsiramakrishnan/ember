@@ -15,6 +15,32 @@
 export interface DiagramNode {
   label: string;
   subLabel?: string;
+  /** Unique ID for graph linking. If set, this node maps to a graph entity. */
+  entityId?: string;
+  /** Entity kind for graph resolution. */
+  entityKind?: 'concept' | 'thinker' | 'term' | 'question';
+  /** Mastery level — drives visual treatment if present. */
+  mastery?: { level: string; percentage: number };
+  /** Children nodes — enables nested, expandable diagrams. */
+  children?: DiagramNode[];
+  /** Accent colour for the node. */
+  accent?: 'sage' | 'indigo' | 'amber' | 'margin';
+  /** Extended description shown on expand. */
+  detail?: string;
+}
+
+/** Typed relationship between two DiagramNodes. */
+export interface DiagramEdge {
+  /** Index of source node in the items array. */
+  from: number;
+  /** Index of target node in the items array. */
+  to: number;
+  /** Relationship label (shown on the edge). */
+  label?: string;
+  /** Edge type for visual treatment. */
+  type?: 'causes' | 'enables' | 'contrasts' | 'extends' | 'requires' | 'bridges';
+  /** Edge weight for thickness (0–1). */
+  weight?: number;
 }
 
 export interface Thinker {
@@ -67,7 +93,7 @@ export type NotebookEntry =
   | { type: 'tutor-marginalia'; content: string }
   | { type: 'tutor-question'; content: string }
   | { type: 'tutor-connection'; content: string; emphasisEnd: number }
-  | { type: 'concept-diagram'; items: DiagramNode[] }
+  | { type: 'concept-diagram'; items: DiagramNode[]; edges?: DiagramEdge[]; title?: string }
   | { type: 'thinker-card'; thinker: Thinker }
 
   // ─── Rich content blocks ────────────────────────────────────

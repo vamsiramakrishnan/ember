@@ -9,9 +9,12 @@ import type { LiveEntry } from '@/types/entries';
 import { Bookmark } from '@/components/student/Bookmark';
 import { AnnotationMargin } from '@/components/student/AnnotationMargin';
 import { SelectionToolbar } from '@/components/student/SelectionToolbar';
+import { InlineEditor } from '@/components/student/InlineEditor';
 import { FollowUp } from '@/components/tutor/FollowUp';
 import { NotebookEntryRenderer } from './NotebookEntryRenderer';
+import { EntryActions } from './EntryActions';
 import { TYPE_META, isStudentEntry } from './entryTypeMeta';
+import { useEntryAnchor } from '@/hooks/useEntryAnchor';
 import styles from './NotebookEntryWrapper.module.css';
 
 const TUTOR_TYPES = new Set([
@@ -33,6 +36,14 @@ interface Props {
   onDrop?: (id: string, e: React.DragEvent) => void;
   onDragEnd?: () => void;
   onFollowUp?: (question: string, context: string) => void;
+  /** Whether this entry is currently being edited in-place. */
+  isEditing?: boolean;
+  /** Called on double-click to start editing (student entries only). */
+  onStartEdit?: (id: string, entryType: string) => void;
+  /** Called when the user saves an edit. */
+  onSaveEdit?: (id: string, content: string, entryType: string) => void;
+  /** Called when the user cancels an edit. */
+  onCancelEdit?: () => void;
   isDragOver?: boolean;
   isDragging?: boolean;
   style?: React.CSSProperties;
@@ -41,13 +52,19 @@ interface Props {
 export const NotebookEntryWrapper = memo(function NotebookEntryWrapper({
   liveEntry, onCrossOut, onToggleBookmark, onTogglePin,
   onAnnotate, onSelectionAction, onBranch, onDragStart, onDragOver,
-  onDragLeave, onDrop, onDragEnd, onFollowUp, isDragOver, isDragging, style,
+  onDragLeave, onDrop, onDragEnd, onFollowUp,
+  isEditing, onStartEdit, onSaveEdit, onCancelEdit,
+  isDragOver, isDragging, style,
 }: Props) {
   const { id, entry, crossedOut, bookmarked, pinned, annotations } = liveEntry;
   const canPin = entry.type === 'question';
   const canCrossOut = isStudentEntry(entry.type);
+  const canEdit = isStudentEntry(entry.type) && 'content' in entry;
   const meta = TYPE_META[entry.type] ?? { label: entry.type };
   const tagCls = meta.tinted ? styles.typeTagTinted : styles.typeTag;
+
+  // Register this entry in the scroll-to-entry registry
+  const { ref: anchorRef, isHighlighted } = useEntryAnchor(id);
 
   const [touched, setTouched] = useState(false);
   const touchTimer = useRef<ReturnType<typeof setTimeout>>();
@@ -66,11 +83,14 @@ export const NotebookEntryWrapper = memo(function NotebookEntryWrapper({
     isDragOver ? styles.dragOver : '',
     isDragging ? styles.dragging : '',
     touched ? styles.touched : '',
+    isHighlighted ? styles.highlighted : '',
   ].filter(Boolean).join(' ');
 
   return (
     <div
+      ref={anchorRef}
       className={cls} style={style}
+      data-entry-id={id}
       draggable={Boolean(onDragStart)}
       onDragStart={onDragStart ? (e) => onDragStart(id, e) : undefined}
       onDragOver={onDragOver ? (e) => onDragOver(id, e) : undefined}
@@ -84,18 +104,35 @@ export const NotebookEntryWrapper = memo(function NotebookEntryWrapper({
         <span className={styles.grip}>⠿</span>
         <span className={tagCls}>{meta.label}</span>
       </div>
-      <div className={styles.content} ref={contentRef}>
-        <NotebookEntryRenderer entry={entry} />
-        <SelectionToolbar
-          containerRef={contentRef}
-          entryId={id}
-          onAction={(a) => onSelectionAction?.(a.entryId, a.type, a.selectedText)}
-        />
-        {onFollowUp && TUTOR_TYPES.has(entry.type) && 'content' in entry && (
-          <FollowUp
-            context={(entry as { content: string }).content}
-            onSubmit={onFollowUp}
+      <div
+        className={styles.content}
+        ref={contentRef}
+        onDoubleClick={canEdit && onStartEdit ? () => onStartEdit(id, entry.type) : undefined}
+      >
+        {isEditing && canEdit && onSaveEdit && onCancelEdit ? (
+          <InlineEditor
+            initialContent={(entry as { content: string }).content}
+            entryType={entry.type}
+            onSave={(content) => onSaveEdit(id, content, entry.type)}
+            onCancel={onCancelEdit}
           />
+        ) : (
+          <>
+            <NotebookEntryRenderer entry={entry} />
+            <SelectionToolbar
+              containerRef={contentRef}
+              entryId={id}
+              onAction={(a) => onSelectionAction?.(a.entryId, a.type, a.selectedText)}
+            />
+          </>
+        )}
+        {onFollowUp && TUTOR_TYPES.has(entry.type) && 'content' in entry && (
+          <div className={styles.followUpZone}>
+            <FollowUp
+              context={(entry as { content: string }).content}
+              onSubmit={onFollowUp}
+            />
+          </div>
         )}
       </div>
       {bookmarked && (
@@ -104,8 +141,10 @@ export const NotebookEntryWrapper = memo(function NotebookEntryWrapper({
       <EntryActions
         id={id} canCrossOut={canCrossOut} crossedOut={crossedOut}
         bookmarked={bookmarked} canPin={canPin} pinned={pinned}
+        canEdit={canEdit && !isEditing}
         onCrossOut={onCrossOut} onToggleBookmark={onToggleBookmark}
         onTogglePin={onTogglePin}
+        onEdit={canEdit && onStartEdit ? () => onStartEdit(id, entry.type) : undefined}
         onBranch={onBranch && 'content' in entry
           ? () => onBranch(id, (entry as { content: string }).content) : undefined}
       />
@@ -119,44 +158,3 @@ export const NotebookEntryWrapper = memo(function NotebookEntryWrapper({
   );
 });
 
-function EntryActions({ id, canCrossOut, crossedOut, bookmarked, canPin, pinned,
-  onCrossOut, onToggleBookmark, onTogglePin, onBranch,
-}: {
-  id: string; canCrossOut: boolean; crossedOut: boolean;
-  bookmarked: boolean; canPin: boolean; pinned: boolean;
-  onCrossOut: (id: string) => void;
-  onToggleBookmark: (id: string) => void;
-  onTogglePin: (id: string) => void;
-  onBranch?: () => void;
-}) {
-  return (
-    <div className={styles.actions} role="group" aria-label="Entry actions">
-      {canCrossOut && (
-        <button className={styles.action} onClick={() => onCrossOut(id)}
-          aria-label={crossedOut ? 'Restore' : 'Cross out'}>
-          {crossedOut ? '↺' : '—'}
-        </button>
-      )}
-      <button
-        className={`${styles.action} ${bookmarked ? styles.actionActive : ''}`}
-        onClick={() => onToggleBookmark(id)}
-        aria-label={bookmarked ? 'Remove bookmark' : 'Bookmark'}>
-        ◇
-      </button>
-      {canPin && (
-        <button
-          className={`${styles.action} ${pinned ? styles.actionActive : ''}`}
-          onClick={() => onTogglePin(id)}
-          aria-label={pinned ? 'Unpin' : 'Pin'}>
-          ⌃
-        </button>
-      )}
-      {onBranch && (
-        <button className={styles.action} onClick={onBranch}
-          aria-label="Branch into new notebook">
-          ⑂
-        </button>
-      )}
-    </div>
-  );
-}

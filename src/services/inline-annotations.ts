@@ -12,7 +12,6 @@ import { updateEntry, getEntry } from '@/persistence/repositories/entries';
 import { Store, notify } from '@/persistence';
 import { createId } from '@/persistence/ids';
 import type { EntryAnnotation } from '@/types/entries';
-import type { EntryRecord } from '@/persistence/records';
 
 interface AnnotationResult {
   span: string;
@@ -64,7 +63,7 @@ export async function annotateEntry(
 
     await updateEntry(entryId, {
       annotations: [...existing, ...newAnnotations],
-    } as Partial<EntryRecord>);
+    });
     notify(Store.Entries);
 
     return newAnnotations.length;

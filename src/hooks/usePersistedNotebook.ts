@@ -168,7 +168,7 @@ export function usePersistedNotebook(sessionId: string | null) {
     const existing = live.annotations ?? [];
     await updateEntry(entryId, {
       annotations: [...existing, annotation],
-    } as Partial<EntryRecord>);
+    });
     notify(Store.Entries);
   }, [entries]);
 

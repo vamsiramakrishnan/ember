@@ -125,3 +125,48 @@ Adapted from Amber Case's calm technology framework: every element in Ember exis
 The system does not surface mastery milestones as notifications. It does not pop up "You've mastered Number Theory!" It does not interrupt the Notebook with Constellation data. The student discovers their progress when they choose to look at it — and the looking itself is an act of reflection, not a response to a prompt.
 
 This is the deepest structural difference between Ember and conventional educational software. Conventional software puts the system at the centre (dashboards, progress bars, achievement notifications) and the learning at the periphery (somewhere inside a "lesson" that is one of many clickable items). Ember inverts this entirely. The learning is the centre. The system is the periphery.
+
+---
+
+## The Knowledge Graph
+
+Beneath the three surfaces lies a persistent knowledge graph — a traversable view of the student's entire intellectual universe. This is not a separate database; it is a lens over the existing data (entries, mastery, encounters, lexicon, curiosities) that provides graph traversal semantics.
+
+**Nodes:** entries, concepts, thinkers, terms, sessions, notebooks, questions.
+
+**Edges:** references, connections, bridges, annotations, cross-references, introduces, explores, prompted-by.
+
+The graph is invisible to the student. They never see "knowledge graph" or "connections" as UI elements. Instead, the graph enables three things that were previously impossible:
+
+**1. The tutor sees structurally.** When the student writes about harmonic ratios, the tutor's context includes not just the last 12 entries but the graph neighbourhood: which concepts are adjacent, which thinkers are connected, which questions are open, which gaps exist between strong and weak understanding. This is Layer 6 of the context assembler.
+
+**2. Cross-notebook discovery.** When a student explores "ratio" in their Music & Mathematics notebook and "genetic ratio" in their Evolution notebook, the system can discover that bridge — not by keyword matching, but by graph topology. The same thinker appearing in two notebooks, the same term with different definitions, the same concept explored from different angles.
+
+**3. Concept journeys.** The tutor can trace how the student's understanding of any concept evolved over time: first encounter, subsequent references, mastery changes, related discoveries. This enables the Echo (6.2) and Connection (2.3) patterns with precision — the tutor cites the student's own intellectual history.
+
+**What the graph does not do:**
+
+- It does not generate notifications ("You have 3 unresolved questions!")
+- It does not create visible network diagrams in the Constellation (Constellation is a list, not a graph visualisation)
+- It does not rank or score the student's "knowledge coverage"
+- It does not suggest a curriculum path
+
+The graph is infrastructure for intelligence, not a feature to be shown.
+
+---
+
+## Learning Intelligence
+
+The knowledge graph enables a layer of analytical computation that surfaces learning opportunities without showing raw metrics:
+
+**Learning gaps.** Concepts that are weak relative to their strong neighbours in the graph. If the student has mastered "harmonic series" but barely explored "Fourier analysis" — and these are connected — that's a productive gap. The tutor can guide toward it naturally.
+
+**Mastery trajectories.** Is understanding growing or stalling? Computed from the event log, not from test scores. A concept whose mastery percentage hasn't changed in three sessions despite being discussed is stalling — the tutor should try a different angle.
+
+**Exploration suggestions.** Based on graph topology, not on a curriculum. Highly-connected concepts with low mastery are hubs worth exploring. Dormant thinkers whose ideas connect to active concepts are worth reintroducing.
+
+**Thread tracking.** Which of the student's questions are open, partially addressed, or resolved? Tracked through graph relations between curiosity entities and the entries that reference them.
+
+**Concept clusters.** Natural groupings of related concepts, computed via connected-component analysis. These inform the Constellation's structure without the student needing to organise anything.
+
+All of this runs silently. The student's experience is simply that the tutor seems to remember everything, know what needs attention, and make connections that feel insightful but inevitable.

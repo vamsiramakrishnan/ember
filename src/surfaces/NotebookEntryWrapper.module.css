@@ -86,6 +86,20 @@
   min-width: 0;
 }
 
+/* ─── Layer 2: follow-up trigger reveal ───────────── */
+/* Hidden at rest. Visible when the entry is hovered.  */
+
+.followUpZone {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.wrapper:hover .followUpZone,
+.touched .followUpZone,
+.followUpZone:focus-within {
+  opacity: 1;
+}
+
 /* ─── Bookmark ────────────────────────────────────── */
 
 .bookmarkPos {
@@ -167,10 +181,23 @@
   .touched .actions { opacity: 1; }
 }
 
+/* ─── Navigation highlight ────────────────────────── */
+/* Deep-link target: brief warm glow when navigated to */
+
+.highlighted {
+  animation: highlightPulse 2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes highlightPulse {
+  0% { background: var(--amber-dim); }
+  100% { background: transparent; }
+}
+
 /* ─── Reduced motion ─────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
   .wrapper, .handle, .actions, .action {
     transition: none;
   }
+  .highlighted { animation: none; background: var(--amber-dim); }
 }
