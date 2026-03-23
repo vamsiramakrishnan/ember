@@ -32,6 +32,7 @@ import type { NotebookEntry, LiveEntry } from '@/types/entries';
 import type { DeferredAction } from './tool-executor';
 import type { GraphDeferredAction } from './graph-tools';
 import { generateEcho, generateBridge, generateReflection, incrementReflectionCounter } from './temporal-layers';
+import { setActivityDetail } from '@/state';
 
 export interface OrchestratorResult {
   entries: NotebookEntry[];
@@ -51,6 +52,7 @@ export async function orchestrate(
 ): Promise<OrchestratorResult> {
   if (!isGeminiAvailable()) return { entries: [], deferredActions: [] };
 
+  setActivityDetail({ step: 'routing', label: 'reading your thoughts…' });
   incrementReflectionCounter();
   const routing = await classifyImmediate(studentText, entries);
   const results: NotebookEntry[] = [];
@@ -58,6 +60,11 @@ export async function orchestrate(
   // Temporal layer: Echo (backward — runs in parallel with tutor)
   const echoPromise = generateEcho(studentText, entries);
 
+  if (routing.research) {
+    setActivityDetail({ step: 'researching', label: 'researching…' });
+  } else {
+    setActivityDetail({ step: 'searching-graph', label: 'exploring connections…' });
+  }
   // Build knowledge graph context in parallel with research
   const [graphCtxLayer, legacyGraph, research] = await Promise.all([
     buildGraphContext(notebookId, studentText).catch(() => null),
@@ -90,7 +97,7 @@ export async function orchestrate(
     research,
   });
 
-  // Run tutor with agentic loop (function calling + graph tools)
+  setActivityDetail({ step: 'thinking', label: 'thinking…' });
   let agenticResult: AgenticResult | null = null;
   try {
     if (getGeminiClient()) {
@@ -116,15 +123,17 @@ export async function orchestrate(
 
   // Enrichment (if router says so)
   if (routing.visualize) {
+    setActivityDetail({ step: 'visualizing', label: 'composing a visualization…' });
     const viz = await generateVisualization(studentText, entries);
     if (viz) results.push(viz);
   }
   if (routing.illustrate) {
+    setActivityDetail({ step: 'illustrating', label: 'sketching a concept…' });
     const ill = await generateIllustration(studentText);
     if (ill) results.push(ill);
   }
 
-  // Temporal layer: Echo (resolve the parallel promise)
+  setActivityDetail({ step: 'reflecting', label: 'reflecting…' });
   const echo = await echoPromise;
   if (echo) results.unshift(echo); // Echo appears BEFORE tutor response
 
@@ -193,6 +202,7 @@ export async function streamOrchestrate(
 ): Promise<OrchestratorResult> {
   if (!isGeminiAvailable()) return { entries: [], deferredActions: [] };
 
+  setActivityDetail({ step: 'routing', label: 'reading your thoughts…' });
   incrementReflectionCounter();
   const routing = await classifyImmediate(studentText, entries);
   const results: NotebookEntry[] = [];
@@ -200,6 +210,11 @@ export async function streamOrchestrate(
   const echoPromise = generateEcho(studentText, entries);
 
   // Build graph context + research in parallel
+  if (routing.research) {
+    setActivityDetail({ step: 'researching', label: 'researching…' });
+  } else {
+    setActivityDetail({ step: 'searching-graph', label: 'exploring connections…' });
+  }
   const [graphCtxLayerS, legacyGraphS, researchS] = await Promise.all([
     buildGraphContext(notebookId, studentText).catch(() => null),
     buildGraph(notebookId).catch(() => null),
@@ -229,6 +244,7 @@ export async function streamOrchestrate(
     research: researchS,
   });
 
+  setActivityDetail({ step: 'streaming', label: 'writing…' });
   let agenticResult: AgenticResult | null = null;
   try {
     if (getGeminiClient()) {
@@ -254,14 +270,17 @@ export async function streamOrchestrate(
   }
 
   if (routing.visualize) {
+    setActivityDetail({ step: 'visualizing', label: 'composing a visualization…' });
     const viz = await generateVisualization(studentText, entries);
     if (viz) results.push(viz);
   }
   if (routing.illustrate) {
+    setActivityDetail({ step: 'illustrating', label: 'sketching a concept…' });
     const ill = await generateIllustration(studentText);
     if (ill) results.push(ill);
   }
 
+  setActivityDetail({ step: 'reflecting', label: 'reflecting…' });
   const echo = await echoPromise;
   if (echo) results.unshift(echo);
 

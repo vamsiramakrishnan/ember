@@ -41,6 +41,28 @@ export type StudentFocus =
   | { type: 'canvas' }
   | { type: 'constellation'; view: string };
 
+/** Granular tutor activity — what the agent pipeline is doing right now. */
+export type TutorActivityStep =
+  | 'routing'         // Classifying the student's input
+  | 'researching'     // Researcher agent gathering facts
+  | 'thinking'        // Tutor formulating response
+  | 'searching-graph' // Traversing the knowledge graph
+  | 'streaming'       // Streaming text to student
+  | 'visualizing'     // Generating a concept diagram or visualization
+  | 'illustrating'    // Generating an illustration
+  | 'reflecting'      // Generating temporal layers (echo, bridge, reflection)
+  | 'refining'        // Iterating on an artifact (critique → patch)
+  | 'enriching';      // Background enrichment tasks
+
+export interface TutorActivityDetail {
+  step: TutorActivityStep;
+  /** Human-readable label, e.g. "Researching orbital mechanics…" */
+  label: string;
+  /** For multi-step processes: which iteration (e.g. refinement pass 2/3). */
+  iteration?: number;
+  maxIterations?: number;
+}
+
 /** Concept currently "in play" — mentioned or being explored. */
 export interface ActiveConcept {
   term: string;
@@ -73,6 +95,8 @@ export interface SessionState {
   // ─── Tutor state ─────────────────────────────────────────
   isThinking: boolean;
   isStreaming: boolean;
+  /** Granular activity — what the tutor is doing right now. */
+  activityDetail: TutorActivityDetail | null;
   /** Topics the tutor has already covered this session (avoid repetition). */
   coveredTopics: string[];
   /** Thinkers already introduced this session. */
@@ -102,6 +126,7 @@ function createInitialState(): SessionState {
     recentStudentTypes: [],
     isThinking: false,
     isStreaming: false,
+    activityDetail: null,
     coveredTopics: [],
     introducedThinkers: [],
     masterySnapshot: [],
@@ -186,12 +211,24 @@ export function setMasterySnapshot(
   emit();
 }
 
-/** Set thinking/streaming state. */
+/** Set thinking/streaming state with optional granular detail. */
 export function setTutorActivity(
   isThinking: boolean,
   isStreaming: boolean,
+  detail?: TutorActivityDetail | null,
 ): void {
-  state = { ...state, isThinking, isStreaming };
+  state = {
+    ...state,
+    isThinking,
+    isStreaming,
+    activityDetail: detail ?? (isThinking || isStreaming ? state.activityDetail : null),
+  };
+  emit();
+}
+
+/** Update just the activity detail (doesn't change thinking/streaming flags). */
+export function setActivityDetail(detail: TutorActivityDetail | null): void {
+  state = { ...state, activityDetail: detail };
   emit();
 }
 

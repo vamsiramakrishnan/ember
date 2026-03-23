@@ -31,6 +31,7 @@ export {
   setActiveConcepts,
   setMasterySnapshot,
   setTutorActivity,
+  setActivityDetail,
 } from './session-state';
 export type {
   SessionState,
@@ -38,6 +39,8 @@ export type {
   InteractionMode,
   StudentFocus,
   ActiveConcept,
+  TutorActivityStep,
+  TutorActivityDetail,
 } from './session-state';
 
 // Composition guard

@@ -1,15 +1,21 @@
 /**
  * Enrichment Pipeline — generates rich content (visualizations,
  * illustrations) when the router decides they're warranted.
+ *
+ * Visualizations now go through an iterative critique→refine loop
+ * using the artifact-refiner, which verifies factual accuracy via
+ * Google Search and applies targeted SEARCH/REPLACE patches.
+ *
  * Separated from the orchestrator for single responsibility.
  */
 import { ILLUSTRATOR_AGENT } from './agents';
 import { runImageAgent } from './run-agent';
 import { generateHtml } from './gemini-html';
 import { EMBER_VIZ_KIT } from './viz-components';
+import { refineArtifact } from './artifact-refiner';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
 
-/** Generate an HTML visualization for a concept. */
+/** Generate an HTML visualization for a concept, with iterative refinement. */
 export async function generateVisualization(
   prompt: string,
   entries: LiveEntry[],
@@ -20,21 +26,23 @@ export async function generateVisualization(
       .filter(Boolean)
       .join('\n');
 
-    const html = await generateHtml({
+    const rawHtml = await generateHtml({
       prompt,
       context: recentContext,
       useSearch: true,
     });
 
-    if (html.trim()) {
-      // Wrap generated body content with the component library
-      const fullHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${EMBER_VIZ_KIT}</head><body>${html}</body></html>`;
-      return {
-        type: 'visualization',
-        html: fullHtml,
-        caption: `concept map: ${prompt.slice(0, 60)}`,
-      };
-    }
+    if (!rawHtml.trim()) return null;
+
+    // Run critique→refine loop for factual accuracy
+    const refined = await refineArtifact(rawHtml, prompt, recentContext);
+
+    const fullHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${EMBER_VIZ_KIT}</head><body>${refined.html}</body></html>`;
+    return {
+      type: 'visualization',
+      html: fullHtml,
+      caption: `concept map: ${prompt.slice(0, 60)}`,
+    };
   } catch {
     // Visualization failed — not critical
   }

@@ -15,6 +15,7 @@ import { SessionDivider } from '@/components/peripheral/SessionDivider';
 import { PinnedThread } from '@/components/student/PinnedThread';
 import { MarginalReference } from '@/components/ambient/MarginalReference';
 import { InputZone } from '@/components/student/InputZone';
+import { TutorActivity } from '@/components/peripheral/TutorActivity';
 import { MentionPopup } from '@/components/student/MentionPopup';
 import { SlashCommandPopup } from '@/components/student/SlashCommandPopup';
 import { NotebookProvider } from '@/contexts/NotebookContext';
@@ -322,6 +323,7 @@ function NotebookContent({
                 onClose={popup.handlePopupClose}
               />
             )}
+            <TutorActivity />
             <InputZone
               onSubmit={handleSubmit}
               onSubmitTyped={handleSubmitTyped}
