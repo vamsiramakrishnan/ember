@@ -109,6 +109,28 @@ export const AGENT_TOOL_DECLARATIONS = [
         },
       },
       {
+        name: 'get_entry_content',
+        description: 'Fetch the full content of a notebook entry by its ID. Use this to drill into entries you see in context summaries (e.g., reading material slides, flashcard decks, exercise sets, code cells, uploaded files). Returns the complete structured data.',
+        parameters: {
+          type: 'object',
+          properties: {
+            entry_id: { type: 'string', description: 'The entry ID from the context summary (e.g., "entry-abc123").' },
+          },
+          required: ['entry_id'],
+        },
+      },
+      {
+        name: 'read_file_content',
+        description: 'Read the text content of an uploaded file (CSV, JSON, code, plain text). Returns the first 2000 characters. For binary files (images, PDFs), use read_attachment or search_history instead.',
+        parameters: {
+          type: 'object',
+          properties: {
+            entry_id: { type: 'string', description: 'The entry ID of the file-upload or code-cell entry.' },
+          },
+          required: ['entry_id'],
+        },
+      },
+      {
         name: 'add_to_lexicon',
         description: 'Add a new term to the student\'s personal vocabulary. Use when the student uses a term meaningfully for the first time.',
         parameters: {

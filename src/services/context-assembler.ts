@@ -195,7 +195,7 @@ function buildConversationMessages(
     } else {
       // Include non-text entries as context summaries so the tutor
       // is aware of files, images, teaching materials, and code cells
-      const summary = summarizeEntry(e);
+      const summary = summarizeEntry(e, le.id);
       if (summary) {
         const role = isStudent ? 'user' : 'model';
         messages.push({ role, parts: [{ text: summary }] });
@@ -211,29 +211,31 @@ function buildConversationMessages(
   return messages;
 }
 
-/** Summarize non-text entries for context inclusion. */
-function summarizeEntry(e: import('@/types/entries').NotebookEntry): string | null {
+/** Summarize non-text entries for context inclusion. Includes entry ID
+ *  so the tutor can call get_entry_content(entry_id) to drill down. */
+function summarizeEntry(e: import('@/types/entries').NotebookEntry, id?: string): string | null {
+  const ref = id ? ` (id:${id})` : '';
   switch (e.type) {
     case 'code-cell':
-      return `[Code (${e.language})]: ${e.source.slice(0, 200)}`;
+      return `[Code (${e.language})${ref}]: ${e.source.slice(0, 200)}`;
     case 'image':
-      return `[Image uploaded: ${e.alt ?? 'no description'}${e.caption ? ` — ${e.caption}` : ''}]`;
+      return `[Image${ref}: ${e.alt ?? 'no description'}${e.caption ? ` — ${e.caption}` : ''}]`;
     case 'sketch':
-      return '[Student drew a sketch]';
+      return `[Sketch${ref}]`;
     case 'file-upload':
-      return `[File uploaded: ${e.file.name} (${e.file.mimeType})]`;
+      return `[File${ref}: ${e.file.name} (${e.file.mimeType}) — use get_entry_content or read_file_content to inspect]`;
     case 'document':
-      return `[Document: ${e.file.name}${e.extractedText ? ` — ${e.extractedText.slice(0, 200)}` : ''}]`;
+      return `[Document${ref}: ${e.file.name} — searchable via search_history${e.extractedText ? `, preview: ${e.extractedText.slice(0, 120)}` : ''}]`;
     case 'embed':
       return `[Link: ${e.title ?? e.url}${e.description ? ` — ${e.description}` : ''}]`;
     case 'reading-material':
-      return `[Reading material: "${e.title}" — ${e.slides.length} slides covering ${e.slides.map((s) => s.heading).join(', ')}]`;
+      return `[Reading material${ref}: "${e.title}" — ${e.slides.length} slides: ${e.slides.map((s) => s.heading).join(', ')}. Use get_entry_content to read slides.]`;
     case 'flashcard-deck':
-      return `[Flashcard deck: "${e.title}" — ${e.cards.length} cards${e.sourceTopics ? ` on ${e.sourceTopics.join(', ')}` : ''}]`;
+      return `[Flashcard deck${ref}: "${e.title}" — ${e.cards.length} cards. Use get_entry_content to see cards.]`;
     case 'exercise-set':
-      return `[Exercise set: "${e.title}" — ${e.exercises.length} exercises (${e.difficulty})]`;
+      return `[Exercise set${ref}: "${e.title}" — ${e.exercises.length} exercises (${e.difficulty}). Use get_entry_content to see problems.]`;
     case 'concept-diagram':
-      return `[Concept diagram${e.title ? `: ${e.title}` : ''} — ${e.items.map((i) => i.label).join(', ')}]`;
+      return `[Concept diagram${ref}${e.title ? `: ${e.title}` : ''} — ${e.items.map((i) => i.label).join(', ')}]`;
     case 'thinker-card':
       return `[Thinker: ${e.thinker.name} (${e.thinker.dates}) — gift: ${e.thinker.gift}]`;
     case 'visualization':
