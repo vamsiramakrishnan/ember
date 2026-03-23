@@ -15,6 +15,7 @@ import type { NotebookEntry } from '@/types/entries';
 import { TUTOR_AGENT } from './agents';
 import { runTextAgent, runTextAgentStreaming } from './run-agent';
 import { parseTutorResponse } from './tutor-response-parser';
+import { generateIllustration } from './enrichment';
 import { setActivityDetail } from '@/state';
 
 // ─── Activity labels for each action ───────────────────────
@@ -161,6 +162,26 @@ export async function dispatchNode(
     step: (stepMap[node.action] ?? 'thinking') as 'thinking',
     label: ACTIVITY_LABELS[node.action] ?? 'processing…',
   });
+
+  // Illustrate requires the image agent, not the text agent.
+  if (node.action === 'illustrate') {
+    try {
+      const entry = await generateIllustration(node.content);
+      if (entry) {
+        return { nodeId: node.id, entries: [entry], success: true };
+      }
+      return {
+        nodeId: node.id,
+        entries: [{ type: 'tutor-marginalia', content: 'The sketch could not be generated — try again with a more specific prompt.' }],
+        success: false,
+        error: 'Image generation returned no result',
+      };
+    } catch (err) {
+      const error = err instanceof Error ? err.message : String(err);
+      console.error(`[DAG] Node ${node.id} (illustrate) failed:`, error);
+      return { nodeId: node.id, entries: [], success: false, error };
+    }
+  }
 
   const messages = [{ role: 'user' as const, parts: [{ text: prompt }] }];
 

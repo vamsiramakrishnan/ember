@@ -69,7 +69,10 @@ export async function generateIllustration(
     }]);
 
     const img = result.images[0];
-    if (!img) return null;
+    if (!img) {
+      console.warn('[Ember] Image generation returned no image for:', prompt);
+      return null;
+    }
 
     // Iterative image refinement: critique → edit instructions → redraw
     const refined = await refineIllustration(
@@ -81,8 +84,8 @@ export async function generateIllustration(
       dataUrl: `data:${refined.mimeType};base64,${refined.imageData}`,
       caption: refined.caption || undefined,
     };
-  } catch {
-    // Illustration failed — not critical
+  } catch (err) {
+    console.error('[Ember] Illustration generation failed:', err);
   }
   return null;
 }

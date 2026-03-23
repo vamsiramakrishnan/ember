@@ -70,7 +70,11 @@ export function useSlashCommandRouter({
       case 'draw': {
         addEntry({ type: 'silence', text: 'sketching…' });
         const ill = await generateIllustration(query);
-        if (ill) addEntry(ill);
+        if (ill) {
+          addEntry(ill);
+        } else {
+          addEntry({ type: 'tutor-marginalia', content: 'The sketch could not be generated — try again with a more specific prompt.' });
+        }
         return true;
       }
 
