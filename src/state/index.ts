@@ -25,6 +25,8 @@ export {
   getSessionState,
   subscribeSessionState,
   resetSession,
+  restoreSession,
+  setSessionIds,
   recordStudentTurn,
   recordTutorTurn,
   setStudentFocus,

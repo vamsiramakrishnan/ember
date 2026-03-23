@@ -1,7 +1,4 @@
-/**
- * Orchestrator Pipeline — shared stages for orchestrate() and streamOrchestrate().
- * Both modes share identical setup, enrichment, and temporal layer logic.
- */
+/** Orchestrator Pipeline — shared stages for orchestrate() and streamOrchestrate(). */
 import { RESEARCHER_AGENT } from './agents';
 import { runTextAgent } from './run-agent';
 import { buildGraphContext } from './graph-context';
@@ -11,6 +8,8 @@ import { generateVisualization, generateIllustration } from './enrichment';
 import { generateEcho, generateBridge, generateReflection, incrementReflectionCounter } from './temporal-layers';
 import { classifyImmediate, type RoutingDecision } from './router-agent';
 import { setActivityDetail } from '@/state';
+import { buildSemanticMemory } from './semantic-memory';
+import { appendDiversityHints } from './diversity-hints';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
 import type { ChangeContract } from './artifact-refiner';
 import type { Subgraph } from './knowledge-graph';
@@ -45,10 +44,11 @@ export async function fetchResearch(text: string): Promise<ResearchResult> {
   }
 }
 
-/** Stage 1: Route, build graph context, fetch research — all in parallel. */
+/** Stage 1: Route, build graph context, fetch research + memory — all in parallel. */
 export async function runPipelineSetup(
   studentText: string,
   entries: LiveEntry[],
+  studentId: string,
   notebookId: string,
   lastSyncTimestamp: number | undefined,
   profile: StudentProfile | null,
@@ -62,12 +62,13 @@ export async function runPipelineSetup(
   const stepLabel = routing.research ? 'researching...' : 'exploring connections...';
   const stepKey = routing.research ? 'researching' : 'searching-graph';
   setActivityDetail({ step: stepKey, label: stepLabel });
-  const [graphCtxLayer, legacyGraph, researchResult] = await Promise.all([
+  const [graphCtxLayer, legacyGraph, researchResult, memory] = await Promise.all([
     buildGraphContext(notebookId, studentText).catch(() => null),
     buildGraph(notebookId).catch(() => null),
     routing.research
       ? fetchResearch(studentText)
       : Promise.resolve({ context: null, citations: [] } as ResearchResult),
+    buildSemanticMemory(studentId, studentText, notebookId),
   ]);
 
   const research = researchResult.context;
@@ -92,9 +93,11 @@ export async function runPipelineSetup(
     entries,
     profile,
     notebook: notebookCtx,
-    memory: null,
+    memory,
     research,
   });
+
+  appendDiversityHints(ctx.messages);
 
   return {
     routing, legacyGraph, collectedCitations,

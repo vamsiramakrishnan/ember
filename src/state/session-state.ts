@@ -18,6 +18,15 @@
  * - 07-compositional-grammar.md: voice alternation
  */
 
+import {
+  persistStudentTurn,
+  persistTutorTurn,
+  persistTutorActivity,
+  loadSessionState,
+  setSessionIds,
+} from './session-state-persistence';
+export { setSessionIds } from './session-state-persistence';
+
 /** The five interaction modes from the spec. */
 export type InteractionMode =
   | 'connection'       // Drawing lines between interests
@@ -156,6 +165,32 @@ export function resetSession(): void {
   emit();
 }
 
+/** Restore session state from persisted events. */
+export async function restoreSession(
+  notebookId: string,
+  sessionId: string,
+): Promise<void> {
+  const restored = await loadSessionState(notebookId, sessionId);
+  if (!restored) {
+    state = createInitialState();
+    emit();
+    return;
+  }
+  state = {
+    ...createInitialState(),
+    phase: restored.phase,
+    studentTurnCount: restored.studentTurnCount,
+    tutorTurnCount: restored.tutorTurnCount,
+    consecutiveTutorEntries: restored.consecutiveTutorEntries,
+    lastTutorMode: restored.lastTutorMode,
+    coveredTopics: restored.coveredTopics,
+    introducedThinkers: restored.introducedThinkers,
+    recentStudentTypes: restored.recentStudentTypes,
+    activeConcepts: restored.activeConcepts,
+  };
+  emit();
+}
+
 /** Record that a student entry was added. */
 export function recordStudentTurn(entryType: string): void {
   state = {
@@ -169,6 +204,7 @@ export function recordStudentTurn(entryType: string): void {
     phase: inferPhase(state.studentTurnCount + 1, state.tutorTurnCount),
   };
   emit();
+  persistStudentTurn(entryType);
 }
 
 /** Record that a tutor entry was added. */
@@ -189,6 +225,7 @@ export function recordTutorTurn(
     phase: inferPhase(state.studentTurnCount, state.tutorTurnCount + 1),
   };
   emit();
+  persistTutorTurn(mode, topics, thinker);
 }
 
 /** Update what the student is focused on. */
@@ -224,6 +261,7 @@ export function setTutorActivity(
     activityDetail: detail ?? (isThinking || isStreaming ? state.activityDetail : null),
   };
   emit();
+  persistTutorActivity(isThinking, isStreaming);
 }
 
 /** Update just the activity detail (doesn't change thinking/streaming flags). */

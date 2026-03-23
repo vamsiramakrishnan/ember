@@ -65,7 +65,7 @@ export async function orchestrate(
   if (!isGeminiAvailable()) return { entries: [], deferredActions: [] };
 
   const setup = await runPipelineSetup(
-    studentText, entries, notebookId, lastSyncTimestamp,
+    studentText, entries, studentId, notebookId, lastSyncTimestamp,
     profile ?? null, notebookCtx ?? null,
   );
   const results: NotebookEntry[] = [];
@@ -111,7 +111,7 @@ export async function streamOrchestrate(
   if (!isGeminiAvailable()) return { entries: [], deferredActions: [] };
 
   const setup = await runPipelineSetup(
-    studentText, entries, notebookId, lastSyncTimestamp,
+    studentText, entries, studentId, notebookId, lastSyncTimestamp,
     profile ?? null, notebookCtx ?? null,
   );
   const results: NotebookEntry[] = [];

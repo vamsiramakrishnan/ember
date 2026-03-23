@@ -4,6 +4,8 @@
  *
  * Read tools execute immediately and return results to the AI.
  * Write tools (link_entities) are deferred for post-response execution.
+ *
+ * Uses structured ToolResult envelopes and retries transient errors once.
  */
 import { createRelation } from '@/persistence/repositories/graph';
 import type { RelationType, EntityKind } from '@/types/entity';
@@ -19,6 +21,7 @@ import {
   execLinkEntities,
   execNeighborhood,
 } from '@/services/graph-tool-impls-extended';
+import { toolError, isTransientError } from './tool-result';
 
 // ─── Context passed to tool implementations ──────────────
 
@@ -28,9 +31,29 @@ export interface GraphToolContext {
   sessionId: string;
 }
 
-// ─── Tool executor (switch router) ───────────────────────
+// ─── Tool executor (with single retry for transient errors) ──
 
 export async function executeGraphTool(
+  name: string,
+  args: Record<string, unknown>,
+  ctx: GraphToolContext,
+): Promise<string> {
+  try {
+    return await executeGraphToolInner(name, args, ctx);
+  } catch (err) {
+    if (isTransientError(err)) {
+      try {
+        return await executeGraphToolInner(name, args, ctx);
+      } catch (retryErr) {
+        return toolError(name, String(retryErr));
+      }
+    }
+    return toolError(name, String(err));
+  }
+}
+
+/** Inner dispatch — no retry logic, just routing. */
+async function executeGraphToolInner(
   name: string,
   args: Record<string, unknown>,
   ctx: GraphToolContext,
@@ -53,7 +76,7 @@ export async function executeGraphTool(
     case 'get_entity_neighborhood':
       return execNeighborhood(args);
     default:
-      return JSON.stringify({ error: `Unknown graph tool: ${name}` });
+      return toolError(name, `Unknown graph tool: ${name}`);
   }
 }
 

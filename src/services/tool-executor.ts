@@ -8,6 +8,8 @@
  *
  * Updated: also routes graph tools (traverse_graph, find_path,
  * discover_gaps, etc.) to the persistent knowledge graph.
+ * Updated: returns structured ToolResult envelopes and retries
+ * transient failures once.
  */
 import {
   executeGraphTool,
@@ -23,6 +25,7 @@ import {
   getRecentChanges,
 } from './tool-impls';
 import { getEntryContent, readFileContent } from './tool-impls-content';
+import { toolOk, toolError, isTransientError } from './tool-result';
 import type { Subgraph } from './knowledge-graph';
 
 /** Graph tool names that should be routed to the persistent graph. */
@@ -41,14 +44,34 @@ export interface ToolContext {
 
 /**
  * Execute a function call from the Gemini model.
- * Returns a string result to feed back as a function response.
+ * Retries once for transient (network/timeout) errors.
+ * Returns a structured JSON envelope (ToolResult).
  */
 export async function executeTool(
   functionName: string,
   args: Record<string, unknown>,
   ctx: ToolContext,
 ): Promise<string> {
-  // Route persistent graph tools to the new graph executor
+  try {
+    return await executeToolInner(functionName, args, ctx);
+  } catch (err) {
+    if (isTransientError(err)) {
+      try {
+        return await executeToolInner(functionName, args, ctx);
+      } catch (retryErr) {
+        return toolError(functionName, String(retryErr));
+      }
+    }
+    return toolError(functionName, String(err));
+  }
+}
+
+/** Inner dispatch — no retry logic, just routing. */
+async function executeToolInner(
+  functionName: string,
+  args: Record<string, unknown>,
+  ctx: ToolContext,
+): Promise<string> {
   if (GRAPH_TOOLS.has(functionName)) {
     return executeGraphTool(functionName, args, {
       studentId: ctx.studentId,
@@ -75,11 +98,11 @@ export async function executeTool(
     case 'read_file_content':
       return readFileContent(String(args.entry_id ?? ''));
     case 'create_annotation':
-      return JSON.stringify({ status: 'queued', entry_id: args.entry_id, content: args.content });
+      return toolOk(JSON.stringify({ queued: true, entry_id: args.entry_id, content: args.content }));
     case 'add_to_lexicon':
-      return JSON.stringify({ status: 'queued', term: args.term, definition: args.definition });
+      return toolOk(JSON.stringify({ queued: true, term: args.term, definition: args.definition }));
     default:
-      return JSON.stringify({ error: `Unknown tool: ${functionName}` });
+      return toolError(functionName, `Unknown tool: ${functionName}`);
   }
 }
 
@@ -100,7 +123,6 @@ export function extractDeferredActions(
   if (functionName === 'add_to_lexicon') {
     return { type: 'add_lexicon', args };
   }
-  // Route graph write tools
   const graphDeferred = extractGraphDeferred(
     functionName, args, notebookId ?? '',
   );
