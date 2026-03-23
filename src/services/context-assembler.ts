@@ -1,44 +1,12 @@
 /**
- * Context Assembler — builds a rich, layered context window
- * for the tutor agent from multiple sources.
- *
- * The tutor doesn't just see the last 12 entries. It sees:
- *
- * Layer 1: Student Profile (always)
- *   - Mastery snapshot: what concepts, at what levels
- *   - Active curiosities: what questions are open
- *   - Vocabulary size: how many terms they own
- *
- * Layer 2: Notebook Context (always)
- *   - Notebook title and description (the guiding question)
- *   - Session topic and number
- *   - Thinkers encountered in this notebook
- *
- * Layer 3: Conversation Window (always)
- *   - Last 12 entries from the current session
- *
- * Layer 4: Semantic Memory (from File Search)
- *   - Past sessions relevant to what the student just wrote
- *   - Vocabulary the student has learned that's relevant
- *   - Thinkers connected to the current topic
- *
- * Layer 5: Research (when needed)
- *   - Factual grounding from Google Search
- *   - Verified historical context
- *
- * Each layer is tagged so the tutor knows what's conversation
- * vs. what's context vs. what's research.
+ * Context Assembler — builds a layered context window for the tutor agent.
+ * Five layers: Profile, Notebook, Conversation, Semantic Memory, Research.
+ * Each layer is tagged and budget-capped. See context-conversation.ts for
+ * the conversation message builder.
  */
 import type { LiveEntry } from '@/types/entries';
 import type { AgentMessage } from './run-agent';
 import { buildConversationMessages } from './context-conversation';
-
-/** Approximate tokens by dividing char count by 4. */
-function estimateTokens(text: string): number {
-  return Math.ceil(text.length / 4);
-}
-
-const MAX_CONTEXT_TOKENS = 6000;
 
 const LAYER_BUDGETS = {
   profile: 400,
