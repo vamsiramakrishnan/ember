@@ -1,33 +1,38 @@
 /**
- * Graph Canvas types — nodes, edges, and canvas state
- * for the knowledge graph visualization.
+ * Graph canvas types — shapes for the knowledge graph visualization.
+ * Used by useGraphCanvas and KnowledgeCanvas components.
  */
 import type { MasteryLevel } from './mastery';
 
+/** The four kinds of entities that appear as nodes on the graph canvas. */
 export type GraphNodeKind = 'concept' | 'thinker' | 'term' | 'curiosity';
 
+/** A node in the knowledge graph canvas. */
 export interface GraphNode {
   id: string;
   kind: GraphNodeKind;
   label: string;
-  /** 0-100 for concepts and terms. */
+
+  /** Mastery percentage (concepts and terms only). */
   mastery?: number;
+  /** Mastery level (concepts and terms only). */
   masteryLevel?: MasteryLevel;
-  /** Thinker's intellectual tradition. */
+  /** Intellectual tradition (thinkers only). */
   tradition?: string;
-  /** Thinker status. */
+  /** Encounter status (thinkers only). */
   status?: 'active' | 'dormant' | 'bridged' | 'pending';
-  /** Whether this curiosity is resolved. */
-  resolved?: boolean;
+
+  /** Spatial position — updated by force simulation or drag. */
   x: number;
   y: number;
-  /** Velocity for force simulation. */
+  /** Velocity — used by force simulation. */
   vx: number;
   vy: number;
-  /** User has manually positioned this node. */
+  /** Whether the user has manually positioned this node. */
   pinned: boolean;
 }
 
+/** A directed edge in the knowledge graph canvas. */
 export interface GraphEdge {
   id: string;
   from: string;
@@ -35,12 +40,4 @@ export interface GraphEdge {
   type: string;
   weight: number;
   label?: string;
-}
-
-export interface GraphCanvasState {
-  nodes: GraphNode[];
-  edges: GraphEdge[];
-  filters: Set<GraphNodeKind>;
-  focusId: string | null;
-  hoverId: string | null;
 }
