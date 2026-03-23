@@ -1,9 +1,9 @@
-/* ConceptDiagram (2.4) — connected node cards */
+/* ConceptDiagram (2.4) — interactive concept relationship map */
 
 .container {
   border-top: 1px solid var(--rule);
   border-bottom: 1px solid var(--rule);
-  padding: 28px 0;
+  padding: 24px 0;
   margin-bottom: var(--diagram-gap);
   background-color: var(--paper-warm);
   overflow-x: auto;
@@ -11,9 +11,21 @@
   animation: diagramReveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+.title {
+  font-family: var(--font-system);
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 0 0 16px;
+  padding: 0 4px;
+}
+
+/* ─── Linear layout ──────────────────────── */
+
 .flow {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
   flex-wrap: wrap;
   gap: 0;
@@ -33,39 +45,60 @@
   flex-shrink: 0;
 }
 
-.card {
+/* ─── Tree layout ────────────────────────── */
+
+.tree {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  gap: 8px;
+  padding: 0 4px;
+}
+
+/* ─── Graph layout ───────────────────────── */
+
+.graph {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.graphNodes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+.graphNode {
+  flex: 0 1 auto;
+  min-width: 140px;
+  max-width: 240px;
+}
+
+/* Edge labels — text representation of relationships */
+.edgeLabels {
+  display: flex;
+  flex-direction: column;
   gap: 4px;
-  padding: 14px 22px;
-  border: 1px solid var(--rule);
-  border-radius: 2px;
-  background: var(--paper);
-  text-align: center;
-  min-width: 100px;
-  transition: border-color 0.2s ease, transform 0.2s ease;
+  padding: 8px 0 0;
+  border-top: 1px solid var(--rule-light);
 }
 
-.card:hover {
-  border-color: var(--ink-ghost);
-  transform: translateY(-1px);
-}
-
-.label {
-  font-family: var(--font-tutor);
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--ink);
-  letter-spacing: -0.1px;
-}
-
-.sub {
+.edgeLabel {
   font-family: var(--font-system);
   font-size: 10px;
-  font-weight: 400;
-  color: var(--ink-soft);
-  letter-spacing: 0.5px;
+  color: var(--ink-faint);
+  letter-spacing: 0.3px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.edgeType {
+  font-style: italic;
+  color: var(--margin);
+  font-family: var(--font-tutor);
+  font-size: 11px;
 }
 
 @keyframes diagramReveal {
@@ -75,17 +108,24 @@
 
 @media (prefers-reduced-motion: reduce) {
   .container { animation: none; }
-  .card { transition: none; }
 }
 
 @media (max-width: 500px) {
   .flow {
     flex-direction: column;
     gap: 4px;
+    align-items: center;
   }
   .connector {
     transform: rotate(90deg);
     width: 24px;
     height: 32px;
+  }
+  .graphNodes {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .graphNode {
+    max-width: 100%;
   }
 }

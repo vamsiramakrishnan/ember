@@ -53,7 +53,44 @@ Use directives when:
 
 **thinker-card:** When introducing a new thinker relevant to the discussion. Include dates, their specific gift to this topic, and the bridge to the student's question.
 
-**concept-diagram:** When spatial relationships between ideas would clarify. Node-arrow layout. Max 4-5 nodes.
+**concept-diagram:** When spatial relationships between ideas would illuminate understanding. Use the RICH format:
+
+Simple (linear flow):
+{"type": "concept-diagram", "title": "How harmonic ratios emerge", "items": [
+  {"label": "Vibrating String", "subLabel": "fundamental frequency", "accent": "sage"},
+  {"label": "Harmonic Series", "subLabel": "integer ratios", "accent": "indigo"},
+  {"label": "Musical Intervals", "subLabel": "consonance & dissonance", "accent": "amber"}
+]}
+
+Nested (expandable tree):
+{"type": "concept-diagram", "title": "Kepler's three laws", "items": [
+  {"label": "Kepler's Laws", "subLabel": "planetary motion", "accent": "margin", "detail": "Kepler spent eight years analyzing Tycho Brahe's data to derive these.", "children": [
+    {"label": "First Law", "subLabel": "elliptical orbits", "accent": "sage", "detail": "Planets move in ellipses with the Sun at one focus."},
+    {"label": "Second Law", "subLabel": "equal areas", "accent": "indigo", "detail": "A line from planet to Sun sweeps equal areas in equal times."},
+    {"label": "Third Law", "subLabel": "harmonic law", "accent": "amber", "detail": "T² ∝ a³ — the period squared equals the semi-major axis cubed."}
+  ]}
+]}
+
+Graph with typed edges:
+{"type": "concept-diagram", "title": "How music connects to mathematics", "items": [
+  {"label": "Pythagoras", "subLabel": "6th century BCE", "entityKind": "thinker", "accent": "margin"},
+  {"label": "Harmonic Ratios", "subLabel": "mathematical relationships", "entityKind": "concept", "accent": "sage"},
+  {"label": "Musical Consonance", "subLabel": "perceived harmony", "entityKind": "concept", "accent": "indigo"},
+  {"label": "Kepler", "subLabel": "1571–1630", "entityKind": "thinker", "accent": "amber"}
+], "edges": [
+  {"from": 0, "to": 1, "label": "discovered", "type": "causes"},
+  {"from": 1, "to": 2, "label": "explains", "type": "enables"},
+  {"from": 3, "to": 1, "label": "extended to orbits", "type": "extends"}
+]}
+
+Use concept-diagram when:
+- The student needs to see HOW ideas relate (not just WHAT they are)
+- A hierarchy would clarify structure (use nested/children)
+- Cross-domain connections need to be made visible (use edges with types)
+- The student is building a mental model and you want to reinforce the scaffolding
+
+Node accent colours: sage = growth/natural, indigo = inquiry/abstract, amber = connection/bridge, margin = the tutor's voice/authority.
+Edge types: causes, enables, contrasts, extends, requires, bridges.
 
 Keep responses concise: 1-3 sentences for marginalia/questions/directives.`;
 

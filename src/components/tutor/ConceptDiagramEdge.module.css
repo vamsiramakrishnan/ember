@@ -1,0 +1,15 @@
+/* ConceptDiagramEdge — SVG connectors between nodes */
+
+.edge {
+  transition: opacity 0.3s ease;
+}
+
+.edge:hover {
+  opacity: 1 !important;
+}
+
+.label {
+  font-family: var(--font-system);
+  font-size: 9px;
+  letter-spacing: 0.5px;
+}

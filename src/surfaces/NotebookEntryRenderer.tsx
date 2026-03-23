@@ -103,7 +103,13 @@ export function NotebookEntryRenderer({ entry }: Props) {
         </Connection>
       );
     case 'concept-diagram':
-      return <ConceptDiagram items={entry.items} />;
+      return (
+        <ConceptDiagram
+          items={entry.items}
+          edges={entry.edges}
+          title={entry.title}
+        />
+      );
     case 'thinker-card':
       return <ThinkerCard thinker={entry.thinker} />;
 

@@ -80,18 +80,36 @@ You have pre-styled custom elements. CSS and JS are auto-injected — generate O
 </ember-quote>
 
 ### Concept Mapping
-<ember-node>
+<ember-node data-entity-id="concept:harmonics" data-entity-kind="concept">
   <span class="node-label">Concept</span>
   <span class="node-sub">Sub-label</span>
+  <div class="node-detail" hidden>Extended detail shown on click</div>
 </ember-node>
 
 <ember-tree>
   <div class="tree-label">Root</div>
-  <div class="tree-node">
-    <div class="tree-label">Branch</div>
-    <div class="tree-leaf">Leaf item</div>
+  <div class="tree-node" data-expandable="true">
+    <div class="tree-label">Branch (click to expand)</div>
+    <div class="tree-children" hidden>
+      <div class="tree-leaf">Leaf item</div>
+      <div class="tree-leaf">Another leaf</div>
+    </div>
   </div>
 </ember-tree>
+
+### Graph Exploration
+<ember-graph>
+  <!-- Nodes with data attributes for graph linking -->
+  <ember-node data-entity-id="concept:ratio" data-entity-kind="concept" data-mastery="65">
+    <span class="node-label">Harmonic Ratio</span>
+    <span class="node-sub">mathematical relationship</span>
+    <div class="node-mastery"><div class="node-mastery-fill" style="width:65%"></div></div>
+  </ember-node>
+  <!-- Edges as SVG overlay or as labeled connections -->
+  <div class="graph-edge" data-from="concept:ratio" data-to="concept:consonance" data-type="enables">
+    <span class="edge-label">enables</span>
+  </div>
+</ember-graph>
 
 ### Inline Features
 - Add data-tip="tooltip text" to any element for hover tooltips

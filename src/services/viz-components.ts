@@ -174,6 +174,23 @@ ember-grid[cols="2"] { grid-template-columns: repeat(2, 1fr); }
 ember-grid[cols="3"] { grid-template-columns: repeat(3, 1fr); }
 @media (max-width: 500px) { ember-grid, ember-grid[cols="2"], ember-grid[cols="3"] { grid-template-columns: 1fr; } }
 
+/* ─── Node Detail (expandable) ────────────────────── */
+ember-node { cursor: pointer; }
+ember-node .node-detail { font-family: var(--font-student); font-size: 13px; color: var(--ink-soft); line-height: 1.6; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--rule-light); animation: fadeSlideUp 0.3s var(--ease-out); }
+ember-node .node-mastery { width: 100%; height: 2px; background: var(--rule-light); border-radius: 1px; margin-top: 6px; overflow: hidden; }
+ember-node .node-mastery-fill { height: 100%; background: var(--sage); border-radius: 1px; transition: width 0.8s var(--ease-out); }
+ember-node[data-entity-kind]::after { content: attr(data-entity-kind); font-family: var(--font-system); font-size: 8px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-ghost); margin-top: 4px; }
+
+/* ─── Graph container ────────────────────────────── */
+ember-graph { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; padding: 16px 0; position: relative; }
+ember-graph .graph-edge { font-family: var(--font-system); font-size: 10px; color: var(--ink-faint); display: flex; align-items: center; gap: 4px; }
+ember-graph .edge-label { font-style: italic; color: var(--margin); font-family: var(--font-tutor); font-size: 11px; }
+
+/* ─── Tree expandable nodes ──────────────────────── */
+ember-tree .tree-node[data-expandable] .tree-label { cursor: pointer; transition: color 0.2s ease; }
+ember-tree .tree-node[data-expandable] .tree-label:hover { color: var(--margin); }
+ember-tree .tree-children { animation: fadeSlideUp 0.3s var(--ease-out); }
+
 /* ─── Section Heading ─────────────────────────────── */
 .section-label { font-family: var(--font-system); font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--ink-faint); margin: 24px 0 12px 0; }
 
@@ -219,6 +236,29 @@ document.querySelectorAll('ember-reveal .reveal-trigger').forEach(btn => {
     if (reveal) reveal.classList.toggle('open');
     btn.textContent = reveal?.classList.contains('open') ? 'Hide' : btn.dataset.label || 'Show more';
   });
+});
+
+// Node detail expand/collapse
+document.querySelectorAll('ember-node').forEach(node => {
+  const detail = node.querySelector('.node-detail');
+  if (detail) {
+    detail.hidden = true;
+    node.addEventListener('click', () => {
+      detail.hidden = !detail.hidden;
+    });
+  }
+});
+
+// Tree expandable nodes
+document.querySelectorAll('ember-tree .tree-node[data-expandable]').forEach(treeNode => {
+  const children = treeNode.querySelector('.tree-children');
+  const label = treeNode.querySelector('.tree-label');
+  if (children && label) {
+    children.hidden = true;
+    label.addEventListener('click', () => {
+      children.hidden = !children.hidden;
+    });
+  }
 });
 
 // Staggered reveal on scroll

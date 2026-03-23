@@ -34,7 +34,7 @@ function cardContent(e: LiveEntry): { label: string; body: string } | null {
     case 'tutor-directive': return { label: 'Explore', body: trunc(entry.content) };
     case 'bridge-suggestion': return { label: 'Bridge', body: trunc(entry.content) };
     case 'thinker-card': return { label: entry.thinker.name, body: entry.thinker.gift };
-    case 'concept-diagram': return { label: 'Concept Map', body: entry.items.map((i) => i.label).join(' → ') };
+    case 'concept-diagram': return { label: entry.title ?? 'Concept Map', body: entry.items.map((i) => i.label).join(' → ') };
     default: return null;
   }
 }
