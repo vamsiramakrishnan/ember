@@ -1,9 +1,11 @@
 /**
- * ExerciseSet — a sequence of Socratic exercises with progressive hints.
- * The student writes free-form responses; the tutor evaluates.
- * No multiple choice — exercises demand genuine reasoning.
- *
+ * ExerciseSet — Socratic exercise progression with free-form responses.
+ * Post-spec extension: not in the original component inventory (06).
+ * Added to support structured practice via the /exercise slash command.
+ * No multiple choice — exercises demand genuine reasoning with progressive hints.
  * AI-generated block — produced by /exercise slash command.
+ * Related: 03-interaction-language.md (Socratic method, open response),
+ *          05-ai-contract.md (what the AI does, student model)
  */
 import { useState, useCallback } from 'react';
 import type { Exercise, ExerciseDifficulty } from '@/types/entries';

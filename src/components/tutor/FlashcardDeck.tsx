@@ -1,9 +1,11 @@
 /**
- * FlashcardDeck — a set of concept flashcards with flip interaction.
+ * FlashcardDeck — concept flashcards with front/back flip interaction.
+ * Post-spec extension: not in the original component inventory (06).
+ * Added to support active recall practice via the /flashcards slash command.
  * Progressive disclosure: thumbnail header → expanded card-by-card view.
- * Each card has front/back with a flip animation.
- *
  * AI-generated block — produced by /flashcards slash command.
+ * Related: 03-interaction-language.md (Socratic method, interaction modes),
+ *          01-design-principles.md (mastery through engagement)
  */
 import { useState, useCallback } from 'react';
 import type { Flashcard } from '@/types/entries';

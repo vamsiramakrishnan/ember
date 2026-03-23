@@ -1,6 +1,11 @@
 /**
- * SlashCommandPopup — appears when the student types / in the InputZone.
- * Grouped by category with accent-colored icons and keyboard hints.
+ * SlashCommandPopup — slash command palette triggered by typing / in the InputZone.
+ * Post-spec extension: not in the original component inventory (06).
+ * Added to support tutor-directed commands (explain, research, flashcards, etc.)
+ * that invoke AI-generated content blocks within the notebook flow.
+ * Related: 06-component-inventory.md 7.4 (InputZone),
+ *          03-interaction-language.md (five interaction modes),
+ *          05-ai-contract.md (AI behaviour contract)
  */
 import { useState, useEffect, useRef } from 'react';
 import styles from './MentionPopup.module.css';

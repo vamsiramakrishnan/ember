@@ -1,7 +1,11 @@
 /**
- * BlockInserter — Notion-style "+" button that appears at the left
- * margin of the InputZone. Opens a quiet popover to select entry type.
+ * BlockInserter — "+" button for inserting new block types into the notebook.
+ * Post-spec extension: not in the original component inventory (06).
+ * Added to support structured entry creation beyond free-form prose,
+ * enabling students to insert specific block types (code, images, files).
  * Menu content extracted to BlockMenu for 150-line discipline.
+ * Related: 06-component-inventory.md 7.4 (InputZone),
+ *          04-information-architecture.md (notebook surface)
  */
 import { useState, useRef, useCallback } from 'react';
 import { ContextPanel } from '@/primitives/ContextPanel';

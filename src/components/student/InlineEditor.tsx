@@ -1,8 +1,10 @@
 /**
- * InlineEditor — editable overlay that replaces entry content.
- * Shows @mention and /command chips during editing (same as InputZone).
- * Supports mid-text @ and / triggers for inserting new mentions.
- * Enter saves, Escape cancels, blur saves if changed.
+ * InlineEditor — in-place editing overlay for existing notebook entries.
+ * Post-spec extension: not in the original component inventory (06).
+ * Added to support editing previously submitted entries without leaving
+ * the notebook flow. Reuses @mention and /command chip rendering from InputZone.
+ * Related: 06-component-inventory.md 7.4 (InputZone),
+ *          04-information-architecture.md (notebook surface, permanence)
  */
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { MENTION_PATTERN } from '@/primitives/MentionChip';

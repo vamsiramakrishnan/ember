@@ -14,7 +14,7 @@ import type { LiveEntry, NotebookEntry } from '@/types/entries';
 import type {
   EntityKind,
   RelationType,
-  MasteryStage,
+  MasteryLevel,
 } from '@/types/entity';
 
 // ─── Command types ────────────────────────────────────────
@@ -96,7 +96,7 @@ register('concept-diagram', (le) => {
     data: {
       term: item.label,
       mastery: 15,
-      masteryLevel: 'exploring' as MasteryStage,
+      masteryLevel: 'exploring' as MasteryLevel,
     },
     sourceEntryId: le.id,
     relationToSource: 'explores' as RelationType,
@@ -156,7 +156,7 @@ register('tutor-connection', (le) => {
     data: {
       term: concept,
       mastery: 10,
-      masteryLevel: 'exploring' as MasteryStage,
+      masteryLevel: 'exploring' as MasteryLevel,
     },
     sourceEntryId: le.id,
     relationToSource: 'explores',
@@ -175,7 +175,7 @@ register('hypothesis', (le) => {
     data: {
       term: concept,
       mastery: 35,
-      masteryLevel: 'developing' as MasteryStage,
+      masteryLevel: 'developing' as MasteryLevel,
     },
     sourceEntryId: le.id,
     relationToSource: 'explores' as RelationType,
@@ -196,7 +196,7 @@ register('reading-material', (le) => {
       data: {
         term: s.heading,
         mastery: 15,
-        masteryLevel: 'exploring' as MasteryStage,
+        masteryLevel: 'exploring' as MasteryLevel,
       },
       sourceEntryId: le.id,
       relationToSource: 'explores' as RelationType,
@@ -217,7 +217,7 @@ register('flashcard-deck', (le) => {
       data: {
         term: c.concept!,
         mastery: 20,
-        masteryLevel: 'exploring' as MasteryStage,
+        masteryLevel: 'exploring' as MasteryLevel,
       },
       sourceEntryId: le.id,
       relationToSource: 'explores' as RelationType,
@@ -238,7 +238,7 @@ register('exercise-set', (le) => {
       data: {
         term: e.concept!,
         mastery: 30,
-        masteryLevel: 'developing' as MasteryStage,
+        masteryLevel: 'developing' as MasteryLevel,
       },
       sourceEntryId: le.id,
       relationToSource: 'explores' as RelationType,

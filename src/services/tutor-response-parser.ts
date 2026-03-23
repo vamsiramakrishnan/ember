@@ -96,8 +96,12 @@ function parseDiagramNodes(
     // Mastery data
     if (isObject(item.mastery)) {
       const m = item.mastery as Record<string, unknown>;
+      const lvl = String(m.level ?? 'exploring');
+      const validLevels = ['mastered', 'strong', 'developing', 'exploring'] as const;
       node.mastery = {
-        level: String(m.level ?? ''),
+        level: validLevels.includes(lvl as typeof validLevels[number])
+          ? (lvl as typeof validLevels[number])
+          : 'exploring',
         percentage: typeof m.percentage === 'number' ? m.percentage : 0,
       };
     }

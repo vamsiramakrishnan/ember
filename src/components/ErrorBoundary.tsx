@@ -5,6 +5,7 @@
  */
 import { Component } from 'react';
 import type { ReactNode, ErrorInfo } from 'react';
+import styles from './ErrorBoundary.module.css';
 
 interface Props {
   children: ReactNode;
@@ -37,41 +38,16 @@ export class ErrorBoundary extends Component<Props, State> {
       if (this.props.fallback) return this.props.fallback;
 
       return (
-        <div style={{
-          maxWidth: 640,
-          margin: '80px auto',
-          padding: '0 24px',
-          fontFamily: 'var(--font-student)',
-          color: 'var(--ink-soft)',
-          textAlign: 'center',
-          lineHeight: 1.75,
-        }}>
-          <p style={{
-            fontFamily: 'var(--font-tutor)',
-            fontSize: 20,
-            fontWeight: 300,
-            color: 'var(--ink)',
-            marginBottom: 16,
-          }}>
+        <div className={styles.container}>
+          <p className={styles.title}>
             Something went quiet.
           </p>
-          <p style={{ fontSize: 15, marginBottom: 24 }}>
+          <p className={styles.message}>
             A rendering error occurred. Your work is safe in the notebook.
           </p>
           <button
             onClick={this.handleReset}
-            style={{
-              fontFamily: 'var(--font-system)',
-              fontSize: 12,
-              color: 'var(--ink-faint)',
-              background: 'none',
-              border: '1px solid var(--rule)',
-              borderRadius: 2,
-              padding: '8px 20px',
-              cursor: 'pointer',
-              letterSpacing: 1,
-              textTransform: 'uppercase',
-            }}
+            className={styles.resetButton}
           >
             Try again
           </button>

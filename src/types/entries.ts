@@ -12,6 +12,8 @@
  * annotations from both student and tutor.
  */
 
+import type { MasteryLevel } from './mastery';
+
 export interface DiagramNode {
   label: string;
   subLabel?: string;
@@ -20,7 +22,7 @@ export interface DiagramNode {
   /** Entity kind for graph resolution. */
   entityKind?: 'concept' | 'thinker' | 'term' | 'question';
   /** Mastery level — drives visual treatment if present. */
-  mastery?: { level: string; percentage: number };
+  mastery?: { level: MasteryLevel; percentage: number };
   /** Children nodes — enables nested, expandable diagrams. */
   children?: DiagramNode[];
   /** Accent colour for the node. */

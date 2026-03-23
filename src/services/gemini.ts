@@ -1,37 +1,29 @@
 /**
  * Gemini API client — core service for AI-powered tutor responses.
- * Uses Google's GenAI SDK with gemini-3.1-flash-lite-preview for text
- * and gemini-3.1-flash-image-preview for image generation.
- *
  * Supports: text generation, Google Search grounding, URL context,
  * and code execution tools.
  */
 import { GoogleGenAI } from '@google/genai';
+import {
+  buildToolsArray,
+  buildConfig,
+  collectStreamChunks,
+  streamWithCallback,
+} from './gemini-helpers';
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
-
 let clientInstance: GoogleGenAI | null = null;
 
 /** Returns the singleton Gemini client, or null if no API key is set. */
 export function getGeminiClient(): GoogleGenAI | null {
   if (!API_KEY) return null;
-  if (!clientInstance) {
-    clientInstance = new GoogleGenAI({ apiKey: API_KEY });
-  }
+  if (!clientInstance) clientInstance = new GoogleGenAI({ apiKey: API_KEY });
   return clientInstance;
 }
 
-/**
- * Whether Gemini is available — either via client-side key (dev)
- * or via server-side proxy (production on Vercel).
- * In production, we assume the proxy is available.
- */
+/** Whether Gemini is available (client-side key or production proxy). */
 export function isGeminiAvailable(): boolean {
-  // Client-side key available (local dev)
-  if (API_KEY) return true;
-  // In production (no VITE_ key), assume proxy routes are deployed
-  if (import.meta.env.PROD) return true;
-  return false;
+  return !!API_KEY || import.meta.env.PROD === true;
 }
 
 /** Models used by Ember. */
@@ -41,232 +33,92 @@ export const MODELS = {
 } as const;
 
 export interface GeminiTextOptions {
-  /** The prompt to send. */
   prompt: string;
-  /** System instruction for the model. */
   systemInstruction?: string;
-  /** Enable Google Search grounding. */
   useSearch?: boolean;
-  /** Enable URL context tool. */
   useUrlContext?: boolean;
-  /** Enable code execution tool. */
   useCodeExecution?: boolean;
-  /** Model override — defaults to text model. */
   model?: string;
 }
 
-/**
- * Generate text using Gemini. Returns the full response text.
- * Collects all chunks from the stream into a single string.
- */
-export async function generateText(
-  options: GeminiTextOptions,
-): Promise<string> {
+/** Require a valid client or throw. */
+function requireClient(): GoogleGenAI {
   const client = getGeminiClient();
-  if (!client) {
-    throw new Error('Gemini API key not configured');
-  }
+  if (!client) throw new Error('Gemini API key not configured');
+  return client;
+}
 
-  const tools: Record<string, unknown>[] = [];
-  if (options.useSearch) {
-    tools.push({ googleSearch: {} });
-  }
-  if (options.useUrlContext) {
-    tools.push({ urlContext: {} });
-  }
-  if (options.useCodeExecution) {
-    tools.push({ codeExecution: {} });
-  }
-
-  const config: Record<string, unknown> = {};
-  if (tools.length > 0) {
-    config.tools = tools;
-  }
-  if (options.systemInstruction) {
-    config.systemInstruction = options.systemInstruction;
-  }
-
-  const contents = [
-    {
-      role: 'user' as const,
-      parts: [{ text: options.prompt }],
-    },
-  ];
-
-  const response = await client.models.generateContentStream({
-    model: options.model ?? MODELS.text,
+/** Internal: start a streaming content generation request. */
+function startStream(
+  client: GoogleGenAI,
+  contents: Array<{ role: string; parts: Array<{ text: string }> }>,
+  opts?: Omit<GeminiTextOptions, 'prompt'>,
+) {
+  const tools = buildToolsArray(opts);
+  const config = buildConfig(opts, tools);
+  return client.models.generateContentStream({
+    model: opts?.model ?? MODELS.text,
     config,
     contents,
   });
-
-  const chunks: string[] = [];
-  for await (const chunk of response) {
-    const parts = chunk.candidates?.[0]?.content?.parts;
-    if (!parts) continue;
-    for (const part of parts) {
-      if ('text' in part && part.text) {
-        chunks.push(part.text);
-      }
-    }
-  }
-
-  return chunks.join('');
 }
 
-/**
- * Stream text with conversation history. Yields chunks via callback.
- */
+/** Build contents array from a single prompt string. */
+function promptContents(prompt: string) {
+  return [{ role: 'user' as const, parts: [{ text: prompt }] }];
+}
+
+/** Build contents array from a message history. */
+function historyContents(
+  messages: Array<{ role: 'user' | 'model'; text: string }>,
+) {
+  return messages.map((m) => ({ role: m.role, parts: [{ text: m.text }] }));
+}
+
+/** Generate text using Gemini. Returns the full response text. */
+export async function generateText(
+  options: GeminiTextOptions,
+): Promise<string> {
+  const response = await startStream(
+    requireClient(), promptContents(options.prompt), options,
+  );
+  return collectStreamChunks(response);
+}
+
+/** Stream text using Gemini. Yields chunks via callback. */
+export async function generateTextStream(
+  options: GeminiTextOptions & {
+    onChunk: (chunk: string, accumulated: string) => void;
+  },
+): Promise<string> {
+  const response = await startStream(
+    requireClient(), promptContents(options.prompt), options,
+  );
+  return streamWithCallback(response, options.onChunk);
+}
+
+/** Generate text with conversation history. Collects all chunks. */
+export async function generateTextWithHistory(
+  messages: Array<{ role: 'user' | 'model'; text: string }>,
+  options?: Omit<GeminiTextOptions, 'prompt'>,
+): Promise<string> {
+  const response = await startStream(
+    requireClient(), historyContents(messages), options,
+  );
+  return collectStreamChunks(response);
+}
+
+/** Stream text with conversation history. Yields chunks via callback. */
 export async function generateTextStreamWithHistory(
   messages: Array<{ role: 'user' | 'model'; text: string }>,
   options?: Omit<GeminiTextOptions, 'prompt'> & {
     onChunk?: (chunk: string, accumulated: string) => void;
   },
 ): Promise<string> {
-  const client = getGeminiClient();
-  if (!client) {
-    throw new Error('Gemini API key not configured');
-  }
-
-  const tools: Record<string, unknown>[] = [];
-  if (options?.useSearch) tools.push({ googleSearch: {} });
-  if (options?.useUrlContext) tools.push({ urlContext: {} });
-  if (options?.useCodeExecution) tools.push({ codeExecution: {} });
-
-  const config: Record<string, unknown> = {};
-  if (tools.length > 0) config.tools = tools;
-  if (options?.systemInstruction) {
-    config.systemInstruction = options.systemInstruction;
-  }
-
-  const contents = messages.map((m) => ({
-    role: m.role,
-    parts: [{ text: m.text }],
-  }));
-
-  const response = await client.models.generateContentStream({
-    model: options?.model ?? MODELS.text,
-    config,
-    contents,
-  });
-
-  let accumulated = '';
-  for await (const chunk of response) {
-    const parts = chunk.candidates?.[0]?.content?.parts;
-    if (!parts) continue;
-    for (const part of parts) {
-      if ('text' in part && part.text) {
-        accumulated += part.text;
-        options?.onChunk?.(part.text, accumulated);
-      }
-    }
-  }
-
-  return accumulated;
-}
-
-/**
- * Stream text using Gemini. Yields chunks as they arrive via callback.
- * Returns the full concatenated text when complete.
- */
-export async function generateTextStream(
-  options: GeminiTextOptions & {
-    onChunk: (chunk: string, accumulated: string) => void;
-  },
-): Promise<string> {
-  const client = getGeminiClient();
-  if (!client) {
-    throw new Error('Gemini API key not configured');
-  }
-
-  const tools: Record<string, unknown>[] = [];
-  if (options.useSearch) tools.push({ googleSearch: {} });
-  if (options.useUrlContext) tools.push({ urlContext: {} });
-  if (options.useCodeExecution) tools.push({ codeExecution: {} });
-
-  const config: Record<string, unknown> = {};
-  if (tools.length > 0) config.tools = tools;
-  if (options.systemInstruction) {
-    config.systemInstruction = options.systemInstruction;
-  }
-
-  const contents = [
-    { role: 'user' as const, parts: [{ text: options.prompt }] },
-  ];
-
-  const response = await client.models.generateContentStream({
-    model: options.model ?? MODELS.text,
-    config,
-    contents,
-  });
-
-  let accumulated = '';
-  for await (const chunk of response) {
-    const parts = chunk.candidates?.[0]?.content?.parts;
-    if (!parts) continue;
-    for (const part of parts) {
-      if ('text' in part && part.text) {
-        accumulated += part.text;
-        options.onChunk(part.text, accumulated);
-      }
-    }
-  }
-
-  return accumulated;
-}
-
-/**
- * Generate text with conversation history.
- * Each message has a role ('user' | 'model') and text content.
- */
-export async function generateTextWithHistory(
-  messages: Array<{ role: 'user' | 'model'; text: string }>,
-  options?: Omit<GeminiTextOptions, 'prompt'>,
-): Promise<string> {
-  const client = getGeminiClient();
-  if (!client) {
-    throw new Error('Gemini API key not configured');
-  }
-
-  const tools: Record<string, unknown>[] = [];
-  if (options?.useSearch) {
-    tools.push({ googleSearch: {} });
-  }
-  if (options?.useUrlContext) {
-    tools.push({ urlContext: {} });
-  }
-  if (options?.useCodeExecution) {
-    tools.push({ codeExecution: {} });
-  }
-
-  const config: Record<string, unknown> = {};
-  if (tools.length > 0) {
-    config.tools = tools;
-  }
-  if (options?.systemInstruction) {
-    config.systemInstruction = options.systemInstruction;
-  }
-
-  const contents = messages.map((m) => ({
-    role: m.role,
-    parts: [{ text: m.text }],
-  }));
-
-  const response = await client.models.generateContentStream({
-    model: options?.model ?? MODELS.text,
-    config,
-    contents,
-  });
-
-  const chunks: string[] = [];
-  for await (const chunk of response) {
-    const parts = chunk.candidates?.[0]?.content?.parts;
-    if (!parts) continue;
-    for (const part of parts) {
-      if ('text' in part && part.text) {
-        chunks.push(part.text);
-      }
-    }
-  }
-
-  return chunks.join('');
+  const response = await startStream(
+    requireClient(), historyContents(messages), options,
+  );
+  const onChunk = options?.onChunk;
+  if (onChunk) return streamWithCallback(response, onChunk);
+  return collectStreamChunks(response);
 }

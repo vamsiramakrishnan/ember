@@ -1,10 +1,11 @@
 /**
- * ReadingMaterial — a paginated deck of teaching slides.
- * Progressive disclosure: thumbnail → expanded paginated view → modal.
- * Each slide is a beautifully typeset page with layout variants.
- * Includes PPTX export via the toolbar.
- *
+ * ReadingMaterial — paginated teaching slide deck with progressive disclosure.
+ * Post-spec extension: not in the original component inventory (06).
+ * Added to support the /teach slash command's structured reading material output.
+ * Three view levels: thumbnail → expanded paginated view → full-screen modal.
  * AI-generated block — produced by /teach slash command.
+ * Related: 03-interaction-language.md (tutor voice, pacing),
+ *          04-information-architecture.md (notebook surface)
  */
 import { useState, useCallback } from 'react';
 import { Lightbox } from '@/primitives/Lightbox';

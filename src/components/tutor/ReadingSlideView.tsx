@@ -1,8 +1,11 @@
 /**
- * ReadingSlideView — renders a single slide from a reading material deck.
- * Layout-aware: title, content, two-column, quote, diagram, summary,
- * timeline, table. Uses MarkdownContent for rich text, plus structured
- * data rendering for timelines, tables, and diagram items.
+ * ReadingSlideView — renders a single slide from a ReadingMaterial deck.
+ * Post-spec extension: not in the original component inventory (06).
+ * Added to support the /teach command's paginated reading material output.
+ * Handles multiple layout variants (title, content, two-column, quote,
+ * diagram, summary, timeline, table) with structured data rendering.
+ * Related: 03-interaction-language.md (tutor voice, pacing),
+ *          02-visual-language.md (typography, spacing)
  */
 import { MarkdownContent } from '@/primitives/MarkdownContent';
 import type { ReadingSlide } from '@/types/entries';

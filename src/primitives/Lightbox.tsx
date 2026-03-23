@@ -1,7 +1,11 @@
 /**
  * Lightbox — full-viewport modal overlay rendered via portal.
+ * Post-spec extension: not in the original component inventory (06).
+ * Added to support deep-dive viewing of visualizations, reading materials,
+ * and other content that benefits from full-screen immersion.
  * Warm paper backdrop, escape to close, scroll lock, focus trap.
- * Used by Visualization for deep-dive mode.
+ * Related: 02-visual-language.md (material, colour tokens),
+ *          01-design-principles.md (focus, quiet interface)
  */
 import { useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';

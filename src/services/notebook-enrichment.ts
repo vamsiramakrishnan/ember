@@ -14,6 +14,7 @@ import { generateText, isGeminiAvailable } from './gemini';
 import { updateNotebook } from '@/persistence/repositories/notebooks';
 import { Store, notify } from '@/persistence';
 import { EMBER_DESIGN_CONTEXT } from './agents/config';
+import { colors } from '@/tokens/colors';
 
 /**
  * Generate a notebook icon — a tiny, warm, typographic symbol
@@ -34,8 +35,8 @@ Generate a tiny 64x64 pixel icon for a notebook titled "${title}".
 ${description ? `The guiding question is: "${description}"` : ''}
 
 Style requirements:
-- Monochrome ink on warm parchment background (#FAF6F1)
-- Ink color: #2C2825 at 60% opacity
+- Monochrome ink on warm parchment background (${colors.paper})
+- Ink color: ${colors.ink} at 60% opacity
 - Single simple symbol or glyph — NOT text, NOT letters
 - Think: a mathematical curve, a leaf, a constellation dot pattern, a wave
 - Minimal, elegant, like a watermark or bookplate stamp

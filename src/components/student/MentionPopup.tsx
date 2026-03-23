@@ -1,7 +1,10 @@
 /**
- * MentionPopup — appears when the student types @ in the InputZone.
- * Shows fuzzy-matched entities from the local index with accent-colored
- * type icons and keyboard navigation hints.
+ * MentionPopup — @ mention autocomplete popup for the InputZone.
+ * Post-spec extension: not in the original component inventory (06).
+ * Added to support entity linking within student prose — typing @ triggers
+ * fuzzy-matched suggestions for thinkers, concepts, terms, and other entities.
+ * Related: 06-component-inventory.md 7.4 (InputZone),
+ *          05-ai-contract.md (student model, entity cross-referencing)
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Entity, EntityType } from '@/hooks/useEntityIndex';

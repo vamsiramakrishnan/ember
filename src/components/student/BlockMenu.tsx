@@ -1,7 +1,11 @@
 /**
- * BlockMenu — popover content for the block inserter.
- * Two sections: text blocks and content blocks.
- * Extracted from BlockInserter to maintain 150-line discipline.
+ * BlockMenu — popover menu content for the BlockInserter.
+ * Post-spec extension: not in the original component inventory (06).
+ * Added as a decomposition of BlockInserter to maintain 150-line discipline.
+ * Lists available text blocks (prose, question, hypothesis, note) and
+ * content blocks (code, image, file, link).
+ * Related: 06-component-inventory.md Family 1 (student elements),
+ *          04-information-architecture.md (notebook surface)
  */
 import type { StudentEntryType, InsertableBlockType } from '@/types/entries';
 import styles from './BlockInserter.module.css';

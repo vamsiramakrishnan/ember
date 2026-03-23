@@ -5,10 +5,11 @@
  * In development with VITE_GEMINI_API_KEY set, falls back to direct
  * SDK calls for convenience. In production (no VITE_ key), uses the proxy.
  */
+import { readNdjsonStream } from './ndjson-stream';
+import type { Tool } from '@google/genai';
 
 /** Whether we should use the server-side proxy. */
 export function useProxy(): boolean {
-  // If no client-side key, we must use the proxy
   const clientKey = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
   return !clientKey;
 }
@@ -16,135 +17,56 @@ export function useProxy(): boolean {
 /** Base URL for API routes (empty string = same origin). */
 const API_BASE = '';
 
-/**
- * Stream text from the /api/gemini-text endpoint.
- * Returns collected text chunks.
- */
-export async function proxyTextGeneration(body: {
+/** Shared request body shape for text generation endpoints. */
+interface TextGenBody {
   messages: Array<{ role: string; parts: Array<{ text?: string }> }>;
   model?: string;
   systemInstruction?: string;
   thinkingLevel?: string;
-  tools?: Record<string, unknown>[];
-}): Promise<string> {
-  const res = await fetch(`${API_BASE}/api/gemini-text`, {
+  tools?: Tool[];
+}
+
+/** POST JSON to an API route; throw on non-OK response. */
+async function postJson(path: string, body: unknown): Promise<Response> {
+  const res = await fetch(`${API_BASE}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText })) as { error: string };
+    const err = await res.json().catch(() => ({
+      error: res.statusText,
+    })) as { error: string };
     throw new Error(`Proxy error: ${err.error}`);
   }
 
-  // Read NDJSON stream
-  const reader = res.body?.getReader();
-  if (!reader) throw new Error('No response body');
+  return res;
+}
 
-  const decoder = new TextDecoder();
-  const chunks: string[] = [];
-  let buffer = '';
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split('\n');
-    buffer = lines.pop() ?? '';
-
-    for (const line of lines) {
-      if (!line.trim()) continue;
-      try {
-        const parsed = JSON.parse(line) as { text?: string };
-        if (parsed.text) chunks.push(parsed.text);
-      } catch {
-        // skip malformed lines
-      }
-    }
-  }
-
-  // Process any remaining buffer
-  if (buffer.trim()) {
-    try {
-      const parsed = JSON.parse(buffer) as { text?: string };
-      if (parsed.text) chunks.push(parsed.text);
-    } catch {
-      // skip
-    }
-  }
-
-  return chunks.join('');
+/**
+ * Stream text from the /api/gemini-text endpoint.
+ * Returns collected text chunks.
+ */
+export async function proxyTextGeneration(
+  body: TextGenBody,
+): Promise<string> {
+  const res = await postJson('/api/gemini-text', body);
+  return readNdjsonStream(res);
 }
 
 /**
  * Stream text from the /api/gemini-text endpoint, yielding chunks.
  */
 export async function proxyTextGenerationStream(
-  body: {
-    messages: Array<{ role: string; parts: Array<{ text?: string }> }>;
-    model?: string;
-    systemInstruction?: string;
-    thinkingLevel?: string;
-    tools?: Record<string, unknown>[];
-  },
+  body: TextGenBody,
   onChunk: (chunk: string, accumulated: string) => void,
 ): Promise<string> {
-  const res = await fetch(`${API_BASE}/api/gemini-text`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText })) as { error: string };
-    throw new Error(`Proxy error: ${err.error}`);
-  }
-
-  const reader = res.body?.getReader();
-  if (!reader) throw new Error('No response body');
-
-  const decoder = new TextDecoder();
-  let accumulated = '';
-  let buffer = '';
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split('\n');
-    buffer = lines.pop() ?? '';
-
-    for (const line of lines) {
-      if (!line.trim()) continue;
-      try {
-        const parsed = JSON.parse(line) as { text?: string };
-        if (parsed.text) {
-          accumulated += parsed.text;
-          onChunk(parsed.text, accumulated);
-        }
-      } catch { /* skip malformed */ }
-    }
-  }
-
-  if (buffer.trim()) {
-    try {
-      const parsed = JSON.parse(buffer) as { text?: string };
-      if (parsed.text) {
-        accumulated += parsed.text;
-        onChunk(parsed.text, accumulated);
-      }
-    } catch { /* skip */ }
-  }
-
-  return accumulated;
+  const res = await postJson('/api/gemini-text', body);
+  return readNdjsonStream(res, onChunk);
 }
 
-/**
- * Generate images via /api/gemini-image.
- */
+/** Generate images via /api/gemini-image. */
 export async function proxyImageGeneration(body: {
   prompt: string;
   useSearch?: boolean;
@@ -154,42 +76,20 @@ export async function proxyImageGeneration(body: {
   images: Array<{ data: string; mimeType: string }>;
   text: string;
 }> {
-  const res = await fetch(`${API_BASE}/api/gemini-image`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText })) as { error: string };
-    throw new Error(`Proxy error: ${err.error}`);
-  }
-
+  const res = await postJson('/api/gemini-image', body);
   return res.json() as Promise<{
     images: Array<{ data: string; mimeType: string }>;
     text: string;
   }>;
 }
 
-/**
- * Generate HTML via /api/gemini-html. Streams the HTML string.
- */
+/** Generate HTML via /api/gemini-html. Streams the HTML string. */
 export async function proxyHtmlGeneration(body: {
   prompt: string;
   context?: string;
   useSearch?: boolean;
 }): Promise<string> {
-  const res = await fetch(`${API_BASE}/api/gemini-html`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText })) as { error: string };
-    throw new Error(`Proxy error: ${err.error}`);
-  }
-
+  const res = await postJson('/api/gemini-html', body);
   return res.text();
 }
 
@@ -202,23 +102,11 @@ export async function proxyTtsGeneration(body: {
   speakers: Array<{ speaker: string; voiceName: string }>;
   model?: string;
 }): Promise<{ audioData: string; mimeType: string }> {
-  const res = await fetch(`${API_BASE}/api/gemini-tts`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText })) as { error: string };
-    throw new Error(`TTS proxy error: ${err.error}`);
-  }
-
+  const res = await postJson('/api/gemini-tts', body);
   return res.json() as Promise<{ audioData: string; mimeType: string }>;
 }
 
-/**
- * Analyse an image via /api/gemini-multimodal.
- */
+/** Analyse an image via /api/gemini-multimodal. */
 export async function proxyMultimodalAnalysis(body: {
   imageData: string;
   mimeType: string;
@@ -227,17 +115,7 @@ export async function proxyMultimodalAnalysis(body: {
   useSearch?: boolean;
   mode?: 'analyse' | 'extract';
 }): Promise<string> {
-  const res = await fetch(`${API_BASE}/api/gemini-multimodal`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText })) as { error: string };
-    throw new Error(`Proxy error: ${err.error}`);
-  }
-
+  const res = await postJson('/api/gemini-multimodal', body);
   const data = await res.json() as { text: string };
   return data.text;
 }

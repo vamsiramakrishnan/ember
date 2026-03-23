@@ -1,9 +1,12 @@
 /**
  * ContextPanel — shared primitive for all contextual interaction surfaces.
- *
- * Provides standardised surface treatment, reveal animation, keyboard
- * dismiss (Escape), and click-outside close across popups, panels,
- * toolbars, and menus.
+ * Post-spec extension: not in the original component inventory (06).
+ * Added to provide a standardised popup/popover foundation used by
+ * SelectionToolbar, BlockInserter, MentionPopup, and SlashCommandPopup.
+ * Handles surface treatment, reveal animation, keyboard dismiss (Escape),
+ * and click-outside close.
+ * Related: 02-visual-language.md (material, motion tokens),
+ *          01-design-principles.md (quiet interface, peripheral visibility)
  *
  * Usage:
  *   <ContextPanel reveal="up" onDismiss={close} zIndex={20}>
