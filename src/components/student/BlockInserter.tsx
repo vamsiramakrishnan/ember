@@ -3,7 +3,8 @@
  * margin of the InputZone. Opens a quiet popover to select entry type.
  * Menu content extracted to BlockMenu for 150-line discipline.
  */
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useCallback } from 'react';
+import { ContextPanel } from '@/primitives/ContextPanel';
 import { BlockMenu } from './BlockMenu';
 import type { StudentEntryType, InsertableBlockType } from '@/types/entries';
 import styles from './BlockInserter.module.css';
@@ -19,28 +20,7 @@ export function BlockInserter({
   onSelect, onSelectBlock, onPaste, onFileUpload,
 }: BlockInserterProps) {
   const [open, setOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const handleClick = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
-    };
-    document.addEventListener('keydown', handleKey);
-    return () => document.removeEventListener('keydown', handleKey);
-  }, [open]);
 
   const handleTextSelect = useCallback((type: StudentEntryType) => {
     setOpen(false);
@@ -83,7 +63,7 @@ export function BlockInserter({
   }, [onPaste, handleTextSelect]);
 
   return (
-    <div className={styles.container} ref={menuRef}>
+    <div className={styles.container}>
       <button
         className={styles.trigger}
         onClick={() => setOpen(!open)}
@@ -99,11 +79,14 @@ export function BlockInserter({
         onChange={handleFileChange}
       />
       {open && (
-        <BlockMenu
-          onTextSelect={handleTextSelect}
-          onContentSelect={handleContentSelect}
-          onPaste={onPaste ? handlePaste : undefined}
-        />
+        <ContextPanel reveal="down" onDismiss={() => setOpen(false)}
+          zIndex={10} className={styles.menu} ariaLabel="Block types" role="menu">
+          <BlockMenu
+            onTextSelect={handleTextSelect}
+            onContentSelect={handleContentSelect}
+            onPaste={onPaste ? handlePaste : undefined}
+          />
+        </ContextPanel>
       )}
     </div>
   );

@@ -1,4 +1,5 @@
 /* AnnotationMargin — incremental reveal in the right margin.
+ * Composes shared animations, inputs, and dismiss from ContextPanel.
  *
  * Layer 1 (rest): count indicator — ghost dot + number. Always visible.
  * Layer 2 (hover): + button fades in on parent hover.
@@ -26,7 +27,7 @@
   border: none;
   cursor: pointer;
   padding: 2px 0;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.15s ease;
 }
 
 .indicator:hover { opacity: 1; }
@@ -53,18 +54,13 @@
 
 /* Layer 2: + button — hidden at rest, visible on parent hover */
 .addButton {
+  composes: ghostTrigger from '../../primitives/ContextPanel.module.css';
   align-self: flex-start;
-  font-family: var(--font-system);
   font-size: 14px;
   font-weight: 300;
-  color: var(--ink-ghost);
-  background: none;
-  border: none;
-  cursor: pointer;
   padding: 0;
   line-height: 1;
   opacity: 0;
-  transition: opacity 0.15s ease;
 }
 
 *:hover > .margin .addButton,
@@ -72,11 +68,10 @@
   opacity: 1;
 }
 
-.addButton:hover { color: var(--ink-faint); }
-
 /* ─── Layer 3: expanded panel ────────────────────── */
 
 .panel {
+  composes: revealRight from '../../primitives/ContextPanel.module.css';
   position: absolute;
   right: -200px;
   top: 0;
@@ -84,7 +79,6 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  animation: panelSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .note {
@@ -132,6 +126,7 @@
   outline: none;
   resize: none;
   line-height: 1.5;
+  transition: border-color 0.2s ease;
 }
 
 .input::placeholder {
@@ -142,38 +137,18 @@
 .input:focus { border-bottom-color: var(--margin); }
 
 .addButtonInline {
+  composes: ghostTrigger from '../../primitives/ContextPanel.module.css';
   align-self: flex-start;
-  font-family: var(--font-system);
   font-size: 14px;
   font-weight: 300;
-  color: var(--ink-ghost);
-  background: none;
-  border: none;
-  cursor: pointer;
   padding: 2px 0;
   line-height: 1;
 }
 
-.addButtonInline:hover { color: var(--ink-faint); }
-
 .collapse {
+  composes: dismissBtn from '../../primitives/ContextPanel.module.css';
   align-self: flex-start;
-  font-family: var(--font-system);
-  font-size: 11px;
-  color: var(--ink-ghost);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 2px 0;
   margin-top: 4px;
-  transition: color 0.15s ease;
-}
-
-.collapse:hover { color: var(--ink-faint); }
-
-@keyframes panelSlideIn {
-  from { opacity: 0; transform: translateX(4px); }
-  to { opacity: 1; transform: translateX(0); }
 }
 
 /* Hide on narrow screens */
@@ -182,6 +157,5 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .margin, .addButton, .indicator, .collapse { transition: none; }
-  .panel { animation: none; }
+  .indicator, .input { transition: none; }
 }

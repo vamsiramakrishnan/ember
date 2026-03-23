@@ -1,0 +1,225 @@
+/* ContextPanel — shared tokens for all contextual interaction surfaces.
+ *
+ * Standardises animation, surface treatment, action buttons, section
+ * headers, footer hints, and z-index across every popup, panel,
+ * toolbar, and contextual menu in Ember.
+ *
+ * Import individual classes where needed. These compose alongside
+ * component-specific styles — they don't replace them.
+ */
+
+/* ─── Z-index scale ─────────────────────────────────── */
+/* Ordered by context: inline < margin < floating < modal  */
+
+/* ─── Surface treatment ─────────────────────────────── */
+.surface {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  box-shadow: none;
+}
+
+/* ─── Reveal animations ─────────────────────────────── */
+/* All contextual surfaces use the same timing + easing.   */
+
+.revealUp {
+  animation: panelRevealUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.revealDown {
+  animation: panelRevealDown 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.revealRight {
+  animation: panelRevealRight 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.revealInline {
+  animation: panelRevealInline 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes panelRevealUp {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes panelRevealDown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes panelRevealRight {
+  from { opacity: 0; transform: translateX(4px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes panelRevealInline {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Section header ────────────────────────────────── */
+.sectionHeader {
+  font-family: var(--font-system);
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink-ghost);
+  padding: 10px 14px 4px;
+}
+
+/* ─── Action button (shared across toolbars, panels) ── */
+.actionBtn {
+  font-family: var(--font-system);
+  font-size: 13px;
+  color: var(--ink-faint);
+  background: none;
+  border: none;
+  cursor: pointer;
+  min-width: 32px;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px;
+  line-height: 1;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.actionBtn:hover {
+  color: var(--ink);
+  background: var(--paper-warm);
+}
+
+.actionBtn:focus-visible {
+  outline: 1.5px solid var(--margin);
+  outline-offset: 1px;
+}
+
+.actionBtnActive {
+  color: var(--amber);
+}
+
+/* Small variant — for compact toolbars and action rows */
+.actionBtnSmall {
+  composes: actionBtn;
+  font-size: 9px;
+  letter-spacing: 0.5px;
+  min-width: unset;
+  min-height: unset;
+  padding: 2px 8px;
+  border: 1px solid var(--rule-light);
+}
+
+.actionBtnSmall:hover {
+  border-color: var(--ink-ghost);
+  color: var(--ink-faint);
+  background: none;
+}
+
+/* ─── Item row (menus, popups, lists) ────────────────── */
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 14px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s ease;
+}
+
+.item:hover, .itemSelected {
+  background: var(--paper-warm);
+}
+
+/* ─── Footer (keyboard hints) ────────────────────────── */
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 6px 14px;
+  border-top: 1px solid var(--rule-light);
+}
+
+.footerHint {
+  font-family: var(--font-system);
+  font-size: 9px;
+  color: var(--ink-ghost);
+  letter-spacing: 0.5px;
+}
+
+/* ─── Input (inline compose inputs) ──────────────────── */
+.input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--font-student);
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--ink);
+  padding: 6px 0;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.input:focus {
+  border-bottom-color: var(--margin);
+}
+
+.input::placeholder {
+  color: var(--ink-ghost);
+  font-style: italic;
+}
+
+/* ─── Ghost trigger (hover-revealed action text) ─────── */
+.ghostTrigger {
+  font-family: var(--font-system);
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 1.5px;
+  color: var(--ink-ghost);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px 0 2px;
+  transition: color 0.2s ease;
+}
+
+.ghostTrigger:hover {
+  color: var(--margin);
+}
+
+/* ─── Dismiss button (collapse, close) ───────────────── */
+.dismissBtn {
+  font-family: var(--font-system);
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--ink-ghost);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 0;
+  transition: color 0.15s ease;
+}
+
+.dismissBtn:hover {
+  color: var(--ink-faint);
+}
+
+/* ─── Reduced motion ────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .revealUp, .revealDown, .revealRight, .revealInline {
+    animation: none;
+    opacity: 1;
+  }
+  .actionBtn, .actionBtnSmall, .item, .input,
+  .ghostTrigger, .dismissBtn {
+    transition: none;
+  }
+}

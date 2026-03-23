@@ -1,14 +1,14 @@
-/* MentionPopup — the @ reference picker. Shared by SlashCommandPopup. */
+/* MentionPopup — the @ reference picker. Shared by SlashCommandPopup.
+ * Composes shared styles from ContextPanel primitive. */
 
 /* ─── Container ──────────────────────────────────── */
 .popup {
+  composes: surface from '../../primitives/ContextPanel.module.css';
+  composes: revealUp from '../../primitives/ContextPanel.module.css';
   position: absolute;
   z-index: 20;
   bottom: calc(100% + 4px);
   left: 0;
-  background: var(--paper);
-  border: 1px solid var(--rule);
-  border-radius: 2px;
   min-width: 300px;
   max-width: 420px;
   max-height: 280px;
@@ -20,13 +20,7 @@
 
 /* ─── Section header (slash commands grouped) ────── */
 .sectionHeader {
-  font-family: var(--font-system);
-  font-size: 9px;
-  font-weight: 400;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--ink-ghost);
-  padding: 10px 14px 4px;
+  composes: sectionHeader from '../../primitives/ContextPanel.module.css';
 }
 
 /* ─── Query echo at top ──────────────────────────── */
@@ -51,20 +45,10 @@
 
 /* ─── Item row ───────────────────────────────────── */
 .item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 7px 14px;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  text-align: left;
-  transition: background 0.1s ease;
+  composes: item from '../../primitives/ContextPanel.module.css';
 }
-.item:hover,
 .selected {
-  background: var(--paper-warm);
+  composes: itemSelected from '../../primitives/ContextPanel.module.css';
 }
 
 /* ─── Entity accent dot ──────────────────────────── */
@@ -139,18 +123,10 @@
 
 /* ─── Footer hint ────────────────────────────────── */
 .footer {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 6px 14px;
-  border-top: 1px solid var(--rule-light);
+  composes: footer from '../../primitives/ContextPanel.module.css';
 }
 .footerHint {
-  font-family: var(--font-system);
-  font-size: 9px;
-  color: var(--ink-ghost);
-  letter-spacing: 0.5px;
+  composes: footerHint from '../../primitives/ContextPanel.module.css';
 }
 
 /* ─── Mobile: full-width popup ────────────────────── */
@@ -158,8 +134,4 @@
   .popup { min-width: unset; max-width: unset; left: 0; right: 0; }
   .item { padding: 10px 14px; }
   .name { font-size: 15px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .item { transition: none; }
 }

@@ -28,7 +28,7 @@ const CONTENT_BLOCKS: { type: InsertableBlockType; label: string; hint: string }
 
 export function BlockMenu({ onTextSelect, onContentSelect, onPaste }: BlockMenuProps) {
   return (
-    <div className={styles.menu} role="menu" aria-label="Block types">
+    <>
       <div className={styles.sectionLabel}>text</div>
       {TEXT_BLOCKS.map((bt) => (
         <div key={bt.type} className={styles.menuItem}>
@@ -61,6 +61,6 @@ export function BlockMenu({ onTextSelect, onContentSelect, onPaste }: BlockMenuP
           <span className={styles.typeHint}>{bt.hint}</span>
         </button>
       ))}
-    </div>
+    </>
   );
 }

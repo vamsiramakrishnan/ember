@@ -91,7 +91,7 @@
 
 .followUpZone {
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.15s ease;
 }
 
 .wrapper:hover .followUpZone,
@@ -127,20 +127,7 @@
 }
 
 .action {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-family: var(--font-system);
-  font-size: 13px;
-  color: var(--ink-faint);
-  /* Min 32px touch target */
-  min-width: 32px;
-  min-height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 2px;
-  transition: color 0.1s ease, background 0.1s ease;
+  composes: actionBtn from '../primitives/ContextPanel.module.css';
 }
 
 .action:hover {
@@ -148,12 +135,9 @@
   background: var(--paper-warm);
 }
 
-.action:focus-visible {
-  outline: 2px solid var(--margin);
-  outline-offset: 1px;
+.actionActive {
+  composes: actionBtnActive from '../primitives/ContextPanel.module.css';
 }
-
-.actionActive { color: var(--amber); }
 .actionActive:hover { color: var(--amber); }
 
 /* ─── Narrow screens ─────────────────────────────── */
