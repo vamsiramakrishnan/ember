@@ -1,69 +1,23 @@
 /**
- * Graph Layout — pure functions for computing initial node positions.
- * Radial layout for reduced-motion, random-seeded for force simulation.
+ * Graph layout utilities — type extensions and edge classification
+ * for the knowledge graph canvas rendering.
  */
-import type { GraphNode } from '@/types/graph-canvas';
+import type { GraphNode as BaseGraphNode, GraphEdge, NodeType } from '@/services/knowledge-graph';
 
-/** Place nodes in a radial pattern centered on the viewport. */
-export function radialLayout(
-  nodes: GraphNode[],
-  width: number,
-  height: number,
-): GraphNode[] {
-  const cx = width / 2;
-  const cy = height / 2;
-  const radius = Math.min(width, height) * 0.35;
+export type { GraphEdge };
 
-  return nodes.map((node, i) => {
-    if (node.pinned) return node;
-    const angle = (2 * Math.PI * i) / nodes.length - Math.PI / 2;
-    return {
-      ...node,
-      x: cx + radius * Math.cos(angle),
-      y: cy + radius * Math.sin(angle),
-      vx: 0,
-      vy: 0,
-    };
-  });
+/**
+ * A graph node with spatial position and optional mastery.
+ * Extends the base GraphNode from the knowledge graph service
+ * with rendering-specific fields.
+ */
+export interface GraphNode extends BaseGraphNode {
+  x: number;
+  y: number;
+  mastery?: number;
 }
 
-/** Place nodes randomly within bounds, seeded from IDs for consistency. */
-export function randomLayout(
-  nodes: GraphNode[],
-  width: number,
-  height: number,
-): GraphNode[] {
-  const pad = 60;
-  return nodes.map((node) => {
-    if (node.pinned) return node;
-    // Simple hash from ID for deterministic placement
-    let hash = 0;
-    for (let i = 0; i < node.id.length; i++) {
-      hash = ((hash << 5) - hash + node.id.charCodeAt(i)) | 0;
-    }
-    const hx = ((hash >>> 0) % 1000) / 1000;
-    const hy = ((((hash >>> 16) ^ (hash << 3)) >>> 0) % 1000) / 1000;
-    return {
-      ...node,
-      x: pad + hx * (width - pad * 2),
-      y: pad + hy * (height - pad * 2),
-      vx: 0,
-      vy: 0,
-    };
-  });
-}
-
-/** Compute the radius of a node based on its kind and mastery. */
-export function nodeRadius(node: GraphNode): number {
-  switch (node.kind) {
-    case 'concept': return 6 + ((node.mastery ?? 0) / 100) * 10;
-    case 'thinker': return 12;
-    case 'term': return 8;
-    case 'curiosity': return 10;
-  }
-}
-
-/** Categorize a relation type for visual styling. */
+/** Visual category for edge styling. */
 export type EdgeCategory =
   | 'knowledge'
   | 'bridge'
@@ -71,12 +25,44 @@ export type EdgeCategory =
   | 'contradiction'
   | 'echo';
 
-export function edgeCategory(type: string): EdgeCategory {
-  if (['bridges-to', 'cross-references'].includes(type)) return 'bridge';
-  if (['prompted-by', 'follow-up', 'extends', 'confirms'].includes(type)) {
-    return 'conversational';
+/** Maps a relation string from GraphEdge to a visual category. */
+export function edgeCategory(relation: string): EdgeCategory {
+  switch (relation) {
+    case 'explores':
+    case 'defines':
+    case 'references':
+    case 'introduces':
+      return 'knowledge';
+    case 'bridges-to':
+    case 'cross-ref':
+      return 'bridge';
+    case 'prompted-by':
+    case 'follow-up':
+    case 'extends':
+    case 'confirms':
+    case 'mentions':
+      return 'conversational';
+    case 'contradicts':
+      return 'contradiction';
+    case 'echoes':
+      return 'echo';
+    default:
+      return 'knowledge';
   }
-  if (type === 'contradicts') return 'contradiction';
-  if (type === 'echoes') return 'echo';
-  return 'knowledge';
+}
+
+/**
+ * Maps NodeType to the visual variant used in rendering.
+ * The knowledge graph uses 'question' where the canvas renders 'curiosity'.
+ */
+export type VisualNodeType = 'concept' | 'thinker' | 'term' | 'curiosity';
+
+export function visualNodeType(type: NodeType): VisualNodeType {
+  switch (type) {
+    case 'concept': return 'concept';
+    case 'thinker': return 'thinker';
+    case 'term': return 'term';
+    case 'question': return 'curiosity';
+    default: return 'concept';
+  }
 }

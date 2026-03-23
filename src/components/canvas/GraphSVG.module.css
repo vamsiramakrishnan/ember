@@ -1,0 +1,14 @@
+.container {
+  width: 100%;
+  overflow: hidden;
+  border-radius: 2px;
+}
+
+.svg {
+  display: block;
+  cursor: grab;
+}
+
+.svg:active {
+  cursor: grabbing;
+}
