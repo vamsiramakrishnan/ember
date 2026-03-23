@@ -1,0 +1,6 @@
+/* NotebookPastSession — dimmed entries from completed sessions.
+ * Opacity uses a design token, not a hardcoded value. */
+
+.entries {
+  opacity: var(--past-session-opacity, 0.55);
+}

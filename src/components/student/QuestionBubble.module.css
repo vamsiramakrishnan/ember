@@ -17,5 +17,7 @@
   left: 13px; /* textIndent(19) - 6 = 13px from container edge */
   font-family: var(--font-tutor);
   font-size: 14px;
+  font-weight: 400;
   color: var(--ink-faint);
+  line-height: 1;
 }

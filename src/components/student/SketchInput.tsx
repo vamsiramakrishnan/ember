@@ -82,6 +82,8 @@ export function SketchInput({ onSubmit, onCancel }: SketchInputProps) {
         width={560}
         height={200}
         className={styles.canvas}
+        aria-label="Drawing canvas — sketch your idea"
+        role="img"
         onMouseDown={startDraw}
         onMouseMove={draw}
         onMouseUp={endDraw}

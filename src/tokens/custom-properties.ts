@@ -55,6 +55,9 @@ export function getTokenCSS(): string {
   --session-header-bottom: ${spacing.sessionHeaderBottom}px;
   --session-divider-margin: ${spacing.sessionDividerMargin}px;
 
+  /* Opacity */
+  --past-session-opacity: 0.55;
+
   /* Motion */
   --entry-duration: ${motion.entryDuration};
   --entry-ease: ${motion.entryEase};

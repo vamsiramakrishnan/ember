@@ -6,6 +6,7 @@
 import { usePersistedNotebook } from '@/hooks/usePersistedNotebook';
 import { SessionHeader } from '@/components/peripheral/SessionHeader';
 import { NotebookEntryRenderer } from './NotebookEntryRenderer';
+import styles from './NotebookPastSession.module.css';
 
 interface PastSessionProps {
   session: {
@@ -28,7 +29,7 @@ export function NotebookPastSession({ session }: PastSessionProps) {
         timeOfDay={session.timeOfDay}
         topic={session.topic}
       />
-      <div style={{ opacity: 0.55 }}>
+      <div className={styles.entries}>
         {entries.map((le) => (
           <NotebookEntryRenderer key={le.id} entry={le.entry} />
         ))}

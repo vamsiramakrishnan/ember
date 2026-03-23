@@ -25,7 +25,6 @@ export function Header({ activeSurface, onNavigate }: HeaderProps) {
               className={styles.logo}
               aria-label="Ember — return to notebooks"
               onClick={signOut}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
             >
               Ember
             </button>
@@ -54,7 +53,9 @@ export function Header({ activeSurface, onNavigate }: HeaderProps) {
             />
           )}
         </div>
-        <Navigation active={activeSurface} onNavigate={onNavigate} />
+        <nav aria-label="Ember navigation">
+          <Navigation active={activeSurface} onNavigate={onNavigate} />
+        </nav>
       </Column>
     </header>
   );

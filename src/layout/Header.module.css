@@ -30,6 +30,10 @@
   margin: 0;
   user-select: none;
   flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
 }
 
 .separator {
@@ -54,6 +58,11 @@
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 200px;
+}
+
+.logo:focus-visible {
+  outline: 2px solid var(--margin);
+  outline-offset: 2px;
 }
 
 .notebookName:hover { color: var(--ink-soft); }
