@@ -194,6 +194,29 @@ export async function proxyHtmlGeneration(body: {
 }
 
 /**
+ * Generate speech audio via /api/gemini-tts.
+ * Returns base64-encoded PCM audio data.
+ */
+export async function proxyTtsGeneration(body: {
+  script: string;
+  speakers: Array<{ speaker: string; voiceName: string }>;
+  model?: string;
+}): Promise<{ audioData: string; mimeType: string }> {
+  const res = await fetch(`${API_BASE}/api/gemini-tts`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText })) as { error: string };
+    throw new Error(`TTS proxy error: ${err.error}`);
+  }
+
+  return res.json() as Promise<{ audioData: string; mimeType: string }>;
+}
+
+/**
  * Analyse an image via /api/gemini-multimodal.
  */
 export async function proxyMultimodalAnalysis(body: {
