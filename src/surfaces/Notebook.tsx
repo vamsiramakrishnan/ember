@@ -355,6 +355,7 @@ function NotebookContent({
               onPaste={contentDrop.handlePaste}
               insertText={popup.pendingInsert}
               onInsertConsumed={popup.handleInsertConsumed}
+              popupOpen={popup.mentionQuery !== null || popup.slashQuery !== null}
               disabled={isThinking}
             />
           </div>

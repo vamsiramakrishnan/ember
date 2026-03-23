@@ -24,13 +24,14 @@ interface InputZoneProps {
   onPaste?: (e: React.ClipboardEvent) => void;
   insertText?: string | null;
   onInsertConsumed?: () => void;
+  popupOpen?: boolean;
   disabled?: boolean;
 }
 
 export function InputZone({
   onSubmit, onSubmitTyped, onSketchSubmit,
   onMentionTrigger, onSlashTrigger, onPopupClose, onPaste,
-  insertText, onInsertConsumed, disabled,
+  insertText, onInsertConsumed, popupOpen, disabled,
 }: InputZoneProps) {
   const [value, setValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
@@ -89,6 +90,11 @@ export function InputZone({
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      // When a popup is open, let the popup's document-level handler
+      // handle Enter, ArrowUp/Down — do not submit or interfere.
+      if (popupOpen && (e.key === 'Enter' || e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+        return;
+      }
       if (e.key === 'Enter' && !e.shiftKey && value.trim()) {
         e.preventDefault(); submit(value.trim());
       }
@@ -96,7 +102,7 @@ export function InputZone({
         if (forcedType) setForcedType(null);
         onPopupClose?.();
       }
-    }, [value, submit, forcedType, onPopupClose]);
+    }, [value, submit, forcedType, onPopupClose, popupOpen]);
 
   const handleBlockSelect = useCallback(
     (type: StudentEntryType) => { setForcedType(type); textareaRef.current?.focus(); }, []);
