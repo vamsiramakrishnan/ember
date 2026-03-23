@@ -2,6 +2,43 @@
   margin-top: var(--session-header-top);
 }
 
+.headerRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.notebookIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 2px;
+  opacity: 0.7;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.discipline {
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.tag {
+  font-family: var(--font-system);
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  color: var(--ink-faint);
+  border: 1px solid var(--rule-light);
+  border-radius: 2px;
+  padding: 2px 8px;
+}
+
 .sectionLabel {
   text-transform: uppercase;
 }

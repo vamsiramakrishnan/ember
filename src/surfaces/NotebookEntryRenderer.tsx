@@ -4,6 +4,8 @@
  *
  * Covers all block types: student, tutor, rich content, AI-generated, system.
  */
+import { useCallback } from 'react';
+import { useEntityNavigation } from '@/hooks/useEntityNavigation';
 import type { NotebookEntry } from '@/types/entries';
 import { ProseEntry } from '@/components/student/ProseEntry';
 import { ScratchNote } from '@/components/student/ScratchNote';
@@ -36,6 +38,16 @@ interface Props {
 }
 
 export function NotebookEntryRenderer({ entry }: Props) {
+  const { navigateTo } = useEntityNavigation();
+
+  const handleNodeClick = useCallback((entityId: string, entityKind: string) => {
+    navigateTo({
+      target: { type: 'entity', entityId, entityKind },
+      surface: entityKind === 'term' ? 'constellation' : 'notebook',
+      highlight: true,
+    });
+  }, [navigateTo]);
+
   switch (entry.type) {
     // Student blocks
     case 'prose':
@@ -51,45 +63,17 @@ export function NotebookEntryRenderer({ entry }: Props) {
 
     // Rich content blocks
     case 'code-cell':
-      return (
-        <CodeCell
-          language={entry.language}
-          source={entry.source}
-          result={entry.result}
-        />
-      );
+      return <CodeCell language={entry.language} source={entry.source} result={entry.result} />;
     case 'image':
-      return (
-        <ImageEntry
-          dataUrl={entry.dataUrl}
-          alt={entry.alt}
-          caption={entry.caption}
-        />
-      );
+      return <ImageEntry dataUrl={entry.dataUrl} alt={entry.alt} caption={entry.caption} />;
     case 'file-upload':
-      return (
-        <FileUploadEntry
-          file={entry.file}
-          summary={entry.summary}
-        />
-      );
+      return <FileUploadEntry file={entry.file} summary={entry.summary} />;
     case 'embed':
-      return (
-        <EmbedEntry
-          url={entry.url}
-          title={entry.title}
-          description={entry.description}
-          favicon={entry.favicon}
-        />
-      );
+      return <EmbedEntry url={entry.url} title={entry.title}
+        description={entry.description} favicon={entry.favicon} />;
     case 'document':
-      return (
-        <DocumentEntry
-          file={entry.file}
-          pages={entry.pages}
-          extractedText={entry.extractedText}
-        />
-      );
+      return <DocumentEntry file={entry.file} pages={entry.pages}
+        extractedText={entry.extractedText} />;
 
     // Tutor blocks
     case 'tutor-marginalia':
@@ -97,17 +81,14 @@ export function NotebookEntryRenderer({ entry }: Props) {
     case 'tutor-question':
       return <SocraticQuestion>{entry.content}</SocraticQuestion>;
     case 'tutor-connection':
-      return (
-        <Connection emphasisEnd={entry.emphasisEnd}>
-          {entry.content}
-        </Connection>
-      );
+      return <Connection emphasisEnd={entry.emphasisEnd}>{entry.content}</Connection>;
     case 'concept-diagram':
       return (
         <ConceptDiagram
           items={entry.items}
           edges={entry.edges}
           title={entry.title}
+          onNodeClick={handleNodeClick}
         />
       );
     case 'thinker-card':
@@ -137,11 +118,7 @@ export function NotebookEntryRenderer({ entry }: Props) {
     case 'streaming-text':
       return <StreamingText done={entry.done}>{entry.content}</StreamingText>;
     default:
-      // Exhaustive check: if a new entry type is added without a renderer,
-      // render nothing rather than crash. In development, log a warning.
-      if (process.env.NODE_ENV !== 'production') {
-        console.warn(`NotebookEntryRenderer: unhandled entry type "${(entry as { type: string }).type}"`);
-      }
+      if (process.env.NODE_ENV !== 'production') console.warn(`Unhandled entry: "${(entry as { type: string }).type}"`);
       return null;
   }
 }

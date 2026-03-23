@@ -29,6 +29,7 @@ import { useContentDrop } from '@/hooks/useContentDrop';
 import { useEntryReorder } from '@/hooks/useEntryReorder';
 import { useInPlaceEdit } from '@/hooks/useInPlaceEdit';
 import { usePopupState } from '@/hooks/usePopupState';
+import { useSlashCommandRouter } from '@/hooks/useSlashCommandRouter';
 import { createStudentEntry } from '@/hooks/useEntryInference';
 import { branchNotebook } from '@/services/notebook-branch';
 import { useStudent } from '@/contexts/StudentContext';
@@ -78,6 +79,7 @@ export function Notebook({ onNavigate }: NotebookProps) {
   const reorder = useEntryReorder();
   const inPlaceEdit = useInPlaceEdit();
   const popup = usePopupState(onNavigate);
+  const slashRouter = useSlashCommandRouter({ addEntry, respond, entries });
   const [mode, setMode] = useState<NotebookMode>('linear');
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -114,8 +116,15 @@ export function Notebook({ onNavigate }: NotebookProps) {
   }, [addEntry, respond, checkAndUpdate]);
 
   const handleSubmit = useCallback((text: string) => {
+    // Check if a slash command was just selected — route to agent
+    const cmd = popup.consumeSlashCommand();
+    if (cmd && text.startsWith('/')) {
+      submitEntry({ type: 'prose', content: text });
+      void slashRouter.route(cmd, text);
+      return;
+    }
     submitEntry(createStudentEntry(text));
-  }, [submitEntry]);
+  }, [submitEntry, popup, slashRouter]);
 
   const handleSubmitTyped = useCallback((text: string, type: string) => {
     submitEntry({ type: type as 'prose', content: text });
