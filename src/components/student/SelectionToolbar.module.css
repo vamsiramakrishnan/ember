@@ -10,7 +10,7 @@
   border-radius: 2px;
   transform: translateX(-50%);
   opacity: 0;
-  animation: toolbarIn 0.15s ease forwards;
+  animation: toolbarIn 0.3s ease forwards;
 }
 
 @keyframes toolbarIn {

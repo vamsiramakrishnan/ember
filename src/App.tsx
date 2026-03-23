@@ -19,6 +19,7 @@ import { openDB } from '@/persistence';
 import { seedIfEmpty } from '@/persistence/seed';
 import { registerAdapter, startSync } from '@/persistence/sync';
 import { createAdapterFromEnv } from '@/persistence/sync/supabase';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import type { Surface } from '@/layout/Navigation';
 
 function ActiveSurface({ surface, onNavigate }: { surface: Surface; onNavigate: (s: Surface) => void }) {
@@ -100,8 +101,10 @@ export function App() {
   if (!ready) return null;
 
   return (
-    <StudentProvider>
-      <AppContent />
-    </StudentProvider>
+    <ErrorBoundary>
+      <StudentProvider>
+        <AppContent />
+      </StudentProvider>
+    </ErrorBoundary>
   );
 }

@@ -3,6 +3,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { inferEntryType } from '@/hooks/useEntryInference';
 import { SketchInput } from './SketchInput';
 import { BlockInserter } from './BlockInserter';
+import { InputAffordances } from './InputAffordances';
 import type { StudentEntryType } from '@/types/entries';
 import styles from './InputZone.module.css';
 
@@ -18,11 +19,8 @@ interface InputZoneProps {
   onSlashTrigger?: (query: string) => void;
   onPopupClose?: () => void;
   onPaste?: (e: React.ClipboardEvent) => void;
-  /** Text to insert at the current @ or / trigger position. */
   insertText?: string | null;
-  /** Called after insertText is consumed. */
   onInsertConsumed?: () => void;
-  /** When true, the tutor is thinking — textarea becomes quiet. */
   disabled?: boolean;
 }
 
@@ -42,11 +40,9 @@ export function InputZone({
     if (el) { el.style.height = 'auto'; el.style.height = `${el.scrollHeight}px`; }
   }, [value]);
 
-  // Insert text from mention/slash selection
   useEffect(() => {
     if (!insertText) return;
     setValue((prev) => {
-      // Replace @query or /query at end of text with the insertion
       const replaced = prev.replace(/@\w*$/, insertText).replace(/\/\w*$/, insertText);
       return replaced === prev ? prev + insertText : replaced;
     });
@@ -69,7 +65,6 @@ export function InputZone({
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const text = e.target.value;
     setValue(text);
-
     const atMatch = text.match(/@(\w*)$/);
     if (atMatch) { onMentionTrigger?.(atMatch[1] ?? ''); return; }
     const slashMatch = text.match(/\/(\w*)$/);
@@ -107,10 +102,7 @@ export function InputZone({
     : value.trim() ? typeLabels[inferEntryType(value.trim())] : '';
 
   return (
-    <div
-      className={styles.container}
-      onClick={() => textareaRef.current?.focus()}
-    >
+    <div className={styles.container} onClick={() => textareaRef.current?.focus()}>
       <BlockInserter onSelect={handleBlockSelect} />
       {forcedType && (
         <div className={styles.forcedTypeBar}>
@@ -119,9 +111,7 @@ export function InputZone({
             className={styles.forcedTypeClear}
             onClick={(e) => { e.stopPropagation(); setForcedType(null); }}
             aria-label="Clear entry type"
-          >
-            esc
-          </button>
+          >esc</button>
         </div>
       )}
       <textarea
@@ -152,20 +142,9 @@ export function InputZone({
           className={styles.sketchToggle}
           onClick={(e) => { e.stopPropagation(); setSketchMode(true); }}
           aria-label="Switch to sketch mode"
-        >
-          sketch
-        </button>
+        >sketch</button>
       </div>
       <InputAffordances />
-    </div>
-  );
-}
-
-const AFFORDANCE_HINTS = ['? asks the tutor', '/visualize', '@mention'];
-function InputAffordances() {
-  return (
-    <div className={styles.affordances} aria-hidden="true">
-      {AFFORDANCE_HINTS.map((h) => <span key={h} className={styles.affordance}>{h}</span>)}
     </div>
   );
 }

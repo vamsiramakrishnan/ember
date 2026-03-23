@@ -27,10 +27,10 @@
 .amber { border-top: 2px solid var(--amber); }
 .margin { border-top: 2px solid var(--margin); }
 
-.sage:hover { background: rgba(107, 143, 113, 0.05); }
-.indigo:hover { background: rgba(74, 88, 153, 0.05); }
-.amber:hover { background: rgba(184, 134, 11, 0.05); }
-.margin:hover { background: rgba(139, 115, 85, 0.05); }
+.sage:hover { background: var(--sage-dim); }
+.indigo:hover { background: var(--indigo-dim); }
+.amber:hover { background: var(--amber-dim); }
+.margin:hover { background: var(--margin-dim); }
 
 /* Header button — the clickable area */
 .header {
