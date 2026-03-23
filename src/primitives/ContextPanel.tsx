@@ -87,17 +87,19 @@ export function ContextPanel({
     const focusable = panel.querySelectorAll<HTMLElement>(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
     );
-    if (focusable.length > 0) focusable[0].focus();
+    const firstFocusable = focusable.length > 0 ? focusable[0] : undefined;
+    if (firstFocusable) firstFocusable.focus();
 
     // Trap Tab within panel
     const trapFocus = (e: KeyboardEvent) => {
       if (e.key !== 'Tab' || !panel) return;
-      const items = panel.querySelectorAll<HTMLElement>(
+      const items = Array.from(panel.querySelectorAll<HTMLElement>(
         'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      );
+      ));
       if (items.length === 0) return;
       const first = items[0];
       const last = items[items.length - 1];
+      if (!first || !last) return;
       if (e.shiftKey && document.activeElement === first) {
         e.preventDefault();
         last.focus();
