@@ -1,0 +1,13 @@
+/* KnowledgeCanvas — empty state styling */
+
+.empty {
+  font-family: var(--font-system);
+  font-size: 12px;
+  font-weight: 300;
+  color: var(--ink-ghost);
+  text-align: center;
+  padding: 80px 24px;
+  margin: 0;
+  letter-spacing: 0.5px;
+  line-height: 1.6;
+}

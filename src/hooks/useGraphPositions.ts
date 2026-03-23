@@ -1,76 +1,62 @@
 /**
- * useGraphPositions — persists graph node positions to IndexedDB.
- * Uses the canvas store with key convention `graph:{notebookId}`
- * to avoid schema migration while reusing the existing Canvas store.
+ * useGraphPositions — persists and restores graph node positions.
  *
- * Only pinned (user-dragged) nodes are saved. Positions are restored
- * on mount and saved with a 500ms debounce after drag events.
+ * Uses localStorage keyed by notebookId. When the canvas is opened,
+ * previously saved positions are restored so the layout is stable
+ * across sessions.
  */
-import { useEffect, useRef, useCallback } from 'react';
-import {
-  saveCanvasState,
-  getCanvasBySession,
-} from '@/persistence/repositories/canvas';
-import type { GraphNode } from '@/types/graph-canvas';
+import { useEffect, useCallback, useRef } from 'react';
+import type { GraphNode, LayoutNode, SavedPosition } from '@/types/graph-canvas';
 
-/** Map of node ID to { x, y } positions for restoration. */
-export type PositionMap = Map<string, { x: number; y: number }>;
+const STORAGE_PREFIX = 'ember-graph-positions-';
 
-const SAVE_DEBOUNCE_MS = 500;
+function storageKey(notebookId: string): string {
+  return `${STORAGE_PREFIX}${notebookId}`;
+}
+
+function loadPositions(notebookId: string): SavedPosition[] {
+  try {
+    const raw = localStorage.getItem(storageKey(notebookId));
+    if (!raw) return [];
+    return JSON.parse(raw) as SavedPosition[];
+  } catch {
+    return [];
+  }
+}
 
 export function useGraphPositions(
-  notebookId: string,
-  onRestored: (positions: PositionMap) => void,
+  notebookId: string | null,
+  _nodes: GraphNode[],
+  onRestored: (positions: SavedPosition[]) => void,
 ) {
-  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const restoredRef = useRef(false);
-  const onRestoredRef = useRef(onRestored);
-  onRestoredRef.current = onRestored;
 
-  // ── Restore positions on mount / notebook change ────────
+  // Restore positions once when the notebook is opened
   useEffect(() => {
-    if (!notebookId) return;
-    restoredRef.current = false;
-
-    const key = `graph:${notebookId}`;
-    void getCanvasBySession(key).then(saved => {
-      if (!saved || restoredRef.current) return;
-      const posMap: PositionMap = new Map();
-      for (const p of saved.positions) {
-        posMap.set(p.id, { x: p.x, y: p.y });
-      }
-      onRestoredRef.current(posMap);
+    if (!notebookId || restoredRef.current) return;
+    const saved = loadPositions(notebookId);
+    if (saved.length > 0) {
+      onRestored(saved);
       restoredRef.current = true;
-    });
+    }
+  }, [notebookId, onRestored]);
+
+  // Reset restoration flag when notebook changes
+  useEffect(() => {
+    restoredRef.current = false;
   }, [notebookId]);
 
-  // ── Save positions (debounced) ──────────────────────────
-  const savePositions = useCallback(
-    (currentNodes: GraphNode[]) => {
-      if (!notebookId) return;
-      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-
-      saveTimeoutRef.current = setTimeout(() => {
-        const positions = currentNodes
-          .filter(n => n.pinned)
-          .map(n => ({ id: n.id, x: n.x, y: n.y }));
-
-        void saveCanvasState({
-          sessionId: `graph:${notebookId}`,
-          positions,
-          connections: [],
-        });
-      }, SAVE_DEBOUNCE_MS);
-    },
-    [notebookId],
-  );
-
-  // ── Cleanup pending timeout on unmount ──────────────────
-  useEffect(() => {
-    return () => {
-      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-    };
-  }, []);
+  const savePositions = useCallback((layoutNodes: LayoutNode[]) => {
+    if (!notebookId) return;
+    const positions: SavedPosition[] = layoutNodes
+      .filter((n) => n.pinned)
+      .map((n) => ({ id: n.id, x: n.x, y: n.y, pinned: true }));
+    try {
+      localStorage.setItem(storageKey(notebookId), JSON.stringify(positions));
+    } catch {
+      // localStorage full — silently ignore
+    }
+  }, [notebookId]);
 
   return { savePositions };
 }

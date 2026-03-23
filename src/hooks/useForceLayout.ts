@@ -1,146 +1,147 @@
 /**
- * useForceLayout — force-directed layout simulation for the knowledge graph.
- * Respects prefers-reduced-motion by falling back to static radial layout.
+ * useForceLayout — force-directed layout for the knowledge graph.
+ * Respects prefers-reduced-motion by snapping to final positions.
  */
-import { useEffect, useRef, useCallback, useState } from 'react';
-import { radialLayout, randomLayout } from '@/components/canvas/graph-layout';
-import type { GraphNode, GraphEdge } from '@/types/graph-canvas';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import type { GraphNode, GraphEdge, LayoutNode } from '@/types/graph-canvas';
+
+interface ForceOptions { width: number; height: number; enabled: boolean }
 
 const REPULSION = 3000;
 const ATTRACTION = 0.005;
-const CENTER_PULL = 0.01;
-const DAMPING = 0.92;
-const MIN_VELOCITY = 0.5;
-const MIN_DISTANCE = 20;
+const DAMPING = 0.85;
+const MIN_VELOCITY = 0.1;
+const MAX_TICKS = 300;
 
-interface ForceLayoutOptions { width: number; height: number; enabled: boolean }
+function initLayout(nodes: GraphNode[], width: number, height: number): LayoutNode[] {
+  const cx = width / 2;
+  const cy = height / 2;
+  const radius = Math.min(width, height) * 0.3;
+  return nodes.map((n, i) => {
+    const angle = (2 * Math.PI * i) / Math.max(nodes.length, 1);
+    return {
+      ...n,
+      x: cx + radius * Math.cos(angle),
+      y: cy + radius * Math.sin(angle),
+      vx: 0, vy: 0, pinned: false,
+    };
+  });
+}
+
+function tick(nodes: LayoutNode[], edges: GraphEdge[], width: number, height: number) {
+  const cx = width / 2;
+  const cy = height / 2;
+
+  for (const node of nodes) {
+    if (node.pinned) continue;
+    let fx = 0;
+    let fy = 0;
+
+    // Repulsion from all other nodes
+    for (const other of nodes) {
+      if (other.id === node.id) continue;
+      const dx = node.x - other.x;
+      const dy = node.y - other.y;
+      const dist = Math.max(Math.sqrt(dx * dx + dy * dy), 1);
+      const force = REPULSION / (dist * dist);
+      fx += (dx / dist) * force;
+      fy += (dy / dist) * force;
+    }
+
+    // Attraction along edges
+    for (const edge of edges) {
+      let other: LayoutNode | undefined;
+      if (edge.from === node.id) other = nodes.find((n) => n.id === edge.to);
+      else if (edge.to === node.id) other = nodes.find((n) => n.id === edge.from);
+      if (!other) continue;
+      const dx = other.x - node.x;
+      const dy = other.y - node.y;
+      fx += dx * ATTRACTION;
+      fy += dy * ATTRACTION;
+    }
+
+    // Centering force
+    fx += (cx - node.x) * 0.001;
+    fy += (cy - node.y) * 0.001;
+
+    node.vx = (node.vx + fx) * DAMPING;
+    node.vy = (node.vy + fy) * DAMPING;
+  }
+
+  // Apply velocities and clamp
+  for (const node of nodes) {
+    if (node.pinned) continue;
+    node.x = Math.max(40, Math.min(width - 40, node.x + node.vx));
+    node.y = Math.max(40, Math.min(height - 40, node.y + node.vy));
+  }
+}
+
+function isSettled(nodes: LayoutNode[]): boolean {
+  return nodes.every(
+    (n) => n.pinned || (Math.abs(n.vx) < MIN_VELOCITY && Math.abs(n.vy) < MIN_VELOCITY),
+  );
+}
 
 export function useForceLayout(
-  initialNodes: GraphNode[],
+  nodes: GraphNode[],
   edges: GraphEdge[],
-  options: ForceLayoutOptions,
+  options: ForceOptions,
 ) {
-  const [nodes, setNodes] = useState<GraphNode[]>(initialNodes);
-  const nodesRef = useRef(initialNodes);
-  const frameRef = useRef(0);
-  const settledRef = useRef(false);
+  const { width, height, enabled } = options;
+  const [layoutNodes, setLayoutNodes] = useState<LayoutNode[]>([]);
+  const nodesRef = useRef(layoutNodes);
+  const tickCount = useRef(0);
+  const rafRef = useRef(0);
 
-  const reducedMotion = typeof window !== 'undefined'
-    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Re-initialize when node set changes
   useEffect(() => {
-    if (!options.enabled || initialNodes.length === 0) return;
+    const layout = initLayout(nodes, width, height);
+    // Preserve pinned positions from previous layout
+    for (const ln of layout) {
+      const prev = nodesRef.current.find((p) => p.id === ln.id);
+      if (prev?.pinned) { ln.x = prev.x; ln.y = prev.y; ln.pinned = true; }
+    }
+    nodesRef.current = layout;
+    tickCount.current = 0;
+    setLayoutNodes([...layout]);
+  }, [nodes, width, height]);
 
-    const laid = reducedMotion
-      ? radialLayout(initialNodes, options.width, options.height)
-      : randomLayout(initialNodes, options.width, options.height);
-
-    nodesRef.current = laid;
-    settledRef.current = reducedMotion;
-    setNodes(laid);
-  }, [initialNodes, options.width, options.height, options.enabled, reducedMotion]);
-
-  // Run force simulation
+  // Animation loop
   useEffect(() => {
-    if (!options.enabled || reducedMotion || settledRef.current) return;
-    if (nodesRef.current.length === 0) return;
+    if (!enabled || nodesRef.current.length === 0) return;
 
-    let running = true;
-    const cx = options.width / 2;
-    const cy = options.height / 2;
-
-    // Build edge lookup for faster access
-    const edgeMap = new Map<string, string[]>();
-    for (const e of edges) {
-      if (!edgeMap.has(e.from)) edgeMap.set(e.from, []);
-      if (!edgeMap.has(e.to)) edgeMap.set(e.to, []);
-      edgeMap.get(e.from)!.push(e.to);
-      edgeMap.get(e.to)!.push(e.from);
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReduced) {
+      // Run simulation to completion synchronously
+      for (let i = 0; i < MAX_TICKS; i++) {
+        tick(nodesRef.current, edges, width, height);
+        if (isSettled(nodesRef.current)) break;
+      }
+      setLayoutNodes([...nodesRef.current]);
+      return;
     }
 
-    let tickCount = 0;
-
-    function tick() {
-      if (!running) return;
-      const ns = nodesRef.current;
-      let maxV = 0;
-
-      for (let i = 0; i < ns.length; i++) {
-        const a = ns[i]!;
-        if (a.pinned) continue;
-
-        let fx = 0;
-        let fy = 0;
-
-        // Repulsion from all other nodes
-        for (let j = 0; j < ns.length; j++) {
-          if (i === j) continue;
-          const b = ns[j]!;
-          const dx = a.x - b.x;
-          const dy = a.y - b.y;
-          const dist = Math.max(Math.sqrt(dx * dx + dy * dy), MIN_DISTANCE);
-          const force = REPULSION / (dist * dist);
-          fx += (dx / dist) * force;
-          fy += (dy / dist) * force;
-        }
-
-        // Attraction along edges
-        const neighbors = edgeMap.get(a.id) ?? [];
-        for (const nId of neighbors) {
-          const b = ns.find(n => n.id === nId);
-          if (!b) continue;
-          fx += (b.x - a.x) * ATTRACTION;
-          fy += (b.y - a.y) * ATTRACTION;
-        }
-
-        // Center pull
-        fx += (cx - a.x) * CENTER_PULL;
-        fy += (cy - a.y) * CENTER_PULL;
-
-        a.vx = (a.vx + fx) * DAMPING;
-        a.vy = (a.vy + fy) * DAMPING;
-        a.x += a.vx;
-        a.y += a.vy;
-
-        maxV = Math.max(maxV, Math.abs(a.vx), Math.abs(a.vy));
-      }
-
-      tickCount++;
-
-      // Update React state at ~15fps during simulation
-      if (tickCount % 4 === 0) {
-        setNodes([...ns]);
-      }
-
-      // Settle check
-      if (maxV < MIN_VELOCITY || tickCount > 300) {
-        settledRef.current = true;
-        setNodes([...ns]);
-        return;
-      }
-
-      frameRef.current = requestAnimationFrame(tick);
-    }
-
-    frameRef.current = requestAnimationFrame(tick);
-
-    return () => {
-      running = false;
-      cancelAnimationFrame(frameRef.current);
+    const step = () => {
+      if (tickCount.current >= MAX_TICKS || isSettled(nodesRef.current)) return;
+      tick(nodesRef.current, edges, width, height);
+      tickCount.current++;
+      setLayoutNodes([...nodesRef.current]);
+      rafRef.current = requestAnimationFrame(step);
     };
-  }, [edges, options.enabled, options.width, options.height, reducedMotion]);
+    rafRef.current = requestAnimationFrame(step);
+
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [enabled, edges, width, height]);
 
   const pinNode = useCallback((id: string, x: number, y: number) => {
-    const ns = nodesRef.current;
-    const node = ns.find(n => n.id === id);
+    const node = nodesRef.current.find((n) => n.id === id);
     if (node) {
-      node.x = x;
-      node.y = y;
+      node.x = x; node.y = y;
+      node.vx = 0; node.vy = 0;
       node.pinned = true;
-      node.vx = 0;
-      node.vy = 0;
-      setNodes([...ns]);
+      setLayoutNodes([...nodesRef.current]);
     }
   }, []);
 
-  return { nodes, pinNode, settled: settledRef.current };
+  return { layoutNodes, pinNode };
 }

@@ -1,14 +1,31 @@
-.container {
-  width: 100%;
-  overflow: hidden;
-  border-radius: 2px;
-}
+/* GraphSVG — knowledge graph SVG canvas */
 
 .svg {
   display: block;
+  cursor: default;
+  user-select: none;
+}
+
+.edge {
+  pointer-events: none;
+  transition: stroke 0.3s ease;
+}
+
+.node {
   cursor: grab;
 }
 
-.svg:active {
+.node:active {
   cursor: grabbing;
+}
+
+.node:focus-visible circle {
+  stroke: var(--margin);
+  stroke-width: 2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .edge {
+    transition: none;
+  }
 }
