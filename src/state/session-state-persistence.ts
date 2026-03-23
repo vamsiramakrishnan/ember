@@ -14,6 +14,7 @@ import {
   deriveSessionState,
 } from '@/persistence/repositories/events';
 import type { InteractionMode } from '@/types/entity';
+import type { SessionPhase } from './session-state-types';
 
 // ─── Session tracking ────────────────────────────────────
 
@@ -84,7 +85,7 @@ export function persistTutorActivity(
 
 /** Result of restoring session state from events. */
 export interface RestoredState {
-  phase: import('./session-state').SessionPhase;
+  phase: SessionPhase;
   studentTurnCount: number;
   tutorTurnCount: number;
   consecutiveTutorEntries: number;
