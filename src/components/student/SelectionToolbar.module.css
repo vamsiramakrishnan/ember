@@ -1,5 +1,12 @@
 /* SelectionToolbar — floating above selected text.
- * Composes shared surface + animation from ContextPanel. */
+ *
+ * UX: appears 200ms after mouseup to avoid fighting Chrome's native
+ * selection handles. Clamped to column boundaries. Arrow points to
+ * the selected text. Buttons show icon + label for discoverability.
+ *
+ * Visual: warm paper surface, 1px rule border, no shadow (per spec).
+ * The toolbar feels like a margin note that appeared because you
+ * asked for it — not like a browser chrome element. */
 
 .toolbar {
   composes: surface from '../../primitives/ContextPanel.module.css';
@@ -7,9 +14,13 @@
   position: absolute;
   z-index: 30;
   display: flex;
-  gap: 2px;
-  padding: 4px 6px;
+  gap: 1px;
+  padding: 3px 4px;
   transform: translateX(-50%);
+  /* Prevent toolbar from triggering hover on entry */
+  pointer-events: auto;
+  /* Suppress native selection when interacting with toolbar */
+  user-select: none;
 }
 
 /* Arrow pointing down to selected text */
@@ -26,11 +37,61 @@
   border-top: 5px solid var(--paper-warm);
 }
 
+/* ─── Action buttons ──────────────────────── */
+
 .action {
-  composes: actionBtn from '../../primitives/ContextPanel.module.css';
-  padding: 4px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 5px 10px;
+  background: none;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 0.15s ease;
 }
 
 .action:hover {
   background: var(--paper-deep);
+}
+
+.action:active {
+  background: var(--rule-light);
+}
+
+.action:focus-visible {
+  outline: 1.5px solid var(--margin);
+  outline-offset: 1px;
+}
+
+.actionIcon {
+  font-family: var(--font-tutor);
+  font-size: 14px;
+  color: var(--ink-faint);
+  line-height: 1;
+  transition: color 0.15s ease;
+}
+
+.action:hover .actionIcon {
+  color: var(--margin);
+}
+
+.actionLabel {
+  font-family: var(--font-system);
+  font-size: 8px;
+  letter-spacing: 0.5px;
+  color: var(--ink-ghost);
+  line-height: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toolbar { animation: none; opacity: 1; }
+  .action, .actionIcon { transition: none; }
+}
+
+/* Mobile: hide labels, just show icons */
+@media (max-width: 480px) {
+  .actionLabel { display: none; }
+  .action { padding: 6px 12px; }
 }

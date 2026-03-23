@@ -79,6 +79,12 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+  max-height: 280px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* Subtle scroll indicator */
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule-light) transparent;
 }
 
 .note {

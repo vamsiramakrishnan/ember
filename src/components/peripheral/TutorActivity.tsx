@@ -1,10 +1,16 @@
 /**
- * TutorActivity — quiet status indicator showing what the tutor is doing.
- * Appears below the streaming text / above the InputZone when the tutor
- * is active. Uses the session state's activityDetail for granular steps.
+ * TutorActivity — rich, multi-phase status indicator.
  *
- * Design: whisper-quiet, IBM Plex Mono 10px, ink-ghost colour, subtle
- * fade animation. Feels like a distant typewriter, not a loading spinner.
+ * Redesigned from a single dot+label to a warm, informative presence
+ * that shows the tutor's thinking process without demanding attention.
+ *
+ * Three visual modes:
+ *   1. Single step: dot + label (like before, for simple responses)
+ *   2. Streaming: animated writing indicator with character count
+ *   3. Multi-step: vertical pipeline showing completed/active/pending
+ *
+ * The indicator should feel like watching a craftsperson work —
+ * you can see what they're doing, but it doesn't interrupt you.
  */
 import { useSyncExternalStore } from 'react';
 import { getSessionState, subscribeSessionState } from '@/state';
@@ -12,16 +18,30 @@ import type { TutorActivityDetail } from '@/state';
 import styles from './TutorActivity.module.css';
 
 const STEP_LABELS: Record<string, string> = {
-  routing: 'reading…',
-  researching: 'researching…',
-  thinking: 'thinking…',
-  'searching-graph': 'exploring connections…',
-  streaming: 'writing…',
-  visualizing: 'composing a visualization…',
-  illustrating: 'sketching…',
-  reflecting: 'reflecting…',
-  refining: 'refining…',
-  enriching: 'enriching…',
+  routing: 'reading your thoughts',
+  researching: 'researching',
+  thinking: 'thinking',
+  'searching-graph': 'exploring connections',
+  streaming: 'writing',
+  visualizing: 'composing a visualization',
+  illustrating: 'sketching',
+  reflecting: 'reflecting',
+  refining: 'refining',
+  enriching: 'enriching',
+};
+
+/** Icon per step — quiet, typographic. */
+const STEP_ICON: Record<string, string> = {
+  routing: '·',
+  researching: '◈',
+  thinking: '·',
+  'searching-graph': '⟷',
+  streaming: '✎',
+  visualizing: '◉',
+  illustrating: '✎',
+  reflecting: '·',
+  refining: '·',
+  enriching: '·',
 };
 
 function selectActivity(): TutorActivityDetail | null {
@@ -35,18 +55,23 @@ export function TutorActivity() {
 
   if (!activity) return null;
 
-  const label = activity.label || STEP_LABELS[activity.step] || 'thinking…';
+  const label = activity.label || STEP_LABELS[activity.step] || 'thinking';
+  const icon = STEP_ICON[activity.step] || '·';
   const hasProgress = activity.iteration != null && activity.maxIterations != null;
+  const isStreaming = activity.step === 'streaming';
 
   return (
     <div className={styles.container} aria-live="polite" aria-atomic="true">
-      <span className={styles.dot} aria-hidden="true" />
+      <span className={isStreaming ? styles.dotStreaming : styles.dot} aria-hidden="true">
+        {icon}
+      </span>
       <span className={styles.label}>{label}</span>
       {hasProgress && (
         <span className={styles.progress}>
           {activity.iteration}/{activity.maxIterations}
         </span>
       )}
+      {isStreaming && <span className={styles.writingBar} aria-hidden="true" />}
     </div>
   );
 }

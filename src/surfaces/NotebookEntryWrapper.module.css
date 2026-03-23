@@ -92,6 +92,12 @@
 
 .content {
   min-width: 0;
+  /* Suppress Chrome's native text selection mini-menu inside entries.
+   * Our SelectionToolbar provides richer actions. The native context
+   * menu (right-click) still works — we only suppress the selection
+   * action bar that Chrome shows on text select. */
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 /* ─── Layer 2: follow-up trigger reveal ───────────── */

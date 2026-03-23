@@ -52,7 +52,7 @@ export const NotebookEntryWrapper = memo(function NotebookEntryWrapper({
   const contentRef = useRef<HTMLDivElement>(null);
 
   const handleTouchStart = useCallback(() =>
-    { touchTimer.current = setTimeout(() => setTouched(true), 200); }, []);
+    { touchTimer.current = setTimeout(() => setTouched(true), 150); }, []);
   const handleTouchEnd = useCallback(() =>
     { if (touchTimer.current) clearTimeout(touchTimer.current); }, []);
 

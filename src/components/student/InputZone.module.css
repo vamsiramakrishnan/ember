@@ -27,7 +27,12 @@
   letter-spacing: 0.005em;
   padding: 0;
   margin: 0;
-  overflow: hidden;
+  /* Auto-grows via JS, but caps at 40vh to keep InputZone usable */
+  max-height: 40vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule-light) transparent;
 }
 
 /* When chip overlay is active, hide the raw syntax text */
