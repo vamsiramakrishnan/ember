@@ -8,6 +8,8 @@ import { generateFlashcards } from '@/services/flashcard-gen';
 import { generateExercises } from '@/services/exercise-gen';
 import { addToLibrary, extractTermsFromMaterial } from '@/services/teaching-integration';
 import { recentContext as buildContext } from '@/services/entry-utils';
+import { generatePodcast } from '@/services/podcast-gen';
+import { indexTeachingContent } from './useTeachingIndexer';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
 import type { SlashCommand } from '@/components/student/SlashCommandPopup';
 
@@ -78,6 +80,7 @@ export function useSlashCommandRouter({
           if (studentId && notebookId) {
             addToLibrary(deck, studentId, notebookId).catch(() => {});
             extractTermsFromMaterial(deck, studentId, notebookId).catch(() => {});
+            indexTeachingContent(deck, studentId, notebookId).catch(() => {});
           }
         }
         return true;
@@ -90,6 +93,7 @@ export function useSlashCommandRouter({
           addEntry(fc);
           if (studentId && notebookId) {
             extractTermsFromMaterial(fc, studentId, notebookId).catch(() => {});
+            indexTeachingContent(fc, studentId, notebookId).catch(() => {});
           }
         }
         return true;
@@ -98,7 +102,19 @@ export function useSlashCommandRouter({
       case 'exercise': {
         addEntry({ type: 'silence', text: 'designing exercises…' });
         const ex = await generateExercises(query, entriesRef.current);
-        if (ex) addEntry(ex);
+        if (ex) {
+          addEntry(ex);
+          if (studentId && notebookId) {
+            indexTeachingContent(ex, studentId, notebookId).catch(() => {});
+          }
+        }
+        return true;
+      }
+
+      case 'podcast': {
+        addEntry({ type: 'silence', text: 'recording podcast…' });
+        const pod = await generatePodcast(query, entriesRef.current);
+        if (pod) addEntry(pod);
         return true;
       }
 

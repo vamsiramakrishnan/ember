@@ -238,6 +238,52 @@
   text-align: center;
 }
 
+/* ─── Timeline ─────────────────────────────────────── */
+.timeline { display: flex; flex-direction: column; gap: 6px; padding-left: 4px; }
+.timelineItem { display: flex; align-items: flex-start; gap: 10px; min-height: 28px; }
+.timelinePeriod {
+  font-family: var(--font-system); font-size: 10px; letter-spacing: 1px;
+  color: var(--ink-faint); min-width: 60px; text-align: right; margin-top: 4px;
+}
+.timelineDot {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--margin);
+  flex-shrink: 0; margin-top: 5px;
+}
+.timelineContent { flex: 1; }
+.timelineEvent {
+  font-family: var(--font-tutor); font-size: 15px; color: var(--ink); display: block;
+}
+.timelineDetail {
+  font-family: var(--font-student); font-size: 13px; color: var(--ink-faint); display: block;
+}
+
+/* ─── Table ────────────────────────────────────────── */
+.tableWrap { overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; }
+.th {
+  font-family: var(--font-tutor); font-size: 13px; font-weight: 500;
+  color: var(--ink); text-align: left; padding: 6px 10px;
+  border-bottom: 1px solid var(--rule); background: var(--paper-warm);
+}
+.td {
+  font-family: var(--font-student); font-size: 13px; color: var(--ink-soft);
+  padding: 5px 10px; border-bottom: 1px solid var(--rule-light);
+}
+
+/* ─── Diagram grid ─────────────────────────────────── */
+.diagramGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+.diagramCard {
+  padding: 12px; border: 1px solid var(--rule-light); border-radius: 2px;
+  background: var(--paper-warm);
+}
+.diagramLabel {
+  font-family: var(--font-tutor); font-size: 14px; color: var(--ink); display: block;
+}
+.diagramDetail {
+  font-family: var(--font-student); font-size: 12px; color: var(--ink-faint);
+  margin-top: 4px; display: block; line-height: 1.5;
+}
+
 /* ─── Toolbar ──────────────────────────────────────── */
 .toolbar {
   display: flex;

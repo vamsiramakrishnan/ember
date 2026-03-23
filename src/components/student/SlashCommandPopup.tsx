@@ -25,6 +25,7 @@ const COMMANDS: SlashCommand[] = [
   { id: 'timeline', label: 'timeline', hint: 'historical progression', icon: '→', accent: s(styles.iconAmber), group: 'create' },
   { id: 'connect', label: 'connect', hint: 'find bridges between ideas', icon: '⟷', accent: s(styles.iconSage), group: 'create' },
   { id: 'teach', label: 'teach', hint: 'create reading material deck', icon: '▣', accent: s(styles.iconAmber), group: 'create' },
+  { id: 'podcast', label: 'podcast', hint: 'audio discussion about a topic', icon: '♪', accent: s(styles.iconMargin), group: 'create' },
   { id: 'flashcards', label: 'flashcards', hint: 'study cards for active recall', icon: '◈', accent: s(styles.iconIndigo), group: 'reflect' },
   { id: 'exercise', label: 'exercise', hint: 'Socratic practice problems', icon: '◇', accent: s(styles.iconSage), group: 'reflect' },
   { id: 'quiz', label: 'quiz me', hint: 'test your understanding', icon: '?', accent: s(styles.iconDefault), group: 'reflect' },

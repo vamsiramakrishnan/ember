@@ -192,15 +192,55 @@ function buildConversationMessages(
       messages.push({ role: 'user', parts: [{ text: `[${e.type}]: ${e.content}` }] });
     } else if (isTutor && 'content' in e) {
       messages.push({ role: 'model', parts: [{ text: e.content }] });
+    } else {
+      // Include non-text entries as context summaries so the tutor
+      // is aware of files, images, teaching materials, and code cells
+      const summary = summarizeEntry(e);
+      if (summary) {
+        const role = isStudent ? 'user' : 'model';
+        messages.push({ role, parts: [{ text: summary }] });
+      }
     }
   }
 
-  // Inject context as the first user message if we have context
-  // and no prior messages, or prepend to the latest
   const fullText = contextPrefix
     ? `${contextPrefix}\n\n[Student writes]: ${latestText}`
     : latestText;
 
   messages.push({ role: 'user', parts: [{ text: fullText }] });
   return messages;
+}
+
+/** Summarize non-text entries for context inclusion. */
+function summarizeEntry(e: import('@/types/entries').NotebookEntry): string | null {
+  switch (e.type) {
+    case 'code-cell':
+      return `[Code (${e.language})]: ${e.source.slice(0, 200)}`;
+    case 'image':
+      return `[Image uploaded: ${e.alt ?? 'no description'}${e.caption ? ` — ${e.caption}` : ''}]`;
+    case 'sketch':
+      return '[Student drew a sketch]';
+    case 'file-upload':
+      return `[File uploaded: ${e.file.name} (${e.file.mimeType})]`;
+    case 'document':
+      return `[Document: ${e.file.name}${e.extractedText ? ` — ${e.extractedText.slice(0, 200)}` : ''}]`;
+    case 'embed':
+      return `[Link: ${e.title ?? e.url}${e.description ? ` — ${e.description}` : ''}]`;
+    case 'reading-material':
+      return `[Reading material: "${e.title}" — ${e.slides.length} slides covering ${e.slides.map((s) => s.heading).join(', ')}]`;
+    case 'flashcard-deck':
+      return `[Flashcard deck: "${e.title}" — ${e.cards.length} cards${e.sourceTopics ? ` on ${e.sourceTopics.join(', ')}` : ''}]`;
+    case 'exercise-set':
+      return `[Exercise set: "${e.title}" — ${e.exercises.length} exercises (${e.difficulty})]`;
+    case 'concept-diagram':
+      return `[Concept diagram${e.title ? `: ${e.title}` : ''} — ${e.items.map((i) => i.label).join(', ')}]`;
+    case 'thinker-card':
+      return `[Thinker: ${e.thinker.name} (${e.thinker.dates}) — gift: ${e.thinker.gift}]`;
+    case 'visualization':
+      return e.caption ? `[Visualization: ${e.caption}]` : null;
+    case 'illustration':
+      return e.caption ? `[Illustration: ${e.caption}]` : null;
+    default:
+      return null;
+  }
 }

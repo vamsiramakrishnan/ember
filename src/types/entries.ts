@@ -90,9 +90,15 @@ export interface ReadingSlide {
   /** Optional speaker/tutor notes (not shown in main view). */
   notes?: string;
   /** Layout variant for visual treatment. */
-  layout: 'title' | 'content' | 'two-column' | 'quote' | 'diagram' | 'summary';
+  layout: 'title' | 'content' | 'two-column' | 'quote' | 'diagram' | 'summary' | 'timeline' | 'table';
   /** Optional accent for the slide's decorative rule. */
   accent?: 'sage' | 'indigo' | 'amber' | 'margin';
+  /** Structured timeline data (for layout='timeline'). */
+  timeline?: Array<{ period: string; event: string; detail?: string }>;
+  /** Structured table data (for layout='table'). */
+  tableData?: { headers: string[]; rows: string[][] };
+  /** Structured diagram items with optional edges (for layout='diagram'). */
+  diagramItems?: Array<{ label: string; detail?: string }>;
 }
 
 /** A single flashcard — front/back with optional metadata. */
