@@ -67,11 +67,13 @@ export async function orchestrate(
     setActivityDetail({ step: 'searching-graph', label: 'exploring connections…' });
   }
   // Build knowledge graph context in parallel with research
-  const [graphCtxLayer, legacyGraph, research] = await Promise.all([
+  const [graphCtxLayer, legacyGraph, researchResult] = await Promise.all([
     buildGraphContext(notebookId, studentText).catch(() => null),
     buildGraph(notebookId).catch(() => null),
-    routing.research ? fetchResearch(studentText) : Promise.resolve(null),
+    routing.research ? fetchResearch(studentText) : Promise.resolve({ context: null, citations: [] } as ResearchResult),
   ]);
+  const research = researchResult.context;
+  const collectedCitations: Array<{ title: string; url: string }> = [...researchResult.citations];
 
   // Compose context additions
   let graphContext = '';
@@ -127,7 +129,7 @@ export async function orchestrate(
     setActivityDetail({ step: 'visualizing', label: 'composing a visualization…' });
     const vizContract: ChangeContract = {
       researchGrounded: routing.research,
-      sourceUrls: pendingCitations.map((c) => c.url),
+      sourceUrls: collectedCitations.map((c) => c.url),
     };
     const viz = await generateVisualization(studentText, entries, vizContract);
     if (viz) results.push(viz);
@@ -150,13 +152,12 @@ export async function orchestrate(
   const reflection = await generateReflection(entries);
   if (reflection) results.push(reflection);
 
-  // Collect any pending research citations
-  if (pendingCitations.length > 0) {
-    const unique = pendingCitations.filter(
+  // Append collected research citations (function-scoped, not global)
+  if (collectedCitations.length > 0) {
+    const unique = collectedCitations.filter(
       (c, i, arr) => arr.findIndex((x) => x.url === c.url) === i,
     );
     results.push({ type: 'citation', sources: unique });
-    pendingCitations.length = 0; // Reset for next call
   }
 
   return {
@@ -165,10 +166,12 @@ export async function orchestrate(
   };
 }
 
-/** Collected citations from research + tutor calls. */
-const pendingCitations: Array<{ title: string; url: string }> = [];
+interface ResearchResult {
+  context: ResearchContext | null;
+  citations: Array<{ title: string; url: string }>;
+}
 
-async function fetchResearch(text: string): Promise<ResearchContext | null> {
+async function fetchResearch(text: string): Promise<ResearchResult> {
   try {
     const result = await runTextAgent(RESEARCHER_AGENT, [{
       role: 'user',
@@ -176,13 +179,12 @@ async function fetchResearch(text: string): Promise<ResearchContext | null> {
         text: `Student asked: "${text}"\n\nFactual grounding, historical context, thinker connections. Max 200 words.`,
       }],
     }]);
-    // Collect research citations
-    if (result.citations.length > 0) {
-      pendingCitations.push(...result.citations);
-    }
-    return result.text.trim() ? { facts: result.text } : null;
+    return {
+      context: result.text.trim() ? { facts: result.text } : null,
+      citations: result.citations,
+    };
   } catch {
-    return null;
+    return { context: null, citations: [] };
   }
 }
 
@@ -220,11 +222,13 @@ export async function streamOrchestrate(
   } else {
     setActivityDetail({ step: 'searching-graph', label: 'exploring connections…' });
   }
-  const [graphCtxLayerS, legacyGraphS, researchS] = await Promise.all([
+  const [graphCtxLayerS, legacyGraphS, researchResultS] = await Promise.all([
     buildGraphContext(notebookId, studentText).catch(() => null),
     buildGraph(notebookId).catch(() => null),
-    routing.research ? fetchResearch(studentText) : Promise.resolve(null),
+    routing.research ? fetchResearch(studentText) : Promise.resolve({ context: null, citations: [] } as ResearchResult),
   ]);
+  const researchS = researchResultS.context;
+  const collectedCitationsS: Array<{ title: string; url: string }> = [...researchResultS.citations];
 
   let graphContextS = '';
   if (graphCtxLayerS?.serialized) {
@@ -278,7 +282,7 @@ export async function streamOrchestrate(
     setActivityDetail({ step: 'visualizing', label: 'composing a visualization…' });
     const vizContract: ChangeContract = {
       researchGrounded: routing.research,
-      sourceUrls: pendingCitations.map((c) => c.url),
+      sourceUrls: collectedCitationsS.map((c) => c.url),
     };
     const viz = await generateVisualization(studentText, entries, vizContract);
     if (viz) results.push(viz);
@@ -299,12 +303,11 @@ export async function streamOrchestrate(
   const reflection = await generateReflection(entries);
   if (reflection) results.push(reflection);
 
-  if (pendingCitations.length > 0) {
-    const unique = pendingCitations.filter(
+  if (collectedCitationsS.length > 0) {
+    const unique = collectedCitationsS.filter(
       (c, i, arr) => arr.findIndex((x) => x.url === c.url) === i,
     );
     results.push({ type: 'citation', sources: unique });
-    pendingCitations.length = 0;
   }
 
   return {

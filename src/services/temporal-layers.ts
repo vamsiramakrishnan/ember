@@ -6,13 +6,15 @@
  * Bridge (forward): emerges from mastery thresholds + knowledge graph
  * Reflection:       synthesizes the session's intellectual movement
  *
- * Each layer runs independently and returns entries to prepend/append
- * to the tutor's response.
+ * Each layer runs independently and returns entries to prepend/append.
+ * Graph relations are created to link temporal entries to their context.
  */
 import { ECHO_AGENT, REFLECTION_AGENT, RESEARCHER_AGENT } from './agents';
 import { runTextAgent } from './run-agent';
 import { isGeminiAvailable } from './gemini';
+import { extractJsonObject } from './json-parser';
 import { getMasteryByNotebook } from '@/persistence/repositories/mastery';
+import { createRelation } from '@/persistence/repositories/graph';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
 
 // ─── Echo ────────────────────────────────────────────────────
@@ -45,9 +47,19 @@ export async function generateEcho(
       }],
     }]);
 
-    const parsed = parseJson(result.text);
+    const parsed = extractJsonObject(result.text);
     if (parsed?.skip) return null;
-    if (typeof parsed?.content === 'string') return { type: 'echo', content: parsed.content };
+    if (typeof parsed?.content === 'string') {
+      // Create graph relation linking echo to its source entry
+      const sourceEntry = pastEntries.find((e) =>
+        'content' in e.entry && typeof e.entry.content === 'string' &&
+        parsed.content && String(parsed.content).includes(String(e.entry.content).slice(0, 30)),
+      );
+      if (sourceEntry) {
+        await createEchoRelation(sourceEntry.id, String(parsed.sourceEntryId ?? sourceEntry.id));
+      }
+      return { type: 'echo', content: parsed.content };
+    }
     return null;
   } catch {
     return null;
@@ -88,6 +100,18 @@ export async function generateBridge(
 
     if (result.text.trim()) {
       bridgeGenerated = true;
+      // Create graph relation: bridge connects the source concepts
+      for (const m of developing.slice(0, 2)) {
+        await createRelation({
+          notebookId,
+          from: m.id,
+          fromKind: 'concept',
+          to: `bridge:${Date.now()}`,
+          toKind: 'concept',
+          type: 'bridges-to',
+          weight: 0.7,
+        }).catch(() => {});
+      }
       return { type: 'bridge-suggestion', content: result.text.trim() };
     }
     return null;
@@ -129,7 +153,7 @@ export async function generateReflection(
       parts: [{ text: `Last ${entries.slice(-12).length} entries:\n${recent}` }],
     }]);
 
-    const parsed = parseJson(result.text);
+    const parsed = extractJsonObject(result.text);
     if (typeof parsed?.content === 'string') {
       return { type: 'tutor-reflection', content: parsed.content };
     }
@@ -139,15 +163,16 @@ export async function generateReflection(
   }
 }
 
-// ─── Helpers ─────────────────────────────────────────────────
+// ─── Graph helpers ───────────────────────────────────────────
 
-function parseJson(text: string): Record<string, unknown> | null {
-  try {
-    const match = text.match(/```(?:json)?\s*([\s\S]*?)```/) ??
-                  text.match(/(\{[\s\S]*\})/);
-    if (!match?.[1]) return null;
-    return JSON.parse(match[1]) as Record<string, unknown>;
-  } catch {
-    return null;
-  }
+async function createEchoRelation(echoSourceId: string, targetId: string): Promise<void> {
+  await createRelation({
+    notebookId: '',
+    from: echoSourceId,
+    fromKind: 'entry',
+    to: targetId,
+    toKind: 'entry',
+    type: 'echoes',
+    weight: 0.3,
+  }).catch(() => {});
 }
