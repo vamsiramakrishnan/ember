@@ -60,6 +60,8 @@ export interface RoutingDecision {
   deepMemory: boolean;
   /** Whether the tutor should use a directive (exploration instruction). */
   directive: boolean;
+  /** Whether the tutor should explore the knowledge graph for connections. */
+  graphExplore: boolean;
   reason: string;
   source: 'router' | 'fallback';
 }
@@ -71,6 +73,7 @@ const DEFAULT_DECISION: RoutingDecision = {
   illustrate: false,
   deepMemory: false,
   directive: false,
+  graphExplore: false,
   reason: 'Default routing — tutor only',
   source: 'fallback',
 };
@@ -206,6 +209,7 @@ Classify this entry. Return JSON only.`;
       illustrate: Boolean(parsed.illustrate) && !isOnCooldown('illustrate'),
       deepMemory: Boolean(parsed.deepMemory) && !isOnCooldown('deepMemory'),
       directive: Boolean(parsed.directive) && !isOnCooldown('directive'),
+      graphExplore: Boolean(parsed.graphExplore),
       reason: typeof parsed.reason === 'string' ? parsed.reason : '',
       source: 'router',
     };
