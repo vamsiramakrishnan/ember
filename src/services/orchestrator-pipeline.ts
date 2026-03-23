@@ -55,10 +55,10 @@ export async function runPipelineSetup(
   notebookCtx: NotebookContext | null,
 ): Promise<PipelineSetupResult> {
   setActivityDetail({ step: 'routing', label: 'reading your thoughts...' });
-  incrementReflectionCounter();
+  incrementReflectionCounter(notebookId);
   const routing = await classifyImmediate(studentText, entries);
 
-  const echoPromise = generateEcho(studentText, entries);
+  const echoPromise = generateEcho(notebookId, studentText, entries);
   const stepLabel = routing.research ? 'researching...' : 'exploring connections...';
   const stepKey = routing.research ? 'researching' : 'searching-graph';
   setActivityDetail({ step: stepKey, label: stepLabel });
@@ -142,7 +142,7 @@ export async function runPipelineTemporalLayers(
   if (echo) before.push(echo);
   const bridge = await generateBridge(notebookId, studentText);
   if (bridge) after.push(bridge);
-  const reflection = await generateReflection(entries);
+  const reflection = await generateReflection(notebookId, entries);
   if (reflection) after.push(reflection);
   return { before, after };
 }
