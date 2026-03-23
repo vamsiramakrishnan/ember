@@ -1,11 +1,4 @@
-/**
- * NotebookEntryWrapper — interactive shell around every entry.
- * Hover/touch: drag handle (left) + type tag + actions (right).
- * Wrapped in React.memo to prevent cascade re-renders in the entry list.
- *
- * Now consumes NotebookContext instead of receiving 20+ individual props.
- * See: 08-touch-and-interaction-states.md
- */
+/** NotebookEntryWrapper — interactive shell around every entry. Memo'd. */
 import { memo, useState, useRef, useCallback } from 'react';
 import type { LiveEntry } from '@/types/entries';
 import { useNotebookActions } from '@/contexts/NotebookContext';
@@ -34,7 +27,7 @@ export const NotebookEntryWrapper = memo(function NotebookEntryWrapper({
   liveEntry, style,
 }: Props) {
   const { id, entry, crossedOut, bookmarked, pinned, annotations } = liveEntry;
-  const { onEntryAction, editingId, drag, dragHandlers } = useNotebookActions();
+  const { onEntryAction, editingId, editPopup, drag, dragHandlers } = useNotebookActions();
 
   const isEditingThis = editingId === id;
   const canPin = entry.type === 'question';
@@ -52,20 +45,14 @@ export const NotebookEntryWrapper = memo(function NotebookEntryWrapper({
   const touchTimer = useRef<ReturnType<typeof setTimeout>>();
   const contentRef = useRef<HTMLDivElement>(null);
 
-  const handleTouchStart = useCallback(() => {
-    touchTimer.current = setTimeout(() => setTouched(true), 200);
-  }, []);
-  const handleTouchEnd = useCallback(() => {
-    if (touchTimer.current) clearTimeout(touchTimer.current);
-  }, []);
+  const handleTouchStart = useCallback(() =>
+    { touchTimer.current = setTimeout(() => setTouched(true), 200); }, []);
+  const handleTouchEnd = useCallback(() =>
+    { if (touchTimer.current) clearTimeout(touchTimer.current); }, []);
 
-  const cls = [
-    styles.wrapper,
-    crossedOut ? styles.crossedOut : '',
-    isDragOver ? styles.dragOver : '',
-    isDragging ? styles.dragging : '',
-    touched ? styles.touched : '',
-    isHighlighted ? styles.highlighted : '',
+  const cls = [styles.wrapper, crossedOut && styles.crossedOut,
+    isDragOver && styles.dragOver, isDragging && styles.dragging,
+    touched && styles.touched, isHighlighted && styles.highlighted,
   ].filter(Boolean).join(' ');
 
   const entryContent = 'content' in entry
@@ -107,6 +94,11 @@ export const NotebookEntryWrapper = memo(function NotebookEntryWrapper({
               type: 'save-edit', id, content, entryType: entry.type,
             })}
             onCancel={() => onEntryAction({ type: 'cancel-edit' })}
+            onMentionTrigger={editPopup?.onMentionTrigger}
+            onSlashTrigger={editPopup?.onSlashTrigger}
+            onPopupClose={editPopup?.onPopupClose}
+            insertText={editPopup?.pendingInsert}
+            onInsertConsumed={editPopup?.onInsertConsumed}
           />
         ) : (
           <>
@@ -137,24 +129,14 @@ export const NotebookEntryWrapper = memo(function NotebookEntryWrapper({
       {bookmarked && (
         <div className={styles.bookmarkPos}><Bookmark /></div>
       )}
-      <EntryActions
-        id={id} canCrossOut={canCrossOut} crossedOut={crossedOut}
+      <EntryActions id={id} canCrossOut={canCrossOut} crossedOut={crossedOut}
         bookmarked={bookmarked} canPin={canPin} pinned={pinned}
         canEdit={canEdit && !isEditingThis}
         onCrossOut={() => onEntryAction({ type: 'cross-out', id })}
         onToggleBookmark={() => onEntryAction({ type: 'toggle-bookmark', id })}
         onTogglePin={() => onEntryAction({ type: 'toggle-pin', id })}
-        onEdit={
-          canEdit
-            ? () => onEntryAction({ type: 'start-edit', id, entryType: entry.type })
-            : undefined
-        }
-        onBranch={
-          entryContent
-            ? () => onEntryAction({ type: 'branch', id, content: entryContent })
-            : undefined
-        }
-      />
+        onEdit={canEdit ? () => onEntryAction({ type: 'start-edit', id, entryType: entry.type }) : undefined}
+        onBranch={entryContent ? () => onEntryAction({ type: 'branch', id, content: entryContent }) : undefined} />
       <AnnotationMargin
         annotations={annotations ?? []}
         onAdd={(content) => onEntryAction({ type: 'annotate', id, content })}

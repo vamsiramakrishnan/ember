@@ -44,6 +44,15 @@ export interface DragHandlers {
 
 // ─── Context shape ─────────────────────────────────────────────────
 
+/** Popup handlers for inline editing (@ mentions, / commands). */
+export interface EditPopupHandlers {
+  onMentionTrigger: (query: string) => void;
+  onSlashTrigger: (query: string) => void;
+  onPopupClose: () => void;
+  pendingInsert: string | null;
+  onInsertConsumed: () => void;
+}
+
 interface NotebookContextValue {
   /** Unified action dispatcher for all entry operations. */
   onEntryAction: (action: EntryAction) => void;
@@ -53,6 +62,8 @@ interface NotebookContextValue {
   drag: DragState;
   /** Drag-and-drop handlers. */
   dragHandlers: DragHandlers;
+  /** Popup handlers for inline editing. */
+  editPopup?: EditPopupHandlers;
 }
 
 const NotebookCtx = createContext<NotebookContextValue | null>(null);
@@ -85,6 +96,7 @@ interface NotebookProviderProps {
   editingId: string | null;
   drag: DragState;
   dragHandlers: DragHandlers;
+  editPopup?: EditPopupHandlers;
 }
 
 export function NotebookProvider({
@@ -92,7 +104,7 @@ export function NotebookProvider({
   crossOut, toggleBookmark, togglePin, annotate,
   onBranch, onFollowUp, onSelectionAction,
   startEdit, saveEdit, cancelEdit, editingId,
-  drag, dragHandlers,
+  drag, dragHandlers, editPopup,
 }: NotebookProviderProps) {
   const onEntryAction = useCallback((action: EntryAction) => {
     switch (action.type) {
@@ -116,9 +128,10 @@ export function NotebookProvider({
   const value = useMemo(() => ({
     onEntryAction,
     editingId,
+    editPopup,
     drag,
     dragHandlers,
-  }), [onEntryAction, editingId, drag, dragHandlers]);
+  }), [onEntryAction, editingId, editPopup, drag, dragHandlers]);
 
   return (
     <NotebookCtx.Provider value={value}>

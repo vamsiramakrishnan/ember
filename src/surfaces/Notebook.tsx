@@ -219,6 +219,13 @@ export function Notebook({ onNavigate }: NotebookProps) {
       editingId={inPlaceEdit.editingId}
       drag={drag}
       dragHandlers={dragHandlers}
+      editPopup={{
+        onMentionTrigger: popup.handleMentionTrigger,
+        onSlashTrigger: popup.handleSlashTrigger,
+        onPopupClose: popup.handlePopupClose,
+        pendingInsert: popup.pendingInsert,
+        onInsertConsumed: popup.handleInsertConsumed,
+      }}
     >
       <NotebookContent
         entries={entries}
