@@ -11,7 +11,7 @@
  */
 import { ILLUSTRATOR_AGENT, VISUALISER_AGENT } from './agents';
 import { runImageAgent, runTextAgent } from './run-agent';
-import { EMBER_VIZ_KIT } from './viz-components';
+import { EMBER_VIZ_CSS, EMBER_VIZ_JS } from './viz-components';
 import { refineArtifact } from './artifact-refiner';
 import { refineIllustration } from './image-refiner';
 import type { ChangeContract } from './artifact-refiner';
@@ -106,13 +106,15 @@ function buildVisualizationPrompt(concept: string, context: string): string {
 }
 
 function wrapHtml(body: string): string {
+  // CSS in <head>, JS at end of <body> — ensures DOM is ready when JS runs
   return [
     '<!DOCTYPE html><html><head>',
     '<meta charset="utf-8">',
     '<meta name="viewport" content="width=device-width,initial-scale=1">',
-    EMBER_VIZ_KIT,
+    EMBER_VIZ_CSS,
     '</head><body>',
     body,
+    EMBER_VIZ_JS,
     '</body></html>',
   ].join('');
 }

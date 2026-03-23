@@ -203,6 +203,7 @@ ember-tree .tree-children { animation: fadeSlideUp 0.3s var(--ease-out); }
 /** Interactive JS for tabs, accordions, reveals — injected into visualisations. */
 export const EMBER_VIZ_JS = `
 <script>
+document.addEventListener('DOMContentLoaded', () => {
 // Tabs
 document.querySelectorAll('ember-tabs').forEach(tabs => {
   const btns = tabs.querySelectorAll('.tab-btn');
@@ -266,7 +267,21 @@ const observer = new IntersectionObserver((entries) => {
   entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('reveal'); observer.unobserve(e.target); }});
 }, { threshold: 0.1 });
 document.querySelectorAll('.animate-in').forEach(el => observer.observe(el));
+
+// Report height to parent for auto-sizing (works even without allow-same-origin)
+function reportHeight() {
+  const h = document.body.scrollHeight;
+  window.parent.postMessage({ type: 'ember-viz-height', height: h }, '*');
+}
+reportHeight();
+// Re-report after images load or accordion/tab changes
+new MutationObserver(reportHeight).observe(document.body, { childList: true, subtree: true, attributes: true });
+window.addEventListener('resize', reportHeight);
+});
 </script>`;
 
-/** Full component kit as a string to inject into visualiser HTML. */
+/** CSS goes in <head>, JS goes at end of <body>. Split for correct timing. */
+export const EMBER_VIZ_CSS = `<style>${EMBER_VIZ_STYLES}</style>`;
+
+/** Full kit for legacy callers (CSS + JS together). */
 export const EMBER_VIZ_KIT = `<style>${EMBER_VIZ_STYLES}</style>${EMBER_VIZ_JS}`;
