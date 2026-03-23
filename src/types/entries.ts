@@ -12,6 +12,8 @@
  * annotations from both student and tutor.
  */
 
+import type { MasteryLevel } from './mastery';
+
 export interface DiagramNode {
   label: string;
   subLabel?: string;
@@ -20,7 +22,7 @@ export interface DiagramNode {
   /** Entity kind for graph resolution. */
   entityKind?: 'concept' | 'thinker' | 'term' | 'question';
   /** Mastery level — drives visual treatment if present. */
-  mastery?: { level: string; percentage: number };
+  mastery?: { level: MasteryLevel; percentage: number };
   /** Children nodes — enables nested, expandable diagrams. */
   children?: DiagramNode[];
   /** Accent colour for the node. */
@@ -81,6 +83,51 @@ export interface FileAttachment {
   blobHash: string;
 }
 
+/** A single slide/page in a reading material deck. */
+export interface ReadingSlide {
+  /** Slide heading. */
+  heading: string;
+  /** Markdown body content. */
+  body: string;
+  /** Optional speaker/tutor notes (not shown in main view). */
+  notes?: string;
+  /** Layout variant for visual treatment. */
+  layout: 'title' | 'content' | 'two-column' | 'quote' | 'diagram' | 'summary' | 'timeline' | 'table';
+  /** Optional accent for the slide's decorative rule. */
+  accent?: 'sage' | 'indigo' | 'amber' | 'margin';
+  /** Structured timeline data (for layout='timeline'). */
+  timeline?: Array<{ period: string; event: string; detail?: string }>;
+  /** Structured table data (for layout='table'). */
+  tableData?: { headers: string[]; rows: string[][] };
+  /** Structured diagram items with optional edges (for layout='diagram'). */
+  diagramItems?: Array<{ label: string; detail?: string }>;
+}
+
+/** A single flashcard — front/back with optional metadata. */
+export interface Flashcard {
+  front: string;
+  back: string;
+  /** Source concept for mastery tracking. */
+  concept?: string;
+  /** Accent for visual treatment. */
+  accent?: 'sage' | 'indigo' | 'amber' | 'margin';
+}
+
+/** An exercise with a prompt, expected approach, and optional hints. */
+export interface Exercise {
+  prompt: string;
+  /** What the tutor expects — used for evaluation, never shown. */
+  approach: string;
+  /** Progressive hints revealed on request. */
+  hints?: string[];
+  /** Exercise format. */
+  format: 'open-response' | 'explain' | 'compare' | 'apply' | 'critique';
+  /** Concept this tests. */
+  concept?: string;
+}
+
+export type ExerciseDifficulty = 'foundational' | 'intermediate' | 'advanced';
+
 export type NotebookEntry =
   // ─── Student blocks ──────────────────────────────────────────
   | { type: 'prose'; content: string }
@@ -104,8 +151,12 @@ export type NotebookEntry =
   | { type: 'document'; file: FileAttachment; pages?: number; extractedText?: string }
 
   // ─── AI-generated blocks ─────────────────────────────────────
+  | { type: 'podcast'; topic: string; audioUrl: string; segments?: string[]; transcript: string; duration?: number }
   | { type: 'visualization'; html: string; caption?: string }
   | { type: 'illustration'; dataUrl: string; caption?: string }
+  | { type: 'reading-material'; title: string; subtitle?: string; slides: ReadingSlide[] }
+  | { type: 'flashcard-deck'; title: string; cards: Flashcard[]; sourceTopics?: string[] }
+  | { type: 'exercise-set'; title: string; exercises: Exercise[]; difficulty: ExerciseDifficulty }
 
   // ─── System blocks ──────────────────────────────────────────
   | { type: 'silence'; text?: string }

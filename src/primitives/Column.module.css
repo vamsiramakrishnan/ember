@@ -1,3 +1,4 @@
+/* Column — 640px centred content column. Sacred width. */
 .column {
   max-width: var(--column-width);
   margin: 0 auto;
@@ -5,4 +6,9 @@
   padding-right: var(--column-padding);
   width: 100%;
   box-sizing: border-box;
+}
+
+/* Tighter padding on narrow mobile */
+@media (max-width: 480px) {
+  .column { padding-left: 16px; padding-right: 16px; }
 }

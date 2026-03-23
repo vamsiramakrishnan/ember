@@ -5,11 +5,12 @@
  */
 import { useState, useCallback } from 'react';
 import { useEntityIndex, type Entity } from './useEntityIndex';
+import { createMentionSyntax } from '@/primitives/MentionChip';
 import type { SlashCommand } from '@/components/student/SlashCommandPopup';
 import type { Surface } from '@/layout/Navigation';
 
 export function usePopupState(onNavigate?: (surface: Surface) => void) {
-  const { search } = useEntityIndex();
+  const { search, registerEntries } = useEntityIndex();
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const [slashQuery, setSlashQuery] = useState<string | null>(null);
   const [mentionResults, setMentionResults] = useState<Entity[]>([]);
@@ -32,9 +33,9 @@ export function usePopupState(onNavigate?: (surface: Surface) => void) {
     setMentionResults([]);
   }, []);
 
-  /** When user clicks a mention result: insert @Name and navigate */
+  /** When user clicks a mention result: insert @[Name](type:id) and navigate */
   const handleMentionSelect = useCallback((entity: Entity) => {
-    setPendingInsert(`@${entity.name} `);
+    setPendingInsert(createMentionSyntax(entity.name, entity.type, entity.id) + ' ');
     setMentionQuery(null);
     setMentionResults([]);
 
@@ -46,11 +47,21 @@ export function usePopupState(onNavigate?: (surface: Surface) => void) {
     }
   }, [onNavigate]);
 
-  /** When user clicks a slash command: insert /command */
+  /** Selected slash command — consumed by Notebook to route to an agent. */
+  const [activeSlashCommand, setActiveSlashCommand] = useState<SlashCommand | null>(null);
+
+  /** When user clicks a slash command: insert /command and store for routing. */
   const handleSlashSelect = useCallback((command: SlashCommand) => {
     setPendingInsert(`/${command.label} `);
     setSlashQuery(null);
+    setActiveSlashCommand(command);
   }, []);
+
+  const consumeSlashCommand = useCallback(() => {
+    const cmd = activeSlashCommand;
+    setActiveSlashCommand(null);
+    return cmd;
+  }, [activeSlashCommand]);
 
   const handleInsertConsumed = useCallback(() => {
     setPendingInsert(null);
@@ -61,11 +72,14 @@ export function usePopupState(onNavigate?: (surface: Surface) => void) {
     slashQuery,
     mentionResults,
     pendingInsert,
+    activeSlashCommand,
     handleMentionTrigger,
     handleSlashTrigger,
     handlePopupClose,
     handleMentionSelect,
     handleSlashSelect,
     handleInsertConsumed,
+    consumeSlashCommand,
+    registerEntries,
   };
 }

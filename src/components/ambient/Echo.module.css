@@ -5,6 +5,7 @@
   font-style: italic;
   color: var(--ink-faint);
   line-height: 1.65;
+  letter-spacing: 0;
   padding-left: var(--text-indent);
   margin-bottom: 16px;
   margin-top: 0;

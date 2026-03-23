@@ -23,7 +23,7 @@ export function StreamingText({ children, done }: StreamingTextProps) {
   // Thinking state: no text yet, just a subtle cursor
   if (!hasContent && !done) {
     return (
-      <div className={styles.thinkingContainer}>
+      <div className={styles.thinkingContainer} aria-busy="true" aria-label="Tutor is thinking">
         <div className={styles.ruleStreaming} />
         <span className={styles.cursor} aria-hidden="true" />
       </div>
@@ -31,7 +31,7 @@ export function StreamingText({ children, done }: StreamingTextProps) {
   }
 
   return (
-    <div className={styles.container}>
+    <div className={styles.container} aria-live="polite" aria-busy={!done}>
       <div className={ruleCls} />
       <div className={styles.body}>
         <span className={styles.text}>

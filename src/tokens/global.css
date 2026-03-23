@@ -34,7 +34,7 @@ body {
 
 /* Selection: warm terracotta tint — the tutor's colour */
 ::selection {
-  background-color: rgba(184, 86, 79, 0.12);
+  background-color: var(--margin-dim);
   color: var(--ink);
 }
 

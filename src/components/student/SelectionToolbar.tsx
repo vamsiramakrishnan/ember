@@ -1,6 +1,10 @@
 /**
  * SelectionToolbar — floating toolbar that appears when text is selected.
- * Like Notion/Medium: select text → toolbar appears above selection.
+ * Post-spec extension: not in the original component inventory (06).
+ * Added to support text-level interactions (linking, annotating, highlighting,
+ * asking) triggered by selecting prose within notebook entries.
+ * Related: 03-interaction-language.md (tutor voice, interaction modes),
+ *          06-component-inventory.md Family 1 (student elements context)
  *
  * Actions:
  * - @ Link: connect selected text to an entity (thinker, concept, term)

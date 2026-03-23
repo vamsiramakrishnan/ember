@@ -1,4 +1,6 @@
-/* BlockInserter — the quiet "+" in the left margin */
+/* BlockInserter — the quiet "+" in the left margin.
+ * Menu composes shared surface + section headers from ContextPanel. */
+
 .container {
   position: relative;
   display: flex;
@@ -44,28 +46,17 @@
   line-height: 1;
 }
 
-/* Popover menu */
+/* Popover menu — positioned; surface + reveal handled by ContextPanel */
 .menu {
   position: absolute;
   left: -8px;
   top: 16px;
-  z-index: 10;
-  background: var(--paper);
-  border: 1px solid var(--rule);
-  border-radius: 2px;
   padding: 6px 0;
   min-width: 220px;
-  box-shadow: none;
 }
 
 .sectionLabel {
-  font-family: var(--font-system);
-  font-size: 9px;
-  font-weight: 400;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--ink-faint);
-  padding: 8px 16px 4px;
+  composes: sectionHeader from '../../primitives/ContextPanel.module.css';
 }
 
 .sectionLabel:not(:first-child) {
@@ -116,38 +107,18 @@
 }
 
 .pasteAction {
-  font-family: var(--font-system);
-  font-size: 9px;
-  letter-spacing: 1px;
-  text-transform: lowercase;
-  color: var(--ink-ghost);
-  background: none;
-  border: none;
-  cursor: pointer;
+  composes: dismissBtn from '../../primitives/ContextPanel.module.css';
   padding: 4px 12px 4px 0;
   white-space: nowrap;
-  transition: color 0.15s ease;
-}
-
-.pasteAction:hover {
-  color: var(--ink-faint);
+  text-transform: lowercase;
+  letter-spacing: 1px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .trigger {
-    transition: none;
-  }
-  .typeButton {
-    transition: none;
-  }
-  .pasteAction {
-    transition: none;
-  }
+  .trigger, .typeButton { transition: none; }
 }
 
 /* On narrow screens, show trigger inline */
 @media (max-width: 800px) {
-  .trigger {
-    left: -28px;
-  }
+  .trigger { left: -28px; }
 }

@@ -15,5 +15,9 @@
   color: var(--sage);
   line-height: 1.72;
   margin: 0;
-  letter-spacing: 0.01em;
+  letter-spacing: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .suggestion { transition: none; }
 }

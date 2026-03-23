@@ -20,6 +20,7 @@
   color: var(--ink-faint);
   line-height: 1.8;
   text-align: center;
+  letter-spacing: 0;
   margin: 16px 0;
   padding: 0 32px;
 }

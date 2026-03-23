@@ -42,4 +42,7 @@ export const ILLUSTRATOR_AGENT: AgentConfig = {
   thinkingLevel: 'MINIMAL',
   tools: [TOOLS.googleSearch],
   responseModalities: ['IMAGE', 'TEXT'],
+  maxTurns: 3,
+  maxTimeMs: 30_000,
+  constraint: 'search-only',
 };

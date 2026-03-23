@@ -1,0 +1,59 @@
+/* GraphFilters — entity-kind filter toggles */
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.separator {
+  color: var(--ink-ghost);
+  font-size: 11px;
+  line-height: 1;
+}
+
+.active,
+.inactive {
+  font-family: var(--font-system);
+  font-size: 11px;
+  font-weight: 300;
+  letter-spacing: 1.5px;
+  text-transform: lowercase;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  transition: color 0.3s ease;
+}
+
+.active {
+  color: var(--ink-faint);
+}
+
+.inactive {
+  color: var(--ink-ghost);
+}
+
+.inactive:hover {
+  color: var(--ink-faint);
+}
+
+.active:focus-visible,
+.inactive:focus-visible {
+  outline: 2px solid var(--margin);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .active,
+  .inactive {
+    transition: none;
+  }
+}

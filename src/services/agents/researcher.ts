@@ -26,4 +26,7 @@ export const RESEARCHER_AGENT: AgentConfig = {
   thinkingLevel: 'HIGH',
   tools: [TOOLS.googleSearch, TOOLS.urlContext],
   responseModalities: ['TEXT'],
+  maxTurns: 5,
+  maxTimeMs: 30_000,
+  constraint: 'search-only',
 };

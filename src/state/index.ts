@@ -25,12 +25,15 @@ export {
   getSessionState,
   subscribeSessionState,
   resetSession,
+  restoreSession,
+  setSessionIds,
   recordStudentTurn,
   recordTutorTurn,
   setStudentFocus,
   setActiveConcepts,
   setMasterySnapshot,
   setTutorActivity,
+  setActivityDetail,
 } from './session-state';
 export type {
   SessionState,
@@ -38,6 +41,8 @@ export type {
   InteractionMode,
   StudentFocus,
   ActiveConcept,
+  TutorActivityStep,
+  TutorActivityDetail,
 } from './session-state';
 
 // Composition guard
@@ -61,6 +66,8 @@ export {
   subscribeGraph,
   getAllRelations,
   clearGraph,
+  setNotebookContext,
+  loadFromPersistence,
 } from './entry-graph';
 export type { EntryRelation, RelationType } from './entry-graph';
 

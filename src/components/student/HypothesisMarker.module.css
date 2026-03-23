@@ -12,7 +12,7 @@
   letter-spacing: 0;
   margin-left: var(--text-indent);
   margin-bottom: var(--entry-gap);
-  border-left: 2px solid rgba(91, 107, 138, 0.40);
+  border-left: 2px solid var(--indigo);
   padding: 10px 16px 10px 14px;
   background: var(--indigo-dim);
   border-radius: 2px;

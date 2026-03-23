@@ -1,6 +1,9 @@
 /* InlineEditor — textarea styled to match entry typography.
- * The goal: it looks like the text became editable, not like
- * a different element replaced it. */
+ * Supports chip overlay for @mentions and /commands. */
+
+.wrap {
+  position: relative;
+}
 
 .editor {
   width: 100%;
@@ -16,8 +19,13 @@
   transition: border-color 0.2s ease;
 }
 
-.editor:focus {
-  border-bottom-color: var(--margin);
+.editor:focus { border-bottom-color: var(--margin); }
+
+/* Hidden text when chip overlay is active */
+.editorHidden {
+  composes: editor;
+  color: transparent;
+  caret-color: var(--ink);
 }
 
 /* Match ProseEntry typography */
@@ -56,6 +64,10 @@
   line-height: 1.80;
 }
 
+@media (max-width: 480px) {
+  .prose, .hypothesis { font-size: 16px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .editor { transition: none; }
+  .editor, .editorHidden { transition: none; }
 }

@@ -11,3 +11,4 @@ export {
 export { searchAll, searchNotebook, searchByType } from './search';
 export type { SearchResult } from './search';
 export { indexCurrentSession } from './session-indexer';
+export { indexTeachingEntry } from './teaching-indexer';

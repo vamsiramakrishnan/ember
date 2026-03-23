@@ -59,6 +59,8 @@ export async function runTextAgent(
   const client = getGeminiClient();
   if (!client) throw new Error('Gemini API key not configured');
 
+  // GenerateContentConfig doesn't expose thinkingConfig in SDK types;
+  // use a plain object that the SDK accepts at runtime.
   const config: Record<string, unknown> = {
     thinkingConfig: { thinkingLevel: agent.thinkingLevel },
     systemInstruction: agent.systemInstruction,
@@ -171,6 +173,8 @@ export async function runTextAgentStreaming(
   const client = getGeminiClient();
   if (!client) throw new Error('Gemini API key not configured');
 
+  // GenerateContentConfig doesn't expose thinkingConfig in SDK types;
+  // use a plain object that the SDK accepts at runtime.
   const config: Record<string, unknown> = {
     thinkingConfig: { thinkingLevel: agent.thinkingLevel },
     systemInstruction: agent.systemInstruction,

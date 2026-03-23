@@ -8,6 +8,11 @@
   position: relative;
 }
 
+/* Wrapper for textarea + chip overlay */
+.textareaWrap {
+  position: relative;
+}
+
 .textarea {
   width: 100%;
   background: transparent;
@@ -25,7 +30,15 @@
   overflow: hidden;
 }
 
-.textarea::placeholder {
+/* When chip overlay is active, hide the raw syntax text */
+.textareaHidden {
+  composes: textarea;
+  color: transparent;
+  caret-color: var(--ink);
+}
+
+.textarea::placeholder,
+.textareaHidden::placeholder {
   color: transparent;
 }
 
@@ -148,21 +161,34 @@
 }
 
 .affordance {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-family: var(--font-system);
   font-size: 9px;
   letter-spacing: 1px;
   color: var(--ink-ghost);
 }
 
+.affordanceKey {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--ink-faint);
+  border: 1px solid var(--rule-light);
+  border-radius: 2px;
+  padding: 0 3px;
+  line-height: 1.3;
+}
+
+/* ─── Mobile: smaller textarea, hide affordances ──── */
+@media (max-width: 480px) {
+  .textarea, .textareaHidden { font-size: 16px; }
+  .hint { font-size: 14px; }
+  .affordances { display: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .hint, .affordances {
-    transition: none;
-  }
-  .cursor {
-    animation: none;
-    opacity: 0.3;
-  }
-  .sketchToggle {
-    transition: none;
-  }
+  .hint, .affordances { transition: none; }
+  .cursor { animation: none; opacity: 0.3; }
+  .sketchToggle { transition: none; }
 }

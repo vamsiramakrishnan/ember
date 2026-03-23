@@ -123,8 +123,6 @@ export function projectEntry(le: LiveEntry): ProjectionResult {
 
     // Hypotheses → developing mastery for the core concept
     case 'hypothesis':
-      // A student forming hypotheses signals developing understanding
-      // Extract the first noun phrase as a rough concept
       extractConcepts(entry.content).forEach((concept) => {
         result.mastery.push({
           concept,
@@ -133,6 +131,48 @@ export function projectEntry(le: LiveEntry): ProjectionResult {
           sourceEntryId: le.id,
         });
       });
+      break;
+
+    // Reading material → mastery seeds for slide topics
+    case 'reading-material':
+      for (const slide of entry.slides) {
+        if (slide.layout !== 'title' && slide.layout !== 'summary') {
+          result.mastery.push({
+            concept: slide.heading,
+            level: 'exploring',
+            percentage: 15,
+            sourceEntryId: le.id,
+          });
+        }
+      }
+      break;
+
+    // Flashcard decks → mastery seeds for each card's concept
+    case 'flashcard-deck':
+      for (const card of entry.cards) {
+        if (card.concept) {
+          result.mastery.push({
+            concept: card.concept,
+            level: 'exploring',
+            percentage: 20,
+            sourceEntryId: le.id,
+          });
+        }
+      }
+      break;
+
+    // Exercise sets → mastery seeds at higher level (practice implies exposure)
+    case 'exercise-set':
+      for (const ex of entry.exercises) {
+        if (ex.concept) {
+          result.mastery.push({
+            concept: ex.concept,
+            level: 'developing',
+            percentage: 30,
+            sourceEntryId: le.id,
+          });
+        }
+      }
       break;
   }
 

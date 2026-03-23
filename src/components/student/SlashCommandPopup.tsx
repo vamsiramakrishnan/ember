@@ -1,29 +1,45 @@
 /**
- * SlashCommandPopup — appears when the student types / in the InputZone.
- * Provides quick actions: summarize, explain, visualize, research, etc.
- *
- * Commands invoke specific AI agent pipelines directly.
+ * SlashCommandPopup — slash command palette triggered by typing / in the InputZone.
+ * Post-spec extension: not in the original component inventory (06).
+ * Added to support tutor-directed commands (explain, research, flashcards, etc.)
+ * that invoke AI-generated content blocks within the notebook flow.
+ * Related: 06-component-inventory.md 7.4 (InputZone),
+ *          03-interaction-language.md (five interaction modes),
+ *          05-ai-contract.md (AI behaviour contract)
  */
-import { useState, useEffect, useCallback, useRef } from 'react';
-import styles from './MentionPopup.module.css'; // Shares styles with MentionPopup
+import { useState, useEffect, useRef } from 'react';
+import styles from './MentionPopup.module.css';
 
 export interface SlashCommand {
   id: string;
   label: string;
   hint: string;
   icon: string;
+  accent: string;
+  group: string;
 }
 
+const s = (c: string | undefined) => c ?? '';
+
 const COMMANDS: SlashCommand[] = [
-  { id: 'summarize', label: 'summarize', hint: 'summarize this session so far', icon: '≡' },
-  { id: 'explain', label: 'explain', hint: 'explain a concept in depth', icon: '◇' },
-  { id: 'visualize', label: 'visualize', hint: 'generate a concept diagram', icon: '◉' },
-  { id: 'research', label: 'research', hint: 'deep-dive with Google Search', icon: '◈' },
-  { id: 'connect', label: 'connect', hint: 'find bridges between ideas', icon: '⟷' },
-  { id: 'quiz', label: 'quiz me', hint: 'test understanding with questions', icon: '?' },
-  { id: 'timeline', label: 'timeline', hint: 'show historical progression', icon: '→' },
-  { id: 'define', label: 'define', hint: 'add a term to your lexicon', icon: '▤' },
+  { id: 'explain', label: 'explain', hint: 'explain a concept in depth', icon: '◇', accent: s(styles.iconIndigo), group: 'explore' },
+  { id: 'research', label: 'research', hint: 'deep-dive with search', icon: '◈', accent: s(styles.iconAmber), group: 'explore' },
+  { id: 'define', label: 'define', hint: 'add a term to your lexicon', icon: '≡', accent: s(styles.iconSage), group: 'explore' },
+  { id: 'visualize', label: 'visualize', hint: 'interactive concept diagram', icon: '◉', accent: s(styles.iconIndigo), group: 'create' },
+  { id: 'draw', label: 'draw', hint: 'hand-drawn concept sketch', icon: '✎', accent: s(styles.iconMargin), group: 'create' },
+  { id: 'timeline', label: 'timeline', hint: 'historical progression', icon: '→', accent: s(styles.iconAmber), group: 'create' },
+  { id: 'connect', label: 'connect', hint: 'find bridges between ideas', icon: '⟷', accent: s(styles.iconSage), group: 'create' },
+  { id: 'teach', label: 'teach', hint: 'create reading material deck', icon: '▣', accent: s(styles.iconAmber), group: 'create' },
+  { id: 'podcast', label: 'podcast', hint: 'audio discussion about a topic', icon: '♪', accent: s(styles.iconMargin), group: 'create' },
+  { id: 'flashcards', label: 'flashcards', hint: 'study cards for active recall', icon: '◈', accent: s(styles.iconIndigo), group: 'reflect' },
+  { id: 'exercise', label: 'exercise', hint: 'Socratic practice problems', icon: '◇', accent: s(styles.iconSage), group: 'reflect' },
+  { id: 'quiz', label: 'quiz me', hint: 'test your understanding', icon: '?', accent: s(styles.iconDefault), group: 'reflect' },
+  { id: 'summarize', label: 'summarize', hint: 'distill the session so far', icon: '≡', accent: s(styles.iconDefault), group: 'reflect' },
 ];
+
+const GROUP_LABELS: Record<string, string> = {
+  explore: 'explore', create: 'create', reflect: 'reflect',
+};
 
 interface SlashCommandPopupProps {
   query: string;
@@ -39,7 +55,8 @@ export function SlashCommandPopup({
   const menuRef = useRef<HTMLDivElement>(null);
 
   const filtered = query.trim()
-    ? COMMANDS.filter((c) => c.label.includes(query.toLowerCase()) || c.hint.includes(query.toLowerCase()))
+    ? COMMANDS.filter((c) =>
+        c.label.includes(query.toLowerCase()) || c.hint.includes(query.toLowerCase()))
     : COMMANDS;
 
   useEffect(() => setSelectedIdx(0), [query]);
@@ -64,45 +81,64 @@ export function SlashCommandPopup({
     return () => document.removeEventListener('keydown', handleKey);
   }, [filtered, selectedIdx, onSelect, onClose]);
 
-  const handleClick = useCallback((cmd: SlashCommand) => {
-    onSelect(cmd);
-  }, [onSelect]);
+  const posStyle = position ? { top: position.top, left: position.left } : undefined;
 
   if (filtered.length === 0) {
     return (
-      <div
-        className={styles.popup}
-        style={position ? { top: position.top, left: position.left } : undefined}
-      >
+      <div className={styles.popup} style={posStyle}>
+        <div className={styles.queryBar}>
+          <span className={styles.queryPrefix}>/</span>
+          <span className={styles.queryText}>{query}</span>
+        </div>
         <div className={styles.empty}>no commands match</div>
       </div>
     );
   }
 
+  // Group commands by category (only when showing all)
+  const showGroups = !query.trim();
+  let lastGroup = '';
+
   return (
-    <div
-      className={styles.popup}
-      style={position ? { top: position.top, left: position.left } : undefined}
-      ref={menuRef}
-      role="listbox"
-      aria-label="Slash commands"
-    >
-      {filtered.map((cmd, i) => (
-        <button
-          key={cmd.id}
-          className={`${styles.item} ${i === selectedIdx ? styles.selected : ''}`}
-          role="option"
-          aria-selected={i === selectedIdx}
-          onClick={() => handleClick(cmd)}
-          onMouseEnter={() => setSelectedIdx(i)}
-        >
-          <span className={styles.icon}>{cmd.icon}</span>
-          <div className={styles.content}>
-            <span className={styles.name}>/{cmd.label}</span>
-            <span className={styles.detail}>{cmd.hint}</span>
+    <div className={styles.popup} style={posStyle} ref={menuRef}
+      role="listbox" aria-label="Slash commands">
+      {query && (
+        <div className={styles.queryBar}>
+          <span className={styles.queryPrefix}>/</span>
+          <span className={styles.queryText}>{query}</span>
+        </div>
+      )}
+      {filtered.map((cmd, i) => {
+        const groupHeader = showGroups && cmd.group !== lastGroup;
+        lastGroup = cmd.group;
+        return (
+          <div key={cmd.id}>
+            {groupHeader && (
+              <div className={styles.sectionHeader}>
+                {GROUP_LABELS[cmd.group] ?? cmd.group}
+              </div>
+            )}
+            <button
+              data-idx={i}
+              className={`${styles.item} ${i === selectedIdx ? styles.selected : ''}`}
+              role="option" aria-selected={i === selectedIdx}
+              onClick={() => onSelect(cmd)}
+              onMouseEnter={() => setSelectedIdx(i)}
+            >
+              <span className={`${styles.icon} ${cmd.accent}`}>{cmd.icon}</span>
+              <div className={styles.content}>
+                <span className={styles.name}>/{cmd.label}</span>
+                <span className={styles.detail}>{cmd.hint}</span>
+              </div>
+            </button>
           </div>
-        </button>
-      ))}
+        );
+      })}
+      <div className={styles.footer}>
+        <span className={styles.footerHint}>↑↓ navigate</span>
+        <span className={styles.footerHint}>↵ select</span>
+        <span className={styles.footerHint}>esc close</span>
+      </div>
     </div>
   );
 }

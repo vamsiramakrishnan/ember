@@ -34,8 +34,8 @@ export const AGENT_TOOL_DECLARATIONS = [
             },
             scope: {
               type: 'string',
-              enum: ['notebook', 'all', 'sessions', 'lexicon', 'encounters', 'mastery'],
-              description: 'Where to search. "notebook" = current notebook. "all" = across all notebooks.',
+              enum: ['notebook', 'all', 'sessions', 'lexicon', 'encounters', 'mastery', 'files', 'flashcards', 'exercises', 'reading'],
+              description: 'Where to search. "notebook" = current notebook. "files" = uploaded files/documents. "flashcards"/"exercises"/"reading" = teaching content.',
             },
           },
           required: ['query'],
@@ -106,6 +106,28 @@ export const AGENT_TOOL_DECLARATIONS = [
             content: { type: 'string', description: 'The annotation text (1-2 sentences max).' },
           },
           required: ['entry_id', 'content'],
+        },
+      },
+      {
+        name: 'get_entry_content',
+        description: 'Fetch the full content of a notebook entry by its ID. Use this to drill into entries you see in context summaries (e.g., reading material slides, flashcard decks, exercise sets, code cells, uploaded files). Returns the complete structured data.',
+        parameters: {
+          type: 'object',
+          properties: {
+            entry_id: { type: 'string', description: 'The entry ID from the context summary (e.g., "entry-abc123").' },
+          },
+          required: ['entry_id'],
+        },
+      },
+      {
+        name: 'read_file_content',
+        description: 'Read the text content of an uploaded file (CSV, JSON, code, plain text). Returns the first 2000 characters. For binary files (images, PDFs), use read_attachment or search_history instead.',
+        parameters: {
+          type: 'object',
+          properties: {
+            entry_id: { type: 'string', description: 'The entry ID of the file-upload or code-cell entry.' },
+          },
+          required: ['entry_id'],
         },
       },
       {

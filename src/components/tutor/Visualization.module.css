@@ -1,23 +1,43 @@
-/* Visualization — interactive whiteboard, sandboxed HTML */
+/* Visualization — three-level progressive disclosure */
+
 .container {
   margin: 16px 0;
   position: relative;
   transition: margin 0.3s ease;
 }
 
-/* Expanded: break out of column, use full viewport width */
 .expanded {
   margin-left: calc(-1 * var(--column-padding, 24px));
   margin-right: calc(-1 * var(--column-padding, 24px));
 }
 
-.frame {
-  width: 100%;
+/* ─── Frame wrapper (handles thumbnail clipping + click target) ─── */
+.frameWrap {
+  position: relative;
+  overflow: hidden;
   border: 1px solid var(--rule);
   border-radius: 2px;
   background: var(--paper);
-  overflow: hidden;
   transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Thumbnail mode: cursor pointer, iframe non-interactive so clicks pass through */
+.frameWrap[role="button"] {
+  cursor: pointer;
+}
+.frameWrap[role="button"] .frame,
+.frameWrap[role="button"] .frameHidden {
+  pointer-events: none;
+}
+.frameWrap[role="button"]:hover {
+  border-color: var(--ink-ghost);
+}
+
+.frame {
+  width: 100%;
+  border: none;
+  background: var(--paper);
+  overflow: hidden;
   opacity: 1;
 }
 
@@ -28,17 +48,53 @@
   pointer-events: none;
 }
 
-/* Loading skeleton — warm pulsing placeholder */
+/* ─── Thumbnail fade overlay ─────────────────────────────── */
+.fade {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
+  background: linear-gradient(transparent, var(--paper));
+  pointer-events: none;
+}
+
+.thumbHint {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.thumbLabel {
+  font-family: var(--font-system);
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 3px 10px;
+}
+
+/* ─── Modal iframe (full viewport) ───────────────────────── */
+.modalFrame {
+  width: 100%;
+  min-height: 400px;
+  border: none;
+  background: var(--paper);
+}
+
+/* ─── Loading skeleton ───────────────────────────────────── */
 .skeleton {
   width: 100%;
-  height: 300px;
+  height: 280px;
   border: 1px solid var(--rule);
   border-radius: 2px;
   background: linear-gradient(
-    110deg,
-    var(--paper) 30%,
-    var(--paper-warm) 50%,
-    var(--paper) 70%
+    110deg, var(--paper) 30%, var(--paper-warm) 50%, var(--paper) 70%
   );
   background-size: 200% 100%;
   animation: skeletonPulse 1.8s ease-in-out infinite;
@@ -49,6 +105,7 @@
   100% { background-position: -200% 0; }
 }
 
+/* ─── Toolbar (caption + action buttons) ─────────────────── */
 .toolbar {
   display: flex;
   align-items: center;
@@ -68,28 +125,32 @@
   flex: 1;
 }
 
-.expandBtn {
-  font-family: var(--font-system);
-  font-size: 12px;
-  color: var(--ink-ghost);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 2px 6px;
-  transition: color 0.2s ease;
+.actions {
+  display: flex;
+  gap: 8px;
   flex-shrink: 0;
 }
 
-.expandBtn:hover {
+.actionBtn {
+  font-family: var(--font-system);
+  font-size: 9px;
+  letter-spacing: 0.5px;
+  color: var(--ink-ghost);
+  background: none;
+  border: 1px solid var(--rule-light);
+  border-radius: 2px;
+  padding: 2px 8px;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.actionBtn:hover {
   color: var(--ink-faint);
+  border-color: var(--ink-ghost);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .frame, .container {
-    transition: none;
-  }
-  .skeleton {
-    animation: none;
-    background: var(--paper-warm);
-  }
+  .frameWrap, .container { transition: none; }
+  .skeleton { animation: none; background: var(--paper-warm); }
+  .actionBtn { transition: none; }
 }

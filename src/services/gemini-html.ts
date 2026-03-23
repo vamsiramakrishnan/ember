@@ -11,27 +11,9 @@
  * - Quiet, generous spacing
  */
 import { getGeminiClient } from './gemini';
+import { EMBER_STYLE_CONTEXT } from './token-context';
 
 export const HTML_MODEL = 'gemini-3-flash-preview';
-
-/** Ember design tokens injected into the HTML generation prompt. */
-const EMBER_STYLE_CONTEXT = `
-Use these design tokens for all generated HTML:
-- Background: #FAF6F1 (paper)
-- Primary text: #2C2825 (ink)
-- Soft text: rgba(44, 40, 37, 0.72) (ink-soft)
-- Faint text: rgba(44, 40, 37, 0.45) (ink-faint)
-- Margin accent: #8B7355 (margin)
-- Sage accent: #6B8F71 (sage)
-- Indigo accent: #4A5899 (indigo)
-- Amber accent: #B8860B (amber)
-- Rule lines: rgba(44, 40, 37, 0.12)
-- Fonts: 'Cormorant Garamond' for headings, 'Crimson Pro' for body, 'IBM Plex Mono' for code/labels
-- Corner radius: 2px max
-- No box shadows, no gradients, no pure black or white
-- Borders: 1px solid with very low opacity
-- Feel: warm, quiet, like a well-typeset notebook page
-`;
 
 export interface HtmlGenerationOptions {
   /** What to generate — description of the concept or visual. */

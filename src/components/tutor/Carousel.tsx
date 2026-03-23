@@ -1,8 +1,10 @@
 /**
- * Carousel — horizontal scrollable card container.
- * Used when the tutor presents multiple related items
- * (thinkers, concepts, comparisons) that benefit from
- * side-by-side viewing. Scroll-snap for clean stops.
+ * Carousel — horizontal scrollable card container with scroll-snap.
+ * Post-spec extension: not in the original component inventory (06).
+ * Added to support side-by-side viewing of multiple tutor-presented items
+ * (thinker cards, concept comparisons) that benefit from horizontal browsing.
+ * Related: 06-component-inventory.md Family 2 (tutor elements, esp. 2.5 ThinkerCard),
+ *          07-compositional-grammar.md (how elements compose)
  */
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import styles from './Carousel.module.css';

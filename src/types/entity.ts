@@ -19,6 +19,8 @@
  */
 
 import type { NotebookEntry } from './entries';
+import type { MasteryLevel } from './mastery';
+export type { MasteryLevel } from './mastery';
 
 // ─── Entity base ──────────────────────────────────────────
 
@@ -40,10 +42,8 @@ export interface ConceptEntity extends EntityMeta {
   /** Mastery percentage 0–100. Single source of truth. */
   mastery: number;
   /** Where mastery falls: exploring < developing < strong < mastered. */
-  masteryLevel: MasteryStage;
+  masteryLevel: MasteryLevel;
 }
-
-export type MasteryStage = 'exploring' | 'developing' | 'strong' | 'mastered';
 
 /** A vocabulary term in the student's personal lexicon. */
 export interface TermEntity extends EntityMeta {
@@ -53,7 +53,7 @@ export interface TermEntity extends EntityMeta {
   definition: string;
   etymology: string;
   mastery: number;
-  masteryLevel: MasteryStage;
+  masteryLevel: MasteryLevel;
 }
 
 /** A thinker the student has encountered. */

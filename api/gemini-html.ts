@@ -7,17 +7,23 @@ import { GoogleGenAI } from '@google/genai';
 
 export const config = { runtime: 'edge' };
 
+/**
+ * IMPORTANT: Keep these values in sync with src/tokens/colors.ts and
+ * src/services/token-context.ts. This file runs as a Vercel Edge Function
+ * and cannot import from the src/ directory via @/ aliases.
+ */
 const EMBER_STYLE_CONTEXT = `
 Use these design tokens for all generated HTML:
-- Background: #FAF6F1 (paper)
+- Background: #F6F1EA (paper)
 - Primary text: #2C2825 (ink)
-- Soft text: rgba(44, 40, 37, 0.72) (ink-soft)
-- Faint text: rgba(44, 40, 37, 0.45) (ink-faint)
-- Margin accent: #8B7355 (margin)
+- Soft text: #5C5550 (ink-soft)
+- Faint text: #9B9590 (ink-faint)
+- Ghost text: #C8C2BA (ink-ghost)
+- Margin accent: #B8564F (margin)
 - Sage accent: #6B8F71 (sage)
-- Indigo accent: #4A5899 (indigo)
-- Amber accent: #B8860B (amber)
-- Rule lines: rgba(44, 40, 37, 0.12)
+- Indigo accent: #5B6B8A (indigo)
+- Amber accent: #C49A3C (amber)
+- Rule lines: #DDD6CC
 - Fonts: 'Cormorant Garamond' for headings, 'Crimson Pro' for body, 'IBM Plex Mono' for code/labels
 - Corner radius: 2px max
 - No box shadows, no gradients, no pure black or white

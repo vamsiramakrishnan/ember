@@ -1,12 +1,15 @@
 /**
- * BlockInserter — Notion-style "+" button that appears between entries
- * and at the left margin of the InputZone. Opens a quiet popover
- * to select the entry type before writing.
- *
- * Two sections: text blocks (prose, question, hypothesis, note)
- * and content blocks (code, image, file, link).
+ * BlockInserter — "+" button for inserting new block types into the notebook.
+ * Post-spec extension: not in the original component inventory (06).
+ * Added to support structured entry creation beyond free-form prose,
+ * enabling students to insert specific block types (code, images, files).
+ * Menu content extracted to BlockMenu for 150-line discipline.
+ * Related: 06-component-inventory.md 7.4 (InputZone),
+ *          04-information-architecture.md (notebook surface)
  */
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useCallback } from 'react';
+import { ContextPanel } from '@/primitives/ContextPanel';
+import { BlockMenu } from './BlockMenu';
 import type { StudentEntryType, InsertableBlockType } from '@/types/entries';
 import styles from './BlockInserter.module.css';
 
@@ -17,46 +20,11 @@ interface BlockInserterProps {
   onFileUpload?: (file: File) => void;
 }
 
-const TEXT_BLOCKS: { type: StudentEntryType; label: string; hint: string }[] = [
-  { type: 'prose', label: 'prose', hint: 'a considered thought' },
-  { type: 'question', label: 'question', hint: 'something you wonder' },
-  { type: 'hypothesis', label: 'hypothesis', hint: 'a tentative idea' },
-  { type: 'scratch', label: 'note', hint: 'a quick fragment' },
-];
-
-const CONTENT_BLOCKS: { type: InsertableBlockType; label: string; hint: string }[] = [
-  { type: 'code-cell', label: 'code', hint: 'a code snippet' },
-  { type: 'image', label: 'image', hint: 'upload or paste' },
-  { type: 'file-upload', label: 'file', hint: 'pdf, document, data' },
-  { type: 'embed', label: 'link', hint: 'paste a url' },
-];
-
 export function BlockInserter({
   onSelect, onSelectBlock, onPaste, onFileUpload,
 }: BlockInserterProps) {
   const [open, setOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const handleClick = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
-    };
-    document.addEventListener('keydown', handleKey);
-    return () => document.removeEventListener('keydown', handleKey);
-  }, [open]);
 
   const handleTextSelect = useCallback((type: StudentEntryType) => {
     setOpen(false);
@@ -65,8 +33,6 @@ export function BlockInserter({
 
   const handleContentSelect = useCallback((type: InsertableBlockType) => {
     setOpen(false);
-
-    // Image and file need the file picker
     if ((type === 'image' || type === 'file-upload') && fileInputRef.current) {
       fileInputRef.current.accept = type === 'image'
         ? 'image/png,image/jpeg,image/gif,image/webp'
@@ -74,25 +40,17 @@ export function BlockInserter({
       fileInputRef.current.click();
       return;
     }
-
-    // Link: prompt for URL
     if (type === 'embed') {
       const url = prompt('Paste a URL:');
-      if (url?.trim()) {
-        onSelectBlock?.('embed');
-      }
+      if (url?.trim()) onSelectBlock?.('embed');
       return;
     }
-
     onSelectBlock?.(type);
   }, [onSelectBlock]);
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && onFileUpload) {
-      onFileUpload(file);
-    }
-    // Reset so the same file can be re-selected
+    if (file && onFileUpload) onFileUpload(file);
     if (e.target) e.target.value = '';
   }, [onFileUpload]);
 
@@ -109,7 +67,7 @@ export function BlockInserter({
   }, [onPaste, handleTextSelect]);
 
   return (
-    <div className={styles.container} ref={menuRef}>
+    <div className={styles.container}>
       <button
         className={styles.trigger}
         onClick={() => setOpen(!open)}
@@ -118,52 +76,21 @@ export function BlockInserter({
       >
         <span className={styles.plus}>+</span>
       </button>
-
       <input
         ref={fileInputRef}
         type="file"
         style={{ display: 'none' }}
         onChange={handleFileChange}
       />
-
       {open && (
-        <div className={styles.menu} role="menu" aria-label="Block types">
-          <div className={styles.sectionLabel}>text</div>
-          {TEXT_BLOCKS.map((bt) => (
-            <div key={bt.type} className={styles.menuItem}>
-              <button
-                className={styles.typeButton}
-                role="menuitem"
-                onClick={() => handleTextSelect(bt.type)}
-              >
-                <span className={styles.typeLabel}>{bt.label}</span>
-                <span className={styles.typeHint}>{bt.hint}</span>
-              </button>
-              {onPaste && (
-                <button
-                  className={styles.pasteAction}
-                  onClick={() => handlePaste(bt.type)}
-                  aria-label={`Paste as ${bt.label}`}
-                >
-                  paste
-                </button>
-              )}
-            </div>
-          ))}
-
-          <div className={styles.sectionLabel}>content</div>
-          {CONTENT_BLOCKS.map((bt) => (
-            <button
-              key={bt.type}
-              className={styles.typeButton}
-              role="menuitem"
-              onClick={() => handleContentSelect(bt.type)}
-            >
-              <span className={styles.typeLabel}>{bt.label}</span>
-              <span className={styles.typeHint}>{bt.hint}</span>
-            </button>
-          ))}
-        </div>
+        <ContextPanel reveal="down" onDismiss={() => setOpen(false)}
+          zIndex={10} className={styles.menu} ariaLabel="Block types" role="menu">
+          <BlockMenu
+            onTextSelect={handleTextSelect}
+            onContentSelect={handleContentSelect}
+            onPaste={onPaste ? handlePaste : undefined}
+          />
+        </ContextPanel>
       )}
     </div>
   );

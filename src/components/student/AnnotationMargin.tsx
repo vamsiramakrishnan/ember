@@ -1,5 +1,10 @@
 /**
  * AnnotationMargin — pencil notes in the right margin.
+ * Post-spec extension: not in the original component inventory (06).
+ * Added to support per-entry margin annotations from both student and tutor,
+ * extending the notebook marginalia metaphor to user-created notes.
+ * Related: 06-component-inventory.md Family 2 (Marginalia 2.1),
+ *          02-visual-language.md (margin zone)
  *
  * Incremental reveal (Layer 1 → 2 → 3):
  *   Layer 1 (rest): count indicator — a ghost-quiet dot + number.

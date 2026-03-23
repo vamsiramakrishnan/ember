@@ -13,7 +13,7 @@ interface SocraticQuestionProps {
 
 export function SocraticQuestion({ children }: SocraticQuestionProps) {
   return (
-    <blockquote className={styles.block}>
+    <blockquote className={styles.block} role="note" aria-label="Tutor's question">
       <MarkdownContent>{children}</MarkdownContent>
     </blockquote>
   );

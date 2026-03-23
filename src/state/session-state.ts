@@ -1,93 +1,25 @@
-/**
- * TutorSessionState — shared reactive state between the tutor pipeline
- * and the learner's UI. This is the collaboration substrate.
- *
- * Eigen principle: The student and tutor share a world model, not just
- * a message stream. The tutor knows what the student is looking at,
- * what concepts are in play, and what rhythm the session is in.
- *
- * Architecture: A single in-memory store (not IndexedDB) that both
- * the tutor hooks and the UI components subscribe to. Changes propagate
- * via React's useSyncExternalStore for zero-overhead subscriptions.
- *
- * Traces to:
- * - Principle I  (Tutor Never Answers First): focus tracking
- * - Principle III (Mastery is Invisible): mastery snapshot
- * - Principle VI  (Silence is a Feature): session phase tracking
- * - 03-interaction-language.md: five interaction modes
- * - 07-compositional-grammar.md: voice alternation
- */
+/** Session state — in-memory store with fire-and-forget IndexedDB persistence. */
 
-/** The five interaction modes from the spec. */
-export type InteractionMode =
-  | 'connection'       // Drawing lines between interests
-  | 'socratic'         // Genuine question
-  | 'confirmation'     // "Right, and..." extension
-  | 'visual'           // Diagram or sketch
-  | 'silence';         // Waiting
+import {
+  persistStudentTurn,
+  persistTutorTurn,
+  persistTutorActivity,
+  loadSessionState,
+} from './session-state-persistence';
+export { setSessionIds } from './session-state-persistence';
+export type {
+  InteractionMode, SessionPhase, StudentFocus,
+  TutorActivityStep, TutorActivityDetail,
+  ActiveConcept, SessionState,
+} from './session-state-types';
 
-/** Session phases from the interaction language spec. */
-export type SessionPhase =
-  | 'opening'          // 1-3 tutor entries max, establishing connection
-  | 'exploration'      // Student-heavy, alternating turns
-  | 'deepening'        // Harder questions, longer silence, mastery edge
-  | 'leaving-off';     // No summary, threads left open
-
-/** What the student is currently doing. */
-export type StudentFocus =
-  | { type: 'writing' }
-  | { type: 'reading'; entryId: string }
-  | { type: 'idle'; since: number }
-  | { type: 'canvas' }
-  | { type: 'constellation'; view: string };
-
-/** Concept currently "in play" — mentioned or being explored. */
-export interface ActiveConcept {
-  term: string;
-  /** Entry that introduced or last referenced this concept. */
-  sourceEntryId: string;
-  /** When it entered the active set. */
-  activatedAt: number;
-}
-
-/** The full shared state. */
-export interface SessionState {
-  // ─── Session rhythm ──────────────────────────────────────
-  phase: SessionPhase;
-  /** Count of student entries in this session. */
-  studentTurnCount: number;
-  /** Count of tutor entries in this session. */
-  tutorTurnCount: number;
-  /** Count of consecutive tutor entries (for voice alternation). */
-  consecutiveTutorEntries: number;
-  /** The last interaction mode the tutor used. */
-  lastTutorMode: InteractionMode | null;
-
-  // ─── Student awareness ──────────────────────────────────
-  focus: StudentFocus;
-  /** Concepts currently "in play" (mentioned in recent entries). */
-  activeConcepts: ActiveConcept[];
-  /** The student's last 3 entry types (for pattern detection). */
-  recentStudentTypes: string[];
-
-  // ─── Tutor state ─────────────────────────────────────────
-  isThinking: boolean;
-  isStreaming: boolean;
-  /** Topics the tutor has already covered this session (avoid repetition). */
-  coveredTopics: string[];
-  /** Thinkers already introduced this session. */
-  introducedThinkers: string[];
-
-  // ─── Mastery context ─────────────────────────────────────
-  /** Quick-access mastery snapshot for the tutor's decisions. */
-  masterySnapshot: Array<{ concept: string; level: string; percentage: number }>;
-}
-
-// ─── Store implementation ──────────────────────────────────
+import type {
+  InteractionMode, SessionPhase, StudentFocus,
+  TutorActivityDetail, ActiveConcept, SessionState,
+} from './session-state-types';
 
 type Listener = () => void;
 const listeners = new Set<Listener>();
-
 let state: SessionState = createInitialState();
 
 function createInitialState(): SessionState {
@@ -102,32 +34,40 @@ function createInitialState(): SessionState {
     recentStudentTypes: [],
     isThinking: false,
     isStreaming: false,
+    activityDetail: null,
     coveredTopics: [],
     introducedThinkers: [],
     masterySnapshot: [],
   };
 }
 
-function emit() {
-  for (const l of listeners) l();
-}
+function emit() { for (const l of listeners) l(); }
 
-// ─── Public API ────────────────────────────────────────────
+export function getSessionState(): SessionState { return state; }
 
-/** Get the current session state (snapshot). */
-export function getSessionState(): SessionState {
-  return state;
-}
-
-/** Subscribe to state changes. Returns unsubscribe function. */
 export function subscribeSessionState(listener: Listener): () => void {
   listeners.add(listener);
   return () => listeners.delete(listener);
 }
 
-/** Reset state for a new session. */
-export function resetSession(): void {
-  state = createInitialState();
+export function resetSession(): void { state = createInitialState(); emit(); }
+
+/** Restore session state from persisted events. */
+export async function restoreSession(
+  notebookId: string, sessionId: string,
+): Promise<void> {
+  const r = await loadSessionState(notebookId, sessionId);
+  if (!r) { state = createInitialState(); emit(); return; }
+  state = {
+    ...createInitialState(),
+    phase: r.phase, studentTurnCount: r.studentTurnCount,
+    tutorTurnCount: r.tutorTurnCount,
+    consecutiveTutorEntries: r.consecutiveTutorEntries,
+    lastTutorMode: r.lastTutorMode, coveredTopics: r.coveredTopics,
+    introducedThinkers: r.introducedThinkers,
+    recentStudentTypes: r.recentStudentTypes,
+    activeConcepts: r.activeConcepts,
+  };
   emit();
 }
 
@@ -144,6 +84,7 @@ export function recordStudentTurn(entryType: string): void {
     phase: inferPhase(state.studentTurnCount + 1, state.tutorTurnCount),
   };
   emit();
+  persistStudentTurn(entryType);
 }
 
 /** Record that a tutor entry was added. */
@@ -164,38 +105,41 @@ export function recordTutorTurn(
     phase: inferPhase(state.studentTurnCount, state.tutorTurnCount + 1),
   };
   emit();
+  persistTutorTurn(mode, topics, thinker);
 }
 
-/** Update what the student is focused on. */
 export function setStudentFocus(focus: StudentFocus): void {
-  state = { ...state, focus };
-  emit();
+  state = { ...state, focus }; emit();
 }
 
-/** Set active concepts (extracted from recent entries). */
 export function setActiveConcepts(concepts: ActiveConcept[]): void {
-  state = { ...state, activeConcepts: concepts };
-  emit();
+  state = { ...state, activeConcepts: concepts }; emit();
 }
 
-/** Update mastery snapshot (from useMasteryUpdater). */
 export function setMasterySnapshot(
   snapshot: Array<{ concept: string; level: string; percentage: number }>,
 ): void {
-  state = { ...state, masterySnapshot: snapshot };
-  emit();
+  state = { ...state, masterySnapshot: snapshot }; emit();
 }
 
-/** Set thinking/streaming state. */
 export function setTutorActivity(
   isThinking: boolean,
   isStreaming: boolean,
+  detail?: TutorActivityDetail | null,
 ): void {
-  state = { ...state, isThinking, isStreaming };
+  state = {
+    ...state,
+    isThinking,
+    isStreaming,
+    activityDetail: detail ?? (isThinking || isStreaming ? state.activityDetail : null),
+  };
   emit();
+  persistTutorActivity(isThinking, isStreaming);
 }
 
-// ─── Phase inference ───────────────────────────────────────
+export function setActivityDetail(detail: TutorActivityDetail | null): void {
+  state = { ...state, activityDetail: detail }; emit();
+}
 
 function inferPhase(studentCount: number, tutorCount: number): SessionPhase {
   const total = studentCount + tutorCount;

@@ -18,11 +18,6 @@
   opacity: 0.35;
   border-radius: 1px;
   min-height: 24px;
-  transition: opacity 0.3s ease;
-}
-
-.container:hover .rule {
-  opacity: 0.5;
 }
 
 .text {
@@ -47,5 +42,5 @@
 
 @media (prefers-reduced-motion: reduce) {
   .container { animation: none; }
-  .rule { transition: none; }
+  .rule { opacity: 0.35; }
 }
