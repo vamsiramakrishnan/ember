@@ -50,6 +50,23 @@
   margin-bottom: 2px;
 }
 
+/* Slash command chip — indigo tint inline */
+.slashChip {
+  display: inline-flex;
+  align-items: center;
+  background: var(--indigo-dim);
+  border: 1px solid rgba(74, 88, 153, 0.15);
+  border-radius: 2px;
+  padding: 0 5px;
+  margin: 0 1px;
+  font-family: var(--font-system);
+  font-size: 0.78em;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  color: var(--indigo);
+  vertical-align: baseline;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .link {
     transition: none;

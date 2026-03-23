@@ -46,3 +46,13 @@
   color: var(--ink);
   border-bottom: 1.5px solid var(--ink);
 }
+
+/* ─── Mobile: tighter nav ────────────────────────── */
+@media (max-width: 640px) {
+  .nav { gap: 20px; padding-bottom: 10px; }
+  .tab { font-size: 13px; padding-bottom: 9px; margin-bottom: -11px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tab { transition: none; }
+}

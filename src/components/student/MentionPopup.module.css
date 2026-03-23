@@ -153,6 +153,13 @@
   letter-spacing: 0.5px;
 }
 
+/* ─── Mobile: full-width popup ────────────────────── */
+@media (max-width: 480px) {
+  .popup { min-width: unset; max-width: unset; left: 0; right: 0; }
+  .item { padding: 10px 14px; }
+  .name { font-size: 15px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .item { transition: none; }
 }
