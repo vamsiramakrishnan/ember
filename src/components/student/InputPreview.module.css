@@ -1,0 +1,61 @@
+/* InputPreview — chip overlay that sits on top of the raw textarea */
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+  font-family: var(--font-student);
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.82;
+  letter-spacing: 0.005em;
+  color: var(--ink);
+  white-space: pre-wrap;
+  word-break: break-word;
+  padding: 0;
+}
+
+/* ─── Mention chip (inline) ──────────────────────── */
+.mentionChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: var(--paper-warm);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 0 6px;
+  margin: 0 1px;
+  vertical-align: baseline;
+  line-height: inherit;
+}
+
+.chipIcon {
+  font-family: var(--font-system);
+  font-size: 0.72em;
+  color: var(--margin);
+}
+
+.chipName {
+  font-weight: 500;
+  color: var(--ink);
+}
+
+/* ─── Slash command chip ─────────────────────────── */
+.slashChip {
+  display: inline-flex;
+  align-items: center;
+  background: var(--indigo-dim);
+  border: 1px solid rgba(74, 88, 153, 0.15);
+  border-radius: 2px;
+  padding: 0 6px;
+  margin: 0 1px;
+  font-family: var(--font-system);
+  font-size: 0.78em;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  color: var(--indigo);
+  vertical-align: baseline;
+  line-height: inherit;
+}

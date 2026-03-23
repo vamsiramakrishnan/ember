@@ -6,6 +6,7 @@
 import { useCallback, useRef } from 'react';
 import { isGeminiAvailable } from '@/services/gemini';
 import { useResearcher } from './useResearcher';
+import { generateIllustration } from '@/services/enrichment';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
 import type { SlashCommand } from '@/components/student/SlashCommandPopup';
 
@@ -49,13 +50,19 @@ export function useSlashCommandRouter({
       case 'visualize':
       case 'timeline':
       case 'connect': {
-        // Route through the tutor with a hint to use the visualiser
         const hint = command.id === 'timeline'
           ? `Create a timeline visualization: ${query}`
           : command.id === 'connect'
             ? `Show how these ideas connect: ${query}`
             : `Visualize this concept: ${query}`;
         respond({ type: 'question', content: hint });
+        return true;
+      }
+
+      case 'draw': {
+        addEntry({ type: 'silence', text: 'sketching…' });
+        const ill = await generateIllustration(query);
+        if (ill) addEntry(ill);
         return true;
       }
 

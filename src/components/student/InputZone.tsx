@@ -1,9 +1,11 @@
 /** InputZone (7.4) — student's writing area. See: 06-component-inventory.md */
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { inferEntryType } from '@/hooks/useEntryInference';
+import { MENTION_PATTERN } from '@/primitives/MentionChip';
 import { SketchInput } from './SketchInput';
 import { BlockInserter } from './BlockInserter';
 import { InputAffordances } from './InputAffordances';
+import { InputPreview } from './InputPreview';
 import type { StudentEntryType } from '@/types/entries';
 import styles from './InputZone.module.css';
 
@@ -86,10 +88,8 @@ export function InputZone({
     [value, submit, forcedType, onPopupClose],
   );
 
-  const handleBlockSelect = useCallback((type: StudentEntryType) => {
-    setForcedType(type);
-    textareaRef.current?.focus();
-  }, []);
+  const handleBlockSelect = useCallback(
+    (type: StudentEntryType) => { setForcedType(type); textareaRef.current?.focus(); }, []);
 
   if (sketchMode) return (
     <SketchInput
@@ -101,48 +101,48 @@ export function InputZone({
   const displayType = forcedType ? typeLabels[forcedType] || forcedType
     : value.trim() ? typeLabels[inferEntryType(value.trim())] : '';
 
+  // Show chip overlay when the value contains @mentions or /commands
+  const hasChips = useMemo(() => {
+    const mentionRe = new RegExp(MENTION_PATTERN.source);
+    return mentionRe.test(value) || /^\/\w+\s/.test(value);
+  }, [value]);
+
   return (
     <div className={styles.container} onClick={() => textareaRef.current?.focus()}>
       <BlockInserter onSelect={handleBlockSelect} />
-      {forcedType && (
-        <div className={styles.forcedTypeBar}>
-          <span className={styles.forcedTypeLabel}>{forcedType}</span>
-          <button
-            className={styles.forcedTypeClear}
-            onClick={(e) => { e.stopPropagation(); setForcedType(null); }}
-            aria-label="Clear entry type"
-          >esc</button>
-        </div>
-      )}
-      <textarea
-        ref={textareaRef}
-        className={styles.textarea}
-        value={value}
-        onChange={handleChange}
-        onFocus={() => setIsFocused(true)}
-        onBlur={() => setIsFocused(false)}
-        onKeyDown={handleKeyDown}
-        onPaste={onPaste}
-        rows={1}
-        disabled={disabled}
-        aria-label="Write your thoughts"
-        aria-busy={disabled}
-      />
+      {forcedType && <div className={styles.forcedTypeBar}>
+        <span className={styles.forcedTypeLabel}>{forcedType}</span>
+        <button className={styles.forcedTypeClear} aria-label="Clear entry type"
+          onClick={(e) => { e.stopPropagation(); setForcedType(null); }}>esc</button>
+      </div>}
+      <div className={styles.textareaWrap}>
+        <textarea
+          ref={textareaRef}
+          className={hasChips ? styles.textareaHidden : styles.textarea}
+          value={value}
+          onChange={handleChange}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          onKeyDown={handleKeyDown}
+          onPaste={onPaste}
+          rows={1}
+          disabled={disabled}
+          aria-label="Write your thoughts"
+          aria-busy={disabled}
+        />
+        <InputPreview value={value} visible={hasChips} />
+      </div>
       {!isFocused && !value && !forcedType && (
-        <>
-          <div className={disabled ? styles.cursorThinking : styles.cursor} aria-hidden="true" />
-          {!disabled && <span className={styles.hint}>What are you thinking about?</span>}
-        </>
+        <div className={disabled ? styles.cursorThinking : styles.cursor} aria-hidden="true" />
+      )}
+      {!isFocused && !value && !forcedType && !disabled && (
+        <span className={styles.hint}>What are you thinking about?</span>
       )}
       <div className={styles.bottomRow}>
-        {displayType && !forcedType && (
-          <span className={styles.typeIndicator}>{displayType}</span>
-        )}
-        <button
-          className={styles.sketchToggle}
+        {displayType && !forcedType && <span className={styles.typeIndicator}>{displayType}</span>}
+        <button className={styles.sketchToggle}
           onClick={(e) => { e.stopPropagation(); setSketchMode(true); }}
-          aria-label="Switch to sketch mode"
-        >sketch</button>
+          aria-label="Switch to sketch mode">sketch</button>
       </div>
       <InputAffordances />
     </div>

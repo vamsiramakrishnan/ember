@@ -1,10 +1,7 @@
 /**
  * MentionPopup — appears when the student types @ in the InputZone.
- * Shows fuzzy-matched entities from the local index.
- * Zero latency — all search happens in-memory.
- *
- * Navigation: arrow keys to select, Enter to insert, Escape to close.
- * Renders as a positioned overlay anchored to the cursor position.
+ * Shows fuzzy-matched entities from the local index with accent-colored
+ * type icons and keyboard navigation hints.
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Entity, EntityType } from '@/hooks/useEntityIndex';
@@ -19,23 +16,21 @@ interface MentionPopupProps {
 }
 
 const TYPE_ICONS: Record<EntityType, string> = {
-  notebook: '◉',
-  session: '§',
-  thinker: '◈',
-  concept: '◇',
-  term: '≡',
-  text: '▤',
-  question: '?',
+  notebook: '◉', session: '§', thinker: '◈', concept: '◇',
+  term: '≡', text: '▤', question: '?',
+};
+
+/** Map entity types to accent color classes. */
+const TYPE_ACCENT: Record<EntityType, string> = {
+  notebook: styles.iconMargin ?? '', session: styles.iconDefault ?? '',
+  thinker: styles.iconAmber ?? '', concept: styles.iconIndigo ?? '',
+  term: styles.iconSage ?? '', text: styles.iconMargin ?? '',
+  question: styles.iconDefault ?? '',
 };
 
 const TYPE_LABELS: Record<EntityType, string> = {
-  notebook: 'notebook',
-  session: 'session',
-  thinker: 'thinker',
-  concept: 'concept',
-  term: 'term',
-  text: 'text',
-  question: 'question',
+  notebook: 'notebook', session: 'session', thinker: 'thinker',
+  concept: 'concept', term: 'term', text: 'text', question: 'question',
 };
 
 export function MentionPopup({
@@ -44,10 +39,8 @@ export function MentionPopup({
   const [selectedIdx, setSelectedIdx] = useState(0);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Reset selection when results change
   useEffect(() => setSelectedIdx(0), [results]);
 
-  // Keyboard navigation
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'ArrowDown') {
@@ -64,27 +57,26 @@ export function MentionPopup({
         onClose();
       }
     };
-
     document.addEventListener('keydown', handleKey);
     return () => document.removeEventListener('keydown', handleKey);
   }, [results, selectedIdx, onSelect, onClose]);
 
-  // Scroll selected item into view
   useEffect(() => {
-    const el = menuRef.current?.children[selectedIdx] as HTMLElement | undefined;
+    const el = menuRef.current?.querySelector(`[data-idx="${selectedIdx}"]`) as HTMLElement | undefined;
     el?.scrollIntoView({ block: 'nearest' });
   }, [selectedIdx]);
 
-  const handleClick = useCallback((entity: Entity) => {
-    onSelect(entity);
-  }, [onSelect]);
+  const handleClick = useCallback((entity: Entity) => onSelect(entity), [onSelect]);
+
+  const posStyle = position ? { top: position.top, left: position.left } : undefined;
 
   if (results.length === 0 && query.length > 0) {
     return (
-      <div
-        className={styles.popup}
-        style={position ? { top: position.top, left: position.left } : undefined}
-      >
+      <div className={styles.popup} style={posStyle}>
+        <div className={styles.queryBar}>
+          <span className={styles.queryPrefix}>@</span>
+          <span className={styles.queryText}>{query}</span>
+        </div>
         <div className={styles.empty}>no matches</div>
       </div>
     );
@@ -93,32 +85,37 @@ export function MentionPopup({
   if (results.length === 0) return null;
 
   return (
-    <div
-      className={styles.popup}
-      style={position ? { top: position.top, left: position.left } : undefined}
-      ref={menuRef}
-      role="listbox"
-      aria-label="Mention suggestions"
-    >
+    <div className={styles.popup} style={posStyle} ref={menuRef}
+      role="listbox" aria-label="Mention suggestions">
+      {query && (
+        <div className={styles.queryBar}>
+          <span className={styles.queryPrefix}>@</span>
+          <span className={styles.queryText}>{query}</span>
+        </div>
+      )}
       {results.map((entity, i) => (
         <button
-          key={entity.id}
+          key={entity.id} data-idx={i}
           className={`${styles.item} ${i === selectedIdx ? styles.selected : ''}`}
-          role="option"
-          aria-selected={i === selectedIdx}
+          role="option" aria-selected={i === selectedIdx}
           onClick={() => handleClick(entity)}
           onMouseEnter={() => setSelectedIdx(i)}
         >
-          <span className={styles.icon}>{TYPE_ICONS[entity.type]}</span>
+          <span className={`${styles.icon} ${TYPE_ACCENT[entity.type]}`}>
+            {TYPE_ICONS[entity.type]}
+          </span>
           <div className={styles.content}>
             <span className={styles.name}>{entity.name}</span>
-            {entity.detail && (
-              <span className={styles.detail}>{entity.detail}</span>
-            )}
+            {entity.detail && <span className={styles.detail}>{entity.detail}</span>}
           </div>
           <span className={styles.type}>{TYPE_LABELS[entity.type]}</span>
         </button>
       ))}
+      <div className={styles.footer}>
+        <span className={styles.footerHint}>↑↓ navigate</span>
+        <span className={styles.footerHint}>↵ select</span>
+        <span className={styles.footerHint}>esc close</span>
+      </div>
     </div>
   );
 }
