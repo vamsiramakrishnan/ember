@@ -13,7 +13,9 @@
  */
 import { getGeminiClient } from './gemini';
 import { AGENT_TOOL_DECLARATIONS } from './agent-tools';
-import { executeTool, extractDeferredActions, type DeferredAction } from './tool-executor';
+import { executeTool, extractDeferredActions } from './tool-executor';
+import type { DeferredAction } from './tool-executor';
+import type { GraphDeferredAction } from './graph-tools';
 import type { AgentConfig } from './agents';
 import type { AgentMessage } from './run-agent';
 import type { Subgraph } from './knowledge-graph';
@@ -23,7 +25,7 @@ const MAX_ITERATIONS = 5;
 export interface AgenticResult {
   text: string;
   toolCalls: string[];
-  deferredActions: DeferredAction[];
+  deferredActions: Array<DeferredAction | GraphDeferredAction>;
 }
 
 /**
@@ -54,7 +56,7 @@ export async function runAgenticLoop(
   };
 
   const toolCalls: string[] = [];
-  const deferredActions: DeferredAction[] = [];
+  const deferredActions: Array<DeferredAction | GraphDeferredAction> = [];
   let currentMessages = [...messages];
 
   for (let iter = 0; iter < MAX_ITERATIONS; iter++) {
@@ -150,7 +152,7 @@ export async function runAgenticLoopStreaming(
   };
 
   const toolCalls: string[] = [];
-  const deferredActions: DeferredAction[] = [];
+  const deferredActions: Array<DeferredAction | GraphDeferredAction> = [];
   let currentMessages = [...messages];
 
   for (let iter = 0; iter < MAX_ITERATIONS; iter++) {

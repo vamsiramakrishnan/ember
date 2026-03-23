@@ -27,6 +27,7 @@ export * as blobs from './repositories/blobs';
 export * as canvas from './repositories/canvas';
 export * as graph from './repositories/graph';
 export * as events from './repositories/events';
+export * as blobEntities from './repositories/blob-entities';
 
 // Sync
 export { registerAdapter, startSync, stopSync, sync } from './sync';

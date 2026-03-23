@@ -89,6 +89,26 @@ export type {
   UpdateEntityCommand,
 } from './entity-projector';
 
+// Learning intelligence
+export {
+  findLearningGaps,
+  computeTrajectories,
+  suggestExplorations,
+  trackThreads,
+  findConceptClusters,
+} from './learning-intelligence';
+export type {
+  LearningGap,
+  MasteryTrajectory,
+  ExplorationSuggestion,
+  TrackedThread,
+  ConceptCluster,
+} from './learning-intelligence';
+
+// Cross-notebook bridges
+export { findCrossNotebookBridges } from './cross-notebook-bridge';
+export type { CrossNotebookBridge } from './cross-notebook-bridge';
+
 // React hooks
 export { useSessionState } from './useSessionState';
 export { useEntryRelations, useEntryConnections } from './useEntryGraph';

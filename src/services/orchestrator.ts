@@ -17,12 +17,13 @@ import { buildGraph, getDelta, serializeSubgraph } from './knowledge-graph';
 import { isGeminiAvailable, getGeminiClient } from './gemini';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
 import type { DeferredAction } from './tool-executor';
+import type { GraphDeferredAction } from './graph-tools';
 import { generateEcho, generateBridge, generateReflection, incrementReflectionCounter } from './temporal-layers';
 
 export interface OrchestratorResult {
   entries: NotebookEntry[];
-  /** Write-side actions the agent requested (annotations, lexicon). */
-  deferredActions: DeferredAction[];
+  /** Write-side actions the agent requested (annotations, lexicon, graph links). */
+  deferredActions: Array<DeferredAction | GraphDeferredAction>;
 }
 
 /** Execute the full pipeline. */
