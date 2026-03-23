@@ -1,13 +1,15 @@
+/* Header — warm, unhurried. The top of the page before the notebook. */
+
 .header {
-  padding-top: 32px;
-  padding-bottom: 4px;
+  padding-top: 36px;
+  padding-bottom: 0;
 }
 
 .row {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
 }
 
 .breadcrumb {
@@ -31,7 +33,7 @@
   font-family: var(--font-tutor);
   font-size: 18px;
   color: var(--ink-ghost);
-  margin: 0 8px;
+  margin: 0 10px;
   user-select: none;
 }
 
@@ -44,7 +46,7 @@
   border: none;
   cursor: pointer;
   padding: 0;
-  transition: color 0.2s ease;
+  transition: color 0.3s ease;
 }
 
 .notebookName:hover {

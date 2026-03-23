@@ -1,6 +1,11 @@
+/* Navigation — Three text labels on a thin ruled line.
+ * Spec: Cormorant Garamond 14px, tab transitions 0.3s ease.
+ * Border: 1px rule-light. Active: ink colour, 1.5px underline.
+ */
+
 .nav {
   display: flex;
-  gap: 28px;
+  gap: 32px;
   border-bottom: 1px solid var(--rule-light);
   padding-bottom: 14px;
 }
@@ -9,19 +14,19 @@
   font-family: var(--font-tutor);
   font-size: 14px;
   font-weight: 400;
-  letter-spacing: 0.2px;
+  letter-spacing: 0.3px;
   background: none;
   border: none;
-  padding: 0 0 12px 0;
+  padding: 0 0 13px 0;
   cursor: pointer;
-  transition: color var(--tab-transition), border-color var(--tab-transition);
+  transition: color 0.3s ease, border-color 0.3s ease;
   margin-bottom: -15px;
   outline: none;
   position: relative;
 }
 
 .tab:focus-visible {
-  outline: 1.5px solid var(--ink-faint);
+  outline: 1.5px solid var(--margin);
   outline-offset: 4px;
   border-radius: 2px;
 }

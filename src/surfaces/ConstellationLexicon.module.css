@@ -1,7 +1,9 @@
 /* ConstellationLexicon — ledger-style vocabulary entries */
+/* Spec: vertical separation 1px rule-light between entries */
 .entry {
-  margin-bottom: 12px;
-  padding: 16px 0;
+  margin-bottom: 0;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--rule-light);
 }
 
 .entryHeader {
@@ -18,13 +20,14 @@
   letter-spacing: 1px;
 }
 
+/* Spec: Cormorant Garamond Italic 22px Medium ink */
 .term {
   font-family: var(--font-tutor);
   font-size: 22px;
   font-weight: 500;
   font-style: italic;
   color: var(--ink);
-  letter-spacing: -0.2px;
+  letter-spacing: 0;
   line-height: 1.3;
 }
 
@@ -35,12 +38,13 @@
   font-style: italic;
 }
 
+/* Spec: Crimson Pro 16px Regular ink, 1.75 line-height */
 .definition {
   font-family: var(--font-student);
   font-size: 16px;
-  color: var(--ink-soft);
-  line-height: 1.78;
-  letter-spacing: 0.005em;
+  color: var(--ink);
+  line-height: 1.75;
+  letter-spacing: 0;
   margin-bottom: 16px;
   max-width: 520px;
 }

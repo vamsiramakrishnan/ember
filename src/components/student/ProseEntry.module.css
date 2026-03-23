@@ -1,12 +1,16 @@
+/* ProseEntry (1.1) — Student's paragraph. The loudest voice on the page.
+ * Spec: Crimson Pro 18px Regular, ink, 1.80 line-height, 19px left indent,
+ * 20px bottom margin. No character limit. Permanent upon submission.
+ */
+
 .entry {
   font-family: var(--font-student);
   font-size: 18px;
   font-weight: 400;
   color: var(--ink);
-  line-height: 1.82;
-  letter-spacing: 0.005em;
+  line-height: 1.80;
+  letter-spacing: 0;
   padding-left: var(--text-indent);
   margin-bottom: var(--entry-gap);
   margin-top: 0;
-  /* Student text has the fullest presence — the darkest ink on the page */
 }

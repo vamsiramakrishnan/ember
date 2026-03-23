@@ -1,35 +1,44 @@
-/* Compact thinking indicator. Just a blinking cursor. */
+/* SilenceMarker (2.6) — Active waiting state.
+ * Spec: ~120px vertical space. 48px padding above/below.
+ * Rule: 1px, 36px tall, centred. Cursor: 1px wide, 22px tall,
+ * ink 30% opacity, 1.2s fade. Text: Cormorant Garamond Italic
+ * 15px ink-ghost, 0.5px letter-spacing.
+ *
+ * "The notebook is open. The room is quiet."
+ */
+
 .container {
-  padding: 12px 0 16px;
+  padding: var(--silence-gap) 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 16px;
 }
 
 .text {
   font-family: var(--font-tutor);
-  font-size: 14px;
+  font-size: 15px;
   font-style: italic;
-  font-weight: 300;
+  font-weight: 400;
   color: var(--ink-ghost);
-  letter-spacing: 0.8px;
+  letter-spacing: 0.5px;
   text-align: center;
   margin: 0;
   max-width: 320px;
   line-height: 1.6;
 }
 
+/* Vertical rule: 1px wide, 36px tall per spec */
 .verticalRule {
   width: 1px;
-  height: 16px;
+  height: 36px;
   background-color: var(--rule);
-  opacity: 0.4;
 }
 
+/* Blinking cursor: 1px wide, 22px tall, ink 30% opacity per spec */
 .cursor {
   width: 1px;
-  height: 18px;
+  height: 22px;
   background-color: var(--ink);
   animation: emberCursorBlink var(--cursor-cycle) ease infinite;
 }
@@ -40,4 +49,3 @@
     opacity: 0.3;
   }
 }
-

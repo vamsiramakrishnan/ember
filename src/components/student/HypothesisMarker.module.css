@@ -1,13 +1,18 @@
+/* HypothesisMarker (1.3) — Student's guess/prediction.
+ * Spec: Crimson Pro 18px Regular, ink, 2px left border indigo 40% opacity,
+ * 14px left padding, indigo-dim background, 2px radius, 20px margin.
+ */
+
 .marker {
   font-family: var(--font-student);
   font-size: 18px;
   font-weight: 400;
   color: var(--ink);
-  line-height: 1.82;
-  letter-spacing: 0.005em;
+  line-height: 1.80;
+  letter-spacing: 0;
   margin-left: var(--text-indent);
   margin-bottom: var(--entry-gap);
-  border-left: 2px solid var(--indigo);
+  border-left: 2px solid rgba(91, 107, 138, 0.40);
   padding: 10px 16px 10px 14px;
   background: var(--indigo-dim);
   border-radius: 2px;

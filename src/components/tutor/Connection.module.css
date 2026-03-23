@@ -1,8 +1,15 @@
+/* Connection (2.3) — Tutor drawing lines between student's interests.
+ * Spec: Identical to marginalia visually, but first sentence Medium (500).
+ * Must reference student's history. Opens sessions or introduces new threads.
+ */
+
 .container {
   display: grid;
   grid-template-columns: var(--margin-rule-width) 1fr;
   gap: var(--margin-rule-gap);
   margin-bottom: var(--entry-gap);
+  padding-top: 2px;
+  animation: marginFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .rule {
@@ -10,6 +17,12 @@
   background-color: var(--margin);
   opacity: 0.35;
   border-radius: 1px;
+  min-height: 24px;
+  transition: opacity 0.3s ease;
+}
+
+.container:hover .rule {
+  opacity: 0.5;
 }
 
 .text {
@@ -17,12 +30,22 @@
   font-size: 17.5px;
   font-weight: 400;
   color: var(--margin);
-  line-height: 1.78;
-  letter-spacing: 0.01em;
+  line-height: 1.75;
+  letter-spacing: 0;
   margin: 0;
 }
 
+/* Spec: first sentence Cormorant Garamond Medium (500) */
 .emphasis {
   font-weight: 500;
-  /* Slightly elevated presence for the connecting insight */
+}
+
+@keyframes marginFadeIn {
+  from { opacity: 0; transform: translateY(7px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .container { animation: none; }
+  .rule { transition: none; }
 }
