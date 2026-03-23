@@ -5,7 +5,7 @@
  */
 import { GoogleGenAI } from '@google/genai';
 
-export const config = { runtime: 'edge' };
+export const config = { runtime: 'edge', maxDuration: 120 };
 
 interface TtsRequestBody {
   script: string;

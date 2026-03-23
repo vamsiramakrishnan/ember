@@ -2,17 +2,18 @@
  * Podcast Generation — creates NotebookLM-style audio discussions.
  *
  * Two-step pipeline:
- * 1. Generate a two-speaker dialogue script via standard Gemini model
- * 2. Convert script to speech via Gemini TTS with multi-speaker config
+ * 1. Generate a concise two-speaker dialogue script via a lightweight agent
+ * 2. Convert script to speech via Gemini TTS with structured prompt
  *
  * Supports both direct Gemini SDK (dev) and proxy (production).
- * Returns a WAV blob URL for playback in the notebook.
+ * Returns a structured podcast entry for the PodcastPlayer component.
  */
 import { getGeminiClient } from './gemini';
 import { useProxy, proxyTtsGeneration } from './proxy-client';
-import { VISUALISER_AGENT } from './agents';
+import { micro } from './agents';
 import { runTextAgent } from './run-agent';
 import { recentContext } from './entry-utils';
+import { pcmToWav } from './pcm-to-wav';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
 
 const TTS_MODEL = 'gemini-2.5-flash-preview-tts';
@@ -28,31 +29,18 @@ export async function generatePodcast(
   entries: LiveEntry[],
 ): Promise<NotebookEntry | null> {
   try {
-    // Step 1: Generate dialogue script
-    const context = recentContext(entries, 8, 800);
+    const context = recentContext(entries, 6, 500);
     const script = await generateScript(topic, context);
     if (!script) {
       return errorEntry('Could not generate dialogue script. Try again.');
     }
 
-    // Step 2: Convert to speech
-    const audioDataUrl = await synthesizeSpeech(script);
+    const audioDataUrl = await synthesizeSpeech(script, topic);
     if (!audioDataUrl) {
-      // Return script-only fallback so the work isn't lost
-      return {
-        type: 'podcast',
-        topic,
-        audioUrl: '',
-        transcript: script,
-      };
+      return { type: 'podcast', topic, audioUrl: '', transcript: script };
     }
 
-    return {
-      type: 'podcast',
-      topic,
-      audioUrl: audioDataUrl,
-      transcript: script,
-    };
+    return { type: 'podcast', topic, audioUrl: audioDataUrl, transcript: script };
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Unknown error';
     console.error('[Ember] Podcast generation failed:', err);
@@ -60,42 +48,44 @@ export async function generatePodcast(
   }
 }
 
+/** Step 1: Generate a concise dialogue script via a lightweight micro-agent. */
 async function generateScript(
   topic: string, context: string,
 ): Promise<string | null> {
-  const result = await runTextAgent(VISUALISER_AGENT, [{
+  const agent = micro(SCRIPT_SYSTEM);
+  const result = await runTextAgent(agent, [{
     role: 'user',
     parts: [{ text: SCRIPT_PROMPT(topic, context) }],
   }]);
 
   const text = result.text.trim();
-  if (!text || text.length < 100) return null;
+  if (!text || text.length < 80) return null;
   return text.replace(/^```\w*\s*/i, '').replace(/```\s*$/i, '').trim();
 }
 
+/** Step 2: Convert dialogue to speech with a structured TTS prompt. */
 async function synthesizeSpeech(
-  script: string,
+  script: string, topic: string,
 ): Promise<string | null> {
+  const ttsPrompt = buildTtsPrompt(script, topic);
   let audioBase64: string;
 
   if (useProxy()) {
-    // Production: use server-side TTS proxy
     const result = await proxyTtsGeneration({
-      script,
+      script: ttsPrompt,
       speakers: SPEAKERS,
       model: TTS_MODEL,
     });
     audioBase64 = result.audioData;
   } else {
-    // Development: direct SDK call
     const client = getGeminiClient();
     if (!client) {
-      throw new Error('No Gemini API key — TTS requires either a client-side key or the server proxy.');
+      throw new Error('No Gemini API key — TTS requires either a key or the server proxy.');
     }
 
     const response = await client.models.generateContent({
       model: TTS_MODEL,
-      contents: [{ parts: [{ text: script }] }],
+      contents: [{ parts: [{ text: ttsPrompt }] }],
       config: {
         responseModalities: ['AUDIO'],
         speechConfig: {
@@ -117,70 +107,40 @@ async function synthesizeSpeech(
     audioBase64 = audio.data;
   }
 
-  // Convert base64 PCM to WAV blob URL
-  const pcmBytes = Uint8Array.from(
-    atob(audioBase64), (c) => c.charCodeAt(0),
-  );
+  const pcmBytes = Uint8Array.from(atob(audioBase64), (c) => c.charCodeAt(0));
   const wav = pcmToWav(pcmBytes, 24000, 1, 16);
   const blob = new Blob([wav], { type: 'audio/wav' });
   return URL.createObjectURL(blob);
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────
+// ─── TTS prompt construction ───────────────────────────────────────
 
-/** Prepend a WAV header to raw PCM data. */
-function pcmToWav(
-  pcm: Uint8Array, sampleRate: number,
-  channels: number, bitsPerSample: number,
-): ArrayBuffer {
-  const byteRate = sampleRate * channels * (bitsPerSample / 8);
-  const blockAlign = channels * (bitsPerSample / 8);
-  const buffer = new ArrayBuffer(44 + pcm.length);
-  const view = new DataView(buffer);
-
-  const writeStr = (offset: number, s: string) => {
-    for (let i = 0; i < s.length; i++) {
-      view.setUint8(offset + i, s.charCodeAt(i));
-    }
-  };
-
-  writeStr(0, 'RIFF');
-  view.setUint32(4, 36 + pcm.length, true);
-  writeStr(8, 'WAVE');
-  writeStr(12, 'fmt ');
-  view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true); // PCM
-  view.setUint16(22, channels, true);
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, byteRate, true);
-  view.setUint16(32, blockAlign, true);
-  view.setUint16(34, bitsPerSample, true);
-  writeStr(36, 'data');
-  view.setUint32(40, pcm.length, true);
-  new Uint8Array(buffer, 44).set(pcm);
-  return buffer;
+/**
+ * Build a structured TTS prompt following the Gemini prompting guide:
+ * Audio profile → Scene → Director's notes → Transcript.
+ */
+function buildTtsPrompt(script: string, topic: string): string {
+  return [
+    `Audio Profile: Warm, intimate podcast. Two people at a quiet desk in a library discussing "${topic}".`,
+    `Director's Notes:`,
+    `- Tutor (Kore): Measured pace, gentle emphasis on key concepts. Brief pauses before important ideas.`,
+    `- Student (Puck): Curious, genuine reactions. Slightly faster when excited by an insight.`,
+    `- Pacing: Conversational, natural beats between turns. No urgency.`,
+    ``,
+    `Transcript:`,
+    script,
+  ].join('\n');
 }
 
-/** Error entry visible to the student. */
 function errorEntry(message: string): NotebookEntry {
   return { type: 'tutor-marginalia', content: message };
 }
 
+const SCRIPT_SYSTEM = `You write short podcast dialogue scripts. Output ONLY the dialogue. Format: "Speaker: text". Two speakers: "Tutor" and "Student". 150-250 words max.`;
+
 function SCRIPT_PROMPT(topic: string, context: string): string {
-  return `Write a short podcast-style dialogue (400-600 words) between two speakers about: ${topic}
+  return `Write a short podcast dialogue (150-250 words) about: ${topic}
 
-Format EXACTLY as:
-Tutor: [text]
-Student: [text]
-
-Rules:
-- Two speakers only: "Tutor" and "Student"
-- Conversational, warm, intellectually curious
-- Natural interruptions, reactions ("Right!", "That's fascinating", "Wait, so...")
-- The Tutor explains concepts; the Student asks genuine questions
-- Build from foundations to insight — don't dump information
-- End with an open question that invites further exploration
-- No stage directions, no [laughs], just dialogue
-
-${context ? `Student's recent exploration:\n${context}\n\n` : ''}Output ONLY the dialogue, nothing else.`;
+Format: Tutor: [line] / Student: [line]
+Style: Warm, curious, natural. Build to one insight. End with a question.${context ? `\nContext:\n${context}` : ''}`;
 }
