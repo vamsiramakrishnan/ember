@@ -1,12 +1,15 @@
 /**
- * AnnotationMargin — renders annotations in the right margin
- * of any notebook block. Both student and tutor can annotate.
+ * AnnotationMargin — pencil notes in the right margin.
  *
- * Student annotations: clicking the margin opens a small textarea.
- * Tutor annotations: appear automatically when the AI responds
- * to a specific block rather than the whole conversation.
+ * Incremental reveal (Layer 1 → 2 → 3):
+ *   Layer 1 (rest): count indicator — a ghost-quiet dot + number.
+ *     "There's something here." No text, no distraction.
+ *   Layer 2 (hover): the + button to add an annotation appears.
+ *   Layer 3 (click): the full annotation panel expands, showing
+ *     all notes and the compose textarea.
  *
- * Visual: like pencil marginalia in a library book.
+ * Visual: a tiny pencil mark in the margin that, when you lean
+ * closer, reveals handwritten notes from student and tutor.
  */
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { MarkdownContent } from '@/primitives/MarkdownContent';
@@ -19,13 +22,29 @@ interface AnnotationMarginProps {
 }
 
 export function AnnotationMargin({ annotations, onAdd }: AnnotationMarginProps) {
+  const [expanded, setExpanded] = useState(false);
   const [composing, setComposing] = useState(false);
   const [draft, setDraft] = useState('');
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (composing) inputRef.current?.focus();
   }, [composing]);
+
+  // Close panel when clicking outside
+  useEffect(() => {
+    if (!expanded) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+        setExpanded(false);
+        setComposing(false);
+        setDraft('');
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [expanded]);
 
   const handleSubmit = useCallback(() => {
     if (!draft.trim()) return;
@@ -40,17 +59,49 @@ export function AnnotationMargin({ annotations, onAdd }: AnnotationMarginProps) 
       handleSubmit();
     }
     if (e.key === 'Escape') {
-      setComposing(false);
-      setDraft('');
+      if (composing) { setComposing(false); setDraft(''); }
+      else { setExpanded(false); }
     }
-  }, [handleSubmit]);
+  }, [handleSubmit, composing]);
 
+  const count = annotations.length;
+
+  // Layer 1: count indicator (always visible when annotations exist)
+  if (!expanded) {
+    return (
+      <div className={styles.margin}>
+        {count > 0 && (
+          <button
+            className={styles.indicator}
+            onClick={() => setExpanded(true)}
+            aria-label={`${count} annotation${count !== 1 ? 's' : ''} — click to expand`}
+            title={`${count} annotation${count !== 1 ? 's' : ''}`}
+          >
+            <span className={styles.dot}>·</span>
+            <span className={styles.count}>{count}</span>
+          </button>
+        )}
+        {/* Layer 2: add button (visible on parent hover) */}
+        <button
+          className={styles.addButton}
+          onClick={() => { setExpanded(true); setComposing(true); }}
+          aria-label="Add annotation"
+        >
+          +
+        </button>
+      </div>
+    );
+  }
+
+  // Layer 3: expanded panel with all annotations
   return (
-    <div className={styles.margin}>
+    <div className={styles.panel} ref={panelRef}>
       {annotations.map((ann) => (
         <div
           key={ann.id}
-          className={`${styles.note} ${ann.author === 'tutor' ? styles.tutorNote : styles.studentNote}`}
+          className={`${styles.note} ${
+            ann.author === 'tutor' ? styles.tutorNote : styles.studentNote
+          }`}
         >
           <span className={styles.author}>
             {ann.author === 'tutor' ? '¶' : '·'}
@@ -76,13 +127,21 @@ export function AnnotationMargin({ annotations, onAdd }: AnnotationMarginProps) 
         </div>
       ) : (
         <button
-          className={styles.addButton}
+          className={styles.addButtonInline}
           onClick={() => setComposing(true)}
           aria-label="Add annotation"
         >
           +
         </button>
       )}
+
+      <button
+        className={styles.collapse}
+        onClick={() => { setExpanded(false); setComposing(false); setDraft(''); }}
+        aria-label="Collapse annotations"
+      >
+        ‹
+      </button>
     </div>
   );
 }

@@ -1,5 +1,11 @@
 /* FollowUp — Socratic follow-up beneath tutor entries.
- * Always subtly visible — this is the invitation to keep thinking. */
+ *
+ * Incremental reveal:
+ *   Layer 2 (hover): trigger appears when parent entry is hovered.
+ *   Layer 3 (click): input slides in for the question.
+ *
+ * At rest: invisible. The notebook is clean.
+ */
 
 .trigger {
   font-family: var(--font-system);
@@ -12,8 +18,8 @@
   cursor: pointer;
   padding: 6px 0 2px;
   margin-top: 6px;
-  transition: color 0.2s ease;
   display: block;
+  transition: color 0.2s ease;
 }
 
 .trigger:hover {

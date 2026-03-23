@@ -86,6 +86,20 @@
   min-width: 0;
 }
 
+/* ─── Layer 2: follow-up trigger reveal ───────────── */
+/* Hidden at rest. Visible when the entry is hovered.  */
+
+.followUpZone {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.wrapper:hover .followUpZone,
+.touched .followUpZone,
+.followUpZone:focus-within {
+  opacity: 1;
+}
+
 /* ─── Bookmark ────────────────────────────────────── */
 
 .bookmarkPos {

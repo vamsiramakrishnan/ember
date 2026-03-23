@@ -1,4 +1,9 @@
-/* ConstellationEncounters — archive ledger display */
+/* ConstellationEncounters — incremental reveal ledger.
+ *
+ * Layer 0: thinker name + core idea (always visible)
+ * Layer 2 (hover): ref, session, date, status fade in
+ */
+
 .header {
   display: grid;
   grid-template-columns: 48px 120px 1fr 120px 90px;
@@ -31,19 +36,36 @@
   background-color: var(--paper-warm);
 }
 
+/* Layer 2: detail columns — hidden at rest, visible on hover */
+.hoverDetail {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.row:hover .hoverDetail {
+  opacity: 1;
+}
+
+/* The ref column is also Layer 2 */
 .ref {
   font-family: var(--font-system);
   font-size: 11px;
   color: var(--ink-ghost);
+  opacity: 0;
+  transition: opacity 0.2s ease;
 }
 
+.row:hover .ref {
+  opacity: 1;
+}
+
+/* Layer 0: always visible */
 .thinkerCol {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-/* Clickable — navigates to thinker-card in notebook */
 .thinkerName {
   font-family: var(--font-tutor);
   font-size: 16px;
@@ -59,9 +81,7 @@
   transition: border-bottom-color 0.2s ease;
 }
 
-.thinkerName:hover {
-  border-bottom-color: var(--rule);
-}
+.thinkerName:hover { border-bottom-color: var(--rule); }
 
 .thinkerName:focus-visible {
   outline: 1.5px solid var(--margin);
@@ -84,6 +104,7 @@
   line-height: 1.6;
 }
 
+/* Layer 2: session detail */
 .sessionCol {
   display: flex;
   flex-direction: column;
@@ -102,6 +123,7 @@
   color: var(--ink-ghost);
 }
 
+/* Layer 2: status badge */
 .status {
   font-family: var(--font-system);
   font-size: 9px;
@@ -113,35 +135,18 @@
   align-self: start;
 }
 
-.active {
-  color: var(--margin);
-  border-color: var(--margin);
-}
+.active { color: var(--margin); border-color: var(--margin); }
+.dormant { color: var(--ink-faint); border-color: var(--rule); }
+.bridged { color: var(--ink); border-color: var(--ink); }
+.pending { color: var(--amber); border-color: var(--amber); }
 
-.dormant {
-  color: var(--ink-faint);
-  border-color: var(--rule);
-}
-
-.bridged {
-  color: var(--ink);
-  border-color: var(--ink);
-}
-
-.pending {
-  color: var(--amber);
-  border-color: var(--amber);
-}
-
-/* On narrow screens, simplify the grid */
+/* On narrow screens, show everything (no hover on touch) */
 @media (max-width: 640px) {
-  .header {
-    display: none;
-  }
+  .header { display: none; }
+  .row { display: flex; flex-direction: column; gap: 4px; }
+  .hoverDetail, .ref { opacity: 1; }
+}
 
-  .row {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
+@media (prefers-reduced-motion: reduce) {
+  .row, .hoverDetail, .ref, .thinkerName { transition: none; }
 }

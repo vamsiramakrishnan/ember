@@ -99,10 +99,12 @@ export const NotebookEntryWrapper = memo(function NotebookEntryWrapper({
           onAction={(a) => onSelectionAction?.(a.entryId, a.type, a.selectedText)}
         />
         {onFollowUp && TUTOR_TYPES.has(entry.type) && 'content' in entry && (
-          <FollowUp
-            context={(entry as { content: string }).content}
-            onSubmit={onFollowUp}
-          />
+          <div className={styles.followUpZone}>
+            <FollowUp
+              context={(entry as { content: string }).content}
+              onSubmit={onFollowUp}
+            />
+          </div>
         )}
       </div>
       {bookmarked && (

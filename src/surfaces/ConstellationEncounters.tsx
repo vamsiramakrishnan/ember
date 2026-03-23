@@ -1,7 +1,12 @@
 /**
  * ConstellationEncounters — Encounter log sub-section of Constellation.
- * Displays a ledger of intellectual encounters with thinkers.
- * Drawn from prototype Screen 4 (Archive Ledger).
+ *
+ * Incremental reveal:
+ *   Layer 0: thinker name + core idea (always visible)
+ *   Layer 2 (hover): ref, session topic, date, status fade in
+ *
+ * The ledger feels clean at rest — just names and ideas.
+ * Hover to see the full archival detail.
  */
 import { Text } from '@/primitives/Text';
 import { spacing } from '@/tokens/spacing';
@@ -32,7 +37,10 @@ function EncounterRow({ encounter }: { encounter: Encounter }) {
 
   return (
     <div className={styles.row}>
+      {/* Layer 2: ref — visible on hover */}
       <span className={styles.ref}>{encounter.ref}</span>
+
+      {/* Layer 0: always visible */}
       <div className={styles.thinkerCol}>
         <button
           className={styles.thinkerName}
@@ -44,11 +52,13 @@ function EncounterRow({ encounter }: { encounter: Encounter }) {
         <span className={styles.tradition}>{encounter.tradition}</span>
       </div>
       <p className={styles.coreIdea}>{encounter.coreIdea}</p>
-      <div className={styles.sessionCol}>
+
+      {/* Layer 2: session detail — visible on hover */}
+      <div className={`${styles.sessionCol} ${styles.hoverDetail}`}>
         <span className={styles.sessionTopic}>{encounter.sessionTopic}</span>
         <span className={styles.date}>{encounter.date}</span>
       </div>
-      <span className={`${styles.status} ${styles[encounter.status]}`}>
+      <span className={`${styles.status} ${styles[encounter.status]} ${styles.hoverDetail}`}>
         {statusText}
       </span>
     </div>
