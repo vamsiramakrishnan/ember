@@ -80,7 +80,10 @@ export function Notebook({ onNavigate }: NotebookProps) {
   const reorder = useEntryReorder();
   const inPlaceEdit = useInPlaceEdit();
   const popup = usePopupState(onNavigate);
-  const slashRouter = useSlashCommandRouter({ addEntry, respond, entries });
+  const slashRouter = useSlashCommandRouter({
+    addEntry, respond, entries,
+    studentId: student?.id, notebookId: notebook?.id,
+  });
   const [mode, setMode] = useState<NotebookMode>('linear');
   const bottomRef = useRef<HTMLDivElement>(null);
 

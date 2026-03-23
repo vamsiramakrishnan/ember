@@ -3,6 +3,7 @@
  * from a ReadingSlide[] deck. Ember visual language: warm tones, quiet type.
  */
 import PptxGenJS from 'pptxgenjs';
+import { addTwoColumnLayout, addDiagramLayout, addSummaryLayout } from './pptx-visual-aids';
 import type { ReadingSlide } from '@/types/entries';
 
 /** Ember palette mapped to PPTX hex values (no # prefix). */
@@ -75,6 +76,12 @@ export async function exportToPptx(
       addTitleLayout(s, slide);
     } else if (slide.layout === 'quote') {
       addQuoteLayout(s, slide);
+    } else if (slide.layout === 'two-column') {
+      addTwoColumnLayout(s, slide);
+    } else if (slide.layout === 'diagram') {
+      addDiagramLayout(s, slide);
+    } else if (slide.layout === 'summary') {
+      addSummaryLayout(s, slide);
     } else {
       addContentLayout(s, slide);
     }

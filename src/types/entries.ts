@@ -95,6 +95,31 @@ export interface ReadingSlide {
   accent?: 'sage' | 'indigo' | 'amber' | 'margin';
 }
 
+/** A single flashcard — front/back with optional metadata. */
+export interface Flashcard {
+  front: string;
+  back: string;
+  /** Source concept for mastery tracking. */
+  concept?: string;
+  /** Accent for visual treatment. */
+  accent?: 'sage' | 'indigo' | 'amber' | 'margin';
+}
+
+/** An exercise with a prompt, expected approach, and optional hints. */
+export interface Exercise {
+  prompt: string;
+  /** What the tutor expects — used for evaluation, never shown. */
+  approach: string;
+  /** Progressive hints revealed on request. */
+  hints?: string[];
+  /** Exercise format. */
+  format: 'open-response' | 'explain' | 'compare' | 'apply' | 'critique';
+  /** Concept this tests. */
+  concept?: string;
+}
+
+export type ExerciseDifficulty = 'foundational' | 'intermediate' | 'advanced';
+
 export type NotebookEntry =
   // ─── Student blocks ──────────────────────────────────────────
   | { type: 'prose'; content: string }
@@ -121,6 +146,8 @@ export type NotebookEntry =
   | { type: 'visualization'; html: string; caption?: string }
   | { type: 'illustration'; dataUrl: string; caption?: string }
   | { type: 'reading-material'; title: string; subtitle?: string; slides: ReadingSlide[] }
+  | { type: 'flashcard-deck'; title: string; cards: Flashcard[]; sourceTopics?: string[] }
+  | { type: 'exercise-set'; title: string; exercises: Exercise[]; difficulty: ExerciseDifficulty }
 
   // ─── System blocks ──────────────────────────────────────────
   | { type: 'silence'; text?: string }

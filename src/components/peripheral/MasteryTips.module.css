@@ -1,0 +1,30 @@
+/* MasteryTips — quiet review suggestions */
+
+.container {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--rule-light);
+}
+
+.label {
+  margin-bottom: 12px;
+}
+
+.tip {
+  font-family: var(--font-student);
+  font-size: 14px;
+  font-weight: 300;
+  color: var(--ink-faint);
+  line-height: 1.7;
+  margin: 0 0 10px;
+  padding-left: 12px;
+  border-left: 2px solid var(--rule-light);
+}
+
+.tip:last-child { margin-bottom: 0; }
+
+/* Accent variants for the left border */
+.sage { border-left-color: var(--sage); }
+.indigo { border-left-color: var(--indigo); }
+.amber { border-left-color: var(--amber); }
+.margin { border-left-color: var(--margin); }

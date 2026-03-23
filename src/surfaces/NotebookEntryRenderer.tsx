@@ -29,6 +29,8 @@ import { BridgeSuggestion } from '@/components/peripheral/BridgeSuggestion';
 import { Visualization } from '@/components/tutor/Visualization';
 import { Illustration } from '@/components/tutor/Illustration';
 import { ReadingMaterial } from '@/components/tutor/ReadingMaterial';
+import { FlashcardDeck } from '@/components/tutor/FlashcardDeck';
+import { ExerciseSet } from '@/components/tutor/ExerciseSet';
 import { Reflection } from '@/components/tutor/Reflection';
 import { Directive } from '@/components/tutor/Directive';
 import { Citation } from '@/components/ambient/Citation';
@@ -103,6 +105,11 @@ export function NotebookEntryRenderer({ entry }: Props) {
     case 'reading-material':
       return <ReadingMaterial title={entry.title} subtitle={entry.subtitle}
         slides={entry.slides} />;
+    case 'flashcard-deck':
+      return <FlashcardDeck title={entry.title} cards={entry.cards} />;
+    case 'exercise-set':
+      return <ExerciseSet title={entry.title} exercises={entry.exercises}
+        difficulty={entry.difficulty} />;
 
     // System blocks
     case 'silence':

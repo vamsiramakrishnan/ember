@@ -1,13 +1,12 @@
-/**
- * useSlashCommandRouter — routes slash commands to agent pipelines.
- * Maps /visualize, /research, /explain, etc. to the corresponding
- * agent invocations, producing notebook entries as output.
- */
+/** useSlashCommandRouter — routes /commands to agent pipelines. */
 import { useCallback, useRef } from 'react';
 import { isGeminiAvailable } from '@/services/gemini';
 import { useResearcher } from './useResearcher';
 import { generateIllustration } from '@/services/enrichment';
 import { generateReadingMaterial } from '@/services/reading-material-gen';
+import { generateFlashcards } from '@/services/flashcard-gen';
+import { generateExercises } from '@/services/exercise-gen';
+import { addToLibrary, extractTermsFromMaterial } from '@/services/teaching-integration';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
 import type { SlashCommand } from '@/components/student/SlashCommandPopup';
 
@@ -15,6 +14,8 @@ interface SlashRouterOptions {
   addEntry: (entry: NotebookEntry) => void;
   respond: (entry: NotebookEntry) => void;
   entries: LiveEntry[];
+  studentId?: string;
+  notebookId?: string;
 }
 
 /** Extract the query by stripping the /command from anywhere in text. */
@@ -23,7 +24,7 @@ function stripCommand(text: string): string {
 }
 
 export function useSlashCommandRouter({
-  addEntry, respond, entries,
+  addEntry, respond, entries, studentId, notebookId,
 }: SlashRouterOptions) {
   const { research } = useResearcher();
   const entriesRef = useRef(entries);
@@ -70,7 +71,33 @@ export function useSlashCommandRouter({
       case 'teach': {
         addEntry({ type: 'silence', text: 'preparing reading material…' });
         const deck = await generateReadingMaterial(query, entriesRef.current);
-        if (deck) addEntry(deck);
+        if (deck) {
+          addEntry(deck);
+          // Background: add to library + extract vocabulary
+          if (studentId && notebookId) {
+            addToLibrary(deck, studentId, notebookId).catch(() => {});
+            extractTermsFromMaterial(deck, studentId, notebookId).catch(() => {});
+          }
+        }
+        return true;
+      }
+
+      case 'flashcards': {
+        addEntry({ type: 'silence', text: 'creating flashcards…' });
+        const fc = await generateFlashcards(query, entriesRef.current);
+        if (fc) {
+          addEntry(fc);
+          if (studentId && notebookId) {
+            extractTermsFromMaterial(fc, studentId, notebookId).catch(() => {});
+          }
+        }
+        return true;
+      }
+
+      case 'exercise': {
+        addEntry({ type: 'silence', text: 'designing exercises…' });
+        const ex = await generateExercises(query, entriesRef.current);
+        if (ex) addEntry(ex);
         return true;
       }
 

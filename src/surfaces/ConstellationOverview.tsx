@@ -6,6 +6,7 @@
 import { Text } from '@/primitives/Text';
 import { Rule } from '@/primitives/Rule';
 import { MasteryBar } from '@/components/peripheral/MasteryBar';
+import { MasteryTips } from '@/components/peripheral/MasteryTips';
 import { BridgeSuggestion } from '@/components/peripheral/BridgeSuggestion';
 import { ThinkerCard } from '@/components/tutor/ThinkerCard';
 import { PinnedThread } from '@/components/student/PinnedThread';
@@ -41,6 +42,7 @@ export function ConstellationOverview({ concepts, threads, thinkers }: Props) {
           <MasteryBar key={c.concept} concept={c.concept}
             level={c.level} percentage={c.percentage} />
         ))}
+        <MasteryTips concepts={concepts} />
         {threads.length > 0 && (
           <BridgeSuggestion>
             {threads[0]?.question ?? ''}

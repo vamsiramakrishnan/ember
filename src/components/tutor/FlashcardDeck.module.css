@@ -1,0 +1,201 @@
+/* FlashcardDeck — study cards with flip interaction */
+
+.container {
+  margin: 16px 0;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: var(--paper);
+  overflow: hidden;
+}
+
+/* ─── Header (collapsed) ────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 20px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+
+.header:hover { background: var(--paper-warm); }
+
+.headerExpanded {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--rule-light);
+}
+
+.icon {
+  font-family: var(--font-tutor);
+  font-size: 18px;
+  color: var(--indigo);
+  flex-shrink: 0;
+}
+
+.titleArea {
+  flex: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
+.title {
+  font-family: var(--font-tutor);
+  font-size: 17px;
+  font-weight: 400;
+  color: var(--ink);
+  letter-spacing: -0.1px;
+}
+
+.badge {
+  font-family: var(--font-system);
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--ink-ghost);
+  border: 1px solid var(--rule-light);
+  border-radius: 2px;
+  padding: 2px 8px;
+  flex-shrink: 0;
+}
+
+.hint {
+  font-family: var(--font-system);
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--ink-ghost);
+}
+
+.collapse {
+  composes: dismissBtn from '../../primitives/ContextPanel.module.css';
+}
+
+/* ─── Card area ─────────────────────────────────── */
+.cardArea {
+  padding: 24px 20px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.card {
+  width: 100%;
+  max-width: 480px;
+  min-height: 180px;
+  perspective: 800px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.cardInner {
+  position: relative;
+  width: 100%;
+  min-height: 180px;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-style: preserve-3d;
+}
+
+.flipped .cardInner,
+.cardInner.flipped {
+  transform: rotateY(180deg);
+}
+
+.front, .back {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  min-height: 180px;
+  padding: 24px;
+  backface-visibility: hidden;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: var(--paper);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.back {
+  transform: rotateY(180deg);
+  background: var(--paper-warm);
+}
+
+.sideLabel {
+  font-family: var(--font-system);
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink-ghost);
+  margin-bottom: 12px;
+}
+
+.cardText {
+  font-family: var(--font-tutor);
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--ink);
+  line-height: 1.65;
+  text-align: center;
+  margin: 0;
+}
+
+.back .cardText {
+  font-family: var(--font-student);
+  font-size: 15px;
+  color: var(--ink-soft);
+  line-height: 1.75;
+}
+
+.flipHint {
+  font-family: var(--font-system);
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--ink-ghost);
+  margin-top: 12px;
+}
+
+/* ─── Navigation ────────────────────────────────── */
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 12px 20px 16px;
+  border-top: 1px solid var(--rule-light);
+}
+
+.navBtn {
+  composes: actionBtn from '../../primitives/ContextPanel.module.css';
+  font-size: 13px;
+  padding: 4px 12px;
+  border: 1px solid var(--rule-light);
+}
+
+.navBtn:disabled { opacity: 0.3; cursor: default; }
+
+.progress {
+  font-family: var(--font-system);
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--ink-ghost);
+  min-width: 48px;
+  text-align: center;
+}
+
+/* ─── Reduced motion ────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .header { transition: none; }
+  .cardInner { transition: none; }
+}
