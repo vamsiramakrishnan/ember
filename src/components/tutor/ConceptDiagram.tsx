@@ -18,6 +18,7 @@
 import { useRef, useCallback } from 'react';
 import type { DiagramNode, DiagramEdge } from '@/types/entries';
 import { ConceptDiagramNode } from './ConceptDiagramNode';
+import { GraphEdges } from './GraphEdges';
 import styles from './ConceptDiagram.module.css';
 
 interface ConceptDiagramProps {
@@ -109,6 +110,7 @@ function GraphLayout({ items, edges, onNodeClick }: {
   edges: DiagramEdge[];
   onNodeClick?: (id: string, kind: string) => void;
 }) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const nodesRef = useRef<Map<number, HTMLDivElement>>(new Map());
 
   const setNodeRef = useCallback((index: number, el: HTMLDivElement | null) => {
@@ -117,7 +119,12 @@ function GraphLayout({ items, edges, onNodeClick }: {
   }, []);
 
   return (
-    <div className={styles.graph}>
+    <div className={styles.graph} ref={containerRef}>
+      <GraphEdges
+        edges={edges}
+        nodeRefs={nodesRef.current}
+        containerRef={containerRef}
+      />
       <div className={styles.graphNodes}>
         {items.map((node, i) => (
           <div
@@ -129,12 +136,15 @@ function GraphLayout({ items, edges, onNodeClick }: {
           </div>
         ))}
       </div>
-      {edges.length > 0 && (
-        <div className={styles.edgeLabels}>
-          {edges.map((edge, i) => (
+      {/* Text fallback for edge labels — remains for accessibility */}
+      {edges.some((e) => e.label) && (
+        <div className={styles.edgeLabels} aria-label="Relationships">
+          {edges.filter((e) => e.label).map((edge, i) => (
             <span key={i} className={styles.edgeLabel}>
               {items[edge.from]?.label ?? ''}
-              <span className={styles.edgeType}>{edge.label ?? edge.type ?? '→'}</span>
+              <span className={styles.edgeType}>
+                {edge.label ?? edge.type ?? '→'}
+              </span>
               {items[edge.to]?.label ?? ''}
             </span>
           ))}

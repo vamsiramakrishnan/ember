@@ -9,6 +9,8 @@ import { InlineEditor } from '@/components/student/InlineEditor';
 import { FollowUp } from '@/components/tutor/FollowUp';
 import { NotebookEntryRenderer } from './NotebookEntryRenderer';
 import { EntryActions } from './EntryActions';
+import { EntryMeta } from './EntryMeta';
+import { ThreadIndicator } from './ThreadIndicator';
 import { TYPE_META, isStudentEntry } from './entryTypeMeta';
 import { useEntryAnchor } from '@/hooks/useEntryAnchor';
 import styles from './NotebookEntryWrapper.module.css';
@@ -20,11 +22,15 @@ const TUTOR_TYPES = new Set([
 
 interface Props {
   liveEntry: LiveEntry;
+  /** 1-based position in the session's entry list. */
+  index?: number;
+  /** Whether the previous entry was a student entry (for thread indicators). */
+  prevIsStudent?: boolean;
   style?: React.CSSProperties;
 }
 
 export const NotebookEntryWrapper = memo(function NotebookEntryWrapper({
-  liveEntry, style,
+  liveEntry, index = 0, prevIsStudent = false, style,
 }: Props) {
   const { id, entry, crossedOut, bookmarked, pinned, annotations } = liveEntry;
   const { onEntryAction, editingId, editPopup, drag, dragHandlers } = useNotebookActions();
@@ -64,6 +70,7 @@ export const NotebookEntryWrapper = memo(function NotebookEntryWrapper({
       ref={anchorRef}
       className={cls} style={style}
       data-entry-id={id}
+      tabIndex={-1}
       draggable
       onDragStart={(e) => dragHandlers.onDragStart(id, e)}
       onDragOver={(e) => dragHandlers.onDragOver(id, e)}
@@ -73,6 +80,16 @@ export const NotebookEntryWrapper = memo(function NotebookEntryWrapper({
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
+      <ThreadIndicator
+        isResponse={TUTOR_TYPES.has(entry.type) && prevIsStudent}
+        isThreadStart={isStudentEntry(entry.type) && index > 1}
+      />
+      <EntryMeta
+        timestamp={liveEntry.timestamp}
+        content={entryContent || undefined}
+        index={index}
+        isTutor={TUTOR_TYPES.has(entry.type)}
+      />
       <div className={styles.handle} aria-hidden="true">
         <span className={styles.grip}>⠿</span>
         <span className={tagCls}>{meta.label}</span>

@@ -65,9 +65,18 @@ export function SelectionToolbar({
       const containerRect = container.getBoundingClientRect();
 
       setText(sel.toString().trim());
+
+      // Compute position with boundary clamping
+      const rawLeft = rect.left - containerRect.left + rect.width / 2;
+      const toolbarWidth = 180; // approximate width of 4 buttons
+      const halfToolbar = toolbarWidth / 2;
+      const minLeft = halfToolbar + 8;
+      const maxLeft = containerRect.width - halfToolbar - 8;
+      const clampedLeft = Math.max(minLeft, Math.min(maxLeft, rawLeft));
+
       setPos({
-        top: rect.top - containerRect.top - 40,
-        left: rect.left - containerRect.left + rect.width / 2,
+        top: rect.top - containerRect.top - 44,
+        left: clampedLeft,
         visible: true,
       });
     };

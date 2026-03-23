@@ -1,29 +1,45 @@
-/* MentionChip — inline reference on warm paper */
+/* MentionChip — inline reference that flows within sentences.
+ * The chip should feel like a slightly warm word in the text,
+ * not a foreign object. It inherits the surrounding font and
+ * only adds a gentle background + icon to signal "this is linked." */
 .chip {
   display: inline-flex;
-  align-items: center;
-  gap: 3px;
+  align-items: baseline;
+  gap: 2px;
   background: var(--paper-warm);
-  border: 1px solid var(--rule);
+  border: 1px solid var(--rule-light);
   border-radius: 2px;
-  padding: 0 5px;
+  padding: 0 4px;
   margin: 0 1px;
   cursor: default;
   vertical-align: baseline;
   line-height: inherit;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  /* Prevent chip from breaking across lines */
+  white-space: nowrap;
+}
+
+.chip:hover {
+  background: var(--rule-light);
+  border-color: var(--rule);
 }
 
 .clickable {
   cursor: pointer;
 }
 .clickable:hover {
-  background: var(--rule-light);
+  background: var(--amber-dim);
+  border-color: rgba(196, 154, 60, 0.2);
 }
 
 .prefix {
   font-family: var(--font-system);
-  font-size: 0.75em;
+  font-size: 0.7em;
   color: var(--margin);
+  opacity: 0.7;
+  /* Align icon with text baseline */
+  position: relative;
+  top: -0.5px;
 }
 
 .name {
@@ -31,6 +47,7 @@
   font-size: inherit;
   color: var(--ink);
   font-weight: 500;
+  letter-spacing: inherit;
 }
 
 /* Meta label — quiet badge showing context (e.g., "slide 3", "python") */
@@ -52,6 +69,19 @@
 .accentSage .prefix { color: var(--sage); }
 .accentMono .prefix { color: var(--ink-soft); }
 
-.accentAmber { border-color: var(--amber-dim, rgba(180, 130, 60, 0.15)); }
-.accentIndigo { border-color: var(--indigo-dim, rgba(90, 100, 140, 0.15)); }
-.accentSage { border-color: var(--sage-dim, rgba(100, 130, 100, 0.15)); }
+.accentAmber { border-color: rgba(180, 130, 60, 0.15); }
+.accentAmber:hover { background: var(--amber-dim); border-color: rgba(180, 130, 60, 0.25); }
+.accentIndigo { border-color: rgba(90, 100, 140, 0.15); }
+.accentIndigo:hover { background: var(--indigo-dim); border-color: rgba(90, 100, 140, 0.25); }
+.accentSage { border-color: rgba(100, 130, 100, 0.15); }
+.accentSage:hover { background: var(--sage-dim); border-color: rgba(100, 130, 100, 0.25); }
+
+/* Focus ring for keyboard navigation */
+.chip:focus-visible {
+  outline: 1px solid var(--margin);
+  outline-offset: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chip { transition: none; }
+}

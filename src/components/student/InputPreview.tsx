@@ -8,6 +8,7 @@
  */
 import { useMemo } from 'react';
 import { MENTION_PATTERN } from '@/primitives/MentionChip';
+import { SlashChip } from '@/primitives/SlashChip';
 import type { EntityType } from '@/hooks/useEntityIndex';
 import styles from './InputPreview.module.css';
 
@@ -85,9 +86,8 @@ export function InputPreview({ value, visible }: InputPreviewProps) {
           );
         }
         if (seg.type === 'slash') {
-          return (
-            <span key={i} className={styles.slashChip}>{seg.value}</span>
-          );
+          const cmd = seg.value.startsWith('/') ? seg.value.slice(1) : seg.value;
+          return <SlashChip key={i} command={cmd} />;
         }
         return <span key={i}>{seg.value}</span>;
       })}

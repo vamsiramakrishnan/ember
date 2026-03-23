@@ -1,0 +1,67 @@
+/* ThreadIndicator — conversation thread continuation mark.
+ * A thin vertical line in the left gutter connecting a student
+ * entry to its tutor response. Ghost-quiet at rest, visible
+ * on hover to help the reader trace the conversational flow. */
+
+.thread {
+  position: absolute;
+  left: -24px;
+  top: -8px;
+  bottom: -8px;
+  width: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+
+/* Reveal thread on entry hover */
+:global(.wrapper):hover .thread,
+:global(.touched) .thread {
+  opacity: 1;
+}
+
+/* Persistent subtle visibility for thread responses */
+.response {
+  opacity: 0.3;
+}
+
+.line {
+  width: 1px;
+  flex: 1;
+  background: var(--margin);
+  opacity: 0.25;
+  border-radius: 0.5px;
+}
+
+.dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--margin);
+  opacity: 0.35;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.start .line {
+  background: var(--ink-ghost);
+  opacity: 0.2;
+}
+
+/* ─── Narrow screens: shift closer ──────────────── */
+
+@media (max-width: 800px) {
+  .thread {
+    left: -12px;
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thread {
+    transition: none;
+  }
+}
