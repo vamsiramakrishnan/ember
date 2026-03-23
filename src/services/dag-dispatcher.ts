@@ -149,11 +149,17 @@ export async function dispatchNode(
   const context = buildContext(node, dag, priorResults);
   const prompt = buildPrompt(node, context);
 
+  // Map DAG action to valid TutorActivityStep
+  const stepMap: Record<string, string> = {
+    respond: 'streaming', visualize: 'visualizing', explain: 'thinking',
+    illustrate: 'illustrating', research: 'researching', define: 'thinking',
+    connect: 'thinking', flashcards: 'thinking', exercise: 'thinking',
+    quiz: 'thinking', summarize: 'thinking', timeline: 'visualizing',
+    teach: 'thinking', podcast: 'thinking', silence: 'reflecting',
+  };
   setActivityDetail({
-    step: node.action === 'respond' ? 'streaming' : node.action,
+    step: (stepMap[node.action] ?? 'thinking') as 'thinking',
     label: ACTIVITY_LABELS[node.action] ?? 'processing…',
-    iteration: undefined,
-    maxIterations: undefined,
   });
 
   const messages = [{ role: 'user' as const, parts: [{ text: prompt }] }];

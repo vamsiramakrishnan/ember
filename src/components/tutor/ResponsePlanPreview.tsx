@@ -25,6 +25,7 @@ const STATUS_ICON: Record<ResponsePlan['status'], string> = {
   pending: '·',
   active: '›',
   complete: '✓',
+  error: '×',
 };
 
 export function ResponsePlanPreview({ plans }: ResponsePlanPreviewProps) {

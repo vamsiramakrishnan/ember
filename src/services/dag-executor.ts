@@ -18,7 +18,7 @@
  * responses introduce non-determinism.
  */
 import type { IntentDAG, IntentNode } from './intent-dag';
-import type { NotebookEntry, LiveEntry } from '@/types/entries';
+import type { NotebookEntry } from '@/types/entries';
 import type { StreamChunkCallback } from './orchestrator';
 
 // ─── Execution types ────────────────────────────────────────

@@ -33,7 +33,7 @@ interface UseGeminiTutorOptions {
 
 export function useGeminiTutor({
   addEntry, addEntryWithId, patchEntryContent, entries,
-  pinnedEntries, sessionTopic, studentId, notebookId, onPlanUpdate,
+  pinnedEntries, sessionTopic, onPlanUpdate,
 }: UseGeminiTutorOptions) {
   const [isThinking, setIsThinking] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -81,7 +81,7 @@ export function useGeminiTutor({
             sessionTopic: sessionTopic ?? current?.topic ?? null,
             studentId: student.id,
             notebookId: notebook.id,
-          }, (plans) => planCallbackRef.current?.(plans));
+          }, (plans: ResponsePlan[]) => planCallbackRef.current?.(plans));
 
           if (dag) {
             // DAG handled it — skip single-response path

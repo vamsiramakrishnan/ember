@@ -16,7 +16,7 @@
  */
 import { useState, useCallback, useRef } from 'react';
 import { parseIntentDAG, type IntentDAG } from '@/services/intent-dag';
-import { executeDAG, collectEntries, buildExecutionPlan } from '@/services/dag-executor';
+import { executeDAG, collectEntries } from '@/services/dag-executor';
 import { dispatchNode } from '@/services/dag-dispatcher';
 import type { LiveEntry, NotebookEntry } from '@/types/entries';
 import type { StreamChunkCallback } from '@/services/orchestrator';

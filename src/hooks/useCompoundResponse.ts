@@ -56,7 +56,7 @@ function buildNodePrompt(
 
   for (const depId of node.dependsOn) {
     const dep = priorResults.get(depId);
-    const depNode = dag.nodes.find((n) => n.id === depId);
+    const depNode = dag.nodes.find((n: IntentNode) => n.id === depId);
     if (dep?.success && depNode) {
       const text = dep.entries
         .filter((e): e is NotebookEntry & { content: string } => 'content' in e)
@@ -67,7 +67,7 @@ function buildNodePrompt(
   }
 
   if (node.entities.length > 0) {
-    parts.push(`[Entities: ${node.entities.map((e) => `${e.name} (${e.entityType})`).join(', ')}]`);
+    parts.push(`[Entities: ${node.entities.map((e: { name: string; entityType: string }) => `${e.name} (${e.entityType})`).join(', ')}]`);
   }
 
   const ctx = parts.length > 0 ? parts.join('\n') + '\n\n' : '';
@@ -92,8 +92,16 @@ async function executeNode(
   const prompt = buildNodePrompt(node, dag, priorResults);
   const messages = [{ role: 'user' as const, parts: [{ text: prompt }] }];
 
+  // Map DAG action to valid TutorActivityStep
+  const ACTION_TO_STEP: Record<string, string> = {
+    respond: 'streaming', visualize: 'visualizing', explain: 'thinking',
+    illustrate: 'illustrating', research: 'researching', define: 'thinking',
+    connect: 'thinking', flashcards: 'thinking', exercise: 'thinking',
+    quiz: 'thinking', summarize: 'thinking', timeline: 'visualizing',
+    teach: 'thinking', podcast: 'thinking', silence: 'reflecting',
+  };
   setActivityDetail({
-    step: node.action === 'respond' ? 'streaming' : node.action,
+    step: (ACTION_TO_STEP[node.action] ?? 'thinking') as 'thinking',
     label: node.label + '…',
   });
 
@@ -102,7 +110,7 @@ async function executeNode(
 
     if (node.id === dag.rootId) {
       // Root node streams tokens into its entry
-      const result = await runTextAgentStreaming(TUTOR_AGENT, messages, (chunk, accumulated) => {
+      const result = await runTextAgentStreaming(TUTOR_AGENT, messages, (_chunk, accumulated) => {
         if (signal.aborted) return;
         refs.patchEntryContent(streamingId, {
           type: 'streaming-text', content: accumulated, done: false,
@@ -123,13 +131,13 @@ async function executeNode(
     const finalEntry = entry ?? { type: 'tutor-marginalia' as const, content: text };
 
     // Check composition guard
-    const [filtered] = filterByComposition([finalEntry], refs.entries);
-    const accepted = filtered ?? finalEntry;
+    const filtered = filterByComposition([finalEntry], refs.entries);
+    const accepted = filtered[0] ?? finalEntry;
 
     // Patch the streaming placeholder with the real entry
     refs.patchEntryContent(streamingId, accepted);
     recordTutorTurn(inferTutorMode(accepted), extractTopics(accepted));
-    addRelation({ from: streamingId, to: streamingId, type: 'dag-node', meta: node.action });
+    addRelation({ from: streamingId, to: streamingId, type: 'references', meta: `dag:${node.action}` });
 
     return { nodeId: node.id, entries: [accepted], success: true };
   } catch (err) {
