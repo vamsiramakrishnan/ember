@@ -28,6 +28,21 @@ export interface AgentConfig {
   constraint?: 'read-only' | 'search-only' | 'no-tools' | 'full';
 }
 
+/** Lightweight agent for background micro-tasks (assessment, extraction). */
+export const MICRO_AGENT: AgentConfig = {
+  name: 'MicroTask',
+  model: 'gemini-3.1-flash-lite-preview',
+  systemInstruction: '',
+  thinkingLevel: 'MINIMAL',
+  tools: [],
+  responseModalities: ['TEXT'],
+};
+
+/** Create a micro-agent with a custom instruction. */
+export function micro(instruction: string, schema?: ZodTypeAny): AgentConfig {
+  return { ...MICRO_AGENT, systemInstruction: instruction, responseSchema: schema };
+}
+
 /** Ember design context injected into all agent prompts. */
 export const EMBER_DESIGN_CONTEXT = `You are part of Ember, an AI-powered aristocratic tutoring interface. The governing metaphor is: a well-worn notebook on a wooden desk, under a reading lamp, in a quiet library, in the late afternoon.
 

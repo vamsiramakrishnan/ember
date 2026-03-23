@@ -2,7 +2,7 @@
  * Agents — public API. Re-exports all agent configs.
  */
 export type { AgentConfig, ThinkingLevel } from './config';
-export { TOOLS, EMBER_DESIGN_CONTEXT } from './config';
+export { TOOLS, EMBER_DESIGN_CONTEXT, MICRO_AGENT, micro } from './config';
 export { TUTOR_AGENT } from './tutor';
 export { RESEARCHER_AGENT } from './researcher';
 export { VISUALISER_AGENT } from './visualiser';

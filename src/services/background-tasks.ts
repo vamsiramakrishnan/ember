@@ -14,12 +14,12 @@
  */
 import { runTextAgent } from './run-agent';
 import { isGeminiAvailable } from './gemini';
+import { extractJsonObject } from './json-parser';
+import { micro } from './agents';
 import { Store, notify } from '@/persistence';
 import { createEncounter, getEncountersByNotebook } from '@/persistence/repositories/encounters';
 import { createLexiconEntry, getLexiconByNotebook } from '@/persistence/repositories/lexicon';
 import { upsertMastery } from '@/persistence/repositories/mastery';
-import type { AgentConfig } from './agents';
-import type { ZodTypeAny } from 'zod';
 import {
   taskSignalsSchema,
   thinkerExtractionSchema,
@@ -27,21 +27,6 @@ import {
   masteryUpdateSchema,
 } from './schemas';
 import type { NotebookEntry } from '@/types/entries';
-
-// ─── Micro-agent (shared config for all background tasks) ────────────
-
-const MICRO_AGENT: AgentConfig = {
-  name: 'MicroTask',
-  model: 'gemini-3.1-flash-lite-preview',
-  systemInstruction: '',
-  thinkingLevel: 'MINIMAL',
-  tools: [],
-  responseModalities: ['TEXT'],
-};
-
-function micro(instruction: string, schema?: ZodTypeAny): AgentConfig {
-  return { ...MICRO_AGENT, systemInstruction: instruction, responseSchema: schema };
-}
 
 // ─── Task Assessment ─────────────────────────────────────────────────
 
@@ -104,7 +89,7 @@ export async function extractThinkers(
     role: 'user', parts: [{ text }],
   }]);
 
-  const parsed = parseJson(result.text);
+  const parsed = extractJsonObject(result.text);
   const thinkers = Array.isArray(parsed?.thinkers) ? parsed.thinkers : [];
   if (thinkers.length === 0) return 0;
 
@@ -147,7 +132,7 @@ export async function extractVocabulary(
     role: 'user', parts: [{ text }],
   }]);
 
-  const parsed = parseJson(result.text);
+  const parsed = extractJsonObject(result.text);
   const terms = Array.isArray(parsed?.terms) ? parsed.terms : [];
   if (terms.length === 0) return 0;
 
@@ -195,7 +180,7 @@ export async function updateMasteryFromEntry(
     }],
   }]);
 
-  const parsed = parseJson(result.text);
+  const parsed = extractJsonObject(result.text);
   const updates = Array.isArray(parsed?.updates) ? parsed.updates : [];
   let count = 0;
 
@@ -217,19 +202,8 @@ export async function updateMasteryFromEntry(
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 
-function parseJson(text: string): Record<string, unknown> | null {
-  try {
-    const match = text.match(/```(?:json)?\s*([\s\S]*?)```/) ??
-                  text.match(/(\{[\s\S]*\})/);
-    if (!match?.[1]) return null;
-    return JSON.parse(match[1]) as Record<string, unknown>;
-  } catch {
-    return null;
-  }
-}
-
 function parseSignals(text: string): TaskSignals {
-  const parsed = parseJson(text);
+  const parsed = extractJsonObject(text);
   if (!parsed) return noTasks();
   return {
     updateThinkers: Boolean(parsed.updateThinkers),

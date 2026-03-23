@@ -182,6 +182,69 @@ register('hypothesis', (le) => {
   }));
 });
 
+// ─── Reading material → ConceptEntity[] ──────────────────
+
+register('reading-material', (le) => {
+  const entry = le.entry;
+  if (entry.type !== 'reading-material') return [];
+
+  return entry.slides
+    .filter((s) => s.layout !== 'title' && s.layout !== 'summary')
+    .map((s) => ({
+      action: 'create-entity' as const,
+      kind: 'concept' as const,
+      data: {
+        term: s.heading,
+        mastery: 15,
+        masteryLevel: 'exploring' as MasteryStage,
+      },
+      sourceEntryId: le.id,
+      relationToSource: 'explores' as RelationType,
+    }));
+});
+
+// ─── Flashcard deck → ConceptEntity[] ────────────────────
+
+register('flashcard-deck', (le) => {
+  const entry = le.entry;
+  if (entry.type !== 'flashcard-deck') return [];
+
+  return entry.cards
+    .filter((c) => c.concept)
+    .map((c) => ({
+      action: 'create-entity' as const,
+      kind: 'concept' as const,
+      data: {
+        term: c.concept!,
+        mastery: 20,
+        masteryLevel: 'exploring' as MasteryStage,
+      },
+      sourceEntryId: le.id,
+      relationToSource: 'explores' as RelationType,
+    }));
+});
+
+// ─── Exercise set → ConceptEntity[] ──────────────────────
+
+register('exercise-set', (le) => {
+  const entry = le.entry;
+  if (entry.type !== 'exercise-set') return [];
+
+  return entry.exercises
+    .filter((e) => e.concept)
+    .map((e) => ({
+      action: 'create-entity' as const,
+      kind: 'concept' as const,
+      data: {
+        term: e.concept!,
+        mastery: 30,
+        masteryLevel: 'developing' as MasteryStage,
+      },
+      sourceEntryId: le.id,
+      relationToSource: 'explores' as RelationType,
+    }));
+});
+
 // ─── Public API ───────────────────────────────────────────
 
 /** Project a single entry into entity commands. */

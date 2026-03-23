@@ -7,6 +7,7 @@ import { generateReadingMaterial } from '@/services/reading-material-gen';
 import { generateFlashcards } from '@/services/flashcard-gen';
 import { generateExercises } from '@/services/exercise-gen';
 import { addToLibrary, extractTermsFromMaterial } from '@/services/teaching-integration';
+import { recentContext as buildContext } from '@/services/entry-utils';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
 import type { SlashCommand } from '@/components/student/SlashCommandPopup';
 
@@ -41,7 +42,7 @@ export function useSlashCommandRouter({
     switch (command.id) {
       case 'research': {
         addEntry({ type: 'silence', text: 'researching…' });
-        const context = recentContext(entriesRef.current);
+        const context = buildContext(entriesRef.current);
         const result = await research(query, context);
         if (result) {
           addEntry({ type: 'tutor-marginalia', content: result });
@@ -136,14 +137,4 @@ export function useSlashCommandRouter({
   }, [addEntry, respond, research]);
 
   return { route };
-}
-
-/** Build a brief context string from recent entries. */
-function recentContext(entries: LiveEntry[]): string {
-  const recent = entries.slice(-6);
-  return recent
-    .filter((le) => 'content' in le.entry && typeof le.entry.content === 'string')
-    .map((le) => (le.entry as { content: string }).content)
-    .join('\n')
-    .slice(0, 500);
 }
