@@ -132,7 +132,6 @@ export async function runPipelineEnrichment(
   }
   return results;
 }
-
 /** Stage 3: Temporal layers — echo, bridge, reflection. */
 export async function runPipelineTemporalLayers(
   studentText: string, entries: LiveEntry[],
