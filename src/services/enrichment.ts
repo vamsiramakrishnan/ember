@@ -11,6 +11,7 @@
  */
 import { ILLUSTRATOR_AGENT, VISUALISER_AGENT } from './agents';
 import { runImageAgent, runTextAgent } from './run-agent';
+import { buildIllustrationPrompt } from './illustration-prompt';
 import { EMBER_VIZ_CSS, EMBER_VIZ_JS } from './viz-components';
 import { refineArtifact } from './artifact-refiner';
 import { refineIllustration } from './image-refiner';
@@ -59,13 +60,15 @@ export async function generateVisualization(
 /** Generate a hand-drawn illustration with iterative critique→edit refinement. */
 export async function generateIllustration(
   prompt: string,
+  entries: LiveEntry[] = [],
+  dagContext?: string,
 ): Promise<NotebookEntry | null> {
   try {
+    const imagePrompt = await buildIllustrationPrompt(prompt, entries, dagContext);
+
     const result = await runImageAgent(ILLUSTRATOR_AGENT, [{
       role: 'user',
-      parts: [{
-        text: `Draw a hand-sketched concept illustration for: ${prompt}. Style: warm sepia paper, fountain pen ink, minimal colour.`,
-      }],
+      parts: [{ text: imagePrompt }],
     }]);
 
     const img = result.images[0];

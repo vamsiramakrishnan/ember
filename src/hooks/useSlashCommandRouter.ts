@@ -69,7 +69,7 @@ export function useSlashCommandRouter({
 
       case 'draw': {
         addEntry({ type: 'silence', text: 'sketching…' });
-        const ill = await generateIllustration(query);
+        const ill = await generateIllustration(query, entriesRef.current);
         if (ill) {
           addEntry(ill);
         } else {

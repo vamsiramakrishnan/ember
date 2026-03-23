@@ -164,9 +164,10 @@ export async function dispatchNode(
   });
 
   // Illustrate requires the image agent, not the text agent.
+  // Pass DAG context as the prompt so the image model can resolve references.
   if (node.action === 'illustrate') {
     try {
-      const entry = await generateIllustration(node.content);
+      const entry = await generateIllustration(node.content, [], context);
       if (entry) {
         return { nodeId: node.id, entries: [entry], success: true };
       }
