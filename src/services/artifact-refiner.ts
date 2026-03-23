@@ -1,37 +1,28 @@
 /**
  * Artifact Refiner — iterative critique→patch loop for rich content.
  *
- * Uses a SEARCH/REPLACE diff format (inspired by aider) so the refinement
- * agent patches targeted sections instead of regenerating entire artifacts.
+ * Three matching strategies (inspired by aider's layered approach):
+ * 1. Exact string match (fastest)
+ * 2. Whitespace-normalized match (handles reformatting)
+ * 3. DOM-selector match (CSS selector → innerHTML, most robust for HTML)
  *
- * Pipeline per iteration:
- * 1. Critic evaluates the artifact (grounded with Search + URL context)
- * 2. If quality passes threshold → done
- * 3. If not → Refiner produces SEARCH/REPLACE blocks
- * 4. Patches applied → next iteration
- *
- * Status updates propagated via setActivityDetail for the TutorActivity UI.
+ * The critic (architect) decides what to fix; the patch applier (editor)
+ * applies it cheaply. Refinement history is preserved as pedagogically
+ * meaningful steps showing how the artifact evolved.
  */
 import { CRITIC_AGENT } from './agents';
 import { runTextAgent } from './run-agent';
+import { applyPatches, type Patch, type RefinementStep } from './patch-applier';
 import { setActivityDetail } from '@/state';
 import type { TutorActivityDetail } from '@/state';
 
 const MAX_ITERATIONS = 3;
 const QUALITY_THRESHOLD = 7;
 
-interface SearchReplaceBlock { search: string; replace: string }
-interface CritiqueResult { score: number; issues: string[]; patches: SearchReplaceBlock[] }
-
-/** What the routing decision expects from the change. */
 export interface ChangeContract {
-  /** Was research invoked? Critic should verify facts. */
   researchGrounded?: boolean;
-  /** Were thinkers referenced? Critic should verify names/dates. */
   thinkersMentioned?: string[];
-  /** Were concepts mapped? Critic should verify relationships. */
   conceptsMapped?: string[];
-  /** URL sources to verify against. */
   sourceUrls?: string[];
 }
 
@@ -39,13 +30,10 @@ export interface RefinementResult {
   html: string;
   iterations: number;
   finalScore: number;
+  /** Pedagogically meaningful: what changed at each step and why. */
+  history: RefinementStep[];
 }
 
-/**
- * Refine an HTML artifact through iterative critique→patch cycles.
- * The critic uses Google Search + URL context for factual grounding.
- * The change contract tells the critic what to specifically verify.
- */
 export async function refineArtifact(
   html: string,
   originalPrompt: string,
@@ -54,10 +42,9 @@ export async function refineArtifact(
 ): Promise<RefinementResult> {
   let currentHtml = html;
   let finalScore = 0;
-  let iterations = 0;
+  const history: RefinementStep[] = [];
 
   for (let i = 0; i < MAX_ITERATIONS; i++) {
-    iterations = i + 1;
     const detail: TutorActivityDetail = {
       step: 'refining',
       label: i === 0 ? 'reviewing…' : `refining (pass ${i + 1})…`,
@@ -68,12 +55,24 @@ export async function refineArtifact(
 
     const critique = await evaluateArtifact(currentHtml, originalPrompt, context, contract);
     finalScore = critique.score;
+    history.push({
+      iteration: i + 1,
+      patchCount: critique.patches.length,
+      issues: critique.issues,
+      score: critique.score,
+    });
 
     if (critique.score >= QUALITY_THRESHOLD || critique.patches.length === 0) break;
     currentHtml = applyPatches(currentHtml, critique.patches);
   }
 
-  return { html: currentHtml, iterations, finalScore };
+  return { html: currentHtml, iterations: history.length, finalScore, history };
+}
+
+interface CritiqueResult {
+  score: number;
+  issues: string[];
+  patches: Patch[];
 }
 
 async function evaluateArtifact(
@@ -87,7 +86,8 @@ async function evaluateArtifact(
       contractHints,
       '', 'Evaluate this HTML visualization:', '```html',
       html.slice(0, 8000), '```', '',
-      'Check facts with Google Search. Return JSON with score, issues, and patches.',
+      'Check facts with Google Search. Return JSON: {score, issues, patches}.',
+      'Each patch: {search, replace} for exact match, or {selector, replace} for CSS selector.',
     ].filter(Boolean).join('\n');
 
     const result = await runTextAgent(CRITIC_AGENT, [{
@@ -108,9 +108,10 @@ function parseCritiqueResponse(text: string): CritiqueResult {
       score: typeof parsed.score === 'number' ? parsed.score : 10,
       issues: Array.isArray(parsed.issues) ? parsed.issues as string[] : [],
       patches: Array.isArray(parsed.patches)
-        ? (parsed.patches as Array<{ search?: unknown; replace?: unknown }>)
-            .filter((p): p is { search: string; replace: string } =>
-              typeof p.search === 'string' && typeof p.replace === 'string')
+        ? (parsed.patches as Array<{ search?: unknown; replace?: unknown; selector?: unknown }>)
+            .filter((p): p is Patch =>
+              typeof p.replace === 'string' &&
+              (typeof p.search === 'string' || typeof p.selector === 'string'))
         : [],
     };
   } catch {
@@ -118,31 +119,20 @@ function parseCritiqueResponse(text: string): CritiqueResult {
   }
 }
 
-function applyPatches(html: string, patches: SearchReplaceBlock[]): string {
-  let result = html;
-  for (const patch of patches) {
-    if (patch.search && result.includes(patch.search)) {
-      result = result.replace(patch.search, patch.replace);
-    }
-  }
-  return result;
-}
-
-/** Build critique hints from the change contract. */
 function buildContractHints(contract?: ChangeContract): string {
   if (!contract) return '';
-  const hints: string[] = ['VERIFICATION CONTRACT:'];
+  const h: string[] = ['VERIFICATION CONTRACT:'];
   if (contract.researchGrounded) {
-    hints.push('- This artifact was research-grounded. Verify ALL dates, names, and factual claims via Google Search.');
+    h.push('- Research-grounded: verify ALL dates, names, facts via Google Search.');
   }
   if (contract.thinkersMentioned?.length) {
-    hints.push(`- Thinkers referenced: ${contract.thinkersMentioned.join(', ')}. Verify attributions and quotes.`);
+    h.push(`- Thinkers: ${contract.thinkersMentioned.join(', ')}. Verify attributions.`);
   }
   if (contract.conceptsMapped?.length) {
-    hints.push(`- Concepts mapped: ${contract.conceptsMapped.join(', ')}. Verify relationships are accurate.`);
+    h.push(`- Concepts: ${contract.conceptsMapped.join(', ')}. Verify relationships.`);
   }
   if (contract.sourceUrls?.length) {
-    hints.push(`- Source URLs to check: ${contract.sourceUrls.join(', ')}. Use URL context to verify content matches.`);
+    h.push(`- Sources: ${contract.sourceUrls.join(', ')}. Use URL context to verify.`);
   }
-  return hints.length > 1 ? hints.join('\n') : '';
+  return h.length > 1 ? h.join('\n') : '';
 }

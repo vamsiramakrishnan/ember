@@ -19,19 +19,21 @@ Respond with EXACTLY this JSON format:
   "score": <number 0-10>,
   "issues": ["issue 1", "issue 2"],
   "patches": [
-    {
-      "search": "<exact string to find in the HTML>",
-      "replace": "<replacement string>"
-    }
+    { "search": "<exact string to find>", "replace": "<replacement>" },
+    { "selector": ".css-selector", "replace": "<new innerHTML>" }
   ]
 }
 
-If score >= 7, return empty patches array. If score < 7, provide targeted
-SEARCH/REPLACE patches that fix the identified issues. Each search string
-must be an EXACT match of content currently in the HTML. Keep patches minimal
-— fix what's wrong, don't rewrite everything.
+Two patch modes:
+1. SEARCH/REPLACE: {"search": "exact string", "replace": "new string"}
+   The search must be an EXACT match of content in the HTML.
+2. SELECTOR: {"selector": ".class-name", "replace": "new innerHTML"}
+   Use when the element can be identified by CSS class or id.
+   Prefer selector mode for structural changes (replacing card content,
+   fixing timeline entries, updating tab panels).
 
-Use your Google Search tool to verify factual claims in the artifact.`;
+If score >= 7, return empty patches array. Keep patches minimal.
+Use Google Search to verify factual claims. Use URL context to check sources.`;
 
 export const CRITIC_AGENT: AgentConfig = {
   name: 'Critic',
