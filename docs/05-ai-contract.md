@@ -71,6 +71,23 @@ The AI must generate visual representations of concepts in real time, calibrated
 
 The visual language of these diagrams must match the notebook's visual language. They are sketched, not designed. They are warm, not clinical. They feel like something a tutor drew on a piece of paper and pushed across the desk.
 
+**Concept Diagram sophistication.** The concept diagram (2.4) supports three layout modes, chosen automatically from data shape:
+
+- **Linear flow:** flat nodes connected left-to-right (≤5 nodes, no nesting). The original treatment — sequential relationships.
+- **Tree layout:** nodes with children, rendered as expandable hierarchies. For structure: Kepler's three laws, the branches of mathematics, the parts of a cell.
+- **Graph layout:** nodes with typed edges — `causes`, `enables`, `contrasts`, `extends`, `requires`, `bridges`. For relationships: how Pythagoras's discovery of harmonic ratios *enables* musical consonance, which *bridges* to Kepler's orbital harmonics.
+
+Each node can carry:
+- An `entityId` linking to the knowledge graph (concept, thinker, term, or question)
+- A mastery level (rendered as a ghost bar behind the label)
+- A `detail` text revealed on expand
+- Children nodes (recursive nesting at any depth)
+- An accent colour (sage/indigo/amber/margin) with semantic meaning
+
+Diagrams are interactive: nodes expand to reveal children and detail. This transforms the concept diagram from a static illustration into an exploration surface — the student can drill into any node to see what's underneath, then collapse it and move on. The diagram remembers which nodes are expanded.
+
+**The diagram is not a separate tool.** It appears inline in the notebook like marginalia — preceded by context, followed by silence or a question. It is the tutor sketching a map of ideas and handing it to the student.
+
 ---
 
 ### 5. Calibrate difficulty and pacing
@@ -86,6 +103,30 @@ Calibration signals include:
 When the AI detects mastery, it extends — connecting to a new concept, introducing a new thinker, or increasing the abstraction level. When it detects struggle, it slows — returning to a concrete example, offering a different analogy, or simply asking "what part of this feels unclear?"
 
 The AI never says "let's review" or "let's go back to basics." It simply shifts its questions to probe at a different angle. The student experiences this as a natural shift in the conversation, not as a pedagogical intervention.
+
+---
+
+### 6. Explore the knowledge graph
+
+The AI has access to 15 function-calling tools that let it explore the student's knowledge graph during response generation. Instead of receiving a pre-assembled summary, the tutor *decides* what to look up — which is the difference between reading a summary and having access to a library card.
+
+**Read tools** (cheap, called freely):
+- `search_history`: semantic search across all notebooks
+- `lookup_concept`, `lookup_thinker`, `lookup_term`: point lookups
+- `traverse_graph`: BFS traversal with typed edge filters
+- `find_path`: shortest path between any two entities
+- `discover_gaps`: find underdeveloped areas near strong ones
+- `get_concept_journey`: trace how understanding evolved
+- `get_entity_neighborhood`: all connections to an entity
+- `suggest_bridge`: find cross-notebook connections
+- `read_attachment`: summarise uploaded files/images
+
+**Write tools** (deferred to post-response):
+- `create_annotation`: margin note on a specific entry
+- `add_to_lexicon`: add a term to vocabulary
+- `link_entities`: create a graph edge the student hasn't made explicit
+
+Tool calls execute in parallel within each agentic loop turn. The tutor can make multiple lookups simultaneously — checking a concept's mastery, finding connected thinkers, and searching for open questions all in one turn. Write actions are collected but not executed until after the response streams, preventing the tutor from modifying state while generating.
 
 ---
 
