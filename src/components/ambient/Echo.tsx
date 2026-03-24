@@ -15,7 +15,7 @@ export function Echo({ children }: EchoProps) {
   return (
     <p className={styles.echo}>
       <span className={styles.glyph}>↩</span>
-      <span><MarkdownContent>{children}</MarkdownContent></span>
+      <MarkdownContent mode="inline">{children}</MarkdownContent>
     </p>
   );
 }

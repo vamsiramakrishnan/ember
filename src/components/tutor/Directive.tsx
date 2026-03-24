@@ -50,7 +50,7 @@ export function Directive({
           )}
         </div>
         <p className={styles.text}>
-          <MarkdownContent>{children}</MarkdownContent>
+          <MarkdownContent mode="inline">{children}</MarkdownContent>
         </p>
         {!isComplete && onComplete && (
           <button

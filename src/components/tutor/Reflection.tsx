@@ -17,7 +17,7 @@ export function Reflection({ children }: ReflectionProps) {
     <div className={styles.container}>
       <div className={styles.rule} />
       <p className={styles.text}>
-        <MarkdownContent>{children}</MarkdownContent>
+        <MarkdownContent mode="inline">{children}</MarkdownContent>
       </p>
       <div className={styles.rule} />
     </div>

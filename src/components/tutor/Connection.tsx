@@ -22,7 +22,7 @@ export function Connection({ children, emphasisEnd }: ConnectionProps) {
       <div className={styles.rule} />
       <p className={styles.text}>
         <span className={styles.emphasis}>{emphasized}</span>
-        <MarkdownContent>{rest}</MarkdownContent>
+        <MarkdownContent mode="inline">{rest}</MarkdownContent>
       </p>
     </div>
   );

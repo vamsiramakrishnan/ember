@@ -112,7 +112,7 @@ export function AnnotationMargin({ annotations, onAdd }: AnnotationMarginProps) 
             {ann.author === 'tutor' ? '¶' : '·'}
           </span>
           <span className={styles.text}>
-            <MarkdownContent>{ann.content}</MarkdownContent>
+            <MarkdownContent mode="inline">{ann.content}</MarkdownContent>
           </span>
         </div>
       ))}

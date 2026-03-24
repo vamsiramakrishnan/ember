@@ -15,7 +15,7 @@ export function ScratchNote({ children }: ScratchNoteProps) {
   return (
     <p className={styles.note}>
       <span className={styles.glyph}>·</span>
-      <MarkdownContent>{children}</MarkdownContent>
+      <MarkdownContent mode="inline">{children}</MarkdownContent>
     </p>
   );
 }

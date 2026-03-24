@@ -1,25 +1,30 @@
-/* MarkdownContent — inherits parent typography, adds inline formatting */
-.markdown {
-  /* Inherit everything from parent */
-}
+/* MarkdownContent — unified rendering styles for Ember's markdown pipeline.
+ * Covers: inline formatting, links, lists, blockquotes, tables,
+ * code blocks (Shiki fallback + override), and KaTeX math overrides. */
 
-.markdown strong {
-  font-weight: 600;
-}
+/* ── Base ────────────────────────────────────────────────────── */
+.markdown { /* Inherits parent typography */ }
 
-.markdown em {
-  font-style: italic;
-}
+.markdown strong { font-weight: 600; }
+.markdown em { font-style: italic; }
 
-.markdown code {
-  font-family: var(--font-mono, 'IBM Plex Mono', monospace);
-  font-size: 0.85em;
-  background: var(--paper-warm);
-  padding: 1px 4px;
-  border-radius: 2px;
-  color: var(--ink-soft);
-}
+.markdown p { margin: 0 0 8px; }
+.markdown p:last-child { margin-bottom: 0; }
 
+.markdown h1, .markdown h2, .markdown h3,
+.markdown h4, .markdown h5, .markdown h6 {
+  font-family: var(--font-tutor);
+  font-weight: 500;
+  color: var(--ink);
+  margin: 16px 0 8px;
+  line-height: 1.35;
+}
+.markdown h1 { font-size: 22px; }
+.markdown h2 { font-size: 19px; }
+.markdown h3 { font-size: 17px; }
+.markdown h4, .markdown h5, .markdown h6 { font-size: 15px; }
+
+/* ── Links ───────────────────────────────────────────────────── */
 .link {
   color: var(--ink-soft);
   text-decoration: underline;
@@ -27,11 +32,13 @@
   text-underline-offset: 2px;
   transition: color 0.15s ease;
 }
+.link:hover { color: var(--ink); }
 
-.link:hover {
-  color: var(--ink);
-}
+/* ── Lists ───────────────────────────────────────────────────── */
+.markdown ul, .markdown ol { margin: 4px 0; padding-left: 20px; }
+.markdown li { margin-bottom: 2px; }
 
+/* ── Blockquote ──────────────────────────────────────────────── */
 .blockquote {
   border-left: 2px solid var(--rule);
   margin-left: 0;
@@ -40,25 +47,57 @@
   font-style: italic;
 }
 
-.markdown ul,
-.markdown ol {
-  margin: 4px 0;
-  padding-left: 20px;
+/* ── Inline code ─────────────────────────────────────────────── */
+.inlineCode {
+  font-family: var(--font-mono, 'IBM Plex Mono', monospace);
+  font-size: 0.85em;
+  background: var(--paper-warm);
+  padding: 1px 4px;
+  border-radius: 2px;
+  color: var(--ink-soft);
 }
 
-.markdown li {
-  margin-bottom: 2px;
+/* ── Code blocks (Shiki + fallback) ──────────────────────────── */
+.pre {
+  background: var(--paper-warm);
+  border: 1px solid var(--rule-light);
+  border-radius: 2px;
+  padding: 14px 16px;
+  margin: 12px 0;
+  overflow-x: auto;
+  font-family: var(--font-mono, 'IBM Plex Mono', monospace);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-soft);
 }
 
-.paragraph {
-  margin: 0 0 8px;
+.codeFallback {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
 }
 
-.paragraph:last-child {
-  margin-bottom: 0;
+.codeBlock {
+  margin: 12px 0;
 }
 
-/* Table styles — matches Ember visual language */
+/* Override Shiki's generated styles for Ember warmth */
+.codeBlock pre {
+  background: var(--paper-warm) !important;
+  border: 1px solid var(--rule-light);
+  border-radius: 2px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  font-family: var(--font-mono, 'IBM Plex Mono', monospace) !important;
+  font-size: 13px !important;
+  line-height: 1.6 !important;
+}
+
+.codeBlock code {
+  font-family: inherit !important;
+}
+
+/* ── Tables ──────────────────────────────────────────────────── */
 .tableWrap {
   overflow-x: auto;
   margin: 12px 0;
@@ -93,10 +132,17 @@
   border-bottom: 1px solid var(--rule-light);
 }
 
-.table tbody tr:last-child .td {
-  border-bottom: none;
+.table tbody tr:last-child .td { border-bottom: none; }
+
+/* ── KaTeX overrides — warm up the math ──────────────────────── */
+.markdown .katex { font-size: 1.05em; }
+.markdown .katex-display {
+  margin: 12px 0;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
+/* ── Reduced motion ──────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   .link { transition: none; }
 }

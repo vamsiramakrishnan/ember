@@ -1,137 +1,118 @@
 /**
- * MarkdownContent — renders markdown text inline with @mention and /command
- * chip support. Parses @[name](type:id) as MentionChip and /command as
- * SlashChip. Supports bold, italic, code, links, lists, blockquotes.
+ * MarkdownContent — unified markdown rendering pipeline for Ember.
+ *
+ * Single pipeline: remarkGfm (tables) → remarkMath (LaTeX) →
+ * rehypeKatex (render math) → rehypeChips (@mentions, /commands).
+ * Code blocks highlighted via Shiki (lazy-loaded).
+ *
+ * Two modes:
+ *   block (default) — renders as <div>, supports tables, code, math blocks
+ *   inline — renders as <span>, strips block elements, safe inside <p>
  */
+import { useMemo, type ReactNode } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import type { ReactNode } from 'react';
-import { MentionChip, MENTION_PATTERN } from './MentionChip';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
+import { rehypeChips } from './rehypeChips';
+import { MentionChip } from './MentionChip';
 import { SlashChip } from './SlashChip';
+import { CodeBlock } from './CodeBlock';
 import type { EntityType } from '@/hooks/useEntityIndex';
 import styles from './MarkdownContent.module.css';
 
-interface MarkdownContentProps {
+interface Props {
   children: string;
   className?: string;
+  /** 'block' (default) renders tables/code/math. 'inline' is safe inside <p>. */
+  mode?: 'block' | 'inline';
 }
 
-const INLINE_ALLOWED = [
-  'p', 'em', 'strong', 'code', 'a',
-  'ul', 'ol', 'li', 'blockquote', 'br', 'del', 'sup', 'sub',
-];
+type Comp = React.ComponentType<Record<string, unknown>>;
 
-const BLOCK_ALLOWED = [
-  ...INLINE_ALLOWED,
-  'table', 'thead', 'tbody', 'tr', 'th', 'td',
-];
+const REMARK = [remarkGfm, remarkMath];
+const REHYPE = [rehypeKatex, rehypeChips];
 
-/** Pattern for /command tokens (at start or after whitespace). */
-const SLASH_PATTERN = /(?:^|\s)(\/(?:draw|visualize|research|explain|summarize|quiz|timeline|connect|define|teach|podcast|flashcards|exercise))\b/;
+/* ── Shared component renderers ──────────────────────────────── */
 
-export function MarkdownContent({ children, className }: MarkdownContentProps) {
-  const hasMentions = MENTION_PATTERN.test(children);
-  const hasSlash = SLASH_PATTERN.test(children);
+const chipRenderers: Record<string, Comp> = {
+  'mention-chip': (p: Record<string, unknown>) => (
+    <MentionChip
+      name={String(p.name ?? '')}
+      entityType={String(p.entityType ?? 'concept') as EntityType}
+      entityId={String(p.entityId ?? '')}
+    />
+  ),
+  'slash-chip': (p: Record<string, unknown>) => (
+    <SlashChip command={String(p.command ?? '')} />
+  ),
+};
 
-  if (hasMentions || hasSlash) {
-    return <ChipAwareContent text={children} className={className} />;
-  }
-  if (!hasMarkdown(children)) return <>{children}</>;
-  if (hasTable(children)) return <MdBlock className={className}>{children}</MdBlock>;
-  return <MdSpan className={className}>{children}</MdSpan>;
-}
+const linkRenderer: Comp = ({ href, children: c }) => (
+  <a className={styles.link} href={href as string}
+    target="_blank" rel="noopener noreferrer">{c as ReactNode}</a>
+);
 
-export { hasTable };
+const quoteRenderer: Comp = ({ children: c }) => (
+  <blockquote className={styles.blockquote}>{c as ReactNode}</blockquote>
+);
 
-/** Splits text on @mentions and /commands, renders chips inline. */
-function ChipAwareContent({ text, className }: { text: string; className?: string }) {
-  // Combined regex: @mentions OR /commands
-  const mentionSrc = MENTION_PATTERN.source;
-  const slashSrc = '(?:^|\\s)(\\/(?:draw|visualize|research|explain|summarize|quiz|timeline|connect|define|teach|podcast|flashcards|exercise))(?=\\s|[.,;:!?]|$)';
-  const combined = new RegExp(`${mentionSrc}|${slashSrc}`, 'g');
+const inlineCodeRenderer: Comp = ({ children: c }) => (
+  <code className={styles.inlineCode}>{c as ReactNode}</code>
+);
 
-  const parts: ReactNode[] = [];
-  let lastIdx = 0;
-  let match;
+/* ── Mode-specific component maps ────────────────────────────── */
 
-  while ((match = combined.exec(text)) !== null) {
-    // Determine if it's a mention (@[name](type:id)) or slash (/command)
-    if (match[1] != null) {
-      // Mention match — groups 1,2,3
-      if (match.index > lastIdx) pushText(parts, text.slice(lastIdx, match.index), className);
-      parts.push(<MentionChip key={`m${match.index}`}
-        name={match[1]} entityType={(match[2] ?? 'concept') as EntityType}
-        entityId={match[3] ?? ''} />);
-      lastIdx = match.index + match[0].length;
-    } else if (match[4] != null) {
-      // Slash match — group 4, may have leading whitespace
-      const cmdStart = match[0].indexOf('/');
-      const absStart = match.index + cmdStart;
-      if (absStart > lastIdx) pushText(parts, text.slice(lastIdx, absStart), className);
-      const cmd = match[4].startsWith('/') ? match[4].slice(1) : match[4];
-      parts.push(<SlashChip key={`s${match.index}`} command={cmd} />);
-      lastIdx = absStart + (match[4]?.length ?? 0);
+const BLOCK: Record<string, Comp> = {
+  ...chipRenderers,
+  a: linkRenderer,
+  blockquote: quoteRenderer,
+  pre: ({ children }) => <>{children as ReactNode}</>,
+  code: ({ className, children }) => {
+    const lang = /language-(\w+)/.exec(String(className ?? ''))?.[1];
+    if (lang && typeof children === 'string') {
+      return <CodeBlock language={lang}>{children}</CodeBlock>;
     }
-  }
-
-  if (lastIdx < text.length) pushText(parts, text.slice(lastIdx), className);
-  return <>{parts}</>;
-}
-
-function pushText(parts: ReactNode[], txt: string, cls?: string) {
-  if (!txt) return;
-  parts.push(hasMarkdown(txt)
-    ? <MdSpan key={`t${parts.length}`} className={cls}>{txt}</MdSpan>
-    : txt);
-}
-
-const INLINE_COMPONENTS = {
-  p: ({ children: c }: { children?: ReactNode }) => <>{c}</>,
-  a: ({ href, children: c }: { href?: string; children?: ReactNode }) => (
-    <a className={styles.link} href={href}
-      target="_blank" rel="noopener noreferrer">{c}</a>),
-  code: ({ children: c }: { children?: ReactNode }) => (
-    <code className={styles.code}>{c}</code>),
-  blockquote: ({ children: c }: { children?: ReactNode }) => (
-    <blockquote className={styles.blockquote}>{c}</blockquote>),
-};
-
-const BLOCK_COMPONENTS = {
-  ...INLINE_COMPONENTS,
-  p: ({ children: c }: { children?: ReactNode }) => (
-    <p className={styles.paragraph}>{c}</p>),
-  table: ({ children: c }: { children?: ReactNode }) => (
+    return <code className={styles.inlineCode}>{children as ReactNode}</code>;
+  },
+  table: ({ children: c }) => (
     <div className={styles.tableWrap}>
-      <table className={styles.table}>{c}</table>
-    </div>),
-  th: ({ children: c }: { children?: ReactNode }) => (
-    <th className={styles.th}>{c}</th>),
-  td: ({ children: c }: { children?: ReactNode }) => (
-    <td className={styles.td}>{c}</td>),
+      <table className={styles.table}>{c as ReactNode}</table>
+    </div>
+  ),
+  th: ({ children: c }) => <th className={styles.th}>{c as ReactNode}</th>,
+  td: ({ children: c }) => <td className={styles.td}>{c as ReactNode}</td>,
 };
 
-function MdSpan({ children, className }: { children: string; className?: string }) {
-  return (
-    <span className={`${styles.markdown} ${className ?? ''}`}>
-      <ReactMarkdown remarkPlugins={[remarkGfm]} allowedElements={INLINE_ALLOWED}
-        unwrapDisallowed components={INLINE_COMPONENTS}>{children}</ReactMarkdown>
-    </span>
+const INLINE: Record<string, Comp> = {
+  ...chipRenderers,
+  p: ({ children: c }) => <>{c as ReactNode}</>,
+  a: linkRenderer,
+  blockquote: quoteRenderer,
+  code: inlineCodeRenderer,
+};
+
+/* ── Main component ──────────────────────────────────────────── */
+
+export function MarkdownContent({ children, className, mode = 'block' }: Props) {
+  const isBlock = mode === 'block';
+  const components = isBlock ? BLOCK : INLINE;
+
+  const content = useMemo(
+    () => (
+      <ReactMarkdown
+        remarkPlugins={REMARK}
+        rehypePlugins={REHYPE}
+        skipHtml
+        components={components}
+      >
+        {children}
+      </ReactMarkdown>
+    ),
+    [children, components],
   );
-}
 
-function MdBlock({ children, className }: { children: string; className?: string }) {
-  return (
-    <div className={`${styles.markdown} ${className ?? ''}`}>
-      <ReactMarkdown remarkPlugins={[remarkGfm]} allowedElements={BLOCK_ALLOWED}
-        unwrapDisallowed components={BLOCK_COMPONENTS}>{children}</ReactMarkdown>
-    </div>
-  );
-}
-
-function hasMarkdown(text: string): boolean {
-  return /[*_`\[\]>#\-~|]/.test(text);
-}
-
-function hasTable(text: string): boolean {
-  return /\|.+\|[\r\n]+\|[\s:*-]+\|/.test(text);
+  const Tag = isBlock ? 'div' : 'span';
+  return <Tag className={`${styles.markdown} ${className ?? ''}`}>{content}</Tag>;
 }

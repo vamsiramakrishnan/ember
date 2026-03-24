@@ -14,7 +14,7 @@ interface ProseEntryProps {
 export function ProseEntry({ children }: ProseEntryProps) {
   return (
     <p className={styles.entry}>
-      <MarkdownContent>{children}</MarkdownContent>
+      <MarkdownContent mode="inline">{children}</MarkdownContent>
     </p>
   );
 }
