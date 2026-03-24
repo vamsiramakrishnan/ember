@@ -53,6 +53,12 @@
   .tab { font-size: 13px; padding-bottom: 9px; margin-bottom: -11px; }
 }
 
+/* Extra-narrow: minimal gap */
+@media (max-width: 375px) {
+  .nav { gap: 16px; padding-bottom: 8px; }
+  .tab { font-size: 12px; padding-bottom: 7px; margin-bottom: -9px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .tab { transition: none; }
 }

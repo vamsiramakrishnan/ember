@@ -85,6 +85,13 @@
   .separator { display: none; }
 }
 
+/* Extra-narrow: tighter top padding */
+@media (max-width: 375px) {
+  .header { padding-top: 16px; }
+  .row { margin-bottom: 12px; }
+  .logo { font-size: 18px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .notebookName { transition: none; }
 }

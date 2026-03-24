@@ -33,3 +33,12 @@
   position: relative;
   z-index: 1;
 }
+
+/* Widescreen: cap max-width so content doesn't float in a sea of paper */
+@media (min-width: 1440px) {
+  .shell {
+    max-width: 1600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}

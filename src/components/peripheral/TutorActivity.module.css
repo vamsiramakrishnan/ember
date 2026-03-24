@@ -97,6 +97,15 @@
   50% { opacity: 0.25; width: 80%; }
 }
 
+/* Mobile: tighter, still visible */
+@media (max-width: 480px) {
+  .container { padding-left: 0; gap: 6px; }
+  .dot, .dotStreaming { width: 10px; font-size: 8px; }
+  .label { font-size: 9px; }
+  .progress { font-size: 8px; }
+  .writingBar { max-width: 48px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .container { animation: none; opacity: 1; }
   .dot, .dotStreaming { animation: none; opacity: 0.5; }

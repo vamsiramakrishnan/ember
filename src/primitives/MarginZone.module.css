@@ -17,3 +17,8 @@
 @media (min-width: 1200px) {
   .zone { width: 200px; right: -240px; }
 }
+
+/* Widescreen: maximum breathing room */
+@media (min-width: 1440px) {
+  .zone { width: 240px; right: -280px; }
+}
