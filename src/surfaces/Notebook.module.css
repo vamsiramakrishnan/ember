@@ -14,6 +14,14 @@
   position: relative;
 }
 
+/* Margin anchor — invisible placeholder for marginalized tutor entries.
+ * Preserves the entry ID in the DOM for scroll-to-entry navigation
+ * while the actual content renders as a MarginNote on the student entry. */
+.marginAnchor {
+  height: 0;
+  overflow: hidden;
+}
+
 /* Mode toggle — linear vs canvas */
 .modeToggle {
   display: flex;
