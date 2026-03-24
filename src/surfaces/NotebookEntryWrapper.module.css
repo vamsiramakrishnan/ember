@@ -196,15 +196,15 @@
 
 @keyframes highlightPulse {
   0% { background: transparent; }
-  8% { background: var(--amber-dim); outline: 1px solid rgba(196, 154, 60, 0.15); outline-offset: 2px; }
-  40% { background: var(--amber-dim); outline: 1px solid rgba(196, 154, 60, 0.15); outline-offset: 2px; }
+  8% { background: var(--amber-dim); outline: 1px solid var(--amber-dim); outline-offset: 2px; }
+  40% { background: var(--amber-dim); outline: 1px solid var(--amber-dim); outline-offset: 2px; }
   100% { background: transparent; outline: 1px solid transparent; outline-offset: 2px; }
 }
 
 /* ─── Reduced motion ─────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
-  .wrapper, .handle, .actions, .action {
+  .wrapper, .handle, .actions, .action, .followUpZone, .dragOver {
     transition: none;
   }
   .highlighted { animation: none; background: var(--amber-dim); }

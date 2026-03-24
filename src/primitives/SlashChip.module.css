@@ -8,7 +8,7 @@
   align-items: baseline;
   gap: 3px;
   background: var(--indigo-dim);
-  border: 1px solid rgba(91, 107, 138, 0.12);
+  border: 1px solid var(--indigo-dim);
   border-radius: 2px;
   padding: 0 5px;
   margin: 0 2px;
@@ -16,13 +16,13 @@
   vertical-align: baseline;
   line-height: inherit;
   white-space: nowrap;
-  transition: background 0.2s ease, border-color 0.2s ease;
+  transition: background 0.15s ease, border-color 0.15s ease;
   position: relative;
 }
 
 .chip:hover {
-  background: rgba(91, 107, 138, 0.1);
-  border-color: rgba(91, 107, 138, 0.2);
+  background: var(--indigo-dim);
+  border-color: color-mix(in srgb, var(--indigo) 20%, transparent);
 }
 
 .clickable {
@@ -70,7 +70,7 @@
   white-space: nowrap;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.15s ease;
   z-index: 10;
 }
 
@@ -81,7 +81,7 @@
 /* ─── Active state — command is executing ─── */
 
 .active {
-  border-color: rgba(91, 107, 138, 0.25);
+  border-color: color-mix(in srgb, var(--indigo) 25%, transparent);
   animation: activePulse 2s ease-in-out infinite;
 }
 
@@ -89,27 +89,27 @@
 
 .accentIndigo {
   background: var(--indigo-dim);
-  border-color: rgba(91, 107, 138, 0.12);
+  border-color: var(--indigo-dim);
 }
 .accentIndigo .icon,
 .accentIndigo .label { color: var(--indigo); }
-.accentIndigo:hover { background: rgba(91, 107, 138, 0.1); border-color: rgba(91, 107, 138, 0.2); }
+.accentIndigo:hover { background: var(--indigo-dim); border-color: color-mix(in srgb, var(--indigo) 20%, transparent); }
 
 .accentSage {
   background: var(--sage-dim);
-  border-color: rgba(107, 143, 113, 0.12);
+  border-color: var(--sage-dim);
 }
 .accentSage .icon,
 .accentSage .label { color: var(--sage); }
-.accentSage:hover { background: rgba(107, 143, 113, 0.1); border-color: rgba(107, 143, 113, 0.2); }
+.accentSage:hover { background: var(--sage-dim); border-color: color-mix(in srgb, var(--sage) 20%, transparent); }
 
 .accentAmber {
   background: var(--amber-dim);
-  border-color: rgba(196, 154, 60, 0.12);
+  border-color: var(--amber-dim);
 }
 .accentAmber .icon,
 .accentAmber .label { color: var(--amber); }
-.accentAmber:hover { background: rgba(196, 154, 60, 0.1); border-color: rgba(196, 154, 60, 0.2); }
+.accentAmber:hover { background: var(--amber-dim); border-color: color-mix(in srgb, var(--amber) 20%, transparent); }
 
 /* ─── Focus ring for keyboard ─────────────── */
 
@@ -121,12 +121,12 @@
 /* ─── Animations ──────────────────────────── */
 
 @keyframes activePulse {
-  0%, 100% { border-color: rgba(91, 107, 138, 0.15); }
-  50% { border-color: rgba(91, 107, 138, 0.35); }
+  0%, 100% { border-color: var(--indigo-dim); }
+  50% { border-color: color-mix(in srgb, var(--indigo) 35%, transparent); }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .chip { transition: none; }
   .chip::after { transition: none; }
-  .active { animation: none; border-color: rgba(91, 107, 138, 0.3); }
+  .active { animation: none; border-color: color-mix(in srgb, var(--indigo) 30%, transparent); }
 }
