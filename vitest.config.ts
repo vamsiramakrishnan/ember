@@ -16,9 +16,15 @@ export default defineConfig({
     include: ['src/**/*.test.{ts,tsx}'],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'lcov'],
+      reporter: ['text', 'lcov', 'json-summary'],
       include: ['src/**/*.{ts,tsx}'],
-      exclude: ['src/test/**', 'src/**/*.test.*', 'src/prototypes/**', 'src/data/**'],
+      exclude: [
+        'src/test/**',
+        'src/**/*.test.*',
+        'src/prototypes/**',
+        'src/data/**',
+        'src/types/**',
+      ],
     },
   },
 });

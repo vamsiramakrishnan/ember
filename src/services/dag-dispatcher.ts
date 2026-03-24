@@ -14,6 +14,7 @@ import { resolveCommandContext } from './command-context';
 import { setActivityDetail } from '@/state';
 import { buildContext } from './dag-context';
 import { buildPrompt } from './dag-prompts';
+import { log, traceAgentDispatch } from '@/observability';
 
 // ─── Activity labels for each action ───────────────────────
 
@@ -67,6 +68,8 @@ export async function dispatchNode(
     return { nodeId: node.id, entries: [{ type: 'silence', text: undefined }], success: true };
   }
 
+  log.breadcrumb('dag', `dispatch ${node.action}`, { nodeId: node.id });
+
   const priorCtx = buildContext(node, dag, priorResults);
   const tier = ANALYTICAL.has(node.action) ? 2 : 1;
   const cmdCtx = await resolveCommandContext(
@@ -79,19 +82,21 @@ export async function dispatchNode(
     label: ACTIVITY_LABELS[node.action] ?? 'processing…',
   });
 
-  // Illustrate → image agent
-  if (node.action === 'illustrate') {
-    return dispatchIllustrate(node, context);
-  }
+  return traceAgentDispatch(`dag.${node.action}`, TUTOR_AGENT.model, async () => {
+    // Illustrate → image agent
+    if (node.action === 'illustrate') {
+      return dispatchIllustrate(node, context);
+    }
 
-  // Rich content → dedicated generators (VISUALISER_AGENT + typed schemas)
-  const richGen = RICH_GENERATORS[node.action];
-  if (richGen) {
-    return dispatchRich(node, richGen, context);
-  }
+    // Rich content → dedicated generators (VISUALISER_AGENT + typed schemas)
+    const richGen = RICH_GENERATORS[node.action];
+    if (richGen) {
+      return dispatchRich(node, richGen, context);
+    }
 
-  // Default → TUTOR_AGENT
-  return dispatchTutor(node, buildPrompt(node, context), onChunk);
+    // Default → TUTOR_AGENT
+    return dispatchTutor(node, buildPrompt(node, context), onChunk);
+  });
 }
 
 async function dispatchIllustrate(node: IntentNode, ctx: string): Promise<NodeResult> {
