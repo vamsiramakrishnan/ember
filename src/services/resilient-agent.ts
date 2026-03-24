@@ -3,8 +3,7 @@
  *
  * Tier 1: Try the configured model (gemini-3.1-flash-lite-preview)
  * Tier 2: Retry once after 1s delay (same model — transient errors)
- * Tier 3: Fall back to gemini-3.1-flash-lite (same generation, lighter)
- * Tier 4: Fall back to gemini-2.0-flash-lite (previous gen, high availability)
+ * Tier 3: Fall back to gemini-2.5-flash-lite
  *
  * Error-code-aware: 429 (rate limit) and 503 (overloaded) get longer
  * back-off before retry. 400 (bad request) skips straight to fallback.
@@ -17,11 +16,7 @@ import { MODELS } from './gemini';
 import type { AgentConfig } from './agents';
 import type { AgentMessage } from './run-agent';
 
-/** Fallback chain: try these models in order after the primary fails. */
-const FALLBACK_MODELS = [
-  'gemini-3.1-flash-lite',
-  'gemini-2.0-flash-lite',
-] as const;
+const FALLBACK_MODEL = MODELS.fallback;
 
 function delay(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
@@ -84,15 +79,12 @@ export async function resilientTextAgent(
     }
   }
 
-  // Tier 3+: fallback models
-  for (const model of FALLBACK_MODELS) {
-    if (model === agent.model) continue; // Skip if same as primary
-    try {
-      const fallback: AgentConfig = { ...agent, model };
-      return await runTextAgent(fallback, messages);
-    } catch (err) {
-      console.warn(`[Ember] Fallback ${model} failed:`, err);
-    }
+  // Tier 3: fallback to gemini-2.5-flash-lite
+  try {
+    const fallback: AgentConfig = { ...agent, model: FALLBACK_MODEL };
+    return await runTextAgent(fallback, messages);
+  } catch (err) {
+    console.warn(`[Ember] Fallback ${FALLBACK_MODEL} failed:`, err);
   }
 
   // All tiers failed — return graceful message
@@ -126,17 +118,14 @@ export async function resilientStreamingAgent(
     }
   }
 
-  // Tier 3+: fallback models (non-streaming for reliability)
-  for (const model of FALLBACK_MODELS) {
-    if (model === agent.model) continue;
-    try {
-      const fallback: AgentConfig = { ...agent, model };
-      const result = await runTextAgent(fallback, messages);
-      onChunk(result.text, result.text);
-      return result;
-    } catch (err) {
-      console.warn(`[Ember] Streaming fallback ${model} failed:`, err);
-    }
+  // Tier 3: non-streaming fallback with gemini-2.5-flash-lite
+  try {
+    const fallback: AgentConfig = { ...agent, model: FALLBACK_MODEL };
+    const result = await runTextAgent(fallback, messages);
+    onChunk(result.text, result.text);
+    return result;
+  } catch (err) {
+    console.warn(`[Ember] Streaming fallback ${FALLBACK_MODEL} failed:`, err);
   }
 
   const fallbackText = GRACEFUL_FALLBACK.text;

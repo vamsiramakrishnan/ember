@@ -33,8 +33,8 @@ export function isGeminiAvailable(): boolean {
 export const MODELS = {
   text: 'gemini-3.1-flash-lite-preview',
   image: 'gemini-3.1-flash-image-preview',
-  /** Fallback when primary text model fails with error codes. */
-  fallback: 'gemini-2.0-flash-lite',
+  /** Fallback when gemini-3.1-flash-lite-preview fails with error codes. */
+  fallback: 'gemini-2.5-flash-lite',
   /** Ultra-lightweight model for cell tagging, status narration, classification. */
   gemma: 'gemma-3-1b-it',
 } as const;
