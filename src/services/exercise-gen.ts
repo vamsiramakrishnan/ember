@@ -3,6 +3,7 @@
  * Uses the shared structured-generator pipeline.
  */
 import { generateStructured } from './structured-generator';
+import { refineContent } from './content-refiner';
 import type { NotebookEntry, LiveEntry, Exercise, ExerciseDifficulty } from '@/types/entries';
 
 const VALID_FORMATS = new Set(['open-response', 'explain', 'compare', 'apply', 'critique']);
@@ -19,7 +20,7 @@ export async function generateExercises(
   entries: LiveEntry[],
   enrichedContext?: string,
 ): Promise<NotebookEntry | null> {
-  return generateStructured<RawSet>(topic, entries, {
+  const raw = await generateStructured<RawSet>(topic, entries, {
     systemPrompt: SYSTEM_PROMPT,
     validate: (parsed) => {
       if (!parsed.title || !Array.isArray(parsed.exercises) || parsed.exercises.length === 0) {
@@ -36,6 +37,9 @@ export async function generateExercises(
       return { type: 'exercise-set', title: String(parsed.title), exercises, difficulty: diff };
     },
   }, enrichedContext);
+  if (!raw) return null;
+  const { entry: refined } = await refineContent(raw, topic, enrichedContext);
+  return refined;
 }
 
 const SYSTEM_PROMPT = `You are Ember's tutor creating Socratic exercises.
