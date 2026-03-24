@@ -100,9 +100,7 @@ async function executeClassification(
     const result = await runTextAgent(ROUTER_AGENT, [
       { role: 'user', parts: [{ text: prompt }] },
     ]);
-    const cleaned = result.text
-      .replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
-    const parsed = JSON.parse(cleaned) as Record<string, unknown>;
+    const parsed = JSON.parse(result.text) as Record<string, unknown>;
 
     const decision: RoutingDecision = {
       tutor: true,

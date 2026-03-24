@@ -12,6 +12,9 @@ interface TextRequestBody {
   systemInstruction?: string;
   thinkingLevel?: string;
   tools?: Record<string, unknown>[];
+  /** When set, Gemini guarantees JSON output matching this schema. */
+  responseMimeType?: string;
+  responseSchema?: Record<string, unknown>;
 }
 
 export default async function handler(req: Request): Promise<Response> {
@@ -55,6 +58,12 @@ export default async function handler(req: Request): Promise<Response> {
   }
   if (body.tools && body.tools.length > 0) {
     geminiConfig.tools = body.tools;
+  }
+  if (body.responseMimeType) {
+    geminiConfig.responseMimeType = body.responseMimeType;
+  }
+  if (body.responseSchema) {
+    geminiConfig.responseSchema = body.responseSchema;
   }
 
   const model = body.model ?? 'gemini-3.1-flash-lite-preview';

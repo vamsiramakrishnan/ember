@@ -3,6 +3,7 @@
  * and generates a paraphrased callback. The notebook remembers.
  */
 import { EMBER_DESIGN_CONTEXT, type AgentConfig } from './config';
+import { echoResponseSchema } from '@/services/schemas';
 
 const INSTRUCTION = `${EMBER_DESIGN_CONTEXT}
 
@@ -30,4 +31,5 @@ export const ECHO_AGENT: AgentConfig = {
   thinkingLevel: 'MINIMAL',
   tools: [],
   responseModalities: ['TEXT'],
+  responseSchema: echoResponseSchema,
 };

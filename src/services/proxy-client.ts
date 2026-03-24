@@ -24,6 +24,9 @@ interface TextGenBody {
   systemInstruction?: string;
   thinkingLevel?: string;
   tools?: Tool[];
+  /** When set, Gemini guarantees JSON output matching this schema. */
+  responseMimeType?: string;
+  responseSchema?: Record<string, unknown>;
 }
 
 /** POST JSON to an API route; throw on non-OK response. */

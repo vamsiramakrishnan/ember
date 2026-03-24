@@ -186,9 +186,7 @@ export async function parseIntentDAG(
       { role: 'user', parts: [{ text: prompt }] },
     ]);
 
-    const cleaned = result.text
-      .replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
-    const parsed = intentDagSchema.parse(JSON.parse(cleaned));
+    const parsed = intentDagSchema.parse(JSON.parse(result.text));
     return parsed;
   } catch (err) {
     console.error('[Ember] DAG parsing failed, falling back:', err);

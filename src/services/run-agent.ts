@@ -46,13 +46,18 @@ export async function runTextAgent(
   messages: AgentMessage[],
 ): Promise<AgentTextResult> {
   if (useProxy()) {
-    const text = await proxyTextGeneration({
+    const body: Parameters<typeof proxyTextGeneration>[0] = {
       messages,
       model: agent.model,
       systemInstruction: agent.systemInstruction,
       thinkingLevel: agent.thinkingLevel,
       tools: agent.tools.length > 0 ? agent.tools : undefined,
-    });
+    };
+    if (agent.responseSchema) {
+      body.responseMimeType = 'application/json';
+      body.responseSchema = toJSONSchema(agent.responseSchema) as Record<string, unknown>;
+    }
+    const text = await proxyTextGeneration(body);
     return { text, citations: [] };
   }
 
@@ -177,13 +182,18 @@ export async function runTextAgentStreaming(
   onChunk: (chunk: string, accumulated: string) => void,
 ): Promise<AgentTextResult> {
   if (useProxy()) {
-    const text = await proxyTextGenerationStream({
+    const body: Parameters<typeof proxyTextGenerationStream>[0] = {
       messages,
       model: agent.model,
       systemInstruction: agent.systemInstruction,
       thinkingLevel: agent.thinkingLevel,
       tools: agent.tools.length > 0 ? agent.tools : undefined,
-    }, onChunk);
+    };
+    if (agent.responseSchema) {
+      body.responseMimeType = 'application/json';
+      body.responseSchema = toJSONSchema(agent.responseSchema) as Record<string, unknown>;
+    }
+    const text = await proxyTextGenerationStream(body, onChunk);
     return { text, citations: [] };
   }
 

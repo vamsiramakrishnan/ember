@@ -95,11 +95,7 @@ export async function bootstrapNotebook(
 
 function parseBootstrapResponse(text: string): BootstrapPayload | null {
   try {
-    // Extract JSON from potential markdown code blocks
-    const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/) ??
-                      text.match(/(\{[\s\S]*\})/);
-    if (!jsonMatch?.[1]) return null;
-    return JSON.parse(jsonMatch[1]) as BootstrapPayload;
+    return JSON.parse(text) as BootstrapPayload;
   } catch {
     return null;
   }
