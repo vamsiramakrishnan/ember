@@ -50,6 +50,17 @@
   transition: color 0.3s ease;
 }
 
+/* Fallback label — hidden when narration sibling is active.
+ * Uses :has() to detect when StatusNarrator renders content. */
+.labelFallback {
+  composes: label;
+}
+
+/* When the container has a narration element with content, hide fallback */
+.container:has([class*="narration"]:not(:empty)) .labelFallback {
+  display: none;
+}
+
 /* ─── Progress counter (iteration/max) ─────── */
 
 .progress {

@@ -8,6 +8,7 @@ import { runAgenticLoop, runAgenticLoopStreaming, type AgenticResult } from './a
 import { getGeminiClient, isGeminiAvailable } from './gemini';
 import { parseTutorResponse } from './tutor-response-parser';
 import { setActivityDetail } from '@/state';
+import { narrateStep, cancelNarration } from './status-narrator';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
 import type { DeferredAction } from './tool-executor';
 import type { GraphDeferredAction } from './graph-tools';
@@ -71,6 +72,7 @@ export async function orchestrate(
   const results: NotebookEntry[] = [];
 
   setActivityDetail({ step: 'thinking', label: 'thinking...' });
+  narrateStep('thinking', studentText);
   let agenticResult: AgenticResult | null = null;
   try {
     if (getGeminiClient()) {
@@ -91,6 +93,7 @@ export async function orchestrate(
     console.error('[Ember] Tutor error:', err);
   }
 
+  cancelNarration();
   const post = await collectPostTutor(setup, studentText, entries, notebookId);
   results.unshift(...post.before);
   results.push(...post.after);
@@ -117,6 +120,7 @@ export async function streamOrchestrate(
   const results: NotebookEntry[] = [];
 
   setActivityDetail({ step: 'streaming', label: 'writing...' });
+  cancelNarration(); // Stop narration once streaming begins
   let agenticResult: AgenticResult | null = null;
   try {
     if (getGeminiClient()) {

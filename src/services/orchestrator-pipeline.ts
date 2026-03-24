@@ -8,6 +8,7 @@ import { generateVisualization, generateIllustration } from './enrichment';
 import { generateEcho, generateBridge, generateReflection, incrementReflectionCounter } from './temporal-layers';
 import { classifyImmediate, type RoutingDecision } from './router-agent';
 import { setActivityDetail } from '@/state';
+import { narrateStep } from './status-narrator';
 import { buildSemanticMemory } from './semantic-memory';
 import { appendDiversityHints } from './diversity-hints';
 import { getWorkingMemory } from './working-memory';
@@ -57,6 +58,7 @@ export async function runPipelineSetup(
   notebookCtx: NotebookContext | null,
 ): Promise<PipelineSetupResult> {
   setActivityDetail({ step: 'routing', label: 'reading your thoughts...' });
+  narrateStep('routing', studentText);
   incrementReflectionCounter(notebookId);
   const routing = await classifyImmediate(studentText, entries);
 
@@ -64,6 +66,7 @@ export async function runPipelineSetup(
   const stepLabel = routing.research ? 'researching...' : 'exploring connections...';
   const stepKey = routing.research ? 'researching' : 'searching-graph';
   setActivityDetail({ step: stepKey, label: stepLabel });
+  narrateStep(stepKey, studentText);
   const [graphCtxLayer, graphSnapshot, researchResult, memory] = await Promise.all([
     buildGraphContext(notebookId, studentText).catch(() => null),
     buildGraph(notebookId).catch(() => null),
@@ -122,6 +125,7 @@ export async function runPipelineEnrichment(
   const results: NotebookEntry[] = [];
   if (routing.visualize) {
     setActivityDetail({ step: 'visualizing', label: 'composing a visualization...' });
+    narrateStep('visualizing', studentText);
     const vizContract: ChangeContract = {
       researchGrounded: routing.research,
       sourceUrls: collectedCitations.map((c) => c.url),
@@ -131,6 +135,7 @@ export async function runPipelineEnrichment(
   }
   if (routing.illustrate) {
     setActivityDetail({ step: 'illustrating', label: 'sketching a concept...' });
+    narrateStep('illustrating', studentText);
     const ill = await generateIllustration(studentText);
     if (ill) results.push(ill);
   }
@@ -142,6 +147,7 @@ export async function runPipelineTemporalLayers(
   notebookId: string, echoPromise: Promise<NotebookEntry | null>,
 ): Promise<{ before: NotebookEntry[]; after: NotebookEntry[] }> {
   setActivityDetail({ step: 'reflecting', label: 'reflecting...' });
+  narrateStep('reflecting', studentText);
   const before: NotebookEntry[] = [];
   const after: NotebookEntry[] = [];
   const echo = await echoPromise;
