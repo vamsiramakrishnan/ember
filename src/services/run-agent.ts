@@ -4,7 +4,7 @@
  * and grounding metadata extraction (Google Search citations).
  */
 import { getGeminiClient } from './gemini';
-import { useProxy, proxyTextGeneration, proxyTextGenerationStream } from './proxy-client';
+import { useProxy, proxyTextGeneration, proxyTextGenerationStream, proxyImageGeneration } from './proxy-client';
 import { toJSONSchema } from 'zod';
 import type { AgentConfig } from './agents';
 
@@ -118,6 +118,22 @@ export async function runImageAgent(
   agent: AgentConfig,
   messages: AgentMessage[],
 ): Promise<AgentImageResult> {
+  // Proxy path: use /api/gemini-image when no client-side API key
+  if (useProxy()) {
+    const prompt = messages
+      .filter((m) => m.role === 'user')
+      .flatMap((m) => m.parts)
+      .map((p) => ('text' in p && p.text) ? p.text : '')
+      .filter(Boolean)
+      .join('\n');
+    const result = await proxyImageGeneration({
+      prompt,
+      useSearch: agent.tools.length > 0,
+      systemInstruction: agent.systemInstruction,
+    });
+    return { images: result.images, text: result.text };
+  }
+
   const client = getGeminiClient();
   if (!client) throw new Error('Gemini API key not configured');
 

@@ -72,6 +72,7 @@ export async function proxyImageGeneration(body: {
   useSearch?: boolean;
   aspectRatio?: string;
   imageSize?: string;
+  systemInstruction?: string;
 }): Promise<{
   images: Array<{ data: string; mimeType: string }>;
   text: string;

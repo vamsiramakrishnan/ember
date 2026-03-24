@@ -11,6 +11,7 @@ interface ImageRequestBody {
   useSearch?: boolean;
   aspectRatio?: string;
   imageSize?: string;
+  systemInstruction?: string;
 }
 
 export default async function handler(req: Request): Promise<Response> {
@@ -57,6 +58,7 @@ export default async function handler(req: Request): Promise<Response> {
   const geminiConfig: Record<string, unknown> = {
     responseModalities: ['IMAGE', 'TEXT'],
   };
+  if (body.systemInstruction) geminiConfig.systemInstruction = body.systemInstruction;
   if (Object.keys(imageConfig).length > 0) geminiConfig.imageConfig = imageConfig;
   if (tools.length > 0) geminiConfig.tools = tools;
 
