@@ -18,11 +18,12 @@ interface ReadingMaterialProps {
   title: string;
   subtitle?: string;
   slides: ReadingSlide[];
+  coverUrl?: string;
 }
 
 type ViewLevel = 'thumbnail' | 'expanded' | 'modal';
 
-export function ReadingMaterial({ title, subtitle, slides }: ReadingMaterialProps) {
+export function ReadingMaterial({ title, subtitle, slides, coverUrl }: ReadingMaterialProps) {
   const [level, setLevel] = useState<ViewLevel>('thumbnail');
   const [page, setPage] = useState(0);
   const [exporting, setExporting] = useState(false);
@@ -61,7 +62,12 @@ export function ReadingMaterial({ title, subtitle, slides }: ReadingMaterialProp
           aria-label={isThumb ? 'Expand reading material' : undefined}
           onKeyDown={isThumb ? (e) => { if (e.key === 'Enter') expand(); } : undefined}>
           <div className={styles.titleRow}>
-            <span className={styles.icon}>◈</span>
+            {coverUrl ? (
+              <img className={styles.coverArt} src={coverUrl}
+                alt={`Cover for ${title}`} loading="lazy" />
+            ) : (
+              <span className={styles.icon}>◈</span>
+            )}
             <div className={styles.titles}>
               <h3 className={styles.title}>{title}</h3>
               {subtitle && <p className={styles.subtitle}>{subtitle}</p>}

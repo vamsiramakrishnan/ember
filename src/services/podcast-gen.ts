@@ -13,6 +13,7 @@
 import { micro } from './agents';
 import { runTextAgent } from './run-agent';
 import { recentContext } from './entry-utils';
+import { generateCoverArt } from './visual-generation';
 import { synthesizeSegment } from './tts-synthesize';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
 
@@ -45,7 +46,11 @@ export async function generatePodcast(
       void synthesizeRemaining(scripts.slice(1), topic, onSegmentReady);
     }
 
-    return { type: 'podcast', topic, audioUrl: seg1Url, transcript };
+    // Fire-and-forget: generate cover art in background
+    const coverPromise = generateCoverArt(topic, topic, 'podcast').catch(() => null);
+    const coverUrl = await coverPromise;
+
+    return { type: 'podcast', topic, audioUrl: seg1Url, transcript, coverUrl: coverUrl ?? undefined };
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Unknown error';
     console.error('[Ember] Podcast generation failed:', err);

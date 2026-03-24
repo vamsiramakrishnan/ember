@@ -60,10 +60,21 @@
 }
 
 /* Layer 0: always visible */
+.portrait {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--rule-light);
+  object-fit: cover;
+  flex-shrink: 0;
+  filter: sepia(10%) saturate(80%);
+}
+
 .thinkerCol {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
 }
 
 .thinkerName {

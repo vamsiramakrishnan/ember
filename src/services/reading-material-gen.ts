@@ -4,6 +4,7 @@
  * Uses the shared structured-generator pipeline.
  */
 import { generateStructured } from './structured-generator';
+import { generateCoverArt } from './visual-generation';
 import type { NotebookEntry, LiveEntry, ReadingSlide } from '@/types/entries';
 
 const VALID_LAYOUTS = new Set([
@@ -46,12 +47,19 @@ export async function generateReadingMaterial(
           label: String(d.label ?? ''), detail: d.detail ? String(d.detail) : undefined,
         })) : undefined,
       }));
-      return {
+      const entry: NotebookEntry = {
         type: 'reading-material',
         title: String(parsed.title),
         subtitle: parsed.subtitle ? String(parsed.subtitle) : undefined,
         slides,
       };
+      // Fire-and-forget: generate cover art in background
+      generateCoverArt(String(parsed.title), topic, 'book').then((url) => {
+        if (url && entry.type === 'reading-material') {
+          (entry as { coverUrl?: string }).coverUrl = url;
+        }
+      }).catch(() => {});
+      return entry;
     },
   }, enrichedContext);
 }

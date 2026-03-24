@@ -1,0 +1,52 @@
+/* InlineSketch — small contextual illustration within tutor prose.
+ * Like a professor drawing on a napkin. Warm, monochrome, minimal. */
+
+.figure {
+  margin: 12px 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.sketch {
+  max-width: 280px;
+  max-height: 160px;
+  border-radius: 2px;
+  border: 1px solid var(--rule-light);
+  filter: sepia(10%) saturate(80%);
+  animation: sketchReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.caption {
+  font-family: var(--font-system);
+  font-size: 9px;
+  color: var(--ink-ghost);
+  letter-spacing: 1px;
+  text-transform: lowercase;
+}
+
+.placeholder {
+  width: 200px;
+  height: 100px;
+  border-radius: 2px;
+  background: var(--paper-deep);
+  margin: 12px auto;
+  animation: sketchPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes sketchReveal {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes sketchPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.15; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sketch { animation: none; }
+  .placeholder { animation: none; opacity: 0.3; }
+}

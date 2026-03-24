@@ -24,6 +24,10 @@ function TextCard({ text }: { text: PrimaryText }) {
 
   return (
     <div className={`${styles.card} ${text.isCurrent ? styles.current : ''}`}>
+      {text.coverUrl && (
+        <img className={styles.cover} src={text.coverUrl}
+          alt={`Cover of ${text.title}`} loading="lazy" />
+      )}
       {text.isCurrent && (
         <span className={styles.currentLabel}>Current Focus</span>
       )}

@@ -42,14 +42,20 @@ function EncounterRow({ encounter }: { encounter: Encounter }) {
 
       {/* Layer 0: always visible */}
       <div className={styles.thinkerCol}>
-        <button
-          className={styles.thinkerName}
-          onClick={handleThinkerClick}
-          title={`Navigate to ${encounter.thinker} in notebook`}
-        >
-          {encounter.thinker}
-        </button>
-        <span className={styles.tradition}>{encounter.tradition}</span>
+        {encounter.portraitUrl && (
+          <img className={styles.portrait} src={encounter.portraitUrl}
+            alt={encounter.thinker} loading="lazy" />
+        )}
+        <div>
+          <button
+            className={styles.thinkerName}
+            onClick={handleThinkerClick}
+            title={`Navigate to ${encounter.thinker} in notebook`}
+          >
+            {encounter.thinker}
+          </button>
+          <span className={styles.tradition}>{encounter.tradition}</span>
+        </div>
       </div>
       <p className={styles.coreIdea}>{encounter.coreIdea}</p>
 

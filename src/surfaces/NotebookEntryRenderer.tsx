@@ -111,14 +111,14 @@ export function NotebookEntryRenderer({ entry }: Props) {
     case 'podcast':
       return <PodcastPlayer topic={entry.topic} audioUrl={entry.audioUrl}
         segments={entry.segments} transcript={entry.transcript}
-        duration={entry.duration} />;
+        duration={entry.duration} coverUrl={entry.coverUrl} />;
     case 'visualization':
       return <Visualization html={entry.html} caption={entry.caption} />;
     case 'illustration':
       return <Illustration dataUrl={entry.dataUrl} caption={entry.caption} />;
     case 'reading-material':
       return <ReadingMaterial title={entry.title} subtitle={entry.subtitle}
-        slides={entry.slides} />;
+        slides={entry.slides} coverUrl={entry.coverUrl} />;
     case 'flashcard-deck':
       return <FlashcardDeck title={entry.title} cards={entry.cards} />;
     case 'exercise-set':

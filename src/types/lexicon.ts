@@ -41,6 +41,8 @@ export interface Encounter {
   status: 'active' | 'dormant' | 'bridged' | 'pending';
   /** If bridged, to what concept. */
   bridgedTo?: string;
+  /** AI-generated portrait (data URL). */
+  portraitUrl?: string;
 }
 
 export interface PrimaryText {
@@ -54,4 +56,6 @@ export interface PrimaryText {
   annotationCount: number;
   /** A representative quote. */
   quote: string;
+  /** AI-generated book cover (data URL). */
+  coverUrl?: string;
 }

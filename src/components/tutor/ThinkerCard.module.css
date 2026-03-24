@@ -30,6 +30,21 @@
   gap: 16px;
 }
 
+.portrait {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--rule);
+  object-fit: cover;
+  flex-shrink: 0;
+  transition: border-color 0.2s ease;
+  filter: sepia(10%) saturate(80%);
+}
+
+.container:hover .portrait {
+  border-color: var(--margin);
+}
+
 .monogram {
   width: 44px;
   height: 44px;
@@ -48,9 +63,18 @@
   transition: border-color 0.2s ease, background 0.2s ease;
 }
 
+.monogramLoading {
+  animation: portraitPulse 1.5s ease-in-out infinite;
+}
+
 .container:hover .monogram {
   border-color: var(--margin);
   background: var(--paper-deep);
+}
+
+@keyframes portraitPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
 .identity {

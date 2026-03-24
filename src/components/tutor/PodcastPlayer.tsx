@@ -16,6 +16,7 @@ interface PodcastPlayerProps {
   segments?: string[];
   transcript: string;
   duration?: number;
+  coverUrl?: string;
 }
 
 function formatTime(sec: number): string {
@@ -25,7 +26,7 @@ function formatTime(sec: number): string {
 }
 
 export function PodcastPlayer({
-  topic, audioUrl, segments, transcript,
+  topic, audioUrl, segments, transcript, coverUrl,
 }: PodcastPlayerProps) {
   // Build the full playlist: first segment is audioUrl, rest from segments[]
   const playlist = [audioUrl, ...(segments ?? [])].filter(Boolean);
@@ -113,10 +114,22 @@ export function PodcastPlayer({
   return (
     <div className={styles.container}>
       {hasAudio && <audio ref={audioRef} src={currentUrl} preload="metadata" />}
-      <div className={styles.label}>
-        {hasAudio ? `podcast${segLabel}` : 'podcast transcript'}
+      <div className={styles.headerRow}>
+        {coverUrl && (
+          <img
+            className={styles.cover}
+            src={coverUrl}
+            alt={`Cover art for ${topic}`}
+            loading="lazy"
+          />
+        )}
+        <div className={styles.headerText}>
+          <div className={styles.label}>
+            {hasAudio ? `podcast${segLabel}` : 'podcast transcript'}
+          </div>
+          <h3 className={styles.topic}>{topic}</h3>
+        </div>
       </div>
-      <h3 className={styles.topic}>{topic}</h3>
 
       {hasAudio && <div className={styles.controls}>
         <button

@@ -131,6 +131,16 @@
   background: var(--paper-warm);
 }
 
+.mnemonic {
+  width: 80px;
+  height: 80px;
+  border-radius: 2px;
+  border: 1px solid var(--rule-light);
+  object-fit: cover;
+  margin-bottom: 12px;
+  filter: sepia(10%) saturate(80%);
+}
+
 .sideLabel {
   font-family: var(--font-system);
   font-size: 9px;

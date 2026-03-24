@@ -34,6 +34,16 @@
   gap: 12px;
 }
 
+.coverArt {
+  width: 48px;
+  height: 48px;
+  border-radius: 2px;
+  border: 1px solid var(--rule-light);
+  object-fit: cover;
+  flex-shrink: 0;
+  filter: sepia(10%) saturate(80%);
+}
+
 .icon {
   font-family: var(--font-tutor);
   font-size: 20px;
