@@ -48,6 +48,7 @@ export const intentNodeSchema = z.object({
     'timeline',       // Historical progression
     'teach',          // Produce reading material deck
     'podcast',        // Audio discussion
+    'deepen',         // Enrich existing content with images, detail, depth
     'silence',        // Wait for the student
   ]),
   /** The text content / question / argument for this action. */

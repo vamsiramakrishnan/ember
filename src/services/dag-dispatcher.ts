@@ -36,6 +36,7 @@ const ACTIVITY_LABELS: Record<string, string> = {
   timeline: 'building timeline…',
   teach: 'creating reading deck…',
   podcast: 'producing audio…',
+  deepen: 'enriching content…',
   silence: '',
 };
 
@@ -122,6 +123,9 @@ function buildPrompt(node: IntentNode, context: string): string {
     case 'illustrate':
       return `${context}\n\nCreate a hand-drawn sketch illustrating: ${base}`;
 
+    case 'deepen':
+      return `${context}\n\nExpand and enrich the following content with more detail, examples, and depth. Add visual layouts (timelines, tables, diagrams) where appropriate. Create a reading-material response with 8-12 slides covering the topic comprehensively: ${base}`;
+
     default:
       return base;
   }
@@ -158,7 +162,7 @@ export async function dispatchNode(
   // Enrich with graph context when notebookId is available.
   // Tier 1 for creative actions, tier 2 for analytical actions.
   const analyticalActions = new Set([
-    'research', 'teach', 'flashcards', 'exercise', 'quiz', 'podcast',
+    'research', 'teach', 'flashcards', 'exercise', 'quiz', 'podcast', 'deepen',
   ]);
   const tier = analyticalActions.has(node.action) ? 2 : 1;
   const cmdCtx = await resolveCommandContext(
@@ -175,7 +179,7 @@ export async function dispatchNode(
     illustrate: 'illustrating', research: 'researching', define: 'thinking',
     connect: 'thinking', flashcards: 'thinking', exercise: 'thinking',
     quiz: 'thinking', summarize: 'thinking', timeline: 'visualizing',
-    teach: 'thinking', podcast: 'thinking', silence: 'reflecting',
+    teach: 'thinking', podcast: 'thinking', deepen: 'thinking', silence: 'reflecting',
   };
   setActivityDetail({
     step: (stepMap[node.action] ?? 'thinking') as 'thinking',

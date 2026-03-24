@@ -35,6 +35,7 @@ export const COMMANDS: SlashCommand[] = [
   { id: 'study', label: 'study', hint: 'cards, exercises, then test', icon: '◎', accent: s(styles.iconMargin), group: 'workflow' },
   { id: 'lesson', label: 'lesson', hint: 'teach, practice, then test', icon: '▸', accent: s(styles.iconMargin), group: 'workflow' },
   { id: 'review', label: 'review', hint: 'summarize, then make cards', icon: '↻', accent: s(styles.iconMargin), group: 'workflow' },
+  { id: 'deepen', label: 'deepen', hint: 'enrich with images, detail, and depth', icon: '⊕', accent: s(styles.iconMargin), group: 'workflow' },
   { id: 'compare', label: 'compare', hint: 'contrast two ideas side by side', icon: '⇌', accent: s(styles.iconMargin), group: 'workflow' },
   { id: 'origins', label: 'origins', hint: 'trace the intellectual history', icon: '⊙', accent: s(styles.iconMargin), group: 'workflow' },
   { id: 'illustrate', label: 'illustrate', hint: 'explain, sketch, then define', icon: '◐', accent: s(styles.iconMargin), group: 'workflow' },
