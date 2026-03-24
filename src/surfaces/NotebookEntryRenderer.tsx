@@ -36,6 +36,7 @@ import { Reflection } from '@/components/tutor/Reflection';
 import { Directive } from '@/components/tutor/Directive';
 import { Citation } from '@/components/ambient/Citation';
 import { StreamingText } from '@/components/tutor/StreamingText';
+import { InlineResponse } from '@/components/tutor/InlineResponse';
 
 interface Props {
   entry: NotebookEntry;
@@ -97,6 +98,14 @@ export function NotebookEntryRenderer({ entry }: Props) {
       );
     case 'thinker-card':
       return <ThinkerCard thinker={entry.thinker} />;
+
+    // Inline response blocks
+    case 'inline-response':
+      return (
+        <InlineResponse quotedText={entry.quotedText} intent={entry.intent}>
+          {entry.content}
+        </InlineResponse>
+      );
 
     // AI-generated blocks
     case 'podcast':

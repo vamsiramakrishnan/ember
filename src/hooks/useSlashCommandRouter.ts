@@ -30,8 +30,8 @@ function stripCommand(text: string): string {
 
 /** Which tier each command needs. */
 const COMMAND_TIERS: Record<string, ContextTier> = {
-  draw: 1, visualize: 1, timeline: 1, connect: 1,
-  explain: 1, define: 1, summarize: 1,
+  draw: 1, visualize: 1, timeline: 1, summarize: 1,
+  connect: 2, explain: 2, define: 2,
   research: 2, teach: 2, flashcards: 2,
   exercise: 2, quiz: 2, podcast: 2,
 };

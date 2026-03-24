@@ -158,6 +158,19 @@ export type NotebookEntry =
   | { type: 'flashcard-deck'; title: string; cards: Flashcard[]; sourceTopics?: string[] }
   | { type: 'exercise-set'; title: string; exercises: Exercise[]; difficulty: ExerciseDifficulty }
 
+  // ─── Inline response blocks ───────────────────────────────
+  | {
+    type: 'inline-response';
+    /** The quoted text the student selected. */
+    quotedText: string;
+    /** The tutor's contextual explanation / response. */
+    content: string;
+    /** ID of the source entry the quote was taken from. */
+    sourceEntryId?: string;
+    /** The action that triggered this (explain, define, connect). */
+    intent: 'explain' | 'define' | 'connect';
+  }
+
   // ─── System blocks ──────────────────────────────────────────
   | { type: 'silence'; text?: string }
   | { type: 'divider'; label?: string }

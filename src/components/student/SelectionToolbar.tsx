@@ -15,7 +15,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import styles from './SelectionToolbar.module.css';
 
 export interface SelectionAction {
-  type: 'link' | 'annotate' | 'highlight' | 'ask';
+  type: 'link' | 'annotate' | 'highlight' | 'ask' | 'explain';
   selectedText: string;
   entryId: string;
 }
@@ -132,6 +132,15 @@ export function SelectionToolbar({
       role="toolbar"
       aria-label="Text actions"
     >
+      <button
+        className={styles.action}
+        onClick={() => handleAction('explain')}
+        title="Explain this"
+        aria-label="Explain"
+      >
+        <span className={styles.actionIcon}>~</span>
+        <span className={styles.actionLabel}>explain</span>
+      </button>
       <button
         className={styles.action}
         onClick={() => handleAction('link')}

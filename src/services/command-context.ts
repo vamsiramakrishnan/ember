@@ -56,6 +56,7 @@ const COMMAND_FORMATS: Record<string, ContextFormat> = {
   explain: 'structured',
   define: 'structured',
   summarize: 'structured',
+  'inline-explain': 'structured',
   quiz: 'bulleted',
   teach: 'bulleted',
   flashcards: 'bulleted',
