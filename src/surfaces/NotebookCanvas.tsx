@@ -9,7 +9,7 @@ import { useCallback, useRef } from 'react';
 import { CanvasMode } from '@/components/canvas/CanvasMode';
 import { Connector } from '@/components/canvas/Connector';
 import { useCanvasPositions } from '@/hooks/useCanvasPositions';
-import { cardContent } from './canvas-helpers';
+import { cardContent, cardAccent } from './canvas-helpers';
 import type { LiveEntry } from '@/types/entries';
 import styles from './NotebookCanvas.module.css';
 
@@ -103,10 +103,12 @@ export function NotebookCanvas({ sessionId, entries }: Props) {
           if (!entry) return null;
           const card = cardContent(entry);
           if (!card) return null;
+          const accent = cardAccent(entry.entry.type);
+          const cls = [styles.card, accent ? styles[accent] : ''].filter(Boolean).join(' ');
           return (
             <div
-              key={pos.id} className={styles.card}
-              style={{ left: pos.x, top: pos.y, width: pos.width ?? 160 }}
+              key={pos.id} className={cls}
+              style={{ left: pos.x, top: pos.y, width: pos.width ?? 180 }}
               tabIndex={0} role="button"
               aria-label={`${card.label}: ${card.body.slice(0, 40)}`}
               onMouseDown={(e) => onMouseDown(pos.id, e)}

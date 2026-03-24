@@ -8,6 +8,19 @@ function trunc(s: string, max = 100): string {
   return s.length > max ? s.slice(0, max) + '…' : s;
 }
 
+/** Accent color class for entry type — maps to semantic color borders. */
+export function cardAccent(type: string): 'sage' | 'amber' | 'indigo' | 'margin' | '' {
+  switch (type) {
+    case 'prose': case 'scratch': case 'hypothesis': return 'sage';
+    case 'question': return 'amber';
+    case 'tutor-marginalia': case 'tutor-question': case 'tutor-reflection': return 'margin';
+    case 'tutor-connection': case 'bridge-suggestion': return 'indigo';
+    case 'thinker-card': return 'amber';
+    case 'concept-diagram': return 'indigo';
+    default: return '';
+  }
+}
+
 /** Extract a label and body from any entry type. */
 export function cardContent(e: LiveEntry): { label: string; body: string } | null {
   const entry = e.entry;
