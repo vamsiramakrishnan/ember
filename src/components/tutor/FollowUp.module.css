@@ -1,7 +1,5 @@
 /* FollowUp — Socratic follow-up beneath tutor entries.
- * Supports @mentions and /commands. Incremental reveal:
- *   Layer 2 (hover): trigger appears.
- *   Layer 3 (click): input slides in. */
+ * Renders its own MentionPopup locally for correct positioning. */
 
 .trigger {
   composes: ghostTrigger from '../../primitives/ContextPanel.module.css';
@@ -31,8 +29,15 @@
   padding-top: 2px;
 }
 
-.input {
+/* Wrap around textarea + popup — popup positions relative to this */
+.inputWrap {
   flex: 1;
+  position: relative;
+  min-width: 0;
+}
+
+.input {
+  width: 100%;
   font-family: var(--font-student);
   font-size: 15px;
   font-style: italic;

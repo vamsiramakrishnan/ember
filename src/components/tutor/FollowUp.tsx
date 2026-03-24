@@ -1,31 +1,32 @@
 /**
  * FollowUp — inline follow-up input beneath tutor entries.
- * Supports @mentions and /commands via the same popup system as InputZone.
+ * Renders its own MentionPopup locally so it appears near the cursor,
+ * not at the bottom of the page.
  */
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { detectTrigger, replaceTrigger } from '@/components/student/trigger-detect';
+import { MentionPopup } from '@/components/student/MentionPopup';
 import { ChipPreviewBar } from '@/components/student/ChipPreviewBar';
-import type { EditPopupHandlers } from '@/contexts/NotebookContext';
+import { useEntityIndex } from '@/hooks/useEntityIndex';
+import { createMentionSyntax } from '@/primitives/MentionChip';
 import styles from './FollowUp.module.css';
 
 interface FollowUpProps {
   context: string;
   onSubmit: (question: string, context: string) => void;
-  popup?: EditPopupHandlers;
 }
 
-export function FollowUp({ context, onSubmit, popup }: FollowUpProps) {
+export function FollowUp({ context, onSubmit }: FollowUpProps) {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState('');
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const triggerPos = useRef(-1);
   const pendingCursorPos = useRef<number | null>(null);
+  const { search } = useEntityIndex();
 
-  useEffect(() => {
-    if (open) inputRef.current?.focus();
-  }, [open]);
+  useEffect(() => { if (open) inputRef.current?.focus(); }, [open]);
 
-  // Auto-grow textarea
   useEffect(() => {
     const el = inputRef.current;
     if (el) { el.style.height = 'auto'; el.style.height = `${el.scrollHeight}px`; }
@@ -36,48 +37,46 @@ export function FollowUp({ context, onSubmit, popup }: FollowUpProps) {
     }
   }, [value]);
 
-  // Handle pending insert from popup selection
-  useEffect(() => {
-    if (!popup?.pendingInsert || triggerPos.current < 0) return;
+  const insertMention = useCallback((text: string) => {
+    if (triggerPos.current < 0) return;
     const pos = triggerPos.current;
-    pendingCursorPos.current = pos + popup.pendingInsert.length;
-    setValue((prev) => replaceTrigger(prev, pos, popup.pendingInsert!));
+    pendingCursorPos.current = pos + text.length;
+    setValue((prev) => replaceTrigger(prev, pos, text));
     triggerPos.current = -1;
-    popup.onInsertConsumed();
-  }, [popup?.pendingInsert, popup?.onInsertConsumed]);
+    setMentionQuery(null);
+  }, []);
 
   const handleSubmit = useCallback(() => {
     const q = value.trim();
     if (!q) return;
     onSubmit(q, context);
-    setValue('');
-    setOpen(false);
-    popup?.onPopupClose();
-  }, [value, context, onSubmit, popup]);
+    setValue(''); setOpen(false); setMentionQuery(null);
+  }, [value, context, onSubmit]);
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const text = e.target.value;
     const cursor = e.target.selectionStart ?? text.length;
     setValue(text);
     const trigger = detectTrigger(text, cursor);
-    if (trigger.type === 'mention' && popup) {
+    if (trigger.type === 'mention') {
       triggerPos.current = trigger.position;
-      popup.onMentionTrigger(trigger.query);
-      return;
-    }
-    if (trigger.type === 'slash' && popup) {
-      triggerPos.current = trigger.position;
-      popup.onSlashTrigger(trigger.query);
+      setMentionQuery(trigger.query);
       return;
     }
     triggerPos.current = -1;
-    popup?.onPopupClose();
-  }, [popup]);
+    setMentionQuery(null);
+  }, []);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (mentionQuery !== null && (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter')) {
+      e.preventDefault(); return;
+    }
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(); }
-    if (e.key === 'Escape') { setOpen(false); setValue(''); popup?.onPopupClose(); }
-  }, [handleSubmit, popup]);
+    if (e.key === 'Escape') {
+      if (mentionQuery !== null) { setMentionQuery(null); return; }
+      setOpen(false); setValue('');
+    }
+  }, [handleSubmit, mentionQuery]);
 
   if (!open) {
     return (
@@ -88,22 +87,24 @@ export function FollowUp({ context, onSubmit, popup }: FollowUpProps) {
     );
   }
 
+  const mentionResults = mentionQuery !== null ? search(mentionQuery).slice(0, 6) : [];
+
   return (
     <div className={styles.container}>
       <div className={styles.inputRow}>
         <span className={styles.prompt}>↳</span>
-        <textarea
-          ref={inputRef}
-          className={styles.input}
-          value={value}
-          onChange={handleChange}
-          onKeyDown={handleKeyDown}
-          placeholder="What about this?"
-          aria-label="Follow-up question"
-          rows={1}
-        />
+        <div className={styles.inputWrap}>
+          <textarea ref={inputRef} className={styles.input} value={value}
+            onChange={handleChange} onKeyDown={handleKeyDown}
+            placeholder="What about this?" aria-label="Follow-up question" rows={1} />
+          {mentionQuery !== null && (
+            <MentionPopup query={mentionQuery} results={mentionResults}
+              onSelect={(entity) => insertMention(createMentionSyntax(entity.name, entity.type, entity.id) + ' ')}
+              onClose={() => setMentionQuery(null)} />
+          )}
+        </div>
         <button className={styles.cancel}
-          onClick={() => { setOpen(false); setValue(''); popup?.onPopupClose(); }}
+          onClick={() => { setOpen(false); setValue(''); setMentionQuery(null); }}
           aria-label="Cancel">esc</button>
       </div>
       <ChipPreviewBar value={value} />

@@ -31,37 +31,35 @@ type EntryCallback = (entries: NotebookEntry[], label: string) => void;
 export function buildBootstrapDAG(title: string, question: string): IntentDAG {
   const topic = question ? `${title} — ${question}` : title;
 
+  const q = question ? `The student's guiding question is: "${question}".` : '';
   const nodes: IntentNode[] = [
-    {
-      id: 'research', action: 'research',
-      content: `Research the topic "${topic}" in depth. Find key thinkers, foundational concepts, surprising connections, and primary sources. This will seed an entire notebook.`,
-      entities: [], dependsOn: [], parallel: true,
-      label: 'researching topic',
-    },
-    {
-      id: 'opening', action: 'respond',
-      content: `Write a warm, welcoming opening for a new notebook on "${topic}". ${question ? `The student's guiding question is: "${question}".` : ''} Reference what makes this topic fascinating. 2-3 sentences, no exclamation marks. This is the first thing the student reads.`,
-      entities: [], dependsOn: [], parallel: true,
-      label: 'welcoming',
-    },
-    {
-      id: 'connect', action: 'connect',
-      content: `Introduce the most important thinker connected to "${topic}". Show why their work matters and how it connects to the student's interest.`,
-      entities: [], dependsOn: ['research'], parallel: true,
-      label: 'introducing thinkers',
-    },
-    {
-      id: 'landscape', action: 'visualize',
-      content: `Create a concept map of the intellectual landscape of "${topic}". Show 4-6 key concepts and how they relate. Use typed edges (causes, enables, contrasts, extends).`,
-      entities: [], dependsOn: ['research'], parallel: true,
-      label: 'mapping concepts',
-    },
-    {
-      id: 'question', action: 'quiz',
-      content: `Ask the student a genuinely interesting opening Socratic question about "${topic}" that would make them want to explore further. Something they can attempt with everyday knowledge.`,
-      entities: [], dependsOn: ['connect'], parallel: false,
-      label: 'opening question',
-    },
+    // Wave 1: parallel foundation
+    { id: 'research', action: 'research',
+      content: `Research "${topic}" in depth. Find key thinkers, foundational concepts, surprising connections, primary sources, and historical context.`,
+      entities: [], dependsOn: [], parallel: true, label: 'researching topic' },
+    { id: 'opening', action: 'respond',
+      content: `Write a warm opening for a notebook on "${topic}". ${q} Reference what makes this fascinating. 2-3 sentences, no exclamation marks.`,
+      entities: [], dependsOn: [], parallel: true, label: 'welcoming' },
+    // Wave 2: depends on research, all parallel
+    { id: 'connect', action: 'connect',
+      content: `Introduce the most important thinker connected to "${topic}". Show why their work matters.`,
+      entities: [], dependsOn: ['research'], parallel: true, label: 'introducing thinkers' },
+    { id: 'landscape', action: 'visualize',
+      content: `Create a concept map of "${topic}" with 4-6 key concepts and typed edges (causes, enables, contrasts, extends).`,
+      entities: [], dependsOn: ['research'], parallel: true, label: 'mapping concepts' },
+    { id: 'teach', action: 'teach',
+      content: `Create a reading material deck introducing "${topic}". Cover foundations, key ideas, historical context. 6-8 slides with timelines, tables, and diagrams.`,
+      entities: [], dependsOn: ['research'], parallel: true, label: 'creating reading material' },
+    // Wave 3: depends on teach/connect
+    { id: 'vocab', action: 'define',
+      content: `Define the 3 most important technical terms in "${topic}" with etymology and usage context.`,
+      entities: [], dependsOn: ['teach'], parallel: true, label: 'building vocabulary' },
+    { id: 'cards', action: 'flashcards',
+      content: `Create 6 flashcards for active recall on the key concepts of "${topic}". Fronts are Socratic questions, backs teach.`,
+      entities: [], dependsOn: ['teach'], parallel: true, label: 'creating study cards' },
+    { id: 'question', action: 'quiz',
+      content: `Ask a genuinely interesting opening Socratic question about "${topic}" that makes the student want to explore. Something they can attempt with everyday knowledge.`,
+      entities: [], dependsOn: ['connect'], parallel: false, label: 'opening question' },
   ];
 
   return {
