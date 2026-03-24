@@ -26,29 +26,33 @@ export interface SlashChipProps {
 interface CommandMeta {
   icon: string;
   hint: string;
-  group: 'explore' | 'create' | 'reflect';
+  group: 'explore' | 'create' | 'reflect' | 'workflow';
 }
 
 const COMMAND_META: Record<string, CommandMeta> = {
-  explain: { icon: '◇', hint: 'explain in depth', group: 'explore' },
-  research: { icon: '◈', hint: 'deep-dive with search', group: 'explore' },
+  explain: { icon: '◇', hint: 'unpack in depth', group: 'explore' },
+  research: { icon: '◈', hint: 'search and synthesize', group: 'explore' },
   define: { icon: '≡', hint: 'add to lexicon', group: 'explore' },
-  visualize: { icon: '◉', hint: 'concept diagram', group: 'create' },
-  draw: { icon: '✎', hint: 'hand-drawn sketch', group: 'create' },
-  timeline: { icon: '→', hint: 'historical progression', group: 'create' },
+  visualize: { icon: '◉', hint: 'map as diagram', group: 'create' },
+  draw: { icon: '✎', hint: 'sketch by hand', group: 'create' },
+  timeline: { icon: '→', hint: 'trace through time', group: 'create' },
   connect: { icon: '⟷', hint: 'bridge ideas', group: 'create' },
-  teach: { icon: '▣', hint: 'reading material', group: 'create' },
-  podcast: { icon: '♪', hint: 'audio discussion', group: 'create' },
-  flashcards: { icon: '◈', hint: 'study cards', group: 'reflect' },
-  exercise: { icon: '◇', hint: 'practice problems', group: 'reflect' },
-  quiz: { icon: '?', hint: 'test understanding', group: 'reflect' },
-  summarize: { icon: '≡', hint: 'distill session', group: 'reflect' },
+  teach: { icon: '▣', hint: 'walk through', group: 'create' },
+  podcast: { icon: '♪', hint: 'discuss aloud', group: 'create' },
+  flashcards: { icon: '▤', hint: 'drill with cards', group: 'reflect' },
+  exercise: { icon: '△', hint: 'guided practice', group: 'reflect' },
+  quiz: { icon: '?', hint: 'test yourself', group: 'reflect' },
+  summarize: { icon: '≡', hint: 'distill key ideas', group: 'reflect' },
+  delve: { icon: '◆', hint: 'research → explain → map', group: 'workflow' },
+  study: { icon: '◎', hint: 'cards → practice → test', group: 'workflow' },
+  lesson: { icon: '▸', hint: 'teach → practice → test', group: 'workflow' },
 };
 
 const GROUP_ACCENT: Record<string, string> = {
   explore: styles.accentIndigo ?? '',
   create: styles.accentSage ?? '',
   reflect: styles.accentAmber ?? '',
+  workflow: styles.accentMargin ?? '',
 };
 
 export function SlashChip({ command, active, onClick }: SlashChipProps) {

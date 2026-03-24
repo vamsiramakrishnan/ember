@@ -70,11 +70,13 @@
 .accentMono .prefix { color: var(--ink-soft); }
 
 .accentAmber { border-color: var(--amber-dim); }
-.accentAmber:hover { background: var(--amber-dim); border-color: var(--amber); border-color: color-mix(in srgb, var(--amber) 20%, transparent); }
+.accentAmber:hover { background: var(--amber-dim); border-color: color-mix(in srgb, var(--amber) 20%, transparent); }
 .accentIndigo { border-color: var(--indigo-dim); }
 .accentIndigo:hover { background: var(--indigo-dim); border-color: color-mix(in srgb, var(--indigo) 20%, transparent); }
 .accentSage { border-color: var(--sage-dim); }
 .accentSage:hover { background: var(--sage-dim); border-color: color-mix(in srgb, var(--sage) 20%, transparent); }
+.accentMargin { border-color: var(--margin-dim); }
+.accentMargin:hover { background: var(--margin-dim); border-color: color-mix(in srgb, var(--margin) 20%, transparent); }
 
 /* Focus ring for keyboard navigation */
 .chip:focus-visible {

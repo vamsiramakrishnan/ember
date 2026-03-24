@@ -18,7 +18,7 @@ interface InputPreviewProps {
 }
 
 /** All recognized /commands — kept in sync with SlashCommandPopup. */
-const SLASH_COMMANDS = 'draw|visualize|research|explain|summarize|quiz|timeline|connect|define|teach|podcast|flashcards|exercise';
+const SLASH_COMMANDS = 'draw|visualize|research|explain|summarize|quiz|timeline|connect|define|teach|podcast|flashcards|exercise|delve|study|lesson';
 
 interface Segment {
   type: 'text' | 'mention' | 'slash';

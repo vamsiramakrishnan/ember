@@ -111,6 +111,14 @@
 .accentAmber .label { color: var(--amber); }
 .accentAmber:hover { background: var(--amber-dim); border-color: color-mix(in srgb, var(--amber) 20%, transparent); }
 
+.accentMargin {
+  background: var(--margin-dim);
+  border-color: var(--margin-dim);
+}
+.accentMargin .icon,
+.accentMargin .label { color: var(--margin); }
+.accentMargin:hover { background: var(--margin-dim); border-color: color-mix(in srgb, var(--margin) 20%, transparent); }
+
 /* ─── Focus ring for keyboard ─────────────── */
 
 .chip:focus-visible {
