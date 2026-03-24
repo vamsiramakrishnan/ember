@@ -16,6 +16,8 @@ import { useEntryReorder } from '@/hooks/useEntryReorder';
 import { useInPlaceEdit } from '@/hooks/useInPlaceEdit';
 import { usePopupState } from '@/hooks/usePopupState';
 import { useSlashCommandRouter } from '@/hooks/useSlashCommandRouter';
+import { useChipResolver } from '@/hooks/useChipResolver';
+import { ChipProvider } from '@/primitives/ChipContext';
 import { useInlineExplain } from '@/hooks/useInlineExplain';
 import { useDirectiveCompletion } from '@/hooks/useDirectiveCompletion';
 import { createStudentEntry } from '@/hooks/useEntryInference';
@@ -61,6 +63,7 @@ export function Notebook({ onNavigate }: NotebookProps) {
   const reorder = useEntryReorder();
   const inPlaceEdit = useInPlaceEdit();
   const popup = usePopupState(onNavigate);
+  const chipCtx = useChipResolver();
 
   useEffect(() => {
     if (notebook && entries.length > 0) popup.registerEntries(entries, notebook.id);
@@ -135,6 +138,7 @@ export function Notebook({ onNavigate }: NotebookProps) {
   }), [reorder.onDragStart, reorder.onDragOver, reorder.onDragLeave, reorder.onDrop, reorder.onDragEnd]);
 
   return (
+    <ChipProvider value={chipCtx}>
     <NotebookProvider
       crossOut={crossOut} toggleBookmark={toggleBookmark} togglePin={togglePin}
       annotate={annotate} onBranch={onBranch} onFollowUp={onFollowUp}
@@ -157,5 +161,6 @@ export function Notebook({ onNavigate }: NotebookProps) {
         handleSubmit={onSubmit} handleSubmitTyped={onSubmitTyped} handleSketchSubmit={onSketchSubmit}
       />
     </NotebookProvider>
+    </ChipProvider>
   );
 }

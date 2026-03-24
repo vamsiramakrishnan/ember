@@ -1,17 +1,19 @@
 /**
  * StreamingText — progressive text rendering for tutor responses.
  * Displays text as it arrives chunk-by-chunk from the Gemini stream.
- * When empty (thinking), shows just a blinking cursor with margin rule.
- * When streaming, text appears with cursor at the end.
- * Layout mirrors Marginalia (2.1): margin rule + text.
  *
- * Uses useDeferredValue to let React deprioritize markdown re-parsing
- * during rapid streaming, keeping the UI responsive.
+ * Three layers of streaming intelligence:
+ *   1. useDeferredValue — React deprioritizes re-parsing during rapid chunks
+ *   2. useSemanticBuffer — masks incomplete code/math/table blocks,
+ *      shows warm placeholders instead of ugly partial markup
+ *   3. unwrapJson — detects structured JSON payloads and either extracts
+ *      displayable content or shows "composing…" for visual types
  *
  * See: 06-component-inventory.md, Family 2.
  */
 import { useDeferredValue } from 'react';
 import { MarkdownContent } from '@/primitives/MarkdownContent';
+import { useSemanticBuffer, pendingLabel } from '@/hooks/useSemanticBuffer';
 import styles from './StreamingText.module.css';
 
 interface StreamingTextProps {
@@ -19,34 +21,26 @@ interface StreamingTextProps {
   done: boolean;
 }
 
-/**
- * Detect structured JSON and try to extract displayable content.
- * Returns the extracted text if it's a text-bearing type (marginalia,
- * question, connection), or 'composing' for visual types (diagram,
- * thinker-card), or null if it's not JSON.
- */
 function unwrapJson(text: string): string | 'composing' | null {
   const trimmed = text.trimStart();
   if (!trimmed.startsWith('{') && !trimmed.startsWith('```')) return null;
   if (!/["']type["']\s*:\s*["']/.test(trimmed)) return null;
-
-  const contentMatch = trimmed.match(
+  const m = trimmed.match(
     /["']content["']\s*:\s*["']([\s\S]*?)(?:["'](?:\s*[,}])|$)/,
   );
-  if (contentMatch?.[1]) {
-    return contentMatch[1]
-      .replace(/\\n/g, '\n').replace(/\\"/g, '"')
+  if (m?.[1]) {
+    return m[1].replace(/\\n/g, '\n').replace(/\\"/g, '"')
       .replace(/\\'/g, "'").replace(/\\\\/g, '\\');
   }
-
   return 'composing';
 }
 
 export function StreamingText({ children, done }: StreamingTextProps) {
   const deferred = useDeferredValue(children);
   const hasContent = children.length > 0;
-  const ruleCls = done ? styles.rule : styles.ruleStreaming;
+  const ruleCls = (done ? styles.rule : styles.ruleStreaming) ?? '';
 
+  // Phase 1: Thinking (empty, not done)
   if (!hasContent && !done) {
     return (
       <div className={styles.thinkingContainer} aria-busy="true"
@@ -57,6 +51,7 @@ export function StreamingText({ children, done }: StreamingTextProps) {
     );
   }
 
+  // Phase 2: Streaming — try JSON unwrap
   if (!done) {
     const unwrapped = unwrapJson(deferred);
     if (unwrapped === 'composing') {
@@ -70,28 +65,29 @@ export function StreamingText({ children, done }: StreamingTextProps) {
       );
     }
     if (unwrapped) {
-      return (
-        <div className={styles.container} aria-live="polite" aria-busy>
-          <div className={ruleCls} />
-          <div className={styles.body}>
-            <div className={styles.text}>
-              <MarkdownContent>{unwrapped}</MarkdownContent>
-            </div>
-            <span className={styles.cursor} aria-hidden="true" />
-          </div>
-        </div>
-      );
+      return <StreamBody text={unwrapped} done={false} ruleCls={ruleCls} />;
     }
   }
 
-  const display = done ? children : deferred;
+  // Phase 3: Streaming raw text / done
+  return <StreamBody text={done ? children : deferred} done={done} ruleCls={ruleCls} />;
+}
+
+/** Inner component that applies semantic buffering to visible text. */
+function StreamBody({ text, done, ruleCls }: {
+  text: string; done: boolean; ruleCls: string;
+}) {
+  const { visible, pending } = useSemanticBuffer(text, done);
+  const label = pendingLabel(pending);
+
   return (
     <div className={styles.container} aria-live="polite" aria-busy={!done}>
       <div className={ruleCls} />
       <div className={styles.body}>
         <div className={styles.text}>
-          <MarkdownContent>{display}</MarkdownContent>
+          <MarkdownContent>{visible}</MarkdownContent>
         </div>
+        {label && <span className={styles.composingLabel}>{label}</span>}
         {!done && <span className={styles.cursor} aria-hidden="true" />}
       </div>
     </div>

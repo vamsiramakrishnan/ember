@@ -1,0 +1,52 @@
+/* MathPreview — quiet floating math in the margin of the InputZone.
+ * Feels like pencil notes appearing in the margin of a notebook. */
+
+.container {
+  position: absolute;
+  right: -200px;
+  top: 24px;
+  width: 180px;
+  padding: 8px 10px;
+  background: var(--paper-warm);
+  border: 1px solid var(--rule-light);
+  border-radius: 2px;
+  animation: mathFadeIn 0.3s ease both;
+}
+
+@keyframes mathFadeIn {
+  from { opacity: 0; transform: translateX(-4px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.label {
+  display: block;
+  font-family: var(--font-system);
+  font-size: 8px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--ink-ghost);
+  margin-bottom: 6px;
+}
+
+.expression {
+  font-family: var(--font-tutor);
+  font-size: 15px;
+  color: var(--ink-soft);
+  line-height: 1.6;
+  padding: 4px 0;
+  border-top: 1px solid var(--rule-light);
+}
+
+.expression:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+/* Hide on narrow screens where margin isn't visible */
+@media (max-width: 900px) {
+  .container { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .container { animation: none; }
+}

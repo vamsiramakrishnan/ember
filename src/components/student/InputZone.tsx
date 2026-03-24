@@ -6,6 +6,7 @@ import { SketchInput } from './SketchInput';
 import { BlockInserter } from './BlockInserter';
 import { InputAffordances } from './InputAffordances';
 import { ChipPreviewBar } from './ChipPreviewBar';
+import { MathPreview } from '@/primitives/MathPreview';
 import type { StudentEntryType } from '@/types/entries';
 import styles from './InputZone.module.css';
 
@@ -127,6 +128,7 @@ export function InputZone({
         rows={1} disabled={disabled}
         aria-label="Write your thoughts" aria-busy={disabled} />
       <ChipPreviewBar value={value} />
+      <MathPreview value={value} />
       {!isFocused && !value && !forcedType && <>
         <div className={disabled ? styles.cursorThinking : styles.cursor} aria-hidden="true" />
         {!disabled && <span className={styles.hint}>What are you thinking about?</span>}
