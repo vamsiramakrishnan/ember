@@ -59,20 +59,25 @@ export function MentionPopup({
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'ArrowDown') {
         e.preventDefault();
+        e.stopPropagation();
         setSelectedIdx((i) => Math.min(i + 1, results.length - 1));
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
+        e.stopPropagation();
         setSelectedIdx((i) => Math.max(i - 1, 0));
       } else if (e.key === 'Enter' && results[selectedIdx]) {
         e.preventDefault();
+        e.stopPropagation();
         onSelect(results[selectedIdx]);
       } else if (e.key === 'Escape') {
         e.preventDefault();
+        e.stopPropagation();
         onClose();
       }
     };
-    document.addEventListener('keydown', handleKey);
-    return () => document.removeEventListener('keydown', handleKey);
+    // Use capture phase to intercept before textarea receives the event
+    document.addEventListener('keydown', handleKey, true);
+    return () => document.removeEventListener('keydown', handleKey, true);
   }, [results, selectedIdx, onSelect, onClose]);
 
   useEffect(() => {

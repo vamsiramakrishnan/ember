@@ -1,0 +1,20 @@
+/* ChipPreviewBar — compact reference strip below the textarea.
+ * Shows chips for @mentions and /commands without overlay cursor bugs. */
+
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 6px 0 2px;
+  /* Quiet reveal — only appears when references exist */
+  animation: chipBarReveal 0.25s ease both;
+}
+
+@keyframes chipBarReveal {
+  from { opacity: 0; transform: translateY(-2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar { animation: none; }
+}

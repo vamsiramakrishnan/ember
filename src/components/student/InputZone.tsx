@@ -1,12 +1,11 @@
 /** InputZone (7.4) — student's writing area. See: 06-component-inventory.md */
-import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { inferEntryType } from '@/hooks/useEntryInference';
-import { MENTION_PATTERN } from '@/primitives/MentionChip';
 import { detectTrigger, replaceTrigger } from './trigger-detect';
 import { SketchInput } from './SketchInput';
 import { BlockInserter } from './BlockInserter';
 import { InputAffordances } from './InputAffordances';
-import { InputPreview } from './InputPreview';
+import { ChipPreviewBar } from './ChipPreviewBar';
 import type { StudentEntryType } from '@/types/entries';
 import styles from './InputZone.module.css';
 
@@ -44,7 +43,6 @@ export function InputZone({
   useEffect(() => {
     const el = textareaRef.current;
     if (el) { el.style.height = 'auto'; el.style.height = `${el.scrollHeight}px`; }
-    // After React commits the new value to the DOM, apply any pending cursor position
     if (pendingCursorPos.current !== null && el) {
       const pos = pendingCursorPos.current;
       pendingCursorPos.current = null;
@@ -90,9 +88,8 @@ export function InputZone({
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      // When a popup is open, let the popup's document-level handler
-      // handle Enter, ArrowUp/Down — do not submit or interfere.
       if (popupOpen && (e.key === 'Enter' || e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+        e.preventDefault();
         return;
       }
       if (e.key === 'Enter' && !e.shiftKey && value.trim()) {
@@ -107,21 +104,12 @@ export function InputZone({
   const handleBlockSelect = useCallback(
     (type: StudentEntryType) => { setForcedType(type); textareaRef.current?.focus(); }, []);
 
-  if (sketchMode) return (
-    <SketchInput
-      onSubmit={(d) => { onSketchSubmit?.(d); setSketchMode(false); }}
-      onCancel={() => setSketchMode(false)}
-    />
-  );
+  if (sketchMode) return <SketchInput
+    onSubmit={(d) => { onSketchSubmit?.(d); setSketchMode(false); }}
+    onCancel={() => setSketchMode(false)} />;
 
   const inferredType = value.trim() ? inferEntryType(value.trim()) : null;
-  const displayType = forcedType ? typeLabels[forcedType] || forcedType
-    : inferredType ? typeLabels[inferredType] : '';
-
-  const hasChips = useMemo(() => {
-    const mentionRe = new RegExp(MENTION_PATTERN.source);
-    return mentionRe.test(value) || /(?:^|\s)\/(?:draw|visualize|research|explain|summarize|quiz|timeline|connect|define|teach|podcast|flashcards|exercise)(?:\s|$)/.test(value);
-  }, [value]);
+  const displayType = forcedType ? typeLabels[forcedType] || forcedType : inferredType ? typeLabels[inferredType] : '';
 
   return (
     <div className={styles.container} onClick={() => textareaRef.current?.focus()}>
@@ -131,39 +119,26 @@ export function InputZone({
         <button className={styles.forcedTypeClear} aria-label="Clear entry type"
           onClick={(e) => { e.stopPropagation(); setForcedType(null); }}>esc</button>
       </div>}
-      <div className={styles.textareaWrap}>
-        <textarea ref={textareaRef}
-          className={hasChips ? styles.textareaHidden : styles.textarea}
-          value={value} onChange={handleChange}
-          onFocus={() => setIsFocused(true)} onBlur={() => setIsFocused(false)}
-          onKeyDown={handleKeyDown} onPaste={onPaste}
-          rows={1} disabled={disabled}
-          aria-label="Write your thoughts" aria-busy={disabled} />
-        <InputPreview value={value} visible={hasChips} />
-      </div>
-      {!isFocused && !value && !forcedType && (
+      <textarea ref={textareaRef}
+        className={styles.textarea}
+        value={value} onChange={handleChange}
+        onFocus={() => setIsFocused(true)} onBlur={() => setIsFocused(false)}
+        onKeyDown={handleKeyDown} onPaste={onPaste}
+        rows={1} disabled={disabled}
+        aria-label="Write your thoughts" aria-busy={disabled} />
+      <ChipPreviewBar value={value} />
+      {!isFocused && !value && !forcedType && <>
         <div className={disabled ? styles.cursorThinking : styles.cursor} aria-hidden="true" />
-      )}
-      {!isFocused && !value && !forcedType && !disabled && (
-        <span className={styles.hint}>What are you thinking about?</span>
-      )}
+        {!disabled && <span className={styles.hint}>What are you thinking about?</span>}
+      </>}
       <div className={styles.bottomRow}>
-        {displayType && !forcedType && (
-          <span
-            key={displayType}
-            className={
-              inferredType === 'question' ? styles.typeIndicatorQuestion
-              : inferredType === 'hypothesis' ? styles.typeIndicatorHypothesis
-              : inferredType === 'scratch' ? styles.typeIndicatorScratch
-              : styles.typeIndicator
-            }
-          >
-            {displayType}
-          </span>
-        )}
-        <button className={styles.sketchToggle}
-          onClick={(e) => { e.stopPropagation(); setSketchMode(true); }}
-          aria-label="Switch to sketch mode">sketch</button>
+        {displayType && !forcedType && <span key={displayType} className={
+          inferredType === 'question' ? styles.typeIndicatorQuestion
+          : inferredType === 'hypothesis' ? styles.typeIndicatorHypothesis
+          : inferredType === 'scratch' ? styles.typeIndicatorScratch
+          : styles.typeIndicator}>{displayType}</span>}
+        <button className={styles.sketchToggle} aria-label="Switch to sketch mode"
+          onClick={(e) => { e.stopPropagation(); setSketchMode(true); }}>sketch</button>
       </div>
       <InputAffordances />
     </div>

@@ -35,13 +35,6 @@
   scrollbar-color: var(--rule-light) transparent;
 }
 
-/* When chip overlay is active, hide the raw syntax text */
-.textareaHidden {
-  composes: textarea;
-  color: transparent;
-  caret-color: var(--ink);
-}
-
 .textarea::placeholder,
 .textareaHidden::placeholder {
   color: transparent;

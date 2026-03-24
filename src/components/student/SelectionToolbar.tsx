@@ -1,15 +1,7 @@
 /**
- * SelectionToolbar — floating toolbar that appears when text is selected.
- * Post-spec extension.
- *
- * UX design decisions:
- * - Appears 200ms AFTER mouseup/touchend (not during selection) to avoid
- *   fighting with Chrome's native selection handles and mini-menu
- * - Positioned above the selection with boundary clamping + arrow caret
- * - Dismisses on any click outside, scroll, or Escape
- * - Suppresses browser context menu within the entry to prevent overlap
- *
- * Actions: @ Link, Annotate, Highlight, Ask tutor
+ * SelectionToolbar — floating toolbar on text selection.
+ * Appears after 280ms to avoid fighting Chrome's native selection UI.
+ * Suppresses context menu on selected text to prevent overlap.
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
 import styles from './SelectionToolbar.module.css';
@@ -32,8 +24,11 @@ interface Position {
   visible: boolean;
 }
 
-/** Delay before showing toolbar — lets Chrome's native selection UI settle. */
-const REVEAL_DELAY = 200;
+const REVEAL_DELAY = 280;
+const ACTIONS: [string, string, string][] = [
+  ['explain', '~', 'explain'], ['link', '@', 'link'],
+  ['annotate', '¶', 'note'], ['highlight', '◇', 'mark'], ['ask', '?', 'ask'],
+];
 
 export function SelectionToolbar({
   containerRef, onAction, entryId,
@@ -63,7 +58,6 @@ export function SelectionToolbar({
       const rect = range.getBoundingClientRect();
       const containerRect = container.getBoundingClientRect();
 
-      // Boundary clamping
       const rawLeft = rect.left - containerRect.left + rect.width / 2;
       const toolbarWidth = 180;
       const halfToolbar = toolbarWidth / 2;
@@ -79,38 +73,45 @@ export function SelectionToolbar({
       });
     };
 
-    // Delayed reveal on mouseup — avoids fighting Chrome's selection UI
-    const handleMouseUp = () => {
+    const scheduleCheck = () => {
       if (revealTimer.current) clearTimeout(revealTimer.current);
       revealTimer.current = setTimeout(checkSelection, REVEAL_DELAY);
     };
 
-    // Also handle keyboard selection (Shift+Arrow)
-    const handleKeyUp = (e: KeyboardEvent) => {
-      if (e.shiftKey || e.key === 'Shift') {
-        if (revealTimer.current) clearTimeout(revealTimer.current);
-        revealTimer.current = setTimeout(checkSelection, REVEAL_DELAY);
-      }
-    };
-
-    // Dismiss on scroll or mousedown elsewhere
     const handleDismiss = () => {
       if (revealTimer.current) clearTimeout(revealTimer.current);
       setPos((p) => ({ ...p, visible: false }));
     };
 
-    container.addEventListener('mouseup', handleMouseUp);
-    container.addEventListener('keyup', handleKeyUp);
-    document.addEventListener('mousedown', (e) => {
+    // Suppress Chrome's native context menu on the entry container
+    const handleContextMenu = (e: MouseEvent) => {
+      const sel = window.getSelection();
+      if (sel && !sel.isCollapsed && container.contains(sel.anchorNode)) {
+        e.preventDefault();
+      }
+    };
+
+    const handleOutsideClick = (e: MouseEvent) => {
       if (toolbarRef.current && !toolbarRef.current.contains(e.target as Node)) {
         handleDismiss();
       }
+    };
+
+    container.addEventListener('mouseup', scheduleCheck);
+    container.addEventListener('touchend', scheduleCheck);
+    container.addEventListener('keyup', (e: KeyboardEvent) => {
+      if (e.shiftKey || e.key === 'Shift') scheduleCheck();
     });
+    container.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('mousedown', handleOutsideClick);
     document.addEventListener('scroll', handleDismiss, { passive: true });
 
     return () => {
-      container.removeEventListener('mouseup', handleMouseUp);
-      container.removeEventListener('keyup', handleKeyUp);
+      container.removeEventListener('mouseup', scheduleCheck);
+      container.removeEventListener('touchend', scheduleCheck);
+      container.removeEventListener('contextmenu', handleContextMenu);
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('scroll', handleDismiss);
       if (revealTimer.current) clearTimeout(revealTimer.current);
     };
   }, [containerRef]);
@@ -131,52 +132,16 @@ export function SelectionToolbar({
       style={{ top: `${pos.top}px`, left: `${pos.left}px` }}
       role="toolbar"
       aria-label="Text actions"
+      onMouseDown={(e) => e.preventDefault()}
     >
-      <button
-        className={styles.action}
-        onClick={() => handleAction('explain')}
-        title="Explain this"
-        aria-label="Explain"
-      >
-        <span className={styles.actionIcon}>~</span>
-        <span className={styles.actionLabel}>explain</span>
-      </button>
-      <button
-        className={styles.action}
-        onClick={() => handleAction('link')}
-        title="Link to entity (@)"
-        aria-label="Link to entity"
-      >
-        <span className={styles.actionIcon}>@</span>
-        <span className={styles.actionLabel}>link</span>
-      </button>
-      <button
-        className={styles.action}
-        onClick={() => handleAction('annotate')}
-        title="Add margin note"
-        aria-label="Annotate"
-      >
-        <span className={styles.actionIcon}>¶</span>
-        <span className={styles.actionLabel}>note</span>
-      </button>
-      <button
-        className={styles.action}
-        onClick={() => handleAction('highlight')}
-        title="Highlight text"
-        aria-label="Highlight"
-      >
-        <span className={styles.actionIcon}>◇</span>
-        <span className={styles.actionLabel}>mark</span>
-      </button>
-      <button
-        className={styles.action}
-        onClick={() => handleAction('ask')}
-        title="Ask tutor about this"
-        aria-label="Ask tutor"
-      >
-        <span className={styles.actionIcon}>?</span>
-        <span className={styles.actionLabel}>ask</span>
-      </button>
+      {ACTIONS.map(([type, icon, label]) => (
+        <button key={type} className={styles.action}
+          onClick={() => handleAction(type as SelectionAction['type'])}
+          title={label} aria-label={label}>
+          <span className={styles.actionIcon}>{icon}</span>
+          <span className={styles.actionLabel}>{label}</span>
+        </button>
+      ))}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 /* InlineEditor — textarea styled to match entry typography.
- * Supports chip overlay for @mentions and /commands. */
+ * Chip preview bar shown below the textarea. */
 
 .wrap {
   position: relative;
@@ -25,18 +25,10 @@
   outline-offset: 2px;
 }
 
-.editor::placeholder,
-.editorHidden::placeholder {
+.editor::placeholder {
   color: var(--ink-ghost);
   font-style: italic;
   opacity: 0.6;
-}
-
-/* Hidden text when chip overlay is active */
-.editorHidden {
-  composes: editor;
-  color: transparent;
-  caret-color: var(--ink);
 }
 
 /* Match ProseEntry typography */
@@ -80,5 +72,5 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .editor, .editorHidden { transition: none; }
+  .editor { transition: none; }
 }
