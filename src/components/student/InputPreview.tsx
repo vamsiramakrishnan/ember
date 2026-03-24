@@ -9,6 +9,7 @@
 import { useMemo } from 'react';
 import { MentionChip, MENTION_PATTERN } from '@/primitives/MentionChip';
 import { SlashChip } from '@/primitives/SlashChip';
+import { SLASH_COMMAND_PATTERN } from './slash-commands';
 import type { EntityType } from '@/hooks/useEntityIndex';
 import styles from './InputPreview.module.css';
 
@@ -16,9 +17,6 @@ interface InputPreviewProps {
   value: string;
   visible: boolean;
 }
-
-/** All recognized /commands — kept in sync with SlashCommandPopup. */
-const SLASH_COMMANDS = 'draw|visualize|research|explain|summarize|quiz|timeline|connect|define|teach|podcast|flashcards|exercise|delve|study|lesson';
 
 interface Segment {
   type: 'text' | 'mention' | 'slash';
@@ -32,7 +30,7 @@ function tokenize(text: string): Segment[] {
 
   // Combined regex: @mentions OR /commands
   const mentionSrc = MENTION_PATTERN.source;
-  const slashSrc = `(?:^|\\s)(\\/(?:${SLASH_COMMANDS}))(?=\\s|$)`;
+  const slashSrc = `(?:^|\\s)(\\/(?:${SLASH_COMMAND_PATTERN}))(?=\\s|$)`;
   const combined = new RegExp(`${mentionSrc}|${slashSrc}`, 'g');
 
   let lastIdx = 0;

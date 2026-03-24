@@ -46,6 +46,10 @@ const COMMAND_META: Record<string, CommandMeta> = {
   delve: { icon: '◆', hint: 'research → explain → map', group: 'workflow' },
   study: { icon: '◎', hint: 'cards → practice → test', group: 'workflow' },
   lesson: { icon: '▸', hint: 'teach → practice → test', group: 'workflow' },
+  review: { icon: '↻', hint: 'summarize → cards', group: 'workflow' },
+  compare: { icon: '⇌', hint: 'contrast → connect → map', group: 'workflow' },
+  origins: { icon: '⊙', hint: 'timeline → research → teach', group: 'workflow' },
+  illustrate: { icon: '◐', hint: 'explain → sketch → define', group: 'workflow' },
 };
 
 const GROUP_ACCENT: Record<string, string> = {

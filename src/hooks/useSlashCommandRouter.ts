@@ -10,7 +10,10 @@ import { addToLibrary, extractTermsFromMaterial } from '@/services/teaching-inte
 import { generatePodcast } from '@/services/podcast-gen';
 import { indexTeachingContent } from './useTeachingIndexer';
 import { resolveCommandContext, type ContextTier } from '@/services/command-context';
-import { routeDelve, routeStudy, routeLesson, type WorkflowDeps } from './routeWorkflow';
+import {
+  routeDelve, routeStudy, routeLesson, routeReview,
+  routeCompare, routeOrigins, routeIllustrate, type WorkflowDeps,
+} from './routeWorkflow';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
 import type { SlashCommand } from '@/components/student/SlashCommandPopup';
 
@@ -24,28 +27,20 @@ interface SlashRouterOptions {
   notebookId?: string;
 }
 
-function stripCommand(text: string): string {
-  return text.replace(/\/\w+\s*/, '').trim();
-}
+const stripCommand = (t: string) => t.replace(/\/\w+\s*/, '').trim();
 
 const COMMAND_TIERS: Record<string, ContextTier> = {
-  draw: 1, visualize: 1, timeline: 1, summarize: 1, connect: 2, explain: 2,
-  define: 2, research: 2, teach: 2, flashcards: 2, exercise: 2, quiz: 2,
-  podcast: 2, delve: 2, study: 2, lesson: 2,
+  draw: 1, visualize: 1, timeline: 1, summarize: 1, connect: 2, explain: 2, define: 2,
+  research: 2, teach: 2, flashcards: 2, exercise: 2, quiz: 2, podcast: 2,
+  delve: 2, study: 2, lesson: 2, review: 2, compare: 2, origins: 2, illustrate: 2,
 };
 
 async function withProcessing(
-  label: string,
-  addEntryWithId: (e: NotebookEntry) => string | Promise<string>,
-  patchEntryContent: (id: string, e: NotebookEntry) => void,
-  work: () => Promise<NotebookEntry | null>,
-): Promise<void> {
-  const id = await addEntryWithId({ type: 'silence', text: `${label}\u2026` });
-  const result = await work();
-  patchEntryContent(id, result ?? {
-    type: 'tutor-marginalia',
-    content: 'That didn\u2019t work \u2014 try again with a more specific prompt.',
-  });
+  label: string, add: (e: NotebookEntry) => string | Promise<string>,
+  patch: (id: string, e: NotebookEntry) => void, work: () => Promise<NotebookEntry | null>,
+) {
+  const id = await add({ type: 'silence', text: `${label}\u2026` });
+  patch(id, await work() ?? { type: 'tutor-marginalia', content: 'That didn\u2019t work \u2014 try again.' });
 }
 
 export function useSlashCommandRouter({
@@ -133,13 +128,17 @@ export function useSlashCommandRouter({
         respond({ type: 'question', content: ctxBlock ? `${pf} ${t}\n\n${ctxBlock}` : `${pf} ${t}` });
         return true;
       }
-      case 'delve': case 'study': case 'lesson': {
+      case 'delve': case 'study': case 'lesson':
+      case 'review': case 'compare': case 'origins': case 'illustrate': {
         const deps: WorkflowDeps = {
           addEntryWithId, patchEntryContent, respond, research,
           entries: () => entriesRef.current, studentId, notebookId,
         };
-        const wf = { delve: routeDelve, study: routeStudy, lesson: routeLesson };
-        await wf[command.id](q, ctxBlock, deps);
+        const wf: Record<string, (q: string, c: string, d: WorkflowDeps) => Promise<void>> = {
+          delve: routeDelve, study: routeStudy, lesson: routeLesson, review: routeReview,
+          compare: routeCompare, origins: routeOrigins, illustrate: routeIllustrate,
+        };
+        await wf[command.id]!(q, ctxBlock, deps);
         return true;
       }
       default: return false;
