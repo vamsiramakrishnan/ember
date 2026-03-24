@@ -3,6 +3,7 @@
  * flash-lite + MINIMAL thinking for low latency.
  */
 import { EMBER_DESIGN_CONTEXT, TOOLS, type AgentConfig } from './config';
+import { tutorResponseSchema } from '@/services/schemas';
 
 const INSTRUCTION = `${EMBER_DESIGN_CONTEXT}
 
@@ -101,4 +102,5 @@ export const TUTOR_AGENT: AgentConfig = {
   thinkingLevel: 'MINIMAL',
   tools: [TOOLS.googleSearch],
   responseModalities: ['TEXT'],
+  responseSchema: tutorResponseSchema,
 };

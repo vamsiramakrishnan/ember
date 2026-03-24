@@ -24,6 +24,9 @@ interface TextGenBody {
   systemInstruction?: string;
   thinkingLevel?: string;
   tools?: Tool[];
+  /** When set, Gemini guarantees JSON output matching this schema. */
+  responseMimeType?: string;
+  responseSchema?: Record<string, unknown>;
 }
 
 /** POST JSON to an API route; throw on non-OK response. */
@@ -66,21 +69,59 @@ export async function proxyTextGenerationStream(
   return readNdjsonStream(res, onChunk);
 }
 
-/** Generate images via /api/gemini-image. */
+/** Generate images via /api/gemini-image (NDJSON streaming to avoid 25s timeout). */
 export async function proxyImageGeneration(body: {
   prompt: string;
   useSearch?: boolean;
   aspectRatio?: string;
   imageSize?: string;
+  referenceImages?: Array<{ mimeType: string; data: string }>;
 }): Promise<{
   images: Array<{ data: string; mimeType: string }>;
   text: string;
 }> {
   const res = await postJson('/api/gemini-image', body);
-  return res.json() as Promise<{
-    images: Array<{ data: string; mimeType: string }>;
-    text: string;
-  }>;
+  return readImageNdjson(res);
+}
+
+/** Parse NDJSON from the image endpoint. Skips heartbeats, returns final result. */
+async function readImageNdjson(res: Response): Promise<{
+  images: Array<{ data: string; mimeType: string }>;
+  text: string;
+}> {
+  const reader = res.body?.getReader();
+  if (!reader) throw new Error('No response body');
+
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let result: { images: Array<{ data: string; mimeType: string }>; text: string } | null = null;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() ?? '';
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      try {
+        const parsed = JSON.parse(trimmed) as Record<string, unknown>;
+        if (parsed.error) throw new Error(String(parsed.error));
+        if (parsed.status === 'generating') continue; // heartbeat — skip
+        if (Array.isArray(parsed.images)) {
+          result = parsed as { images: Array<{ data: string; mimeType: string }>; text: string };
+        }
+      } catch (e) {
+        if (e instanceof Error && e.message !== trimmed) throw e;
+      }
+    }
+  }
+
+  if (!result) throw new Error('No image data received');
+  return result;
 }
 
 /** Generate HTML via /api/gemini-html. Streams the HTML string. */

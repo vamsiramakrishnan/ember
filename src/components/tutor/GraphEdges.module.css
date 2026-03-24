@@ -1,0 +1,34 @@
+/* GraphEdges — SVG bezier curves for concept diagram relationships.
+ * Sits behind nodes via pointer-events: none. */
+
+.svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.edge {
+  opacity: 0.55;
+  transition: opacity 0.3s ease;
+}
+
+.edge:hover {
+  opacity: 0.85;
+}
+
+.label {
+  font-family: var(--font-tutor);
+  font-size: 10px;
+  font-style: italic;
+  fill: var(--ink-faint);
+  letter-spacing: 0.3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .edge {
+    transition: none;
+  }
+}

@@ -76,7 +76,7 @@ export async function orchestrate(
     if (getGeminiClient()) {
       agenticResult = await runAgenticLoop(
         TUTOR_AGENT, setup.contextMessages,
-        { studentId, notebookId, graph: setup.legacyGraph },
+        { studentId, notebookId },
       );
     } else {
       const result = await resilientTextAgent(TUTOR_AGENT, setup.contextMessages);
@@ -122,7 +122,7 @@ export async function streamOrchestrate(
     if (getGeminiClient()) {
       agenticResult = await runAgenticLoopStreaming(
         TUTOR_AGENT, setup.contextMessages,
-        { studentId, notebookId, graph: setup.legacyGraph },
+        { studentId, notebookId },
         onChunk,
       );
     } else {

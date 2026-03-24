@@ -1,0 +1,85 @@
+/* InlineResponse — quoted text + tutor explanation.
+ * Two-part visual: faint quote block → margin-ruled response.
+ * The quote anchors the response to a specific piece of student work.
+ * Follows Family 2 visual grammar (margin rule, tutor colour, Cormorant). */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: var(--entry-gap);
+  animation: inlineReveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ─── Quote block ──────────────────────────── */
+
+.quoteBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.intentLabel {
+  font-family: var(--font-system);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink-ghost);
+  padding-left: 14px;
+}
+
+.quote {
+  font-family: var(--font-student);
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--ink-faint);
+  line-height: 1.6;
+  margin: 0;
+  padding: 8px 16px;
+  border-left: 1px solid var(--rule);
+  border-radius: 0 2px 2px 0;
+  background: var(--paper-deep);
+  /* Truncate long selections gracefully */
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ─── Tutor response ──────────────────────── */
+
+.response {
+  display: grid;
+  grid-template-columns: var(--margin-rule-width) 1fr;
+  gap: var(--margin-rule-gap);
+  padding-top: 2px;
+}
+
+.rule {
+  width: var(--margin-rule-width);
+  background-color: var(--margin);
+  opacity: 0.35;
+  border-radius: 1px;
+  min-height: 24px;
+}
+
+.text {
+  font-family: var(--font-tutor);
+  font-size: 17.5px;
+  font-weight: 400;
+  color: var(--margin);
+  line-height: 1.75;
+  letter-spacing: 0;
+}
+
+/* ─── Animation ──────────────────────────── */
+
+@keyframes inlineReveal {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .container { animation: none; }
+}

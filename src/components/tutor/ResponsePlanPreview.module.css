@@ -1,0 +1,93 @@
+/* ResponsePlanPreview — tutor's response roadmap.
+ * Mirrors the Marginalia grid: margin-rule | content.
+ * Ghost-quiet until an intent completes. */
+
+.container {
+  display: grid;
+  grid-template-columns: var(--margin-rule-width) 1fr;
+  gap: var(--margin-rule-gap);
+  margin-bottom: var(--entry-gap);
+  padding: 8px 0;
+  animation: planReveal 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.rule {
+  width: var(--margin-rule-width);
+  background-color: var(--margin);
+  opacity: 0.15;
+  border-radius: 1px;
+  min-height: 16px;
+}
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-system);
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  color: var(--ink-ghost);
+  transition: color 0.3s ease, opacity 0.3s ease;
+}
+
+.icon {
+  font-size: 10px;
+  width: 12px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.label {
+  white-space: nowrap;
+}
+
+/* ─── States ──────────────────────────────── */
+
+.pending {
+  opacity: 0.5;
+}
+
+.active {
+  color: var(--margin);
+  opacity: 0.7;
+}
+
+.active .icon {
+  animation: pulseIcon 1.5s ease-in-out infinite;
+}
+
+.complete {
+  color: var(--sage);
+  opacity: 0.6;
+}
+
+.error {
+  color: var(--ink-ghost);
+  opacity: 0.4;
+  text-decoration: line-through;
+  text-decoration-color: var(--ink-ghost);
+}
+
+/* ─── Animations ──────────────────────────── */
+
+@keyframes planReveal {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulseIcon {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .container { animation: none; }
+  .step { transition: none; }
+  .active .icon { animation: none; opacity: 0.7; }
+}

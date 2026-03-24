@@ -11,6 +11,7 @@
  */
 import { ILLUSTRATOR_AGENT, VISUALISER_AGENT } from './agents';
 import { runImageAgent, runTextAgent } from './run-agent';
+import { buildIllustrationPrompt } from './illustration-prompt';
 import { EMBER_VIZ_CSS, EMBER_VIZ_JS } from './viz-components';
 import { refineArtifact } from './artifact-refiner';
 import { refineIllustration } from './image-refiner';
@@ -59,17 +60,22 @@ export async function generateVisualization(
 /** Generate a hand-drawn illustration with iterative critique→edit refinement. */
 export async function generateIllustration(
   prompt: string,
+  entries: LiveEntry[] = [],
+  dagContext?: string,
 ): Promise<NotebookEntry | null> {
   try {
+    const imagePrompt = await buildIllustrationPrompt(prompt, entries, dagContext);
+
     const result = await runImageAgent(ILLUSTRATOR_AGENT, [{
       role: 'user',
-      parts: [{
-        text: `Draw a hand-sketched concept illustration for: ${prompt}. Style: warm sepia paper, fountain pen ink, minimal colour.`,
-      }],
+      parts: [{ text: imagePrompt }],
     }]);
 
     const img = result.images[0];
-    if (!img) return null;
+    if (!img) {
+      console.warn('[Ember] Image generation returned no image for:', prompt);
+      return null;
+    }
 
     // Iterative image refinement: critique → edit instructions → redraw
     const refined = await refineIllustration(
@@ -81,8 +87,8 @@ export async function generateIllustration(
       dataUrl: `data:${refined.mimeType};base64,${refined.imageData}`,
       caption: refined.caption || undefined,
     };
-  } catch {
-    // Illustration failed — not critical
+  } catch (err) {
+    console.error('[Ember] Illustration generation failed:', err);
   }
   return null;
 }

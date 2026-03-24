@@ -20,6 +20,17 @@
 }
 
 .editor:focus { border-bottom-color: var(--margin); }
+.editor:focus-visible {
+  outline: 1.5px solid var(--margin);
+  outline-offset: 2px;
+}
+
+.editor::placeholder,
+.editorHidden::placeholder {
+  color: var(--ink-ghost);
+  font-style: italic;
+  opacity: 0.6;
+}
 
 /* Hidden text when chip overlay is active */
 .editorHidden {

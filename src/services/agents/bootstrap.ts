@@ -4,6 +4,7 @@
  * then generates initial constellation data and an opening entry.
  */
 import { EMBER_DESIGN_CONTEXT, TOOLS, type AgentConfig } from './config';
+import { bootstrapSchema } from '@/services/schemas';
 
 const INSTRUCTION = `${EMBER_DESIGN_CONTEXT}
 
@@ -45,4 +46,5 @@ export const BOOTSTRAP_AGENT: AgentConfig = {
   thinkingLevel: 'MEDIUM',
   tools: [TOOLS.googleSearch, TOOLS.urlContext],
   responseModalities: ['TEXT'],
+  responseSchema: bootstrapSchema,
 };

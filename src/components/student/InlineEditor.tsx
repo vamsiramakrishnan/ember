@@ -108,6 +108,7 @@ export function InlineEditor({
         className={`${hasChips ? styles.editorHidden : styles.editor} ${typeCls}`}
         value={value} onChange={handleChange}
         onKeyDown={handleKeyDown} onBlur={handleBlur}
+        placeholder="Continue your thought…"
         rows={1} aria-label="Edit entry" />
       <InputPreview value={value} visible={hasChips} />
     </div>

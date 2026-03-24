@@ -1,21 +1,45 @@
-/* TutorActivity — whisper-quiet status indicator */
+/* TutorActivity — rich multi-phase status indicator.
+ *
+ * Three modes: single step (dot+label), streaming (writing bar),
+ * multi-step (pipeline). All whisper-quiet — the tutor's process
+ * visible but never demanding.
+ *
+ * Feels like watching ink dry on a page: you know something is
+ * happening, but it doesn't pull you away from your own thoughts. */
+
 .container {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 0;
+  padding: 8px 0 4px;
+  padding-left: var(--text-indent);
   opacity: 0;
   animation: fadeIn 0.6s ease forwards;
 }
 
+/* ─── Dot: the primary presence indicator ──── */
+
 .dot {
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--margin);
+  font-family: var(--font-system);
+  font-size: 10px;
+  color: var(--margin);
   opacity: 0.5;
   animation: pulse 1.6s ease infinite;
+  line-height: 1;
+  width: 14px;
+  text-align: center;
+  flex-shrink: 0;
 }
+
+/* Streaming variant — brighter, faster pulse */
+.dotStreaming {
+  composes: dot;
+  opacity: 0.7;
+  animation: streamPulse 1.0s ease infinite;
+  color: var(--margin);
+}
+
+/* ─── Label ────────────────────────────────── */
 
 .label {
   font-family: var(--font-system);
@@ -23,15 +47,35 @@
   font-weight: 300;
   color: var(--ink-ghost);
   letter-spacing: 0.5px;
+  transition: color 0.3s ease;
 }
+
+/* ─── Progress counter (iteration/max) ─────── */
 
 .progress {
   font-family: var(--font-system);
   font-size: 9px;
   color: var(--ink-ghost);
   letter-spacing: 0.5px;
-  opacity: 0.6;
+  opacity: 0.5;
 }
+
+/* ─── Writing bar: subtle horizontal progress ── */
+/* Shows during streaming — a thin line that breathes
+ * to indicate tokens flowing. */
+
+.writingBar {
+  flex: 1;
+  max-width: 80px;
+  height: 1px;
+  background: var(--margin);
+  opacity: 0.15;
+  border-radius: 0.5px;
+  animation: writingPulse 2s ease-in-out infinite;
+  margin-left: 4px;
+}
+
+/* ─── Animations ──────────────────────────── */
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(3px); }
@@ -40,16 +84,22 @@
 
 @keyframes pulse {
   0%, 100% { opacity: 0.3; }
-  50% { opacity: 0.8; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes streamPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.9; }
+}
+
+@keyframes writingPulse {
+  0%, 100% { opacity: 0.1; width: 30%; }
+  50% { opacity: 0.25; width: 80%; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .container {
-    animation: none;
-    opacity: 1;
-  }
-  .dot {
-    animation: none;
-    opacity: 0.5;
-  }
+  .container { animation: none; opacity: 1; }
+  .dot, .dotStreaming { animation: none; opacity: 0.5; }
+  .writingBar { animation: none; opacity: 0.15; width: 60%; }
+  .label { transition: none; }
 }

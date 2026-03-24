@@ -96,10 +96,7 @@ export async function annotateRecentEntries(
 
 function parseAnnotations(text: string): AnnotationResult[] {
   try {
-    const match = text.match(/```(?:json)?\s*([\s\S]*?)```/) ??
-                  text.match(/(\{[\s\S]*\})/);
-    if (!match?.[1]) return [];
-    const data = JSON.parse(match[1]) as Record<string, unknown>;
+    const data = JSON.parse(text) as Record<string, unknown>;
     if (!Array.isArray(data.annotations)) return [];
     return (data.annotations as Array<Record<string, unknown>>)
       .filter((a) => typeof a.span === 'string' && typeof a.content === 'string' && typeof a.kind === 'string')

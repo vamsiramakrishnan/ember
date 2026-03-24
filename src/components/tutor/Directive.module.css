@@ -1,8 +1,14 @@
-/* Directive — exploration instruction. Indigo accent, left border. */
+/* Directive — exploration instruction. Indigo accent, left border.
+ * Supports completion state: fades when done, "mark complete" button at rest. */
 
 .container {
   margin: 12px 0;
   padding: 0;
+  transition: opacity 0.6s ease;
+}
+
+.completed {
+  opacity: 0.55;
 }
 
 .rule {
@@ -11,12 +17,27 @@
   background: var(--indigo);
   opacity: 0.3;
   margin-bottom: 8px;
+  transition: background 0.3s ease;
+}
+
+.completed .rule {
+  background: var(--sage);
 }
 
 .body {
   padding-left: 16px;
   border-left: 2px solid var(--indigo);
-  border-left-color: var(--indigo);
+  transition: border-color 0.3s ease;
+}
+
+.completed .body {
+  border-left-color: var(--sage);
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .action {
@@ -31,6 +52,21 @@
   margin-bottom: 4px;
 }
 
+.completed .action {
+  color: var(--sage);
+}
+
+.completedLabel {
+  font-family: var(--font-system);
+  font-size: 9px;
+  font-weight: 300;
+  letter-spacing: 1px;
+  color: var(--sage);
+  opacity: 0.7;
+  margin-bottom: 4px;
+  margin-left: auto;
+}
+
 .text {
   font-family: var(--font-tutor);
   font-size: 16px;
@@ -41,6 +77,56 @@
   margin: 0;
 }
 
+/* Complete button — ghost quiet, visible on container hover */
+.completeBtn {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 12px;
+  font-family: var(--font-system);
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--indigo);
+  background: transparent;
+  border: 1px solid var(--indigo);
+  border-radius: 2px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease, background-color 0.15s ease;
+}
+
+.container:hover .completeBtn {
+  opacity: 0.5;
+}
+
+.completeBtn:hover {
+  opacity: 1 !important;
+  background: rgba(107, 103, 178, 0.07);
+}
+
+.checkmark {
+  display: inline-block;
+  margin-top: 6px;
+  font-family: var(--font-system);
+  font-size: 14px;
+  color: var(--sage);
+  animation: checkReveal 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes checkReveal {
+  from { opacity: 0; transform: scale(0.5); }
+  to { opacity: 0.7; transform: scale(1); }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .container, .rule, .body { transition: none; }
+  .container { transition: none; }
+  .rule, .body { transition: none; }
+  .completeBtn { transition: none; }
+  .checkmark { animation: none; opacity: 0.7; }
+}
+
+/* On touch devices, always show the button */
+@media (hover: none) {
+  .completeBtn { opacity: 0.5; }
 }

@@ -14,7 +14,6 @@
  */
 import { runTextAgent } from './run-agent';
 import { isGeminiAvailable } from './gemini';
-import { extractJsonObject } from './json-parser';
 import { micro } from './agents';
 import { Store, notify } from '@/persistence';
 import { createEncounter, getEncountersByNotebook } from '@/persistence/repositories/encounters';
@@ -62,7 +61,13 @@ export async function assessTasks(
       role: 'user',
       parts: [{ text: `Student: "${studentText}"\nTutor: "${tutorText}"` }],
     }]);
-    return parseSignals(result.text);
+    const parsed = JSON.parse(result.text) as Record<string, unknown>;
+    return {
+      updateThinkers: Boolean(parsed.updateThinkers),
+      updateVocabulary: Boolean(parsed.updateVocabulary),
+      updateMastery: Boolean(parsed.updateMastery),
+      updateCuriosities: Boolean(parsed.updateCuriosities),
+    };
   } catch {
     return noTasks();
   }
@@ -89,8 +94,8 @@ export async function extractThinkers(
     role: 'user', parts: [{ text }],
   }]);
 
-  const parsed = extractJsonObject(result.text);
-  const thinkers = Array.isArray(parsed?.thinkers) ? parsed.thinkers : [];
+  const parsed = JSON.parse(result.text) as Record<string, unknown>;
+  const thinkers = Array.isArray(parsed.thinkers) ? parsed.thinkers : [];
   if (thinkers.length === 0) return 0;
 
   const existing = await getEncountersByNotebook(notebookId);
@@ -132,8 +137,8 @@ export async function extractVocabulary(
     role: 'user', parts: [{ text }],
   }]);
 
-  const parsed = extractJsonObject(result.text);
-  const terms = Array.isArray(parsed?.terms) ? parsed.terms : [];
+  const parsed = JSON.parse(result.text) as Record<string, unknown>;
+  const terms = Array.isArray(parsed.terms) ? parsed.terms : [];
   if (terms.length === 0) return 0;
 
   const existing = await getLexiconByNotebook(notebookId);
@@ -180,8 +185,8 @@ export async function updateMasteryFromEntry(
     }],
   }]);
 
-  const parsed = extractJsonObject(result.text);
-  const updates = Array.isArray(parsed?.updates) ? parsed.updates : [];
+  const parsed = JSON.parse(result.text) as Record<string, unknown>;
+  const updates = Array.isArray(parsed.updates) ? parsed.updates : [];
   let count = 0;
 
   for (const u of updates as Array<Record<string, unknown>>) {
@@ -201,14 +206,3 @@ export async function updateMasteryFromEntry(
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────
-
-function parseSignals(text: string): TaskSignals {
-  const parsed = extractJsonObject(text);
-  if (!parsed) return noTasks();
-  return {
-    updateThinkers: Boolean(parsed.updateThinkers),
-    updateVocabulary: Boolean(parsed.updateVocabulary),
-    updateMastery: Boolean(parsed.updateMastery),
-    updateCuriosities: Boolean(parsed.updateCuriosities),
-  };
-}

@@ -6,6 +6,7 @@
 import ReactMarkdown from 'react-markdown';
 import type { ReactNode } from 'react';
 import { MentionChip, MENTION_PATTERN } from './MentionChip';
+import { SlashChip } from './SlashChip';
 import type { EntityType } from '@/hooks/useEntityIndex';
 import styles from './MarkdownContent.module.css';
 
@@ -58,7 +59,7 @@ function ChipAwareContent({ text, className }: { text: string; className?: strin
       const cmdStart = match[0].indexOf('/');
       const absStart = match.index + cmdStart;
       if (absStart > lastIdx) pushText(parts, text.slice(lastIdx, absStart), className);
-      parts.push(<span key={`s${match.index}`} className={styles.slashChip}>{match[4]}</span>);
+      parts.push(<SlashChip key={`s${match.index}`} command={match[4] ?? ''} />);
       lastIdx = absStart + (match[4]?.length ?? 0);
     }
   }

@@ -13,6 +13,7 @@
 import { micro } from './agents';
 import { runTextAgent } from './run-agent';
 import { recentContext } from './entry-utils';
+import { generateCoverArt } from './visual-generation';
 import { synthesizeSegment } from './tts-synthesize';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
 
@@ -24,9 +25,10 @@ export async function generatePodcast(
   topic: string,
   entries: LiveEntry[],
   onSegmentReady?: (index: number, url: string) => void,
+  enrichedContext?: string,
 ): Promise<NotebookEntry | null> {
   try {
-    const context = recentContext(entries, 6, 500);
+    const context = enrichedContext || recentContext(entries, 6, 500);
     const scripts = await generateScripts(topic, context);
     if (!scripts.length) {
       return errorEntry('Could not generate dialogue script. Try again.');
@@ -44,7 +46,11 @@ export async function generatePodcast(
       void synthesizeRemaining(scripts.slice(1), topic, onSegmentReady);
     }
 
-    return { type: 'podcast', topic, audioUrl: seg1Url, transcript };
+    // Fire-and-forget: generate cover art in background
+    const coverPromise = generateCoverArt(topic, topic, 'podcast').catch(() => null);
+    const coverUrl = await coverPromise;
+
+    return { type: 'podcast', topic, audioUrl: seg1Url, transcript, coverUrl: coverUrl ?? undefined };
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Unknown error';
     console.error('[Ember] Podcast generation failed:', err);

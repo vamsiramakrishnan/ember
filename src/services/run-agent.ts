@@ -7,6 +7,7 @@ import { getGeminiClient } from './gemini';
 import { useProxy, proxyTextGeneration, proxyTextGenerationStream } from './proxy-client';
 import { toJSONSchema } from 'zod';
 import type { AgentConfig } from './agents';
+export { runImageAgent } from './run-image-agent';
 
 export interface AgentContentPart {
   text?: string;
@@ -46,13 +47,18 @@ export async function runTextAgent(
   messages: AgentMessage[],
 ): Promise<AgentTextResult> {
   if (useProxy()) {
-    const text = await proxyTextGeneration({
+    const body: Parameters<typeof proxyTextGeneration>[0] = {
       messages,
       model: agent.model,
       systemInstruction: agent.systemInstruction,
       thinkingLevel: agent.thinkingLevel,
       tools: agent.tools.length > 0 ? agent.tools : undefined,
-    });
+    };
+    if (agent.responseSchema) {
+      body.responseMimeType = 'application/json';
+      body.responseSchema = toJSONSchema(agent.responseSchema) as Record<string, unknown>;
+    }
+    const text = await proxyTextGeneration(body);
     return { text, citations: [] };
   }
 
@@ -113,43 +119,6 @@ export async function runTextAgent(
   return { text: chunks.join(''), citations };
 }
 
-/** Run an image-capable agent. */
-export async function runImageAgent(
-  agent: AgentConfig,
-  messages: AgentMessage[],
-): Promise<AgentImageResult> {
-  const client = getGeminiClient();
-  if (!client) throw new Error('Gemini API key not configured');
-
-  const config: Record<string, unknown> = {
-    thinkingConfig: { thinkingLevel: agent.thinkingLevel },
-    systemInstruction: agent.systemInstruction,
-    responseModalities: agent.responseModalities,
-  };
-  if (agent.tools.length > 0) config.tools = agent.tools;
-
-  const response = await client.models.generateContentStream({
-    model: agent.model, config, contents: messages,
-  });
-
-  const images: Array<{ data: string; mimeType: string }> = [];
-  const textChunks: string[] = [];
-
-  for await (const chunk of response) {
-    const parts = chunk.candidates?.[0]?.content?.parts;
-    if (!parts) continue;
-    for (const part of parts) {
-      if ('inlineData' in part && part.inlineData) {
-        images.push({ data: part.inlineData.data ?? '', mimeType: part.inlineData.mimeType ?? 'image/png' });
-      } else if ('text' in part && part.text) {
-        textChunks.push(part.text);
-      }
-    }
-  }
-
-  return { images, text: textChunks.join('') };
-}
-
 /**
  * Run a text agent with streaming. Yields chunks via onChunk callback.
  * Extracts grounding citations on completion.
@@ -160,13 +129,18 @@ export async function runTextAgentStreaming(
   onChunk: (chunk: string, accumulated: string) => void,
 ): Promise<AgentTextResult> {
   if (useProxy()) {
-    const text = await proxyTextGenerationStream({
+    const body: Parameters<typeof proxyTextGenerationStream>[0] = {
       messages,
       model: agent.model,
       systemInstruction: agent.systemInstruction,
       thinkingLevel: agent.thinkingLevel,
       tools: agent.tools.length > 0 ? agent.tools : undefined,
-    }, onChunk);
+    };
+    if (agent.responseSchema) {
+      body.responseMimeType = 'application/json';
+      body.responseSchema = toJSONSchema(agent.responseSchema) as Record<string, unknown>;
+    }
+    const text = await proxyTextGenerationStream(body, onChunk);
     return { text, citations: [] };
   }
 

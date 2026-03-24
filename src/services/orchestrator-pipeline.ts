@@ -26,7 +26,8 @@ export type StreamChunkCallback = (chunk: string, accumulated: string) => void;
 
 export interface PipelineSetupResult {
   routing: RoutingDecision;
-  legacyGraph: Subgraph | null;
+  /** In-memory snapshot of the knowledge graph (used only for delta fallback). */
+  graphSnapshot: Subgraph | null;
   collectedCitations: Array<{ title: string; url: string }>;
   echoPromise: Promise<NotebookEntry | null>;
   contextMessages: AgentMessage[];
@@ -63,7 +64,7 @@ export async function runPipelineSetup(
   const stepLabel = routing.research ? 'researching...' : 'exploring connections...';
   const stepKey = routing.research ? 'researching' : 'searching-graph';
   setActivityDetail({ step: stepKey, label: stepLabel });
-  const [graphCtxLayer, legacyGraph, researchResult, memory] = await Promise.all([
+  const [graphCtxLayer, graphSnapshot, researchResult, memory] = await Promise.all([
     buildGraphContext(notebookId, studentText).catch(() => null),
     buildGraph(notebookId).catch(() => null),
     routing.research
@@ -78,8 +79,11 @@ export async function runPipelineSetup(
   let graphContext = '';
   if (graphCtxLayer?.serialized) {
     graphContext = `\n\n${graphCtxLayer.serialized}`;
-  } else if (legacyGraph && lastSyncTimestamp) {
-    const delta = getDelta(legacyGraph, lastSyncTimestamp);
+  } else if (graphSnapshot && lastSyncTimestamp) {
+    // Fallback: use the in-memory snapshot to compute a delta of
+    // what changed since the last sync. Only reached when the
+    // text-aware graphCtxLayer found no matching concepts.
+    const delta = getDelta(graphSnapshot, lastSyncTimestamp);
     if (delta.nodes.length > 0) {
       graphContext = `\n\n[Recent changes in knowledge graph]:\n${serializeSubgraph(delta)}`;
     }
@@ -103,7 +107,7 @@ export async function runPipelineSetup(
   appendDiversityHints(ctx.messages);
 
   return {
-    routing, legacyGraph, collectedCitations,
+    routing, graphSnapshot, collectedCitations,
     echoPromise, contextMessages: ctx.messages,
   };
 }

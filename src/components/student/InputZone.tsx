@@ -114,8 +114,9 @@ export function InputZone({
     />
   );
 
+  const inferredType = value.trim() ? inferEntryType(value.trim()) : null;
   const displayType = forcedType ? typeLabels[forcedType] || forcedType
-    : value.trim() ? typeLabels[inferEntryType(value.trim())] : '';
+    : inferredType ? typeLabels[inferredType] : '';
 
   const hasChips = useMemo(() => {
     const mentionRe = new RegExp(MENTION_PATTERN.source);
@@ -147,7 +148,19 @@ export function InputZone({
         <span className={styles.hint}>What are you thinking about?</span>
       )}
       <div className={styles.bottomRow}>
-        {displayType && !forcedType && <span className={styles.typeIndicator}>{displayType}</span>}
+        {displayType && !forcedType && (
+          <span
+            key={displayType}
+            className={
+              inferredType === 'question' ? styles.typeIndicatorQuestion
+              : inferredType === 'hypothesis' ? styles.typeIndicatorHypothesis
+              : inferredType === 'scratch' ? styles.typeIndicatorScratch
+              : styles.typeIndicator
+            }
+          >
+            {displayType}
+          </span>
+        )}
         <button className={styles.sketchToggle}
           onClick={(e) => { e.stopPropagation(); setSketchMode(true); }}
           aria-label="Switch to sketch mode">sketch</button>

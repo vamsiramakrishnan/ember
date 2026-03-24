@@ -3,6 +3,7 @@
  * Not a summary. A recognition of intellectual movement.
  */
 import { EMBER_DESIGN_CONTEXT, type AgentConfig } from './config';
+import { reflectionResponseSchema } from '@/services/schemas';
 
 const INSTRUCTION = `${EMBER_DESIGN_CONTEXT}
 
@@ -31,4 +32,5 @@ export const REFLECTION_AGENT: AgentConfig = {
   thinkingLevel: 'LOW',
   tools: [],
   responseModalities: ['TEXT'],
+  responseSchema: reflectionResponseSchema,
 };

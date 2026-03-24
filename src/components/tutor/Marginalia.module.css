@@ -28,6 +28,9 @@
   color: var(--margin);
   line-height: 1.75;
   letter-spacing: 0;
+}
+
+.prose {
   margin: 0;
 }
 

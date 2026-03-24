@@ -16,9 +16,12 @@ import { useEntryReorder } from '@/hooks/useEntryReorder';
 import { useInPlaceEdit } from '@/hooks/useInPlaceEdit';
 import { usePopupState } from '@/hooks/usePopupState';
 import { useSlashCommandRouter } from '@/hooks/useSlashCommandRouter';
+import { useInlineExplain } from '@/hooks/useInlineExplain';
+import { useDirectiveCompletion } from '@/hooks/useDirectiveCompletion';
 import { createStudentEntry } from '@/hooks/useEntryInference';
 import { useStudent } from '@/contexts/StudentContext';
 import { recordStudentTurn, setStudentFocus } from '@/state';
+import type { ResponsePlan } from '@/hooks/useResponseOrchestrator';
 import { NotebookContent } from './NotebookContent';
 import { handleBranch, handleSelectionAction, handleFollowUp, deriveMarginalRef } from './notebook-handlers';
 import type { NotebookMode } from './NotebookModeToggle';
@@ -44,9 +47,11 @@ export function Notebook({ onNavigate }: NotebookProps) {
   const entriesRef = useRef(entries);
   entriesRef.current = entries;
 
+  const [responsePlans, setResponsePlans] = useState<ResponsePlan[]>([]);
   const addEntries = useCallback((_e: unknown[]) => {}, []);
   const { respond, isThinking } = useTutorResponse(
     addEntry, addEntries, entries, addEntryWithId, patchEntryContent,
+    pinnedEntries, current?.topic ?? null, student?.id, notebook?.id, setResponsePlans,
   );
   const { analyseSketch } = useSketchAnalysis(addEntry);
   const { checkAndUpdate } = useMasteryUpdater();
@@ -65,6 +70,10 @@ export function Notebook({ onNavigate }: NotebookProps) {
     addEntry, addEntryWithId, patchEntryContent, respond,
     entries, studentId: student?.id, notebookId: notebook?.id,
   });
+  const { requestInlineExplain } = useInlineExplain({
+    entries, notebookId: notebook?.id, addEntry,
+  });
+  const { completeDirective } = useDirectiveCompletion({ patchEntry: patchEntryContent });
   const [mode, setMode] = useState<NotebookMode>('linear');
   const bottomRef = useRef<HTMLDivElement>(null);
   const marginalRef = useMemo(() => deriveMarginalRef(entries), [entries]);
@@ -107,8 +116,8 @@ export function Notebook({ onNavigate }: NotebookProps) {
   );
   const onSelectionAction = useCallback(
     (eId: string, aType: string, sel: string) =>
-      handleSelectionAction({ annotate, submitEntry, popup }, eId, aType, sel),
-    [annotate, submitEntry, popup],
+      handleSelectionAction({ annotate, submitEntry, addEntry, requestInlineExplain, popup }, eId, aType, sel),
+    [annotate, submitEntry, addEntry, requestInlineExplain, popup],
   );
   const onFollowUp = useCallback(
     (q: string, ctx: string) => handleFollowUp(submitEntry, entries, q, ctx),
@@ -130,6 +139,7 @@ export function Notebook({ onNavigate }: NotebookProps) {
       crossOut={crossOut} toggleBookmark={toggleBookmark} togglePin={togglePin}
       annotate={annotate} onBranch={onBranch} onFollowUp={onFollowUp}
       onSelectionAction={onSelectionAction}
+      onDirectiveComplete={completeDirective}
       startEdit={inPlaceEdit.startEdit} saveEdit={inPlaceEdit.saveEdit}
       cancelEdit={inPlaceEdit.cancelEdit} editingId={inPlaceEdit.editingId}
       drag={drag} dragHandlers={dragHandlers}
@@ -142,7 +152,8 @@ export function Notebook({ onNavigate }: NotebookProps) {
       <NotebookContent
         entries={entries} pinnedEntries={pinnedEntries} past={past} current={current}
         sessionId={sessionId} mode={mode} setMode={setMode} marginalRef={marginalRef}
-        contentDrop={contentDrop} popup={popup} isThinking={isThinking} bottomRef={bottomRef}
+        contentDrop={contentDrop} popup={popup} isThinking={isThinking}
+        responsePlans={responsePlans} bottomRef={bottomRef}
         handleSubmit={onSubmit} handleSubmitTyped={onSubmitTyped} handleSketchSubmit={onSketchSubmit}
       />
     </NotebookProvider>

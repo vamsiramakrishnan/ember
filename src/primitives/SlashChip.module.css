@@ -1,0 +1,126 @@
+/* SlashChip — /command pill flowing within sentences.
+ * Three semantic groups: explore (indigo), create (sage), reflect (amber).
+ * Inline, inherits line-height, never breaks text flow. */
+
+.chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  background: var(--indigo-dim);
+  border: 1px solid rgba(91, 107, 138, 0.12);
+  border-radius: 2px;
+  padding: 0 5px;
+  margin: 0 2px;
+  cursor: default;
+  vertical-align: baseline;
+  line-height: inherit;
+  white-space: nowrap;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+}
+
+.chip:hover {
+  background: rgba(91, 107, 138, 0.1);
+  border-color: rgba(91, 107, 138, 0.2);
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.clickable:hover {
+  box-shadow: 0 0 0 1px rgba(91, 107, 138, 0.08);
+}
+
+/* ─── Icon ────────────────────────────────── */
+
+.icon {
+  font-family: var(--font-system);
+  font-size: 0.7em;
+  color: var(--indigo);
+  opacity: 0.6;
+  position: relative;
+  top: -0.5px;
+}
+
+/* ─── Label ───────────────────────────────── */
+
+.label {
+  font-family: var(--font-system);
+  font-size: 0.82em;
+  font-weight: 400;
+  letter-spacing: 0.3px;
+  color: var(--indigo);
+  opacity: 0.85;
+}
+
+/* ─── Hover hint — appears on hover, absolute right ─── */
+
+.hint {
+  font-family: var(--font-system);
+  font-size: 0.7em;
+  font-weight: 300;
+  color: var(--ink-faint);
+  letter-spacing: 0.3px;
+  margin-left: 4px;
+  opacity: 0.7;
+  animation: hintFade 0.2s ease both;
+}
+
+/* ─── Active state — command is executing ─── */
+
+.active {
+  border-color: rgba(91, 107, 138, 0.25);
+  animation: activePulse 2s ease-in-out infinite;
+}
+
+/* ─── Group accents ───────────────────────── */
+
+.accentIndigo {
+  background: var(--indigo-dim);
+  border-color: rgba(91, 107, 138, 0.12);
+}
+.accentIndigo .icon,
+.accentIndigo .label { color: var(--indigo); }
+.accentIndigo:hover { background: rgba(91, 107, 138, 0.1); border-color: rgba(91, 107, 138, 0.2); }
+
+.accentSage {
+  background: var(--sage-dim);
+  border-color: rgba(107, 143, 113, 0.12);
+}
+.accentSage .icon,
+.accentSage .label { color: var(--sage); }
+.accentSage:hover { background: rgba(107, 143, 113, 0.1); border-color: rgba(107, 143, 113, 0.2); }
+
+.accentAmber {
+  background: var(--amber-dim);
+  border-color: rgba(196, 154, 60, 0.12);
+}
+.accentAmber .icon,
+.accentAmber .label { color: var(--amber); }
+.accentAmber:hover { background: rgba(196, 154, 60, 0.1); border-color: rgba(196, 154, 60, 0.2); }
+
+/* ─── Focus ring for keyboard ─────────────── */
+
+.chip:focus-visible {
+  outline: 1px solid var(--indigo);
+  outline-offset: 1px;
+}
+
+/* ─── Animations ──────────────────────────── */
+
+@keyframes hintFade {
+  from { opacity: 0; transform: translateX(-2px); }
+  to { opacity: 0.7; transform: translateX(0); }
+}
+
+@keyframes activePulse {
+  0%, 100% { border-color: rgba(91, 107, 138, 0.15); }
+  50% { border-color: rgba(91, 107, 138, 0.35); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chip { transition: none; }
+  .active { animation: none; border-color: rgba(91, 107, 138, 0.3); }
+  .hint { animation: none; }
+}

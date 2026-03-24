@@ -5,6 +5,7 @@
 
 .shell {
   min-height: 100vh;
+  position: relative;
   background-color: var(--paper);
   /* Reading-lamp warmth — subtle pool of warm light from above,
    * as if an angled desk lamp casts its glow across the top of the page */
@@ -15,4 +16,20 @@
       transparent 60%
     );
   background-attachment: fixed;
+}
+
+/* Ambient texture layer — generated per session topic, rendered at ~4% opacity.
+ * Creates a barely-visible atmospheric watermark that changes what you're studying
+ * "feels" like. Fixed position so it doesn't scroll with content. */
+.ambientLayer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  transition: opacity 2s ease;
+}
+
+.shell > :not(.ambientLayer) {
+  position: relative;
+  z-index: 1;
 }

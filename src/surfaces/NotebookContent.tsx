@@ -24,6 +24,10 @@ import type { LiveEntry } from '@/types/entries';
 import type { SessionRecord } from '@/persistence/records';
 import type { useContentDrop } from '@/hooks/useContentDrop';
 import type { usePopupState } from '@/hooks/usePopupState';
+import { isStudentEntry as isStudentType } from './entryTypeMeta';
+import { useEntryKeyboardNav } from '@/hooks/useEntryKeyboardNav';
+import { ResponsePlanPreview } from '@/components/tutor/ResponsePlanPreview';
+import type { ResponsePlan } from '@/hooks/useResponseOrchestrator';
 import styles from './Notebook.module.css';
 
 export interface NotebookContentProps {
@@ -38,6 +42,7 @@ export interface NotebookContentProps {
   contentDrop: ReturnType<typeof useContentDrop>;
   popup: ReturnType<typeof usePopupState>;
   isThinking: boolean;
+  responsePlans?: ResponsePlan[];
   bottomRef: React.RefObject<HTMLDivElement>;
   handleSubmit: (text: string) => void;
   handleSubmitTyped: (text: string, type: string) => void;
@@ -46,9 +51,11 @@ export interface NotebookContentProps {
 
 export function NotebookContent({
   entries, pinnedEntries, past, current, sessionId, mode, setMode,
-  marginalRef, contentDrop, popup, isThinking, bottomRef,
+  marginalRef, contentDrop, popup, isThinking, responsePlans, bottomRef,
   handleSubmit, handleSubmitTyped, handleSketchSubmit,
 }: NotebookContentProps) {
+  const { containerRef: kbNavRef, handleKeyDown: handleKbNav } = useEntryKeyboardNav();
+
   return (
     <Column>
       {past.map((session) => (
@@ -76,9 +83,11 @@ export function NotebookContent({
       {mode === 'linear' ? (
         <>
           <div
+            ref={kbNavRef}
             className={styles.entryContainer}
             onDrop={contentDrop.handleDrop}
             onDragOver={contentDrop.handleDragOver}
+            onKeyDown={handleKbNav}
             aria-live="polite"
             aria-relevant="additions"
           >
@@ -87,11 +96,19 @@ export function NotebookContent({
                 <MarginalReference>{marginalRef}</MarginalReference>
               </MarginZone>
             )}
-            {entries.map((le) => (
-              <div key={le.id} className={styles.entryRow}>
-                <NotebookEntryWrapper liveEntry={le} />
-              </div>
-            ))}
+            {entries.map((le, i) => {
+              const prev = i > 0 ? entries[i - 1] : null;
+              const prevIsStudent = prev ? isStudentType(prev.entry.type) : false;
+              return (
+                <div key={le.id} className={styles.entryRow}>
+                  <NotebookEntryWrapper
+                    liveEntry={le}
+                    index={i + 1}
+                    prevIsStudent={prevIsStudent}
+                  />
+                </div>
+              );
+            })}
           </div>
           <div style={{ position: 'relative' }}>
             {popup.mentionQuery !== null && (
@@ -108,6 +125,9 @@ export function NotebookContent({
                 onSelect={(c) => popup.handleSlashSelect(c)}
                 onClose={popup.handlePopupClose}
               />
+            )}
+            {responsePlans && responsePlans.length > 0 && (
+              <ResponsePlanPreview plans={responsePlans} />
             )}
             <TutorActivity />
             <InputZone

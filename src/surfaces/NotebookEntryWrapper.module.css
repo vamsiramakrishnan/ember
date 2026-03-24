@@ -7,6 +7,8 @@
   padding: 4px 0;
   border-radius: 2px;
   transition: background 0.15s ease;
+  /* Scroll margin for deep-link navigation — accounts for header + breathing room */
+  scroll-margin-top: 80px;
 }
 
 .wrapper:hover,
@@ -58,6 +60,12 @@
   opacity: 1;
 }
 
+/* Show entry meta on hover — from EntryMeta.module.css */
+.wrapper:hover [class*="EntryMeta_meta"],
+.touched [class*="EntryMeta_meta"] {
+  opacity: 1;
+}
+
 .grip {
   font-size: 12px;
   color: var(--ink-faint);
@@ -84,6 +92,12 @@
 
 .content {
   min-width: 0;
+  /* Suppress Chrome's native text selection mini-menu inside entries.
+   * Our SelectionToolbar provides richer actions. The native context
+   * menu (right-click) still works — we only suppress the selection
+   * action bar that Chrome shows on text select. */
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 /* ─── Layer 2: follow-up trigger reveal ───────────── */
@@ -165,16 +179,26 @@
   .touched .actions { opacity: 1; }
 }
 
+/* ─── Keyboard navigation focus ──────────────────── */
+
+.wrapper:global(.kb-focused) {
+  outline: 1px solid var(--rule);
+  outline-offset: 2px;
+  background: var(--paper-warm);
+}
+
 /* ─── Navigation highlight ────────────────────────── */
 /* Deep-link target: brief warm glow when navigated to */
 
 .highlighted {
-  animation: highlightPulse 2s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: highlightPulse 2.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @keyframes highlightPulse {
-  0% { background: var(--amber-dim); }
-  100% { background: transparent; }
+  0% { background: transparent; }
+  8% { background: var(--amber-dim); outline: 1px solid rgba(196, 154, 60, 0.15); outline-offset: 2px; }
+  40% { background: var(--amber-dim); outline: 1px solid rgba(196, 154, 60, 0.15); outline-offset: 2px; }
+  100% { background: transparent; outline: 1px solid transparent; outline-offset: 2px; }
 }
 
 /* ─── Reduced motion ─────────────────────────────── */

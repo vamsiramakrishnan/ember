@@ -38,6 +38,11 @@
   background: var(--paper-warm);
 }
 
+.trigger:focus-visible {
+  outline: 1.5px solid var(--margin);
+  outline-offset: 2px;
+}
+
 .plus {
   font-family: var(--font-system);
   font-size: 16px;
@@ -118,7 +123,24 @@
   .trigger, .typeButton { transition: none; }
 }
 
-/* On narrow screens, show trigger inline */
+/* On narrow screens, reposition trigger and clamp menu to viewport */
 @media (max-width: 800px) {
   .trigger { left: -28px; }
+  .menu {
+    left: 0;
+    right: auto;
+    min-width: min(220px, calc(100vw - 48px));
+  }
+}
+
+@media (max-width: 400px) {
+  .menu {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    top: auto;
+    bottom: 80px;
+    min-width: auto;
+    z-index: 30;
+  }
 }

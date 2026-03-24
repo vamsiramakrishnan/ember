@@ -67,6 +67,14 @@ export function FlashcardDeck({ title, cards }: FlashcardDeckProps) {
               <p className={styles.cardText}>{card.front}</p>
             </div>
             <div className={styles.back}>
+              {card.imageUrl && (
+                <img
+                  className={styles.mnemonic}
+                  src={card.imageUrl}
+                  alt={`Visual mnemonic for ${card.concept ?? card.front}`}
+                  loading="lazy"
+                />
+              )}
               <span className={styles.sideLabel}>answer</span>
               <p className={styles.cardText}>{card.back}</p>
             </div>

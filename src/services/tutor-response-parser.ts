@@ -1,78 +1,81 @@
 /**
- * Tutor Response Parser — parses Gemini JSON responses into
- * typed NotebookEntry objects. Shared by orchestrator and
- * any service that calls the tutor agent.
+ * Tutor Response Parser — parses Gemini structured JSON responses
+ * into typed NotebookEntry objects.
+ *
+ * With responseSchema set on TUTOR_AGENT, Gemini guarantees valid
+ * JSON matching the tutorResponseSchema. No regex fence-stripping
+ * or fallback parsing needed — just JSON.parse() and map to entries.
  */
 import type { NotebookEntry } from '@/types/entries';
 
 /**
  * Parse the tutor's JSON response into a NotebookEntry.
- * Handles markdown fences, fallback to raw text, and all
- * tutor response types.
+ * Gemini guarantees valid JSON when responseSchema is set,
+ * so this is a simple type-mapping layer.
  */
 export function parseTutorResponse(raw: string): NotebookEntry | null {
   try {
-    const cleaned = raw
-      .replace(/```json\s*/g, '')
-      .replace(/```\s*/g, '')
-      .trim();
-    const parsed = JSON.parse(cleaned) as Record<string, unknown>;
-    const type = parsed.type as string;
-
-    if (type === 'tutor-marginalia' && typeof parsed.content === 'string') {
-      return { type: 'tutor-marginalia', content: parsed.content };
-    }
-    if (type === 'tutor-question' && typeof parsed.content === 'string') {
-      return { type: 'tutor-question', content: parsed.content };
-    }
-    if (type === 'tutor-connection' && typeof parsed.content === 'string') {
-      return {
-        type: 'tutor-connection',
-        content: parsed.content,
-        emphasisEnd: typeof parsed.emphasisEnd === 'number'
-          ? parsed.emphasisEnd : 0,
-      };
-    }
-    if (type === 'thinker-card' && isObject(parsed.thinker)) {
-      const t = parsed.thinker as Record<string, unknown>;
-      return {
-        type: 'thinker-card',
-        thinker: {
-          name: String(t.name ?? ''),
-          dates: String(t.dates ?? ''),
-          gift: String(t.gift ?? ''),
-          bridge: String(t.bridge ?? ''),
-        },
-      };
-    }
-    if (type === 'tutor-directive' && typeof parsed.content === 'string') {
-      return {
-        type: 'tutor-directive',
-        content: parsed.content,
-        action: typeof parsed.action === 'string' ? parsed.action : undefined,
-      };
-    }
-    if (type === 'concept-diagram' && Array.isArray(parsed.items)) {
-      return {
-        type: 'concept-diagram',
-        items: parseDiagramNodes(parsed.items as Record<string, unknown>[]),
-        edges: Array.isArray(parsed.edges)
-          ? parseDiagramEdges(parsed.edges as Record<string, unknown>[])
-          : undefined,
-        title: typeof parsed.title === 'string' ? parsed.title : undefined,
-      };
-    }
-    // Fallback: if it has content, treat as marginalia
-    if (typeof parsed.content === 'string') {
-      return { type: 'tutor-marginalia', content: parsed.content };
-    }
-    return null;
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    return mapToEntry(parsed);
   } catch {
-    // Not JSON — treat raw text as marginalia
+    // Safety net: if somehow not valid JSON, treat as marginalia
     return raw.trim()
       ? { type: 'tutor-marginalia', content: raw.trim() }
       : null;
   }
+}
+
+function mapToEntry(parsed: Record<string, unknown>): NotebookEntry | null {
+  const type = parsed.type as string;
+
+  if (type === 'tutor-marginalia' && typeof parsed.content === 'string') {
+    return { type: 'tutor-marginalia', content: parsed.content };
+  }
+  if (type === 'tutor-question' && typeof parsed.content === 'string') {
+    return { type: 'tutor-question', content: parsed.content };
+  }
+  if (type === 'tutor-connection' && typeof parsed.content === 'string') {
+    return {
+      type: 'tutor-connection',
+      content: parsed.content,
+      emphasisEnd: typeof parsed.emphasisEnd === 'number'
+        ? parsed.emphasisEnd : 0,
+    };
+  }
+  if (type === 'thinker-card' && isObject(parsed.thinker)) {
+    const t = parsed.thinker as Record<string, unknown>;
+    return {
+      type: 'thinker-card',
+      thinker: {
+        name: String(t.name ?? ''),
+        dates: String(t.dates ?? ''),
+        gift: String(t.gift ?? ''),
+        bridge: String(t.bridge ?? ''),
+      },
+    };
+  }
+  if (type === 'tutor-directive' && typeof parsed.content === 'string') {
+    return {
+      type: 'tutor-directive',
+      content: parsed.content,
+      action: typeof parsed.action === 'string' ? parsed.action : undefined,
+    };
+  }
+  if (type === 'concept-diagram' && Array.isArray(parsed.items)) {
+    return {
+      type: 'concept-diagram',
+      items: parseDiagramNodes(parsed.items as Record<string, unknown>[]),
+      edges: Array.isArray(parsed.edges)
+        ? parseDiagramEdges(parsed.edges as Record<string, unknown>[])
+        : undefined,
+      title: typeof parsed.title === 'string' ? parsed.title : undefined,
+    };
+  }
+  // Fallback: if it has content, treat as marginalia
+  if (typeof parsed.content === 'string') {
+    return { type: 'tutor-marginalia', content: parsed.content };
+  }
+  return null;
 }
 
 function isObject(v: unknown): v is Record<string, unknown> {
@@ -93,7 +96,6 @@ function parseDiagramNodes(
       detail: typeof item.detail === 'string' ? item.detail : undefined,
     };
 
-    // Mastery data
     if (isObject(item.mastery)) {
       const m = item.mastery as Record<string, unknown>;
       const lvl = String(m.level ?? 'exploring');
@@ -106,7 +108,6 @@ function parseDiagramNodes(
       };
     }
 
-    // Recursive children
     if (Array.isArray(item.children) && item.children.length > 0) {
       node.children = parseDiagramNodes(
         item.children as Record<string, unknown>[],
@@ -117,7 +118,6 @@ function parseDiagramNodes(
   });
 }
 
-/** Parse edge definitions. */
 function parseDiagramEdges(
   edges: Record<string, unknown>[],
 ): import('@/types/entries').DiagramEdge[] {

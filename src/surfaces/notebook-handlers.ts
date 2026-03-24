@@ -49,16 +49,24 @@ export async function handleBranch(
 interface SelectionActionDeps {
   annotate: (entryId: string, note: string) => Promise<void>;
   submitEntry: (entry: NotebookEntry) => void;
+  addEntry: (entry: NotebookEntry) => void;
+  requestInlineExplain: (selectedText: string, sourceEntryId: string) => void;
   popup: { handleMentionTrigger: (query: string) => void };
 }
 
 export function handleSelectionAction(
-  { annotate, submitEntry, popup }: SelectionActionDeps,
+  { annotate, submitEntry, addEntry, requestInlineExplain, popup }: SelectionActionDeps,
   entryId: string,
   actionType: string,
   selectedText: string,
 ): void {
   switch (actionType) {
+    case 'explain':
+      // Show a silence marker while the tutor thinks, then fire the
+      // async explain flow that will create an inline-response entry.
+      addEntry({ type: 'silence', text: 'reading…' });
+      requestInlineExplain(selectedText, entryId);
+      break;
     case 'link':
       popup.handleMentionTrigger(selectedText.slice(0, 20));
       break;

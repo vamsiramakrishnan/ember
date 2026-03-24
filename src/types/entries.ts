@@ -50,6 +50,8 @@ export interface Thinker {
   dates: string;
   gift: string;
   bridge: string;
+  /** AI-generated portrait (data URL). Populated on first encounter. */
+  portraitUrl?: string;
 }
 
 /** Annotation that can be attached to any entry — optionally targeting a text span. */
@@ -101,6 +103,8 @@ export interface ReadingSlide {
   tableData?: { headers: string[]; rows: string[][] };
   /** Structured diagram items with optional edges (for layout='diagram'). */
   diagramItems?: Array<{ label: string; detail?: string }>;
+  /** AI-generated illustration for this slide (data URL). */
+  imageUrl?: string;
 }
 
 /** A single flashcard — front/back with optional metadata. */
@@ -111,6 +115,8 @@ export interface Flashcard {
   concept?: string;
   /** Accent for visual treatment. */
   accent?: 'sage' | 'indigo' | 'amber' | 'margin';
+  /** AI-generated visual mnemonic (data URL). */
+  imageUrl?: string;
 }
 
 /** An exercise with a prompt, expected approach, and optional hints. */
@@ -151,12 +157,25 @@ export type NotebookEntry =
   | { type: 'document'; file: FileAttachment; pages?: number; extractedText?: string }
 
   // ─── AI-generated blocks ─────────────────────────────────────
-  | { type: 'podcast'; topic: string; audioUrl: string; segments?: string[]; transcript: string; duration?: number }
+  | { type: 'podcast'; topic: string; audioUrl: string; segments?: string[]; transcript: string; duration?: number; coverUrl?: string }
   | { type: 'visualization'; html: string; caption?: string }
   | { type: 'illustration'; dataUrl: string; caption?: string }
-  | { type: 'reading-material'; title: string; subtitle?: string; slides: ReadingSlide[] }
+  | { type: 'reading-material'; title: string; subtitle?: string; slides: ReadingSlide[]; coverUrl?: string }
   | { type: 'flashcard-deck'; title: string; cards: Flashcard[]; sourceTopics?: string[] }
   | { type: 'exercise-set'; title: string; exercises: Exercise[]; difficulty: ExerciseDifficulty }
+
+  // ─── Inline response blocks ───────────────────────────────
+  | {
+    type: 'inline-response';
+    /** The quoted text the student selected. */
+    quotedText: string;
+    /** The tutor's contextual explanation / response. */
+    content: string;
+    /** ID of the source entry the quote was taken from. */
+    sourceEntryId?: string;
+    /** The action that triggered this (explain, define, connect). */
+    intent: 'explain' | 'define' | 'connect';
+  }
 
   // ─── System blocks ──────────────────────────────────────────
   | { type: 'silence'; text?: string }
@@ -164,7 +183,7 @@ export type NotebookEntry =
   | { type: 'echo'; content: string }
   | { type: 'bridge-suggestion'; content: string }
   | { type: 'tutor-reflection'; content: string }
-  | { type: 'tutor-directive'; content: string; action?: string }
+  | { type: 'tutor-directive'; content: string; action?: string; completed?: boolean; completedAt?: number }
   | { type: 'citation'; sources: Array<{ title: string; url: string }> }
   | { type: 'streaming-text'; content: string; done: boolean };
 

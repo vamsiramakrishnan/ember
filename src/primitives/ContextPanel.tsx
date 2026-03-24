@@ -50,6 +50,7 @@ export function ContextPanel({
   className, style, role = 'dialog', ariaLabel, bare,
 }: ContextPanelProps) {
   const ref = useRef<HTMLDivElement>(null);
+  const prevFocusRef = useRef<Element | null>(null);
 
   // Escape to dismiss
   useEffect(() => {
@@ -75,6 +76,48 @@ export function ContextPanel({
     }, 10);
     return () => { clearTimeout(timer); document.removeEventListener('mousedown', onClick); };
   }, [onDismiss]);
+
+  // Focus trap: move focus into panel on open, restore on close
+  useEffect(() => {
+    prevFocusRef.current = document.activeElement;
+    const panel = ref.current;
+    if (!panel) return;
+
+    // Focus first focusable element inside the panel
+    const focusable = panel.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const firstFocusable = focusable.length > 0 ? focusable[0] : undefined;
+    if (firstFocusable) firstFocusable.focus();
+
+    // Trap Tab within panel
+    const trapFocus = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab' || !panel) return;
+      const items = Array.from(panel.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      ));
+      if (items.length === 0) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (!first || !last) return;
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener('keydown', trapFocus);
+
+    return () => {
+      document.removeEventListener('keydown', trapFocus);
+      // Restore focus to the element that opened the panel
+      if (prevFocusRef.current instanceof HTMLElement) {
+        prevFocusRef.current.focus();
+      }
+    };
+  }, []);
 
   const revealCls = REVEAL_MAP[reveal] ?? '';
   const surfaceCls = bare ? '' : styles.surface;

@@ -4,6 +4,7 @@
  * Uses the shared structured-generator pipeline.
  */
 import { generateStructured } from './structured-generator';
+import { generateCoverArt } from './visual-generation';
 import type { NotebookEntry, LiveEntry, ReadingSlide } from '@/types/entries';
 
 const VALID_LAYOUTS = new Set([
@@ -20,6 +21,7 @@ interface RawDeck {
 export async function generateReadingMaterial(
   topic: string,
   entries: LiveEntry[],
+  enrichedContext?: string,
 ): Promise<NotebookEntry | null> {
   return generateStructured<RawDeck>(topic, entries, {
     systemPrompt: SYSTEM_PROMPT,
@@ -45,14 +47,21 @@ export async function generateReadingMaterial(
           label: String(d.label ?? ''), detail: d.detail ? String(d.detail) : undefined,
         })) : undefined,
       }));
-      return {
+      const entry: NotebookEntry = {
         type: 'reading-material',
         title: String(parsed.title),
         subtitle: parsed.subtitle ? String(parsed.subtitle) : undefined,
         slides,
       };
+      // Fire-and-forget: generate cover art in background
+      generateCoverArt(String(parsed.title), topic, 'book').then((url) => {
+        if (url && entry.type === 'reading-material') {
+          (entry as { coverUrl?: string }).coverUrl = url;
+        }
+      }).catch(() => {});
+      return entry;
     },
-  });
+  }, enrichedContext);
 }
 
 const SYSTEM_PROMPT = `You are Ember's tutor creating a visually rich reading material deck.

@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <!-- Paper background -->
+  <rect width="400" height="300" fill="#F6F1EA"/>
+
+  <!-- Paper variants row -->
+  <rect x="20" y="20" width="70" height="40" rx="2" fill="#F9F4ED" stroke="#DDD6CC" stroke-width="1"/>
+  <rect x="100" y="20" width="70" height="40" rx="2" fill="#F6F1EA" stroke="#DDD6CC" stroke-width="1"/>
+  <rect x="180" y="20" width="70" height="40" rx="2" fill="#EDE6DB" stroke="#DDD6CC" stroke-width="1"/>
+
+  <!-- Ink gradient row -->
+  <rect x="20" y="80" width="50" height="40" rx="2" fill="#2C2825"/>
+  <rect x="80" y="80" width="50" height="40" rx="2" fill="#5C5550"/>
+  <rect x="140" y="80" width="50" height="40" rx="2" fill="#9B9590"/>
+  <rect x="200" y="80" width="50" height="40" rx="2" fill="#C8C2BA"/>
+
+  <!-- Accent colors -->
+  <rect x="20" y="140" width="60" height="50" rx="2" fill="#6B8F71"/>
+  <rect x="90" y="140" width="60" height="50" rx="2" fill="#5B6B8A"/>
+  <rect x="160" y="140" width="60" height="50" rx="2" fill="#C49A3C"/>
+  <rect x="230" y="140" width="60" height="50" rx="2" fill="#B8564F"/>
+
+  <!-- Dim accent tints -->
+  <rect x="20" y="200" width="60" height="30" rx="2" fill="rgba(107,143,113,0.10)" stroke="#DDD6CC" stroke-width="1"/>
+  <rect x="90" y="200" width="60" height="30" rx="2" fill="rgba(91,107,138,0.08)" stroke="#DDD6CC" stroke-width="1"/>
+  <rect x="160" y="200" width="60" height="30" rx="2" fill="rgba(196,154,60,0.08)" stroke="#DDD6CC" stroke-width="1"/>
+  <rect x="230" y="200" width="60" height="30" rx="2" fill="rgba(184,86,79,0.07)" stroke="#DDD6CC" stroke-width="1"/>
+
+  <!-- Cross-hatching texture sample -->
+  <rect x="310" y="20" width="70" height="100" rx="2" fill="#F6F1EA" stroke="#9B9590" stroke-width="1"/>
+  <g stroke="#2C2825" stroke-width="0.5" opacity="0.7">
+    <line x1="315" y1="25" x2="375" y2="85"/>
+    <line x1="315" y1="35" x2="375" y2="95"/>
+    <line x1="315" y1="45" x2="375" y2="105"/>
+    <line x1="315" y1="55" x2="375" y2="115"/>
+    <line x1="315" y1="65" x2="365" y2="115"/>
+    <line x1="315" y1="75" x2="355" y2="115"/>
+    <line x1="325" y1="25" x2="375" y2="75"/>
+    <line x1="335" y1="25" x2="375" y2="65"/>
+    <line x1="345" y1="25" x2="375" y2="55"/>
+    <line x1="375" y1="25" x2="315" y2="85"/>
+    <line x1="375" y1="35" x2="315" y2="95"/>
+    <line x1="375" y1="45" x2="315" y2="105"/>
+    <line x1="375" y1="55" x2="315" y2="115"/>
+    <line x1="365" y1="25" x2="315" y2="75"/>
+    <line x1="355" y1="25" x2="315" y2="65"/>
+    <line x1="345" y1="25" x2="315" y2="55"/>
+  </g>
+
+  <!-- Structural rules -->
+  <line x1="20" y1="248" x2="380" y2="248" stroke="#DDD6CC" stroke-width="1"/>
+  <line x1="20" y1="252" x2="380" y2="252" stroke="#EBE5DC" stroke-width="1"/>
+
+  <!-- Margin rule sample -->
+  <line x1="310" y1="140" x2="310" y2="230" stroke="#B8564F" stroke-width="3" opacity="0.35"/>
+
+  <!-- Small accent circles -->
+  <circle cx="330" cy="160" r="8" fill="#6B8F71"/>
+  <circle cx="355" cy="160" r="8" fill="#5B6B8A"/>
+  <circle cx="330" cy="185" r="8" fill="#C49A3C"/>
+  <circle cx="355" cy="185" r="8" fill="#B8564F"/>
+
+  <!-- Border -->
+  <rect x="0" y="0" width="400" height="300" fill="none" stroke="#DDD6CC" stroke-width="2" rx="2"/>
+</svg>

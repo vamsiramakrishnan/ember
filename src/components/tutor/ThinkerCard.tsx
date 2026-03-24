@@ -3,12 +3,16 @@
  * Introduction to a thinker entering the student's orbit.
  *
  * Incremental reveal:
- *   Layer 0: monogram + name + dates (always visible)
+ *   Layer 0: portrait/monogram + name + dates (always visible)
  *   Layer 3 (click): Gift and Bridge sections expand below
+ *
+ * Portrait: AI-generated on first encounter via useEntityPortrait.
+ * Falls back to text monogram if generation fails or is pending.
  *
  * See: 06-component-inventory.md, Family 2.
  */
 import { useState } from 'react';
+import { useEntityPortrait } from '@/hooks/useEntityPortrait';
 import type { Thinker } from '@/types/entries';
 import styles from './ThinkerCard.module.css';
 
@@ -24,6 +28,9 @@ function initials(name: string): string {
 
 export function ThinkerCard({ thinker, showBottomBorder }: ThinkerCardProps) {
   const [expanded, setExpanded] = useState(false);
+  const { portraitUrl, loading } = useEntityPortrait(
+    thinker.name, thinker.dates, thinker.portraitUrl,
+  );
 
   return (
     <div
@@ -41,9 +48,18 @@ export function ThinkerCard({ thinker, showBottomBorder }: ThinkerCardProps) {
     >
       {/* Layer 0: always visible */}
       <div className={styles.header}>
-        <div className={styles.monogram} aria-hidden="true">
-          {initials(thinker.name)}
-        </div>
+        {portraitUrl ? (
+          <img
+            className={styles.portrait}
+            src={portraitUrl}
+            alt={`Portrait of ${thinker.name}`}
+            loading="lazy"
+          />
+        ) : (
+          <div className={`${styles.monogram} ${loading ? styles.monogramLoading : ''}`} aria-hidden="true">
+            {initials(thinker.name)}
+          </div>
+        )}
         <div className={styles.identity}>
           <span className={styles.name}>{thinker.name}</span>
           <span className={styles.dates}>{thinker.dates}</span>

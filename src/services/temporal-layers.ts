@@ -11,7 +11,6 @@
 import { ECHO_AGENT, REFLECTION_AGENT, RESEARCHER_AGENT } from './agents';
 import { runTextAgent } from './run-agent';
 import { isGeminiAvailable } from './gemini';
-import { extractJsonObject } from './json-parser';
 import { getMasteryByNotebook } from '@/persistence/repositories/mastery';
 import { createRelation } from '@/persistence/repositories/graph';
 import {
@@ -53,9 +52,9 @@ export async function generateEcho(
       role: 'user',
       parts: [{ text: `Current student entry: "${studentText}"\n\nPast entries:\n${pastStudent}` }],
     }]);
-    const parsed = extractJsonObject(result.text);
-    if (parsed?.skip) return null;
-    if (typeof parsed?.content === 'string') {
+    const parsed = JSON.parse(result.text) as Record<string, unknown>;
+    if (parsed.skip) return null;
+    if (typeof parsed.content === 'string') {
       const sourceEntry = pastEntries.find((e) =>
         'content' in e.entry && typeof e.entry.content === 'string' &&
         parsed.content && String(parsed.content).includes(String(e.entry.content).slice(0, 30)),
@@ -127,8 +126,8 @@ export async function generateReflection(
       role: 'user',
       parts: [{ text: `Last ${entries.slice(-12).length} entries:\n${recent}` }],
     }]);
-    const parsed = extractJsonObject(result.text);
-    if (typeof parsed?.content === 'string') {
+    const parsed = JSON.parse(result.text) as Record<string, unknown>;
+    if (typeof parsed.content === 'string') {
       return { type: 'tutor-reflection', content: parsed.content };
     }
     return null;

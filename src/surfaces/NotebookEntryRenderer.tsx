@@ -36,12 +36,15 @@ import { Reflection } from '@/components/tutor/Reflection';
 import { Directive } from '@/components/tutor/Directive';
 import { Citation } from '@/components/ambient/Citation';
 import { StreamingText } from '@/components/tutor/StreamingText';
+import { InlineResponse } from '@/components/tutor/InlineResponse';
 
 interface Props {
   entry: NotebookEntry;
+  /** Callback when a directive is marked complete. Receives the entry content for mastery tracking. */
+  onDirectiveComplete?: (content: string, action?: string) => void;
 }
 
-export function NotebookEntryRenderer({ entry }: Props) {
+export function NotebookEntryRenderer({ entry, onDirectiveComplete }: Props) {
   const { navigateTo } = useEntityNavigation();
 
   const handleNodeClick = useCallback((entityId: string, entityKind: string) => {
@@ -98,18 +101,26 @@ export function NotebookEntryRenderer({ entry }: Props) {
     case 'thinker-card':
       return <ThinkerCard thinker={entry.thinker} />;
 
+    // Inline response blocks
+    case 'inline-response':
+      return (
+        <InlineResponse quotedText={entry.quotedText} intent={entry.intent}>
+          {entry.content}
+        </InlineResponse>
+      );
+
     // AI-generated blocks
     case 'podcast':
       return <PodcastPlayer topic={entry.topic} audioUrl={entry.audioUrl}
         segments={entry.segments} transcript={entry.transcript}
-        duration={entry.duration} />;
+        duration={entry.duration} coverUrl={entry.coverUrl} />;
     case 'visualization':
       return <Visualization html={entry.html} caption={entry.caption} />;
     case 'illustration':
       return <Illustration dataUrl={entry.dataUrl} caption={entry.caption} />;
     case 'reading-material':
       return <ReadingMaterial title={entry.title} subtitle={entry.subtitle}
-        slides={entry.slides} />;
+        slides={entry.slides} coverUrl={entry.coverUrl} />;
     case 'flashcard-deck':
       return <FlashcardDeck title={entry.title} cards={entry.cards} />;
     case 'exercise-set':
@@ -128,7 +139,18 @@ export function NotebookEntryRenderer({ entry }: Props) {
     case 'tutor-reflection':
       return <Reflection>{entry.content}</Reflection>;
     case 'tutor-directive':
-      return <Directive action={entry.action}>{entry.content}</Directive>;
+      return (
+        <Directive
+          action={entry.action}
+          completed={entry.completed}
+          completedAt={entry.completedAt}
+          onComplete={onDirectiveComplete
+            ? () => onDirectiveComplete(entry.content, entry.action)
+            : undefined}
+        >
+          {entry.content}
+        </Directive>
+      );
     case 'citation':
       return <Citation sources={entry.sources} />;
     case 'streaming-text':

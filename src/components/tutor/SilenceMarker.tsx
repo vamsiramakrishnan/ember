@@ -12,10 +12,10 @@ interface SilenceMarkerProps {
 
 export function SilenceMarker({ text }: SilenceMarkerProps) {
   return (
-    <div className={styles.container}>
+    <div className={styles.container} role="status" aria-label="The tutor is waiting for you to think">
       {text && <p className={styles.text}>{text}</p>}
-      <div className={styles.verticalRule} />
-      <div className={styles.cursor} />
+      <div className={styles.verticalRule} aria-hidden="true" />
+      <div className={styles.cursor} aria-hidden="true" />
     </div>
   );
 }

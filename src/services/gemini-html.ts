@@ -4,13 +4,10 @@
  * beautiful HTML representations of concepts, diagrams, and
  * visual explanations — all aligned with Ember's warm notebook aesthetic.
  *
- * Generated HTML follows Ember's design philosophy:
- * - Cormorant Garamond, Crimson Pro, IBM Plex Mono typefaces
- * - Warm paper palette (#FAF6F1, #2C2825, etc.)
- * - No pure black or white, no box shadows, no gradients
- * - Quiet, generous spacing
+ * Supports dual-mode: direct SDK (dev) or server proxy (production).
  */
 import { getGeminiClient } from './gemini';
+import { useProxy, proxyHtmlGeneration } from './proxy-client';
 import { EMBER_STYLE_CONTEXT } from './token-context';
 
 export const HTML_MODEL = 'gemini-3-flash-preview';
@@ -32,6 +29,16 @@ export interface HtmlGenerationOptions {
 export async function generateHtml(
   options: HtmlGenerationOptions,
 ): Promise<string> {
+  // Proxy path
+  if (useProxy()) {
+    const html = await proxyHtmlGeneration({
+      prompt: options.prompt,
+      context: options.context,
+      useSearch: options.useSearch,
+    });
+    return html.replace(/^```html\s*/i, '').replace(/```\s*$/i, '').trim();
+  }
+
   const client = getGeminiClient();
   if (!client) {
     throw new Error('Gemini API key not configured');
@@ -96,7 +103,6 @@ Return ONLY the body HTML — no <!DOCTYPE>, no <html>, no <head> tags. Just the
   }
 
   let html = chunks.join('');
-  // Strip any markdown fences if the model wrapped the response
   html = html.replace(/^```html\s*/i, '').replace(/```\s*$/i, '').trim();
 
   return html;
