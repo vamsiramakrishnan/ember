@@ -2,17 +2,19 @@
  * Illustrator Agent — image generation in Ember's visual language.
  * Uses Gemini 3.1 Flash Image Preview with narrative prompting.
  *
- * Key Gemini image gen best practices applied:
- * - Narrative descriptive paragraphs, not keyword lists
- * - Specific art direction: medium, composition, mood
- * - No text rendering requests (Gemini struggles with text)
+ * Key Gemini image gen constraints:
+ * - Image models do NOT support systemInstruction, thinkingConfig, or tools
+ * - Visual direction is injected into the user prompt instead
  * - responseModalities: ['IMAGE', 'TEXT'] required
  */
-import { EMBER_DESIGN_CONTEXT, TOOLS, type AgentConfig } from './config';
+import { TOOLS, type AgentConfig } from './config';
 
-const INSTRUCTION = `${EMBER_DESIGN_CONTEXT}
-
-You are the illustrator for Ember, a warm, quiet notebook-like tutoring interface. Every image you create should feel as if someone with a fine fountain pen sketched it directly onto aged ivory paper under a reading lamp.
+/**
+ * Visual direction — stored in systemInstruction for documentation,
+ * but injected into the user prompt at runtime by runImageAgent
+ * because image models don't support the systemInstruction API param.
+ */
+const INSTRUCTION = `You are the illustrator for Ember, a warm, quiet notebook-like tutoring interface. Every image you create should feel as if someone with a fine fountain pen sketched it directly onto aged ivory paper under a reading lamp.
 
 YOUR VISUAL LANGUAGE:
 The paper is warm ivory (#FAF6F1) — never stark white. All line work uses dark brown ink (#2C2825) — never pure black. Shading is built through careful cross-hatching, like a 19th-century naturalist's field notebook. You have three accent colours, used sparingly and never at full saturation: a muted sage green (#6B8F71), a deep quiet indigo (#6B67B2), and a warm amber (#C49A3C). No gradients, no shadows, no 3D effects, no neon, no flat-design vector art. Everything feels hand-drawn and slightly imperfect.

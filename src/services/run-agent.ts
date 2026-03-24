@@ -118,6 +118,35 @@ export async function runTextAgent(
   return { text: chunks.join(''), citations };
 }
 
+/**
+ * Inject systemInstruction as a context prefix in the first user message.
+ * Image models don't support the systemInstruction config param, so we
+ * prepend it to the user's prompt text instead.
+ */
+function injectSystemContext(
+  messages: AgentMessage[],
+  context: string,
+): AgentMessage[] {
+  if (!context) return messages;
+  return messages.map((msg, i) => {
+    if (i !== 0 || msg.role !== 'user') return msg;
+    // Prepend context to the first text part
+    const parts = msg.parts.map((part, j) => {
+      if (j === 0 && part.text) {
+        return { ...part, text: `${context}\n\n---\n\n${part.text}` };
+      }
+      // If first part is an image (inlineData), add context as a new text part after it
+      return part;
+    });
+    // If no text part was found, append one
+    const hasText = parts.some((p) => p.text?.startsWith(context));
+    if (!hasText) {
+      parts.push({ text: `${context}` });
+    }
+    return { ...msg, parts };
+  });
+}
+
 /** Run an image-capable agent (non-streaming — image models return complete). */
 export async function runImageAgent(
   agent: AgentConfig,
@@ -125,16 +154,19 @@ export async function runImageAgent(
 ): Promise<AgentImageResult> {
   // Proxy path: use /api/gemini-image when no client-side API key
   if (useProxy()) {
-    const prompt = messages
+    const userText = messages
       .filter((m) => m.role === 'user')
       .flatMap((m) => m.parts)
       .map((p) => ('text' in p && p.text) ? p.text : '')
       .filter(Boolean)
       .join('\n');
+    // Image models don't support systemInstruction — prepend to prompt
+    const prompt = agent.systemInstruction
+      ? `${agent.systemInstruction}\n\n---\n\n${userText}`
+      : userText;
     const result = await proxyImageGeneration({
       prompt,
       useSearch: agent.tools.length > 0,
-      systemInstruction: agent.systemInstruction,
     });
     return { images: result.images, text: result.text };
   }
@@ -142,17 +174,21 @@ export async function runImageAgent(
   const client = getGeminiClient();
   if (!client) throw new Error('Gemini API key not configured');
 
-  // Image models have thinking enabled by default and it cannot be
-  // configured, so we omit thinkingConfig entirely.
+  // Image models don't support systemInstruction — inject it into
+  // the first user message instead. thinkingConfig and tools are kept.
   const config: Record<string, unknown> = {
-    systemInstruction: agent.systemInstruction,
     responseModalities: agent.responseModalities,
   };
   if (agent.tools.length > 0) config.tools = agent.tools;
 
+  // Prepend systemInstruction as context in the first user turn
+  const contents = agent.systemInstruction
+    ? injectSystemContext(messages, agent.systemInstruction)
+    : messages;
+
   // Use generateContent (not stream) — image responses are atomic blobs.
   const response = await client.models.generateContent({
-    model: agent.model, config, contents: messages,
+    model: agent.model, config, contents,
   });
 
   const images: Array<{ data: string; mimeType: string }> = [];
