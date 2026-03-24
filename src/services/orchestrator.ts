@@ -62,6 +62,7 @@ export async function orchestrate(
   profile?: StudentProfile | null,
   notebookCtx?: NotebookContext | null,
   lastSyncTimestamp?: number,
+  signal?: AbortSignal,
 ): Promise<OrchestratorResult> {
   if (!isGeminiAvailable()) return { entries: [], deferredActions: [] };
 
@@ -69,6 +70,7 @@ export async function orchestrate(
     studentText, entries, studentId, notebookId, lastSyncTimestamp,
     profile ?? null, notebookCtx ?? null,
   );
+  if (signal?.aborted) return { entries: [], deferredActions: [] };
   const results: NotebookEntry[] = [];
 
   setActivityDetail({ step: 'thinking', label: 'thinking...' });
@@ -79,6 +81,7 @@ export async function orchestrate(
       agenticResult = await runAgenticLoop(
         TUTOR_AGENT, setup.contextMessages,
         { studentId, notebookId },
+        signal,
       );
     } else {
       const result = await resilientTextAgent(TUTOR_AGENT, setup.contextMessages);
@@ -87,6 +90,7 @@ export async function orchestrate(
         results.push({ type: 'citation', sources: result.citations });
       }
     }
+    if (signal?.aborted) return { entries: results, deferredActions: [] };
     const entry = parseTutorResponse(agenticResult.text);
     if (entry) results.push(entry);
   } catch (err) {
@@ -94,6 +98,7 @@ export async function orchestrate(
   }
 
   cancelNarration();
+  if (signal?.aborted) return { entries: results, deferredActions: agenticResult?.deferredActions ?? [] };
   const post = await collectPostTutor(setup, studentText, entries, notebookId);
   results.unshift(...post.before);
   results.push(...post.after);
@@ -110,6 +115,7 @@ export async function streamOrchestrate(
   profile?: StudentProfile | null,
   notebookCtx?: NotebookContext | null,
   lastSyncTimestamp?: number,
+  signal?: AbortSignal,
 ): Promise<OrchestratorResult> {
   if (!isGeminiAvailable()) return { entries: [], deferredActions: [] };
 
@@ -117,6 +123,7 @@ export async function streamOrchestrate(
     studentText, entries, studentId, notebookId, lastSyncTimestamp,
     profile ?? null, notebookCtx ?? null,
   );
+  if (signal?.aborted) return { entries: [], deferredActions: [] };
   const results: NotebookEntry[] = [];
 
   setActivityDetail({ step: 'streaming', label: 'writing...' });
@@ -128,6 +135,7 @@ export async function streamOrchestrate(
         TUTOR_AGENT, setup.contextMessages,
         { studentId, notebookId },
         onChunk,
+        signal,
       );
     } else {
       const result = await resilientStreamingAgent(
@@ -138,12 +146,15 @@ export async function streamOrchestrate(
         results.push({ type: 'citation', sources: result.citations });
       }
     }
+    if (signal?.aborted) return { entries: results, deferredActions: [] };
     const entry = parseTutorResponse(agenticResult.text);
     if (entry) results.push(entry);
   } catch (err) {
     console.error('[Ember] Streaming tutor error:', err);
   }
 
+  cancelNarration();
+  if (signal?.aborted) return { entries: results, deferredActions: agenticResult?.deferredActions ?? [] };
   const post = await collectPostTutor(setup, studentText, entries, notebookId);
   results.unshift(...post.before);
   results.push(...post.after);

@@ -76,7 +76,8 @@ export function useCanvasPositions(
       );
       return [...prev, ...additions];
     });
-  }, [entries, positions]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entries]);
 
   const updatePosition = useCallback(
     (id: string, x: number, y: number) => {

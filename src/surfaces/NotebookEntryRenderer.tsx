@@ -162,8 +162,12 @@ export function NotebookEntryRenderer({ entry, onDirectiveComplete, onPatchEntry
       return <Citation sources={entry.sources} />;
     case 'streaming-text':
       return <StreamingText done={entry.done}>{entry.content}</StreamingText>;
-    default:
-      if (process.env.NODE_ENV !== 'production') console.warn(`Unhandled entry: "${(entry as { type: string }).type}"`);
+    default: {
+      // Exhaustive check — TypeScript will error if a new entry type is added to NotebookEntry
+      // but not handled above.
+      const _exhaustive: never = entry;
+      if (process.env.NODE_ENV !== 'production') console.warn(`Unhandled entry: "${(_exhaustive as { type: string }).type}"`);
       return null;
+    }
   }
 }

@@ -4,7 +4,7 @@
  * Constellation → Encounters sub-view.
  */
 import { Store } from '../schema';
-import { get, getAll, put, getByIndex } from '../engine';
+import { get, getAll, put, getByIndex, patch } from '../engine';
 import { createId } from '../ids';
 import type { EncounterRecord } from '../records';
 
@@ -70,12 +70,10 @@ export async function updateEncounterStatus(
   status: EncounterStatus,
   bridgedTo?: string,
 ): Promise<void> {
-  const existing = await get<EncounterRecord>(Store.Encounters, id);
-  if (!existing) return;
-  await put(Store.Encounters, {
+  await patch<EncounterRecord>(Store.Encounters, id, (existing) => ({
     ...existing,
     status,
     bridgedTo: bridgedTo ?? existing.bridgedTo,
     updatedAt: Date.now(),
-  });
+  }));
 }

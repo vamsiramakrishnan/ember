@@ -3,6 +3,7 @@
  */
 import type { ZodTypeAny } from 'zod';
 import type { Tool } from '@google/genai';
+import { MODELS } from '../gemini';
 
 export const TOOLS = {
   googleSearch: { googleSearch: {} } as Tool,
@@ -32,7 +33,7 @@ export interface AgentConfig {
 /** Lightweight agent for background micro-tasks (assessment, extraction). */
 export const MICRO_AGENT: AgentConfig = {
   name: 'MicroTask',
-  model: 'gemini-3.1-flash-lite-preview',
+  model: MODELS.text,
   systemInstruction: '',
   thinkingLevel: 'MINIMAL',
   tools: [],

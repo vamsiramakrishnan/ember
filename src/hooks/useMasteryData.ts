@@ -2,6 +2,7 @@
  * useMasteryData — reactive mastery state for the Constellation surface.
  * All data derived from notebook-scoped persistence. No demo fallbacks.
  */
+import { useMemo } from 'react';
 import { Store, useStoreQuery } from '@/persistence';
 import { getMasteryByNotebook, getCuriositiesByNotebook } from '@/persistence/repositories/mastery';
 import { getLexiconByNotebook } from '@/persistence/repositories/lexicon';
@@ -10,6 +11,7 @@ import { getLibraryByNotebook } from '@/persistence/repositories/library';
 import { useStudent } from '@/contexts/StudentContext';
 import type { Thinker } from '@/types/entries';
 import type { MasteryRecord, CuriosityRecord, LexiconRecord, EncounterRecord, LibraryRecord } from '@/persistence/records';
+import { encounterRecordToView, lexiconRecordToView, libraryRecordToView } from '@/persistence/mappers';
 
 /** Derive Thinker cards from EncounterRecords. */
 function encounterToThinker(e: EncounterRecord): Thinker {
@@ -53,32 +55,39 @@ export function useMasteryData() {
     [], [nid],
   );
 
-  const concepts = masteryRecords
-    .map((m) => ({ concept: m.concept, level: m.level, percentage: m.percentage }))
-    .sort((a, b) => b.percentage - a.percentage);
+  const concepts = useMemo(() =>
+    masteryRecords
+      .map((m) => ({ concept: m.concept, level: m.level, percentage: m.percentage }))
+      .sort((a, b) => b.percentage - a.percentage),
+    [masteryRecords],
+  );
 
-  const threads = curiosityRecords.map((c) => ({ question: c.question }));
+  const threads = useMemo(() =>
+    curiosityRecords.map((c) => ({ question: c.question })),
+    [curiosityRecords],
+  );
 
-  const thinkers = encounterRecords
-    .filter((e) => e.status === 'active' || e.status === 'bridged')
-    .map(encounterToThinker);
+  const thinkers = useMemo(() =>
+    encounterRecords
+      .filter((e) => e.status === 'active' || e.status === 'bridged')
+      .map(encounterToThinker),
+    [encounterRecords],
+  );
 
-  const lexicon = lexiconRecords.map((l) => ({
-    number: l.number, term: l.term, pronunciation: l.pronunciation,
-    definition: l.definition, level: l.level, percentage: l.percentage,
-    etymology: l.etymology, crossReferences: l.crossReferences,
-  }));
+  const lexicon = useMemo(() =>
+    lexiconRecords.map(lexiconRecordToView),
+    [lexiconRecords],
+  );
 
-  const encounters = encounterRecords.map((e) => ({
-    ref: e.ref, thinker: e.thinker, tradition: e.tradition,
-    coreIdea: e.coreIdea, sessionTopic: e.sessionTopic,
-    date: e.date, status: e.status, bridgedTo: e.bridgedTo,
-  }));
+  const encounters = useMemo(() =>
+    encounterRecords.map(encounterRecordToView),
+    [encounterRecords],
+  );
 
-  const library = libraryRecords.map((l) => ({
-    title: l.title, author: l.author, isCurrent: l.isCurrent,
-    annotationCount: l.annotationCount, quote: l.quote,
-  }));
+  const library = useMemo(() =>
+    libraryRecords.map(libraryRecordToView),
+    [libraryRecords],
+  );
 
   return { concepts, threads, thinkers, lexicon, encounters, library };
 }

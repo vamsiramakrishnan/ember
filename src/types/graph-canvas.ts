@@ -6,7 +6,7 @@
 
 export type GraphNodeKind = 'concept' | 'thinker' | 'term' | 'curiosity';
 
-export interface GraphNode {
+export interface CanvasNode {
   id: string;
   kind: GraphNodeKind;
   label: string;
@@ -25,7 +25,7 @@ export interface GraphEdge {
   weight: number;
 }
 
-export interface LayoutNode extends GraphNode {
+export interface LayoutNode extends CanvasNode {
   x: number;
   y: number;
   /** Whether the node has been manually pinned. */

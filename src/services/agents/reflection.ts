@@ -3,6 +3,7 @@
  * Not a summary. A recognition of intellectual movement.
  */
 import { EMBER_DESIGN_CONTEXT, type AgentConfig } from './config';
+import { MODELS } from '../gemini';
 import { reflectionResponseSchema } from '@/services/schemas';
 
 const INSTRUCTION = `${EMBER_DESIGN_CONTEXT}
@@ -27,7 +28,7 @@ Respond with ONLY a JSON object:
 
 export const REFLECTION_AGENT: AgentConfig = {
   name: 'Reflection',
-  model: 'gemini-3.1-flash-lite-preview',
+  model: MODELS.text,
   systemInstruction: INSTRUCTION,
   thinkingLevel: 'LOW',
   tools: [],

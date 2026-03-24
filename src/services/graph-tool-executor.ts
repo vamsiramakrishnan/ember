@@ -21,7 +21,8 @@ import {
   execLinkEntities,
   execNeighborhood,
 } from '@/services/graph-tool-impls-extended';
-import { toolError, isTransientError } from './tool-result';
+import { toolError } from './tool-result';
+import { withRetry } from './retry';
 
 // ─── Context passed to tool implementations ──────────────
 
@@ -38,18 +39,7 @@ export async function executeGraphTool(
   args: Record<string, unknown>,
   ctx: GraphToolContext,
 ): Promise<string> {
-  try {
-    return await executeGraphToolInner(name, args, ctx);
-  } catch (err) {
-    if (isTransientError(err)) {
-      try {
-        return await executeGraphToolInner(name, args, ctx);
-      } catch (retryErr) {
-        return toolError(name, String(retryErr));
-      }
-    }
-    return toolError(name, String(err));
-  }
+  return withRetry(name, () => executeGraphToolInner(name, args, ctx));
 }
 
 /** Inner dispatch — no retry logic, just routing. */

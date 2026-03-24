@@ -6,7 +6,7 @@
  * Like a librarian who reshelves books after midnight.
  */
 import { put as localPut, del as localDel } from '../engine';
-import { notify } from '../emitter';
+import { notifyStores } from '../emitter';
 import {
   getPendingOps, markSynced, getLastSyncTimestamp, pendingCount,
 } from './oplog';
@@ -77,15 +77,19 @@ async function pull(): Promise<void> {
   const since = await getLastSyncTimestamp();
   const remoteOps = await adapter.pullOperations(since ?? 0);
 
+  const affectedStores = new Set<StoreName>();
   for (const op of remoteOps) {
     const storeName = op.store as StoreName;
     if (op.action === 'put' && op.payload) {
       await localPut(storeName, op.payload);
-      notify(storeName);
+      affectedStores.add(storeName);
     } else if (op.action === 'delete') {
       await localDel(storeName, op.key);
-      notify(storeName);
+      affectedStores.add(storeName);
     }
+  }
+  if (affectedStores.size > 0) {
+    notifyStores([...affectedStores]);
   }
 }
 

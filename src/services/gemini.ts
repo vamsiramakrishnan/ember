@@ -32,6 +32,8 @@ export function isGeminiAvailable(): boolean {
 /** Models used by Ember. */
 export const MODELS = {
   text: 'gemini-3.1-flash-lite-preview',
+  /** Heavy model for research, critique, and HTML generation. */
+  heavy: 'gemini-3-flash-preview',
   image: 'gemini-3.1-flash-image-preview',
   /** Fallback when gemini-3.1-flash-lite-preview fails with error codes. */
   fallback: 'gemini-2.5-flash-lite',

@@ -25,7 +25,8 @@ import {
   getRecentChanges,
 } from './tool-impls';
 import { getEntryContent, readFileContent } from './tool-impls-content';
-import { toolOk, toolError, isTransientError } from './tool-result';
+import { toolOk, toolError } from './tool-result';
+import { withRetry } from './retry';
 import type { Subgraph } from './knowledge-graph';
 
 /** Graph tool names that should be routed to the persistent graph. */
@@ -53,18 +54,7 @@ export async function executeTool(
   args: Record<string, unknown>,
   ctx: ToolContext,
 ): Promise<string> {
-  try {
-    return await executeToolInner(functionName, args, ctx);
-  } catch (err) {
-    if (isTransientError(err)) {
-      try {
-        return await executeToolInner(functionName, args, ctx);
-      } catch (retryErr) {
-        return toolError(functionName, String(retryErr));
-      }
-    }
-    return toolError(functionName, String(err));
-  }
+  return withRetry(functionName, () => executeToolInner(functionName, args, ctx));
 }
 
 /** Inner dispatch — no retry logic, just routing. */

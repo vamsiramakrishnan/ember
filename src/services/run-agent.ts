@@ -45,6 +45,7 @@ export interface AgentImageResult {
 export async function runTextAgent(
   agent: AgentConfig,
   messages: AgentMessage[],
+  signal?: AbortSignal,
 ): Promise<AgentTextResult> {
   if (useProxy()) {
     const body: Parameters<typeof proxyTextGeneration>[0] = {
@@ -92,6 +93,7 @@ export async function runTextAgent(
   const citations: GroundingCitation[] = [];
 
   for await (const chunk of response) {
+    if (signal?.aborted) break;
     const candidate = chunk.candidates?.[0];
     const parts = candidate?.content?.parts;
     if (parts) {
@@ -127,6 +129,7 @@ export async function runTextAgentStreaming(
   agent: AgentConfig,
   messages: AgentMessage[],
   onChunk: (chunk: string, accumulated: string) => void,
+  signal?: AbortSignal,
 ): Promise<AgentTextResult> {
   if (useProxy()) {
     const body: Parameters<typeof proxyTextGenerationStream>[0] = {
@@ -163,6 +166,7 @@ export async function runTextAgentStreaming(
   const citations: GroundingCitation[] = [];
 
   for await (const chunk of response) {
+    if (signal?.aborted) break;
     const candidate = chunk.candidates?.[0];
     const parts = candidate?.content?.parts;
     if (parts) {

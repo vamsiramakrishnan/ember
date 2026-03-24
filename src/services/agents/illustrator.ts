@@ -8,6 +8,7 @@
  * - responseModalities: ['IMAGE', 'TEXT'] required
  */
 import { TOOLS, type AgentConfig } from './config';
+import { MODELS } from '../gemini';
 
 /**
  * Visual direction — stored in systemInstruction for documentation,
@@ -29,7 +30,7 @@ When asked for an infographic, create a data-driven visual using the three accen
 
 export const ILLUSTRATOR_AGENT: AgentConfig = {
   name: 'Illustrator',
-  model: 'gemini-3.1-flash-image-preview',
+  model: MODELS.image,
   systemInstruction: INSTRUCTION,
   thinkingLevel: 'MINIMAL',
   tools: [TOOLS.googleSearch],

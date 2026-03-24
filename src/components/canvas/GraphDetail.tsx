@@ -2,7 +2,7 @@
  * GraphDetail — metadata panel for the focused graph node.
  * Warm, typographically refined, appears below the graph field.
  */
-import type { GraphNode } from '@/types/graph-canvas';
+import type { CanvasNode } from '@/types/graph-canvas';
 import styles from './GraphDetail.module.css';
 
 interface Neighbor {
@@ -12,7 +12,7 @@ interface Neighbor {
 }
 
 interface GraphDetailProps {
-  node: GraphNode;
+  node: CanvasNode;
   neighbors: Neighbor[];
 }
 

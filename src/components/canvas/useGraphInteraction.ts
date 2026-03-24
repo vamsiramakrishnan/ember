@@ -3,7 +3,7 @@
  * Uses refs for interaction state to avoid re-renders during drag/zoom.
  */
 import { useRef, useCallback, useState } from 'react';
-import type { GraphNode } from './graph-layout';
+import type { PositionedNode } from './graph-layout';
 
 interface DragState {
   type: 'pan' | 'node';
@@ -17,7 +17,7 @@ interface DragState {
 export function useGraphInteraction(
   width: number,
   height: number,
-  nodes: GraphNode[],
+  nodes: PositionedNode[],
   onNodeDrag: (id: string, x: number, y: number) => void,
 ) {
   const panRef = useRef({ x: 0, y: 0 });

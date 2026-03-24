@@ -4,6 +4,7 @@
  * All operations return Promises. Batch writes are atomic within a transaction.
  */
 import { DB_NAME, DB_VERSION, stores, type StoreName } from './schema';
+import { promisify, txDone as txComplete } from './idb-utils';
 import { createOplogStores } from './sync/oplog';
 
 let dbInstance: IDBDatabase | null = null;
@@ -36,22 +37,6 @@ export function openDB(): Promise<IDBDatabase> {
   });
 }
 
-/** Wrap an IDBRequest in a Promise. */
-function promisify<T>(request: IDBRequest<T>): Promise<T> {
-  return new Promise((resolve, reject) => {
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
-}
-
-/** Wrap a transaction completion in a Promise. */
-function txComplete(tx: IDBTransaction): Promise<void> {
-  return new Promise((resolve, reject) => {
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-    tx.onabort = () => reject(tx.error);
-  });
-}
 
 /** Get a single record by key. */
 export async function get<T>(
@@ -126,6 +111,51 @@ export async function count(
     ? tx.objectStore(storeName).index(indexName)
     : tx.objectStore(storeName);
   return promisify<number>(target.count(value));
+}
+
+/**
+ * Atomic read-modify-write. Reads a record by key, applies the updater,
+ * and writes back — all within a single read-write transaction.
+ * Returns the updated record, or undefined if the key was not found.
+ */
+export async function patch<T extends { id: string }>(
+  storeName: StoreName,
+  id: string,
+  updater: (existing: T) => T,
+): Promise<T | undefined> {
+  const db = await openDB();
+  const tx = db.transaction(storeName, 'readwrite');
+  const store = tx.objectStore(storeName);
+  const existing = await promisify<T | undefined>(store.get(id));
+  if (!existing) return undefined;
+  const updated = updater(existing);
+  await promisify(store.put(updated));
+  await txComplete(tx);
+  return updated;
+}
+
+/**
+ * Atomic upsert-by-index. Looks up a record by index within a single
+ * read-write transaction. If found, applies `updater`; if not, inserts
+ * the result of `creator()`. Returns the final record.
+ */
+export async function upsertByIndex<T>(
+  storeName: StoreName,
+  indexName: string,
+  key: IDBValidKey,
+  updater: (existing: T) => T,
+  creator: () => T,
+): Promise<T> {
+  const db = await openDB();
+  const tx = db.transaction(storeName, 'readwrite');
+  const store = tx.objectStore(storeName);
+  const index = store.index(indexName);
+  const existing = await promisify<T[]>(index.getAll(key));
+  const first = existing[0];
+  const record = first ? updater(first) : creator();
+  await promisify(store.put(record));
+  await txComplete(tx);
+  return record;
 }
 
 /** Clear all records from a store. */

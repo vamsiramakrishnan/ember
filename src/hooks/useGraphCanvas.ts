@@ -8,7 +8,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useEntityIndex } from './useEntityIndex';
 import { useNotebookGraph } from './useKnowledgeGraph';
-import type { GraphNode, GraphEdge, GraphNodeKind } from '@/types/graph-canvas';
+import type { CanvasNode, GraphEdge, GraphNodeKind } from '@/types/graph-canvas';
 
 const KIND_MAP: Record<string, GraphNodeKind | null> = {
   concept: 'concept',
@@ -29,12 +29,12 @@ export function useGraphCanvas() {
   const [focusId, setFocusId] = useState<string | null>(null);
   const [hoverId, setHoverId] = useState<string | null>(null);
 
-  const nodes: GraphNode[] = useMemo(() => {
+  const nodes: CanvasNode[] = useMemo(() => {
     return entities
       .map((e) => {
         const kind = KIND_MAP[e.type] ?? null;
         if (!kind) return null;
-        const node: GraphNode = {
+        const node: CanvasNode = {
           id: e.id,
           kind,
           label: e.name,
@@ -42,7 +42,7 @@ export function useGraphCanvas() {
         };
         return node;
       })
-      .filter((n): n is GraphNode => n !== null);
+      .filter((n): n is CanvasNode => n !== null);
   }, [entities]);
 
   const edges: GraphEdge[] = useMemo(() => {

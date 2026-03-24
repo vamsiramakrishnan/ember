@@ -3,6 +3,7 @@
  * flash-lite + MINIMAL thinking for low latency.
  */
 import { EMBER_DESIGN_CONTEXT, TOOLS, type AgentConfig } from './config';
+import { MODELS } from '../gemini';
 import { tutorResponseSchema } from '@/services/schemas';
 
 const INSTRUCTION = `${EMBER_DESIGN_CONTEXT}
@@ -97,7 +98,7 @@ Keep responses concise: 1-3 sentences for marginalia/questions/directives.`;
 
 export const TUTOR_AGENT: AgentConfig = {
   name: 'Tutor',
-  model: 'gemini-3.1-flash-lite-preview',
+  model: MODELS.text,
   systemInstruction: INSTRUCTION,
   thinkingLevel: 'MINIMAL',
   tools: [TOOLS.googleSearch],

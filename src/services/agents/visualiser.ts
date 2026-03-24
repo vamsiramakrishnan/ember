@@ -3,6 +3,7 @@
  * flash + HIGH thinking for thoughtful, interactive concept visualization.
  */
 import { EMBER_DESIGN_CONTEXT, TOOLS, type AgentConfig } from './config';
+import { MODELS } from '../gemini';
 
 const INSTRUCTION = `${EMBER_DESIGN_CONTEXT}
 
@@ -148,7 +149,7 @@ CREATE EXPERIENCES, NOT DISPLAYS. Every visualization should invite exploration:
 
 export const VISUALISER_AGENT: AgentConfig = {
   name: 'Visualiser',
-  model: 'gemini-3-flash-preview',
+  model: MODELS.heavy,
   systemInstruction: INSTRUCTION,
   thinkingLevel: 'HIGH',
   tools: [TOOLS.googleSearch],

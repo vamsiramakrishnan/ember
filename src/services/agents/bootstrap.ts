@@ -4,6 +4,7 @@
  * then generates initial constellation data and an opening entry.
  */
 import { EMBER_DESIGN_CONTEXT, TOOLS, type AgentConfig } from './config';
+import { MODELS } from '../gemini';
 import { bootstrapSchema } from '@/services/schemas';
 
 const INSTRUCTION = `${EMBER_DESIGN_CONTEXT}
@@ -41,7 +42,7 @@ Keep everything grounded in real scholarship. No invented thinkers, no fake book
 
 export const BOOTSTRAP_AGENT: AgentConfig = {
   name: 'Bootstrap',
-  model: 'gemini-3-flash-preview',
+  model: MODELS.heavy,
   systemInstruction: INSTRUCTION,
   thinkingLevel: 'MEDIUM',
   tools: [TOOLS.googleSearch, TOOLS.urlContext],

@@ -3,7 +3,7 @@
  * Sessions are scoped to a notebook, which belongs to a student.
  */
 import { Store } from '../schema';
-import { get, getAll, put, getByIndex } from '../engine';
+import { get, getAll, put, getByIndex, patch } from '../engine';
 import { createId } from '../ids';
 import type { SessionRecord } from '../records';
 
@@ -59,9 +59,11 @@ export async function updateSession(
   id: string,
   updates: Partial<Pick<SessionRecord, 'topic' | 'date' | 'timeOfDay'>>,
 ): Promise<void> {
-  const existing = await get<SessionRecord>(Store.Sessions, id);
-  if (!existing) return;
-  await put(Store.Sessions, { ...existing, ...updates, updatedAt: Date.now() });
+  await patch<SessionRecord>(Store.Sessions, id, (existing) => ({
+    ...existing,
+    ...updates,
+    updatedAt: Date.now(),
+  }));
 }
 
 export async function getLatestSession(): Promise<SessionRecord | undefined> {

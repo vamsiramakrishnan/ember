@@ -3,7 +3,7 @@
  * Stores positions and connections for canvas mode (4.1).
  */
 import { Store } from '../schema';
-import { get, put, getByIndex } from '../engine';
+import { get, getByIndex, upsertByIndex } from '../engine';
 import { createId } from '../ids';
 import type { CanvasRecord } from '../records';
 import type { CanvasPosition, CanvasConnection } from '@/types/canvas';
@@ -13,23 +13,21 @@ export async function saveCanvasState(params: {
   positions: CanvasPosition[];
   connections: CanvasConnection[];
 }): Promise<CanvasRecord> {
-  const existing = await getCanvasBySession(params.sessionId);
-  const now = Date.now();
-
-  if (existing) {
-    const updated = { ...existing, ...params, updatedAt: now };
-    await put(Store.Canvas, updated);
-    return updated;
-  }
-
-  const record: CanvasRecord = {
-    id: createId(),
-    createdAt: now,
-    updatedAt: now,
-    ...params,
-  };
-  await put(Store.Canvas, record);
-  return record;
+  return upsertByIndex<CanvasRecord>(
+    Store.Canvas,
+    'by-session',
+    params.sessionId,
+    (existing) => ({ ...existing, ...params, updatedAt: Date.now() }),
+    () => {
+      const now = Date.now();
+      return {
+        id: createId(),
+        createdAt: now,
+        updatedAt: now,
+        ...params,
+      };
+    },
+  );
 }
 
 export async function getCanvasBySession(

@@ -50,6 +50,7 @@ async function _streamFallback(
 async function _runLoop(
   agent: AgentConfig, messages: AgentMessage[],
   context: LoopContext, onFinalText?: StreamCb,
+  signal?: AbortSignal,
 ): Promise<AgenticResult> {
   const client = getGeminiClient();
   if (!client) throw new Error('Gemini API key not configured');
@@ -65,6 +66,7 @@ async function _runLoop(
   const lastToolResults = new Map<string, string>();
 
   for (let iter = 0; iter < maxIter; iter++) {
+    if (signal?.aborted) break;
     const response = await client.models.generateContent({
       model: agent.model, config, contents: currentMessages,
     });
@@ -99,6 +101,7 @@ async function _runLoop(
     const results = await Promise.all(
       fnCalls.map((p) => executeTool(p.functionCall.name, p.functionCall.args, context)),
     );
+    if (signal?.aborted) break;
 
     // Loop detection: break if every tool returned same result as prior iteration
     let stuckCount = 0;
@@ -125,22 +128,24 @@ async function _runLoop(
 /** Run an agent with function calling tools (non-streaming). */
 export async function runAgenticLoop(
   agent: AgentConfig, messages: AgentMessage[], context: LoopContext,
+  signal?: AbortSignal,
 ): Promise<AgenticResult> {
   if (!getGeminiClient() && useProxy()) {
-    const result = await runTextAgent(agent, messages);
+    const result = await runTextAgent(agent, messages, signal);
     return { text: result.text, toolCalls: [], deferredActions: [] };
   }
-  return _runLoop(agent, messages, context);
+  return _runLoop(agent, messages, context, undefined, signal);
 }
 
 /** Run an agent with function calling, streaming the final text. */
 export async function runAgenticLoopStreaming(
   agent: AgentConfig, messages: AgentMessage[],
   context: LoopContext, onChunk: StreamCb,
+  signal?: AbortSignal,
 ): Promise<AgenticResult> {
   if (!getGeminiClient() && useProxy()) {
-    const result = await runTextAgentStreaming(agent, messages, onChunk);
+    const result = await runTextAgentStreaming(agent, messages, onChunk, signal);
     return { text: result.text, toolCalls: [], deferredActions: [] };
   }
-  return _runLoop(agent, messages, context, onChunk);
+  return _runLoop(agent, messages, context, onChunk, signal);
 }

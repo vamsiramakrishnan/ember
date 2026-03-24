@@ -74,7 +74,9 @@ export function useScrollContext(entries: LiveEntry[]): ScrollContext {
     entryEls.forEach((el) => observer.observe(el));
 
     return () => observer.disconnect();
-  }, [entries]);
+  // Observer uses entryMapRef (a ref), so no need to re-create on entries change.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const clearReference = useCallback(() => {
     setReferencedEntry(null);

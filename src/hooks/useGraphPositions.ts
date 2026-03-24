@@ -6,7 +6,7 @@
  * across sessions.
  */
 import { useEffect, useCallback, useRef } from 'react';
-import type { GraphNode, LayoutNode, SavedPosition } from '@/types/graph-canvas';
+import type { CanvasNode, LayoutNode, SavedPosition } from '@/types/graph-canvas';
 
 const STORAGE_PREFIX = 'ember-graph-positions-';
 
@@ -26,7 +26,7 @@ function loadPositions(notebookId: string): SavedPosition[] {
 
 export function useGraphPositions(
   notebookId: string | null,
-  _nodes: GraphNode[],
+  _nodes: CanvasNode[],
   onRestored: (positions: SavedPosition[]) => void,
 ) {
   const restoredRef = useRef(false);
