@@ -29,7 +29,7 @@ export function Footer() {
 
   return (
     <footer className={styles.footer}>
-      <Column>
+      <Column wide>
         <div className={styles.row}>
           <p className={styles.text}>
             Ember — aristocratic tutoring for every child

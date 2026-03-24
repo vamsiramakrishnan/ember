@@ -6,9 +6,10 @@
 import { useMemo } from 'react';
 import { MentionChip, parseMentions } from '@/primitives/MentionChip';
 import { SlashChip } from '@/primitives/SlashChip';
+import { SLASH_COMMAND_PATTERN } from './slash-commands';
 import styles from './ChipPreviewBar.module.css';
 
-const SLASH_RE = /\/(?:draw|visualize|research|explain|summarize|quiz|timeline|connect|define|teach|podcast|flashcards|exercise)\b/g;
+const SLASH_RE = new RegExp(`\\/(?:${SLASH_COMMAND_PATTERN})\\b`, 'g');
 
 interface ChipPreviewBarProps {
   value: string;

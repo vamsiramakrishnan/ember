@@ -18,7 +18,7 @@ export function Header({ activeSurface, onNavigate }: HeaderProps) {
 
   return (
     <header className={styles.header}>
-      <Column>
+      <Column wide>
         <div className={styles.row}>
           <div className={styles.breadcrumb}>
             <button

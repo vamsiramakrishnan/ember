@@ -34,7 +34,7 @@ export function Constellation() {
   const subtitle = notebook?.summary || notebook?.description;
 
   return (
-    <Column>
+    <Column wide>
       <div className={styles.container}>
         <div className={styles.headerRow}>
           {notebook?.iconDataUrl && (
