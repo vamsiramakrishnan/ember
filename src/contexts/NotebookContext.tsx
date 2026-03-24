@@ -25,7 +25,8 @@ export type EntryAction =
   | { type: 'selection'; entryId: string; actionType: string; text: string }
   | { type: 'start-edit'; id: string; entryType: string }
   | { type: 'save-edit'; id: string; content: string; entryType: string }
-  | { type: 'cancel-edit' };
+  | { type: 'cancel-edit' }
+  | { type: 'directive-complete'; id: string; content: string; action?: string };
 
 // ─── Drag state ────────────────────────────────────────────────────
 
@@ -90,6 +91,7 @@ interface NotebookProviderProps {
   onBranch: (id: string, content: string) => void;
   onFollowUp: (question: string, context: string) => void;
   onSelectionAction: (entryId: string, actionType: string, text: string) => void;
+  onDirectiveComplete: (id: string, content: string, action?: string) => void;
   startEdit: (id: string, entryType: string) => void;
   saveEdit: (id: string, content: string, entryType: string) => Promise<void>;
   cancelEdit: () => void;
@@ -102,7 +104,7 @@ interface NotebookProviderProps {
 export function NotebookProvider({
   children,
   crossOut, toggleBookmark, togglePin, annotate,
-  onBranch, onFollowUp, onSelectionAction,
+  onBranch, onFollowUp, onSelectionAction, onDirectiveComplete,
   startEdit, saveEdit, cancelEdit, editingId,
   drag, dragHandlers, editPopup,
 }: NotebookProviderProps) {
@@ -118,10 +120,11 @@ export function NotebookProvider({
       case 'start-edit': startEdit(action.id, action.entryType); break;
       case 'save-edit': void saveEdit(action.id, action.content, action.entryType); break;
       case 'cancel-edit': cancelEdit(); break;
+      case 'directive-complete': onDirectiveComplete(action.id, action.content, action.action); break;
     }
   }, [
     crossOut, toggleBookmark, togglePin, annotate,
-    onBranch, onFollowUp, onSelectionAction,
+    onBranch, onFollowUp, onSelectionAction, onDirectiveComplete,
     startEdit, saveEdit, cancelEdit,
   ]);
 

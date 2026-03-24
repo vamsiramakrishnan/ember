@@ -40,9 +40,11 @@ import { InlineResponse } from '@/components/tutor/InlineResponse';
 
 interface Props {
   entry: NotebookEntry;
+  /** Callback when a directive is marked complete. Receives the entry content for mastery tracking. */
+  onDirectiveComplete?: (content: string, action?: string) => void;
 }
 
-export function NotebookEntryRenderer({ entry }: Props) {
+export function NotebookEntryRenderer({ entry, onDirectiveComplete }: Props) {
   const { navigateTo } = useEntityNavigation();
 
   const handleNodeClick = useCallback((entityId: string, entityKind: string) => {
@@ -137,7 +139,18 @@ export function NotebookEntryRenderer({ entry }: Props) {
     case 'tutor-reflection':
       return <Reflection>{entry.content}</Reflection>;
     case 'tutor-directive':
-      return <Directive action={entry.action}>{entry.content}</Directive>;
+      return (
+        <Directive
+          action={entry.action}
+          completed={entry.completed}
+          completedAt={entry.completedAt}
+          onComplete={onDirectiveComplete
+            ? () => onDirectiveComplete(entry.content, entry.action)
+            : undefined}
+        >
+          {entry.content}
+        </Directive>
+      );
     case 'citation':
       return <Citation sources={entry.sources} />;
     case 'streaming-text':

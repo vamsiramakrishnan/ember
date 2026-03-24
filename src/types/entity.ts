@@ -222,7 +222,8 @@ export type CollaborationEvent =
   | { type: 'concept-deactivated'; conceptId: string; timestamp: number }
   | { type: 'mastery-updated'; conceptId: string; from: number; to: number; timestamp: number }
   | { type: 'tutor-thinking'; isThinking: boolean; isStreaming: boolean; timestamp: number }
-  | { type: 'session-phase-change'; phase: SessionPhase; timestamp: number };
+  | { type: 'session-phase-change'; phase: SessionPhase; timestamp: number }
+  | { type: 'directive-completed'; action: string; content: string; timestamp: number };
 
 export type InteractionMode =
   | 'connection' | 'socratic' | 'confirmation' | 'visual' | 'silence';

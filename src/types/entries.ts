@@ -183,7 +183,7 @@ export type NotebookEntry =
   | { type: 'echo'; content: string }
   | { type: 'bridge-suggestion'; content: string }
   | { type: 'tutor-reflection'; content: string }
-  | { type: 'tutor-directive'; content: string; action?: string }
+  | { type: 'tutor-directive'; content: string; action?: string; completed?: boolean; completedAt?: number }
   | { type: 'citation'; sources: Array<{ title: string; url: string }> }
   | { type: 'streaming-text'; content: string; done: boolean };
 

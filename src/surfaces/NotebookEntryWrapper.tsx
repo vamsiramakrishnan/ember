@@ -119,7 +119,14 @@ export const NotebookEntryWrapper = memo(function NotebookEntryWrapper({
           />
         ) : (
           <>
-            <NotebookEntryRenderer entry={entry} />
+            <NotebookEntryRenderer
+              entry={entry}
+              onDirectiveComplete={entry.type === 'tutor-directive'
+                ? (content, action) => onEntryAction({
+                  type: 'directive-complete', id, content, action,
+                })
+                : undefined}
+            />
             <SelectionToolbar
               containerRef={contentRef}
               entryId={id}

@@ -11,9 +11,44 @@
  */
 import { useCallback, useRef } from 'react';
 import { resolveCommandContext } from '@/services/command-context';
-import { TUTOR_AGENT } from '@/services/agents';
+import { micro } from '@/services/agents/config';
 import { runTextAgent } from '@/services/run-agent';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
+
+/**
+ * Dedicated agent for inline explanations — plain prose output only.
+ * Must NOT use the full TUTOR_AGENT which outputs structured JSON
+ * for the tutor-response-parser.
+ */
+const EXPLAIN_AGENT = micro(
+  `You are Ember's tutor. You explain concepts with warmth, clarity, and intellectual precision.
+
+Rules:
+- Write 2-4 sentences of plain prose. No JSON, no markdown headers, no structured output.
+- Use the student's vocabulary level based on their mastery context.
+- If the concept connects to something the student already knows, draw the connection.
+- Do not repeat the quoted text. Do not use preamble like "Sure!" or "Great question!".
+- Write in the tutor's voice: warm serif prose, like a margin annotation in a library book.`,
+);
+
+/**
+ * Safety net: if the agent accidentally returns JSON-wrapped text,
+ * extract the content string. This handles the case where the model
+ * falls back to structured output despite the system instruction.
+ */
+function stripJsonWrapper(raw: string): string {
+  // If it looks like JSON, try to extract .content
+  if (raw.startsWith('{') || raw.startsWith('```')) {
+    try {
+      const cleaned = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+      const parsed = JSON.parse(cleaned) as Record<string, unknown>;
+      if (typeof parsed.content === 'string') return parsed.content;
+    } catch {
+      // Not valid JSON — return as-is
+    }
+  }
+  return raw;
+}
 
 interface InlineExplainDeps {
   entries: LiveEntry[];
@@ -66,12 +101,12 @@ export function useInlineExplain({ entries, notebookId, addEntry }: InlineExplai
         'Do not repeat the quoted text. Do not use preamble.',
       );
 
-      const result = await runTextAgent(TUTOR_AGENT, [{
+      const result = await runTextAgent(EXPLAIN_AGENT, [{
         role: 'user',
         parts: [{ text: promptParts.join('\n') }],
       }]);
 
-      const explanation = result.text.trim();
+      const explanation = stripJsonWrapper(result.text.trim());
       if (!explanation) return;
 
       const entry: NotebookEntry = {

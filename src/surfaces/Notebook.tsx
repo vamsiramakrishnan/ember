@@ -17,6 +17,7 @@ import { useInPlaceEdit } from '@/hooks/useInPlaceEdit';
 import { usePopupState } from '@/hooks/usePopupState';
 import { useSlashCommandRouter } from '@/hooks/useSlashCommandRouter';
 import { useInlineExplain } from '@/hooks/useInlineExplain';
+import { useDirectiveCompletion } from '@/hooks/useDirectiveCompletion';
 import { createStudentEntry } from '@/hooks/useEntryInference';
 import { useStudent } from '@/contexts/StudentContext';
 import { recordStudentTurn, setStudentFocus } from '@/state';
@@ -72,6 +73,7 @@ export function Notebook({ onNavigate }: NotebookProps) {
   const { requestInlineExplain } = useInlineExplain({
     entries, notebookId: notebook?.id, addEntry,
   });
+  const { completeDirective } = useDirectiveCompletion({ patchEntry: patchEntryContent });
   const [mode, setMode] = useState<NotebookMode>('linear');
   const bottomRef = useRef<HTMLDivElement>(null);
   const marginalRef = useMemo(() => deriveMarginalRef(entries), [entries]);
@@ -137,6 +139,7 @@ export function Notebook({ onNavigate }: NotebookProps) {
       crossOut={crossOut} toggleBookmark={toggleBookmark} togglePin={togglePin}
       annotate={annotate} onBranch={onBranch} onFollowUp={onFollowUp}
       onSelectionAction={onSelectionAction}
+      onDirectiveComplete={completeDirective}
       startEdit={inPlaceEdit.startEdit} saveEdit={inPlaceEdit.saveEdit}
       cancelEdit={inPlaceEdit.cancelEdit} editingId={inPlaceEdit.editingId}
       drag={drag} dragHandlers={dragHandlers}
