@@ -50,6 +50,53 @@
   margin-bottom: 2px;
 }
 
+.paragraph {
+  margin: 0 0 8px;
+}
+
+.paragraph:last-child {
+  margin-bottom: 0;
+}
+
+/* Table styles — matches Ember visual language */
+.tableWrap {
+  overflow-x: auto;
+  margin: 12px 0;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.th {
+  font-family: var(--font-tutor);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 10px 12px;
+  text-align: left;
+  background: var(--paper-deep);
+  border-bottom: 1px solid var(--rule);
+}
+
+.td {
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 400;
+  color: var(--ink-soft);
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--rule-light);
+}
+
+.table tbody tr:last-child .td {
+  border-bottom: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .link { transition: none; }
 }

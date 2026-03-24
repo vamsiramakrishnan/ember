@@ -6,7 +6,7 @@
  * Layout mirrors Marginalia (2.1): margin rule + text.
  * See: 06-component-inventory.md, Family 2.
  */
-import { MarkdownContent } from '@/primitives/MarkdownContent';
+import { MarkdownContent, hasTable } from '@/primitives/MarkdownContent';
 import styles from './StreamingText.module.css';
 
 interface StreamingTextProps {
@@ -68,14 +68,14 @@ export function StreamingText({ children, done }: StreamingTextProps) {
       );
     }
     if (unwrapped) {
-      // Show the extracted text content during streaming
+      const Tag = hasTable(unwrapped) ? 'div' : 'span';
       return (
         <div className={styles.container} aria-live="polite" aria-busy>
           <div className={ruleCls} />
           <div className={styles.body}>
-            <span className={styles.text}>
+            <Tag className={styles.text}>
               <MarkdownContent>{unwrapped}</MarkdownContent>
-            </span>
+            </Tag>
             <span className={styles.cursor} aria-hidden="true" />
           </div>
         </div>
@@ -83,13 +83,14 @@ export function StreamingText({ children, done }: StreamingTextProps) {
     }
   }
 
+  const Wrap = hasTable(children) ? 'div' : 'span';
   return (
     <div className={styles.container} aria-live="polite" aria-busy={!done}>
       <div className={ruleCls} />
       <div className={styles.body}>
-        <span className={styles.text}>
+        <Wrap className={styles.text}>
           <MarkdownContent>{children}</MarkdownContent>
-        </span>
+        </Wrap>
         {!done && <span className={styles.cursor} aria-hidden="true" />}
       </div>
     </div>

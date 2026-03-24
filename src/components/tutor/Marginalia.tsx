@@ -8,7 +8,7 @@
  *
  * See: 06-component-inventory.md, Family 2.
  */
-import { MarkdownContent } from '@/primitives/MarkdownContent';
+import { MarkdownContent, hasTable } from '@/primitives/MarkdownContent';
 import { InlineSketch, parseSketchMarkers } from './InlineSketch';
 import styles from './Marginalia.module.css';
 
@@ -34,6 +34,10 @@ export function Marginalia({ children }: MarginaliaProps) {
               <InlineSketch key={i} description={seg.description} />
             ),
           )
+        ) : hasTable(children) ? (
+          <div className={styles.prose}>
+            <MarkdownContent>{children}</MarkdownContent>
+          </div>
         ) : (
           <p className={styles.prose}>
             <MarkdownContent>{children}</MarkdownContent>

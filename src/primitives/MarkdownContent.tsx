@@ -4,6 +4,7 @@
  * SlashChip. Supports bold, italic, code, links, lists, blockquotes.
  */
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import type { ReactNode } from 'react';
 import { MentionChip, MENTION_PATTERN } from './MentionChip';
 import { SlashChip } from './SlashChip';
@@ -15,9 +16,14 @@ interface MarkdownContentProps {
   className?: string;
 }
 
-const ALLOWED = [
+const INLINE_ALLOWED = [
   'p', 'em', 'strong', 'code', 'a',
   'ul', 'ol', 'li', 'blockquote', 'br', 'del', 'sup', 'sub',
+];
+
+const BLOCK_ALLOWED = [
+  ...INLINE_ALLOWED,
+  'table', 'thead', 'tbody', 'tr', 'th', 'td',
 ];
 
 /** Pattern for /command tokens (at start or after whitespace). */
@@ -31,8 +37,11 @@ export function MarkdownContent({ children, className }: MarkdownContentProps) {
     return <ChipAwareContent text={children} className={className} />;
   }
   if (!hasMarkdown(children)) return <>{children}</>;
+  if (hasTable(children)) return <MdBlock className={className}>{children}</MdBlock>;
   return <MdSpan className={className}>{children}</MdSpan>;
 }
+
+export { hasTable };
 
 /** Splits text on @mentions and /commands, renders chips inline. */
 function ChipAwareContent({ text, className }: { text: string; className?: string }) {
@@ -76,23 +85,53 @@ function pushText(parts: ReactNode[], txt: string, cls?: string) {
     : txt);
 }
 
+const INLINE_COMPONENTS = {
+  p: ({ children: c }: { children?: ReactNode }) => <>{c}</>,
+  a: ({ href, children: c }: { href?: string; children?: ReactNode }) => (
+    <a className={styles.link} href={href}
+      target="_blank" rel="noopener noreferrer">{c}</a>),
+  code: ({ children: c }: { children?: ReactNode }) => (
+    <code className={styles.code}>{c}</code>),
+  blockquote: ({ children: c }: { children?: ReactNode }) => (
+    <blockquote className={styles.blockquote}>{c}</blockquote>),
+};
+
+const BLOCK_COMPONENTS = {
+  ...INLINE_COMPONENTS,
+  p: ({ children: c }: { children?: ReactNode }) => (
+    <p className={styles.paragraph}>{c}</p>),
+  table: ({ children: c }: { children?: ReactNode }) => (
+    <div className={styles.tableWrap}>
+      <table className={styles.table}>{c}</table>
+    </div>),
+  th: ({ children: c }: { children?: ReactNode }) => (
+    <th className={styles.th}>{c}</th>),
+  td: ({ children: c }: { children?: ReactNode }) => (
+    <td className={styles.td}>{c}</td>),
+};
+
 function MdSpan({ children, className }: { children: string; className?: string }) {
   return (
     <span className={`${styles.markdown} ${className ?? ''}`}>
-      <ReactMarkdown allowedElements={ALLOWED} unwrapDisallowed components={{
-        p: ({ children: c }: { children?: ReactNode }) => <>{c}</>,
-        a: ({ href, children: c }: { href?: string; children?: ReactNode }) => (
-          <a className={styles.link} href={href}
-            target="_blank" rel="noopener noreferrer">{c}</a>),
-        code: ({ children: c }: { children?: ReactNode }) => (
-          <code className={styles.code}>{c}</code>),
-        blockquote: ({ children: c }: { children?: ReactNode }) => (
-          <blockquote className={styles.blockquote}>{c}</blockquote>),
-      }}>{children}</ReactMarkdown>
+      <ReactMarkdown remarkPlugins={[remarkGfm]} allowedElements={INLINE_ALLOWED}
+        unwrapDisallowed components={INLINE_COMPONENTS}>{children}</ReactMarkdown>
     </span>
   );
 }
 
+function MdBlock({ children, className }: { children: string; className?: string }) {
+  return (
+    <div className={`${styles.markdown} ${className ?? ''}`}>
+      <ReactMarkdown remarkPlugins={[remarkGfm]} allowedElements={BLOCK_ALLOWED}
+        unwrapDisallowed components={BLOCK_COMPONENTS}>{children}</ReactMarkdown>
+    </div>
+  );
+}
+
 function hasMarkdown(text: string): boolean {
-  return /[*_`\[\]>#\-~]/.test(text);
+  return /[*_`\[\]>#\-~|]/.test(text);
+}
+
+function hasTable(text: string): boolean {
+  return /\|.+\|[\r\n]+\|[\s:*-]+\|/.test(text);
 }
