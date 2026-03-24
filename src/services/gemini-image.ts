@@ -2,8 +2,11 @@
  * Gemini image generation service.
  * Uses gemini-3.1-flash-image-preview for generating concept diagrams,
  * whiteboard sketches, and visual explanations in Ember's notebook style.
+ *
+ * Supports dual-mode: direct SDK (dev) or server proxy (production).
  */
 import { getGeminiClient, MODELS } from './gemini';
+import { useProxy, proxyImageGeneration } from './proxy-client';
 
 export interface GeneratedImage {
   /** Base64-encoded image data. */
@@ -37,6 +40,16 @@ export interface ImageGenerationOptions {
 export async function generateImage(
   options: ImageGenerationOptions,
 ): Promise<ImageGenerationResult> {
+  // Proxy path: use /api/gemini-image when no client-side API key
+  if (useProxy()) {
+    return proxyImageGeneration({
+      prompt: options.prompt,
+      useSearch: options.useSearch,
+      aspectRatio: options.aspectRatio,
+      imageSize: options.imageSize,
+    });
+  }
+
   const client = getGeminiClient();
   if (!client) {
     throw new Error('Gemini API key not configured');

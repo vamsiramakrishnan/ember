@@ -3,8 +3,11 @@
  * Analyses images (sketches, diagrams, photos of handwritten work)
  * that students share in the notebook, extracting concepts and
  * generating tutor responses grounded in visual content.
+ *
+ * Supports dual-mode: direct SDK (dev) or server proxy (production).
  */
 import { getGeminiClient, MODELS } from './gemini';
+import { useProxy, proxyMultimodalAnalysis } from './proxy-client';
 import { TUTOR_SYSTEM_PROMPT } from './tutor-prompt';
 
 export interface MultimodalAnalysisOptions {
@@ -25,6 +28,18 @@ export interface MultimodalAnalysisOptions {
 export async function analyseImage(
   options: MultimodalAnalysisOptions,
 ): Promise<string> {
+  // Proxy path
+  if (useProxy()) {
+    return proxyMultimodalAnalysis({
+      imageData: options.imageData,
+      mimeType: options.mimeType,
+      prompt: options.prompt,
+      systemInstruction: TUTOR_SYSTEM_PROMPT,
+      useSearch: options.useSearch,
+      mode: 'analyse',
+    });
+  }
+
   const client = getGeminiClient();
   if (!client) {
     throw new Error('Gemini API key not configured');
@@ -89,6 +104,16 @@ export async function extractTextFromImage(
   imageData: string,
   mimeType: string,
 ): Promise<string> {
+  // Proxy path
+  if (useProxy()) {
+    return proxyMultimodalAnalysis({
+      imageData,
+      mimeType,
+      prompt: 'Extract all text visible in this image. Preserve the layout and structure as much as possible. Return only the extracted text, no commentary.',
+      mode: 'extract',
+    });
+  }
+
   const client = getGeminiClient();
   if (!client) {
     throw new Error('Gemini API key not configured');

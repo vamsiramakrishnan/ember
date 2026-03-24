@@ -2,6 +2,8 @@
  * Gemini API client — core service for AI-powered tutor responses.
  * Supports: text generation, Google Search grounding, URL context,
  * and code execution tools.
+ *
+ * Supports dual-mode: direct SDK (dev) or server proxy (production).
  */
 import { GoogleGenAI } from '@google/genai';
 import {
@@ -10,6 +12,7 @@ import {
   collectStreamChunks,
   streamWithCallback,
 } from './gemini-helpers';
+import { useProxy, proxyTextGeneration, proxyTextGenerationStream } from './proxy-client';
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
 let clientInstance: GoogleGenAI | null = null;
@@ -79,6 +82,15 @@ function historyContents(
 export async function generateText(
   options: GeminiTextOptions,
 ): Promise<string> {
+  // Proxy path
+  if (useProxy()) {
+    return proxyTextGeneration({
+      messages: promptContents(options.prompt),
+      model: options.model,
+      systemInstruction: options.systemInstruction,
+    });
+  }
+
   const response = await startStream(
     requireClient(), promptContents(options.prompt), options,
   );
@@ -91,6 +103,15 @@ export async function generateTextStream(
     onChunk: (chunk: string, accumulated: string) => void;
   },
 ): Promise<string> {
+  // Proxy path
+  if (useProxy()) {
+    return proxyTextGenerationStream({
+      messages: promptContents(options.prompt),
+      model: options.model,
+      systemInstruction: options.systemInstruction,
+    }, options.onChunk);
+  }
+
   const response = await startStream(
     requireClient(), promptContents(options.prompt), options,
   );
@@ -102,6 +123,15 @@ export async function generateTextWithHistory(
   messages: Array<{ role: 'user' | 'model'; text: string }>,
   options?: Omit<GeminiTextOptions, 'prompt'>,
 ): Promise<string> {
+  // Proxy path
+  if (useProxy()) {
+    return proxyTextGeneration({
+      messages: historyContents(messages),
+      model: options?.model,
+      systemInstruction: options?.systemInstruction,
+    });
+  }
+
   const response = await startStream(
     requireClient(), historyContents(messages), options,
   );
@@ -115,6 +145,23 @@ export async function generateTextStreamWithHistory(
     onChunk?: (chunk: string, accumulated: string) => void;
   },
 ): Promise<string> {
+  // Proxy path
+  if (useProxy()) {
+    const onChunk = options?.onChunk;
+    if (onChunk) {
+      return proxyTextGenerationStream({
+        messages: historyContents(messages),
+        model: options?.model,
+        systemInstruction: options?.systemInstruction,
+      }, onChunk);
+    }
+    return proxyTextGeneration({
+      messages: historyContents(messages),
+      model: options?.model,
+      systemInstruction: options?.systemInstruction,
+    });
+  }
+
   const response = await startStream(
     requireClient(), historyContents(messages), options,
   );
