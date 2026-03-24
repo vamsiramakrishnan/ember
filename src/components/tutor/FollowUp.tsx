@@ -1,11 +1,13 @@
 /**
  * FollowUp — inline follow-up input beneath tutor entries.
- * Renders its own MentionPopup locally so it appears near the cursor,
- * not at the bottom of the page.
+ * Renders its own MentionPopup and SlashCommandPopup locally
+ * so popups appear near the cursor, not at the page bottom.
  */
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { detectTrigger, replaceTrigger } from '@/components/student/trigger-detect';
 import { MentionPopup } from '@/components/student/MentionPopup';
+import { SlashCommandPopup } from '@/components/student/SlashCommandPopup';
+import type { SlashCommand } from '@/components/student/SlashCommandPopup';
 import { ChipPreviewBar } from '@/components/student/ChipPreviewBar';
 import { useEntityIndex } from '@/hooks/useEntityIndex';
 import { createMentionSyntax } from '@/primitives/MentionChip';
@@ -20,6 +22,7 @@ export function FollowUp({ context, onSubmit }: FollowUpProps) {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState('');
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const [slashQuery, setSlashQuery] = useState<string | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const triggerPos = useRef(-1);
   const pendingCursorPos = useRef<number | null>(null);
@@ -37,21 +40,26 @@ export function FollowUp({ context, onSubmit }: FollowUpProps) {
     }
   }, [value]);
 
-  const insertMention = useCallback((text: string) => {
+  const insertText = useCallback((text: string) => {
     if (triggerPos.current < 0) return;
     const pos = triggerPos.current;
     pendingCursorPos.current = pos + text.length;
     setValue((prev) => replaceTrigger(prev, pos, text));
     triggerPos.current = -1;
     setMentionQuery(null);
+    setSlashQuery(null);
+  }, []);
+
+  const closePopups = useCallback(() => {
+    setMentionQuery(null); setSlashQuery(null); triggerPos.current = -1;
   }, []);
 
   const handleSubmit = useCallback(() => {
     const q = value.trim();
     if (!q) return;
     onSubmit(q, context);
-    setValue(''); setOpen(false); setMentionQuery(null);
-  }, [value, context, onSubmit]);
+    setValue(''); setOpen(false); closePopups();
+  }, [value, context, onSubmit, closePopups]);
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const text = e.target.value;
@@ -60,23 +68,29 @@ export function FollowUp({ context, onSubmit }: FollowUpProps) {
     const trigger = detectTrigger(text, cursor);
     if (trigger.type === 'mention') {
       triggerPos.current = trigger.position;
-      setMentionQuery(trigger.query);
+      setMentionQuery(trigger.query); setSlashQuery(null);
       return;
     }
-    triggerPos.current = -1;
-    setMentionQuery(null);
-  }, []);
+    if (trigger.type === 'slash') {
+      triggerPos.current = trigger.position;
+      setSlashQuery(trigger.query); setMentionQuery(null);
+      return;
+    }
+    closePopups();
+  }, [closePopups]);
+
+  const popupOpen = mentionQuery !== null || slashQuery !== null;
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (mentionQuery !== null && (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter')) {
-      e.preventDefault(); return;
+    if (popupOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter')) {
+      return; // let popup handle these via its own document listener
     }
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(); }
     if (e.key === 'Escape') {
-      if (mentionQuery !== null) { setMentionQuery(null); return; }
+      if (popupOpen) { closePopups(); return; }
       setOpen(false); setValue('');
     }
-  }, [handleSubmit, mentionQuery]);
+  }, [handleSubmit, popupOpen, closePopups]);
 
   if (!open) {
     return (
@@ -99,12 +113,17 @@ export function FollowUp({ context, onSubmit }: FollowUpProps) {
             placeholder="What about this?" aria-label="Follow-up question" rows={1} />
           {mentionQuery !== null && (
             <MentionPopup query={mentionQuery} results={mentionResults}
-              onSelect={(entity) => insertMention(createMentionSyntax(entity.name, entity.type, entity.id) + ' ')}
+              onSelect={(entity) => insertText(createMentionSyntax(entity.name, entity.type, entity.id) + ' ')}
               onClose={() => setMentionQuery(null)} />
+          )}
+          {slashQuery !== null && (
+            <SlashCommandPopup query={slashQuery}
+              onSelect={(cmd: SlashCommand) => insertText(`/${cmd.label} `)}
+              onClose={() => setSlashQuery(null)} />
           )}
         </div>
         <button className={styles.cancel}
-          onClick={() => { setOpen(false); setValue(''); setMentionQuery(null); }}
+          onClick={() => { setOpen(false); setValue(''); closePopups(); }}
           aria-label="Cancel">esc</button>
       </div>
       <ChipPreviewBar value={value} />
