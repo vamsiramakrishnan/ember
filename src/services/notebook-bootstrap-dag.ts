@@ -4,7 +4,6 @@ import type { NodeResult } from './dag-executor';
 import { executeDAG, collectEntries } from './dag-executor';
 import { dispatchNode } from './dag-dispatcher';
 import { isGeminiAvailable } from './gemini';
-import { refineContent } from './content-refiner';
 import { bootstrapNotebook } from './notebook-bootstrap';
 import { generateNotebookIcon } from './notebook-enrichment';
 import { Store, notify } from '@/persistence';
@@ -76,25 +75,12 @@ export async function executeBootstrapDAG(
   ) => dispatchNode(node, d, prior, undefined, notebookId);
 
   const results = await executeDAG(dag, dispatcher, (nodeId, status, label) => {
-    // Drive bootstrap progress indicator
     updateBootstrapNode(nodeId, status);
-    if (status === 'active' && onEntries) {
-      onEntries([], label);
-    }
+    if (status === 'active' && onEntries) onEntries([], label);
   });
 
-  // Refine reading material if generated (critique loop)
-  for (const [nodeId, result] of results) {
-    if (!result.success) continue;
-    for (let i = 0; i < result.entries.length; i++) {
-      const entry = result.entries[i]!;
-      if (entry.type === 'reading-material' || entry.type === 'flashcard-deck') {
-        const node = dag.nodes.find((n) => n.id === nodeId);
-        const refined = await refineContent(entry, node?.content ?? '').catch(() => null);
-        if (refined?.entry) result.entries[i] = refined.entry;
-      }
-    }
-  }
+  // Note: reading-material, flashcard-deck, and exercise-set are already
+  // refined by their dedicated generators — no double-refinement needed.
 
   // Emit entries per node as they become available
   const allEntries = collectEntries(dag, results);
