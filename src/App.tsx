@@ -1,17 +1,12 @@
 /**
  * App — Root component.
  * Flow: Landing (pick student) → NotebookSelect (pick notebook) → Surfaces.
- * Initialises persistence and seeds demo data on first run.
+ * Initialises persistence, observability, and seeds demo data on first run.
  */
-import { useState, useEffect } from 'react';
+import { lazy, Suspense, useState, useEffect } from 'react';
 import { Shell } from '@/layout/Shell';
 import { Header } from '@/layout/Header';
 import { Footer } from '@/layout/Footer';
-import { Landing } from '@/surfaces/Landing';
-import { NotebookSelect } from '@/surfaces/NotebookSelect';
-import { Notebook } from '@/surfaces/Notebook';
-import { Constellation } from '@/surfaces/Constellation';
-import { Philosophy } from '@/surfaces/Philosophy';
 import { StudentProvider, useStudent } from '@/contexts/StudentContext';
 import { EntityNavigationProvider } from '@/hooks/useEntityNavigation';
 import { useEntityResolver } from '@/hooks/useEntityResolver';
@@ -20,16 +15,66 @@ import { seedIfEmpty } from '@/persistence/seed';
 import { registerAdapter, startSync } from '@/persistence/sync';
 import { createAdapterFromEnv } from '@/persistence/sync/supabase';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { SurfaceErrorBoundary } from '@/components/SurfaceErrorBoundary';
+import { initObservability } from '@/observability';
 import type { Surface } from '@/layout/Navigation';
 
-function ActiveSurface({ surface, onNavigate }: { surface: Surface; onNavigate: (s: Surface) => void }) {
+/* Lazy-loaded surfaces — each in its own chunk */
+const Notebook = lazy(() =>
+  import('@/surfaces/Notebook').then(m => ({ default: m.Notebook }))
+);
+const Constellation = lazy(() =>
+  import('@/surfaces/Constellation').then(m => ({ default: m.Constellation }))
+);
+const Philosophy = lazy(() =>
+  import('@/surfaces/Philosophy').then(m => ({ default: m.Philosophy }))
+);
+const Landing = lazy(() =>
+  import('@/surfaces/Landing').then(m => ({ default: m.Landing }))
+);
+const NotebookSelect = lazy(() =>
+  import('@/surfaces/NotebookSelect').then(m => ({ default: m.NotebookSelect }))
+);
+
+/** Invisible loader — Ember shows nothing rather than a spinner. */
+function SurfaceLoader() {
+  return <div style={{ minHeight: '80vh' }} aria-busy="true" />;
+}
+
+function ActiveSurface({
+  surface,
+  onNavigate,
+}: {
+  surface: Surface;
+  onNavigate: (s: Surface) => void;
+}) {
+  const handleRecovery = () => onNavigate('notebook');
+
   switch (surface) {
     case 'notebook':
-      return <Notebook onNavigate={onNavigate} />;
+      return (
+        <SurfaceErrorBoundary surface="Notebook" onRecover={handleRecovery}>
+          <Suspense fallback={<SurfaceLoader />}>
+            <Notebook onNavigate={onNavigate} />
+          </Suspense>
+        </SurfaceErrorBoundary>
+      );
     case 'constellation':
-      return <Constellation />;
+      return (
+        <SurfaceErrorBoundary surface="Constellation" onRecover={handleRecovery}>
+          <Suspense fallback={<SurfaceLoader />}>
+            <Constellation />
+          </Suspense>
+        </SurfaceErrorBoundary>
+      );
     case 'philosophy':
-      return <Philosophy />;
+      return (
+        <SurfaceErrorBoundary surface="Philosophy" onRecover={handleRecovery}>
+          <Suspense fallback={<SurfaceLoader />}>
+            <Philosophy />
+          </Suspense>
+        </SurfaceErrorBoundary>
+      );
   }
 }
 
@@ -42,7 +87,9 @@ function AppContent() {
   if (!student) {
     return (
       <Shell>
-        <Landing />
+        <Suspense fallback={<SurfaceLoader />}>
+          <Landing />
+        </Suspense>
       </Shell>
     );
   }
@@ -53,7 +100,9 @@ function AppContent() {
       <Shell>
         <Header activeSurface={surface} onNavigate={setSurface} />
         <main style={{ minHeight: '80vh' }}>
-          <NotebookSelect />
+          <Suspense fallback={<SurfaceLoader />}>
+            <NotebookSelect />
+          </Suspense>
         </main>
         <Footer />
       </Shell>
@@ -82,6 +131,8 @@ export function App() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    initObservability();
+
     openDB()
       .then(() => seedIfEmpty())
       .then(() => {

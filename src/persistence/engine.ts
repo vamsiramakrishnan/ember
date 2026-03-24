@@ -9,6 +9,11 @@ import { createOplogStores } from './sync/oplog';
 
 let dbInstance: IDBDatabase | null = null;
 
+/** Reset cached DB instance. Test-only — not for production use. */
+export function _resetForTest(): void {
+  dbInstance = null;
+}
+
 /** Open (or create) the database, running migrations as needed. */
 export function openDB(): Promise<IDBDatabase> {
   if (dbInstance) return Promise.resolve(dbInstance);

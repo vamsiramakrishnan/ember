@@ -1,0 +1,51 @@
+/**
+ * SurfaceErrorBoundary — quiet, on-brand surface-level error recovery.
+ * All values reference CSS custom properties from the token system.
+ */
+
+.container {
+  max-width: 640px;
+  margin: 80px auto;
+  padding: 0 24px;
+  font-family: var(--font-student);
+  color: var(--ink-soft);
+  text-align: center;
+  line-height: 1.75;
+}
+
+.title {
+  font-family: var(--font-tutor);
+  font-size: 20px;
+  font-weight: 300;
+  color: var(--ink);
+  margin-bottom: 16px;
+}
+
+.message {
+  font-size: 15px;
+  margin-bottom: 24px;
+}
+
+.recoverButton {
+  font-family: var(--font-system);
+  font-size: 12px;
+  color: var(--ink-faint);
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 8px 20px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: color 0.3s ease, border-color 0.3s ease;
+}
+
+.recoverButton:hover {
+  color: var(--ink-soft);
+  border-color: var(--ink-ghost);
+}
+
+.recoverButton:focus-visible {
+  outline: 2px solid var(--margin);
+  outline-offset: 2px;
+}
