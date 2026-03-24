@@ -38,7 +38,7 @@ export async function runImageAgent(
 
   // Inject style reference palette + system context into user messages.
   // NB2 adheres to style much better with a visual reference than hex codes.
-  const withStyle = injectStyleReference(messages);
+  const withStyle = await injectStyleReference(messages);
   const contents = agent.systemInstruction
     ? injectSystemContext(withStyle, agent.systemInstruction)
     : withStyle;
@@ -93,7 +93,7 @@ async function runImageViaProxy(
     useSearch: agent.tools.length > 0,
     referenceImages: [{
       mimeType: STYLE_REFERENCE_MIME,
-      data: getStyleReferenceData(),
+      data: await getStyleReferenceData(),
     }],
   });
   return { images: result.images, text: result.text };
@@ -106,8 +106,8 @@ async function runImageViaProxy(
  * user message. NB2 achieves much better style adherence when given a
  * visual example alongside text descriptions.
  */
-function injectStyleReference(messages: AgentMessage[]): AgentMessage[] {
-  const paletteData = getStyleReferenceData();
+async function injectStyleReference(messages: AgentMessage[]): Promise<AgentMessage[]> {
+  const paletteData = await getStyleReferenceData();
   return messages.map((msg, i) => {
     if (i !== 0 || msg.role !== 'user') return msg;
     return {
