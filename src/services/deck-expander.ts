@@ -4,26 +4,17 @@
  * Uses a git-diff-inspired approach: given the existing slides, generates
  * a continuation that picks up where the deck left off. The new slides
  * are appended (not replaced), preserving the student's reading position.
- *
- * Also enriches slides with per-slide AI illustrations for visual-heavy
- * layouts (diagram, timeline, two-column).
  */
 import { generateStructured } from './structured-generator';
 import { refineContent } from './content-refiner';
+import { validateSlides } from './slide-validation';
 import { narrateStep, cancelNarration } from './status-narrator';
 import { setTutorActivity } from '@/state';
 import type { NotebookEntry, LiveEntry, ReadingSlide } from '@/types/entries';
 
-const VALID_LAYOUTS = new Set([
-  'title', 'content', 'two-column', 'quote', 'diagram', 'summary', 'timeline', 'table',
-]);
-const VALID_ACCENTS = new Set(['sage', 'indigo', 'amber', 'margin']);
-
 /** How many new slides to generate per expansion. */
 const EXPANSION_SIZES: Record<string, number> = {
-  brief: 3,
-  standard: 5,
-  deep: 8,
+  brief: 3, standard: 5, deep: 8,
 };
 
 export type ExpansionDepth = 'brief' | 'standard' | 'deep';
@@ -55,22 +46,17 @@ export async function expandDeck(
           const newSlides = validateSlides(parsed.slides);
           if (newSlides.length === 0) return null;
 
-          // Merge: existing slides (without final summary) + new slides
           const base = stripTrailingSummary(existing.slides);
-          const merged = [...base, ...newSlides];
-
           const entry: NotebookEntry = {
             type: 'reading-material',
-            title: existing.title,
-            subtitle: existing.subtitle,
-            slides: merged,
+            title: existing.title, subtitle: existing.subtitle,
+            slides: [...base, ...newSlides],
             coverUrl: existing.coverUrl,
           };
           return entry;
         },
       },
     );
-
     if (!raw) return null;
     const { entry: refined } = await refineContent(raw, topic);
     return refined;
@@ -78,29 +64,6 @@ export async function expandDeck(
     cancelNarration();
     setTutorActivity(false, false, null);
   }
-}
-
-// ─── Helpers ─────────────────────────────────────────────────
-
-function validateSlides(raw: ReadingSlide[]): ReadingSlide[] {
-  return raw.slice(0, 12).map((s) => ({
-    heading: String(s.heading || 'Untitled'),
-    body: String(s.body || ''),
-    layout: VALID_LAYOUTS.has(s.layout) ? s.layout : 'content',
-    accent: s.accent && VALID_ACCENTS.has(s.accent) ? s.accent : undefined,
-    notes: s.notes ? String(s.notes) : undefined,
-    timeline: Array.isArray(s.timeline) ? s.timeline.map((t) => ({
-      period: String(t.period ?? ''), event: String(t.event ?? ''),
-      detail: t.detail ? String(t.detail) : undefined,
-    })) : undefined,
-    tableData: s.tableData?.headers ? {
-      headers: s.tableData.headers.map(String),
-      rows: (s.tableData.rows ?? []).map((r: string[]) => r.map(String)),
-    } : undefined,
-    diagramItems: Array.isArray(s.diagramItems) ? s.diagramItems.map((d) => ({
-      label: String(d.label ?? ''), detail: d.detail ? String(d.detail) : undefined,
-    })) : undefined,
-  }));
 }
 
 function stripTrailingSummary(slides: ReadingSlide[]): ReadingSlide[] {
@@ -126,17 +89,23 @@ Schema:
   "slides": [{
     "heading": "string",
     "body": "string (markdown — substantial, 80-150 words per slide)",
-    "layout": "content | two-column | quote | diagram | summary | timeline | table",
+    "layout": "content | two-column | quote | diagram | summary | timeline | table | stat-cards | process-flow | pyramid | comparison | funnel | cycle | checklist | matrix",
     "accent": "sage | indigo | amber | margin (optional)",
-    "notes": "string (optional)",
-    "timeline": [{"period": "1609", "event": "...", "detail": "optional"}],
-    "tableData": {"headers": ["A", "B"], "rows": [["x", "y"]]},
-    "diagramItems": [{"label": "Concept", "detail": "explanation"}]
+    "statCards": [{"value": "42%", "label": "Metric", "detail": "context"}],
+    "processSteps": [{"step": "Step name", "detail": "description"}],
+    "pyramidLayers": [{"label": "Top", "detail": "narrowest concept"}],
+    "comparisonData": {"leftLabel": "A", "rightLabel": "B", "leftPoints": ["..."], "rightPoints": ["..."]},
+    "funnelStages": [{"stage": "Stage", "value": "100", "detail": "..."}],
+    "cycleSteps": [{"step": "Step", "detail": "..."}],
+    "checklistItems": [{"item": "Key point", "checked": true}],
+    "matrixData": {"topLabel": "High", "bottomLabel": "Low", "leftLabel": "Easy", "rightLabel": "Hard", "quadrants": ["TL","TR","BL","BR"]}
   }]
 }
 
 Rules:
-- At least 1 slide MUST use timeline, table, or diagram layout
+- At least 1 slide MUST use a visual layout (not content/quote)
+- PRIORITISE visual layouts: stat-cards, process-flow, pyramid, funnel, cycle, matrix
+- Each visual layout MUST include its corresponding data array
 - Write MORE content per slide than the original (deeper, more detailed)
 - Introduce new angles, examples, or connections not in the existing slides
 - Last slide: layout "summary" — synthesize the entire expanded deck
