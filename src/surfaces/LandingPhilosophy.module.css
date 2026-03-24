@@ -1,0 +1,77 @@
+/* LandingPhilosophy — stanzas that unfold like pages turning. */
+
+.philosophy {
+  padding: 80px 24px 96px;
+}
+
+.column {
+  max-width: 540px;
+  margin: 0 auto;
+}
+
+.stanza {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.9s ease, transform 0.9s ease;
+  margin-bottom: 0;
+}
+
+.stanza.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--ink-soft);
+  line-height: 1.75;
+  margin: 0;
+  padding: 0;
+  text-indent: 0;
+}
+
+.attribution {
+  display: block;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  font-weight: 300;
+  font-style: normal;
+  color: var(--ink-ghost);
+  letter-spacing: 1.5px;
+  text-transform: lowercase;
+  margin-top: 12px;
+}
+
+.rule {
+  width: 40px;
+  height: 1px;
+  background: var(--rule);
+  margin: 40px 0;
+}
+
+.answer {
+  font-family: 'Crimson Pro', serif;
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--ink-faint);
+  margin-top: 48px;
+  letter-spacing: 0.3px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .stanza {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .philosophy { padding: 56px 24px 72px; }
+  .text { font-size: 18px; }
+}

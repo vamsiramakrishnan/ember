@@ -1,0 +1,157 @@
+/* LandingNotebook — the visual demo of student-tutor interaction. */
+
+.section {
+  padding: 64px 24px 96px;
+}
+
+.section.visible .exchange,
+.section.visible .silenceRow {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink-ghost);
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+/* The notebook container — warm paper, subtle border */
+.notebook {
+  max-width: 720px;
+  margin: 0 auto;
+  background: var(--paper-warm);
+  border: 1px solid var(--rule-light);
+  border-radius: 2px;
+  padding: 48px 32px 40px;
+  position: relative;
+}
+
+.page {
+  max-width: 560px;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* Each student-tutor pair */
+.exchange {
+  margin-bottom: 32px;
+  position: relative;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+/* Student voice — the primary text */
+.studentText {
+  font-family: 'Crimson Pro', serif;
+  font-size: 17px;
+  font-weight: 400;
+  color: var(--ink);
+  line-height: 1.78;
+  margin: 0;
+}
+
+/* Margin note container — positioned to the right on wide screens */
+.marginNote {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 12px;
+  padding-left: 20px;
+}
+
+.marginRule {
+  width: 3px;
+  min-height: 100%;
+  background: var(--margin);
+  opacity: 0.35;
+  border-radius: 1px;
+  flex-shrink: 0;
+}
+
+.tutorText {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--margin);
+  line-height: 1.65;
+  margin: 0;
+  font-style: italic;
+}
+
+/* Silence — the waiting cursor */
+.silenceRow {
+  display: flex;
+  justify-content: center;
+  padding: 24px 0 8px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.silenceCursor {
+  width: 1px;
+  height: 18px;
+  background: var(--margin);
+  animation: emberCursorBlink 1.2s ease infinite;
+}
+
+/* Caption below the notebook */
+.caption {
+  font-family: 'Crimson Pro', serif;
+  font-size: 15px;
+  font-weight: 300;
+  color: var(--ink-faint);
+  text-align: center;
+  margin-top: 32px;
+  letter-spacing: 0.3px;
+}
+
+/* Wide screens: float margin notes to the right */
+@media (min-width: 860px) {
+  .notebook { padding: 48px 48px 40px; }
+  .page { max-width: 480px; margin: 0 0 0 32px; }
+
+  .marginNote {
+    position: absolute;
+    right: -180px;
+    top: 0;
+    width: 160px;
+    margin: 0;
+    padding: 0;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .marginRule {
+    width: 100%;
+    height: 1px;
+    min-height: 0;
+    margin-bottom: 8px;
+  }
+
+  .tutorText { font-size: 14px; line-height: 1.55; }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .exchange, .silenceRow {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .silenceCursor { animation: none; opacity: 0.3; }
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .notebook { padding: 32px 20px; }
+  .studentText { font-size: 16px; }
+  .tutorText { font-size: 15px; }
+}
