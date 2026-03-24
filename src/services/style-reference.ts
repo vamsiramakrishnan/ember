@@ -1,120 +1,153 @@
 /**
- * Style Reference — generates a visual color palette + texture reference
- * image for the Gemini image model (Nano Banana 2).
+ * Style Reference — generates a visual color palette reference image
+ * for the Gemini image model (Nano Banana 2).
  *
  * NB2 is much better at style adherence with a visual example than with
- * hex codes in text. This module creates an SVG palette swatch showing
- * Ember's exact token colors, cross-hatching texture, and paper tone,
- * encoded as a base64 data URI for injection as an inlineData part.
+ * hex codes in text. This module renders Ember's exact token colors as
+ * a PNG via OffscreenCanvas, encoded as base64 for Gemini inlineData.
  *
  * The palette is generated once and cached for the session lifetime.
  */
 import { colors } from '@/tokens/colors';
 
+const W = 400;
+const H = 300;
 
-/**
- * Build an SVG that shows Ember's visual language as a reference sheet.
- * Layout: paper background, ink swatches, accent swatches, hatching sample.
- */
-function buildPaletteSvg(): string {
-  // 400×300 reference sheet — small enough for fast transfer,
-  // large enough for the model to read the colors clearly.
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
-  <!-- Paper background -->
-  <rect width="400" height="300" fill="${colors.paper}"/>
+/** Render the palette swatches onto a canvas context. */
+function drawPalette(ctx: OffscreenCanvasRenderingContext2D): void {
+  // Paper background
+  ctx.fillStyle = colors.paper;
+  ctx.fillRect(0, 0, W, H);
 
-  <!-- Paper variants row -->
-  <rect x="20" y="20" width="70" height="40" rx="2" fill="${colors.paperWarm}" stroke="${colors.rule}" stroke-width="1"/>
-  <rect x="100" y="20" width="70" height="40" rx="2" fill="${colors.paper}" stroke="${colors.rule}" stroke-width="1"/>
-  <rect x="180" y="20" width="70" height="40" rx="2" fill="${colors.paperDeep}" stroke="${colors.rule}" stroke-width="1"/>
+  // Paper variants row
+  fillSwatch(ctx, 20, 20, 70, 40, colors.paperWarm, colors.rule);
+  fillSwatch(ctx, 100, 20, 70, 40, colors.paper, colors.rule);
+  fillSwatch(ctx, 180, 20, 70, 40, colors.paperDeep, colors.rule);
 
-  <!-- Ink gradient row -->
-  <rect x="20" y="80" width="50" height="40" rx="2" fill="${colors.ink}"/>
-  <rect x="80" y="80" width="50" height="40" rx="2" fill="${colors.inkSoft}"/>
-  <rect x="140" y="80" width="50" height="40" rx="2" fill="${colors.inkFaint}"/>
-  <rect x="200" y="80" width="50" height="40" rx="2" fill="${colors.inkGhost}"/>
+  // Ink gradient row
+  fillSwatch(ctx, 20, 80, 50, 40, colors.ink);
+  fillSwatch(ctx, 80, 80, 50, 40, colors.inkSoft);
+  fillSwatch(ctx, 140, 80, 50, 40, colors.inkFaint);
+  fillSwatch(ctx, 200, 80, 50, 40, colors.inkGhost);
 
-  <!-- Accent colors — the only chromatic colors allowed -->
-  <rect x="20" y="140" width="60" height="50" rx="2" fill="${colors.sage}"/>
-  <rect x="90" y="140" width="60" height="50" rx="2" fill="${colors.indigo}"/>
-  <rect x="160" y="140" width="60" height="50" rx="2" fill="${colors.amber}"/>
-  <rect x="230" y="140" width="60" height="50" rx="2" fill="${colors.margin}"/>
+  // Accent colors
+  fillSwatch(ctx, 20, 140, 60, 50, colors.sage);
+  fillSwatch(ctx, 90, 140, 60, 50, colors.indigo);
+  fillSwatch(ctx, 160, 140, 60, 50, colors.amber);
+  fillSwatch(ctx, 230, 140, 60, 50, colors.margin);
 
-  <!-- Dim accent tints (how accents appear as backgrounds) -->
-  <rect x="20" y="200" width="60" height="30" rx="2" fill="${colors.sageDim}" stroke="${colors.rule}" stroke-width="1"/>
-  <rect x="90" y="200" width="60" height="30" rx="2" fill="${colors.indigoDim}" stroke="${colors.rule}" stroke-width="1"/>
-  <rect x="160" y="200" width="60" height="30" rx="2" fill="${colors.amberDim}" stroke="${colors.rule}" stroke-width="1"/>
-  <rect x="230" y="200" width="60" height="30" rx="2" fill="${colors.marginDim}" stroke="${colors.rule}" stroke-width="1"/>
+  // Dim accent tints
+  fillSwatch(ctx, 20, 200, 60, 30, colors.sageDim, colors.rule);
+  fillSwatch(ctx, 90, 200, 60, 30, colors.indigoDim, colors.rule);
+  fillSwatch(ctx, 160, 200, 60, 30, colors.amberDim, colors.rule);
+  fillSwatch(ctx, 230, 200, 60, 30, colors.marginDim, colors.rule);
 
-  <!-- Cross-hatching texture sample (the Ember drawing style) -->
-  <rect x="310" y="20" width="70" height="100" rx="2" fill="${colors.paper}" stroke="${colors.inkFaint}" stroke-width="1"/>
-  <g stroke="${colors.ink}" stroke-width="0.5" opacity="0.7">
-    <!-- Primary hatch lines (45°) -->
-    <line x1="315" y1="25" x2="375" y2="85"/>
-    <line x1="315" y1="35" x2="375" y2="95"/>
-    <line x1="315" y1="45" x2="375" y2="105"/>
-    <line x1="315" y1="55" x2="375" y2="115"/>
-    <line x1="315" y1="65" x2="365" y2="115"/>
-    <line x1="315" y1="75" x2="355" y2="115"/>
-    <line x1="325" y1="25" x2="375" y2="75"/>
-    <line x1="335" y1="25" x2="375" y2="65"/>
-    <line x1="345" y1="25" x2="375" y2="55"/>
-    <!-- Cross-hatch lines (135°) -->
-    <line x1="375" y1="25" x2="315" y2="85"/>
-    <line x1="375" y1="35" x2="315" y2="95"/>
-    <line x1="375" y1="45" x2="315" y2="105"/>
-    <line x1="375" y1="55" x2="315" y2="115"/>
-    <line x1="365" y1="25" x2="315" y2="75"/>
-    <line x1="355" y1="25" x2="315" y2="65"/>
-    <line x1="345" y1="25" x2="315" y2="55"/>
-  </g>
+  // Cross-hatching texture sample
+  fillSwatch(ctx, 310, 20, 70, 100, colors.paper, colors.inkFaint);
+  drawCrossHatch(ctx, 315, 25, 375, 115);
 
-  <!-- Structural rules (dividers, borders) -->
-  <line x1="20" y1="248" x2="380" y2="248" stroke="${colors.rule}" stroke-width="1"/>
-  <line x1="20" y1="252" x2="380" y2="252" stroke="${colors.ruleLight}" stroke-width="1"/>
+  // Structural rules
+  ctx.strokeStyle = colors.rule;
+  ctx.lineWidth = 1;
+  line(ctx, 20, 248, 380, 248);
+  ctx.strokeStyle = colors.ruleLight;
+  line(ctx, 20, 252, 380, 252);
 
-  <!-- Margin rule sample (tutor's terracotta line) -->
-  <line x1="310" y1="140" x2="310" y2="230" stroke="${colors.margin}" stroke-width="3" opacity="0.35"/>
+  // Margin rule sample (tutor's terracotta)
+  ctx.strokeStyle = colors.margin;
+  ctx.lineWidth = 3;
+  ctx.globalAlpha = 0.35;
+  line(ctx, 310, 140, 310, 230);
+  ctx.globalAlpha = 1;
 
-  <!-- Small circles showing accent colors at small scale -->
-  <circle cx="330" cy="160" r="8" fill="${colors.sage}"/>
-  <circle cx="355" cy="160" r="8" fill="${colors.indigo}"/>
-  <circle cx="330" cy="185" r="8" fill="${colors.amber}"/>
-  <circle cx="355" cy="185" r="8" fill="${colors.margin}"/>
+  // Small accent circles at small scale
+  circle(ctx, 330, 160, 8, colors.sage);
+  circle(ctx, 355, 160, 8, colors.indigo);
+  circle(ctx, 330, 185, 8, colors.amber);
+  circle(ctx, 355, 185, 8, colors.margin);
 
-  <!-- Warm border around the whole sheet -->
-  <rect x="0" y="0" width="400" height="300" fill="none" stroke="${colors.rule}" stroke-width="2" rx="2"/>
-</svg>`;
+  // Warm border
+  ctx.strokeStyle = colors.rule;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(1, 1, W - 2, H - 2);
 }
 
-/**
- * Convert SVG string to a base64 data URI suitable for Gemini inlineData.
- * Uses SVG directly (image/svg+xml) since Gemini supports it.
- */
-function svgToBase64(svg: string): string {
-  // Use btoa for browser environments
-  return btoa(unescape(encodeURIComponent(svg)));
+type Ctx = OffscreenCanvasRenderingContext2D;
+
+function fillSwatch(ctx: Ctx, x: number, y: number, w: number, h: number, fill: string, stroke?: string): void {
+  ctx.fillStyle = fill;
+  ctx.fillRect(x, y, w, h);
+  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1; ctx.strokeRect(x, y, w, h); }
 }
 
-/** Cached palette data. */
+function line(ctx: Ctx, x1: number, y1: number, x2: number, y2: number): void {
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+}
+
+function circle(ctx: Ctx, cx: number, cy: number, r: number, fill: string): void {
+  ctx.fillStyle = fill; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+}
+
+function drawCrossHatch(
+  ctx: OffscreenCanvasRenderingContext2D,
+  x1: number, y1: number, x2: number, y2: number,
+): void {
+  ctx.save();
+  ctx.strokeStyle = colors.ink;
+  ctx.lineWidth = 0.5;
+  ctx.globalAlpha = 0.7;
+  const step = 10;
+  // 45° lines
+  for (let d = 0; d < (x2 - x1) + (y2 - y1); d += step) {
+    const sx = x1 + Math.min(d, x2 - x1);
+    const sy = y1 + Math.max(0, d - (x2 - x1));
+    const ex = x1 + Math.max(0, d - (y2 - y1));
+    const ey = y1 + Math.min(d, y2 - y1);
+    line(ctx, sx, sy, ex, ey);
+  }
+  // 135° lines
+  for (let d = 0; d < (x2 - x1) + (y2 - y1); d += step) {
+    const sx = x2 - Math.min(d, x2 - x1);
+    const sy = y1 + Math.max(0, d - (x2 - x1));
+    const ex = x2 - Math.max(0, d - (y2 - y1));
+    const ey = y1 + Math.min(d, y2 - y1);
+    line(ctx, sx, sy, ex, ey);
+  }
+  ctx.restore();
+}
+
+// ─── Public API ─────────────────────────────────────────────
+
 let cachedData: string | null = null;
 
 /**
- * Get the style reference palette as a base64-encoded SVG.
- * Cached after first call — zero cost on subsequent uses.
+ * Get the style reference palette as a base64-encoded PNG.
+ * Rendered via OffscreenCanvas, cached after first call.
  */
 export function getStyleReferenceData(): string {
   if (!cachedData) {
-    cachedData = svgToBase64(buildPaletteSvg());
+    const canvas = new OffscreenCanvas(W, H);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('OffscreenCanvas 2D not available');
+    drawPalette(ctx);
+    // Synchronous: convertToBlob is async, but we need sync for caching.
+    // Use toDataURL workaround via regular canvas if available, or
+    // encode the raw pixel data as PNG manually.
+    // OffscreenCanvas doesn't have toDataURL — transfer to regular canvas.
+    const regular = document.createElement('canvas');
+    regular.width = W;
+    regular.height = H;
+    const rctx = regular.getContext('2d');
+    if (!rctx) throw new Error('Canvas 2D not available');
+    rctx.drawImage(canvas, 0, 0);
+    // toDataURL returns "data:image/png;base64,..."
+    cachedData = regular.toDataURL('image/png').split(',')[1] ?? '';
   }
-  return cachedData;
+  return cachedData as string;
 }
 
-/** MIME type for the style reference (SVG). */
-export const STYLE_REFERENCE_MIME = 'image/svg+xml';
+/** MIME type for the style reference. */
+export const STYLE_REFERENCE_MIME = 'image/png';
 
-/**
- * Brief text description to accompany the palette reference.
- * Tells the model what it's looking at and how to use it.
- */
+/** Text description accompanying the palette reference. */
 export const STYLE_REFERENCE_NOTE = `[STYLE REFERENCE] The image above shows the EXACT color palette and drawing style you must use. Top row: paper tones (warm ivory, never white). Second row: ink tones from darkest to lightest — use these for all line work. Third row: the ONLY four accent colors allowed (sage green, blue-grey indigo, warm amber, terracotta). Fourth row: how accents appear as subtle background tints. Right side: cross-hatching texture sample — this is how all shading should be rendered. The thin lines show structural dividers. Match these exact colors and this hand-drawn cross-hatching style.`;
