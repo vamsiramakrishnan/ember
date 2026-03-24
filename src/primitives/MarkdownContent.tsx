@@ -21,7 +21,7 @@ const ALLOWED = [
 ];
 
 /** Pattern for /command tokens (at start or after whitespace). */
-const SLASH_PATTERN = /(?:^|\s)(\/(?:draw|visualize|research|explain|summarize|quiz|timeline|connect|define))\b/;
+const SLASH_PATTERN = /(?:^|\s)(\/(?:draw|visualize|research|explain|summarize|quiz|timeline|connect|define|teach|podcast|flashcards|exercise))\b/;
 
 export function MarkdownContent({ children, className }: MarkdownContentProps) {
   const hasMentions = MENTION_PATTERN.test(children);
@@ -38,7 +38,7 @@ export function MarkdownContent({ children, className }: MarkdownContentProps) {
 function ChipAwareContent({ text, className }: { text: string; className?: string }) {
   // Combined regex: @mentions OR /commands
   const mentionSrc = MENTION_PATTERN.source;
-  const slashSrc = '(?:^|\\s)(\\/(?:draw|visualize|research|explain|summarize|quiz|timeline|connect|define))(?:\\s|$)';
+  const slashSrc = '(?:^|\\s)(\\/(?:draw|visualize|research|explain|summarize|quiz|timeline|connect|define|teach|podcast|flashcards|exercise))(?=\\s|[.,;:!?]|$)';
   const combined = new RegExp(`${mentionSrc}|${slashSrc}`, 'g');
 
   const parts: ReactNode[] = [];
@@ -59,7 +59,8 @@ function ChipAwareContent({ text, className }: { text: string; className?: strin
       const cmdStart = match[0].indexOf('/');
       const absStart = match.index + cmdStart;
       if (absStart > lastIdx) pushText(parts, text.slice(lastIdx, absStart), className);
-      parts.push(<SlashChip key={`s${match.index}`} command={match[4] ?? ''} />);
+      const cmd = match[4].startsWith('/') ? match[4].slice(1) : match[4];
+      parts.push(<SlashChip key={`s${match.index}`} command={cmd} />);
       lastIdx = absStart + (match[4]?.length ?? 0);
     }
   }

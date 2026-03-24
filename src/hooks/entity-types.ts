@@ -22,7 +22,8 @@ export type EntityType =
   | 'diagram'
   | 'image'
   | 'file'
-  | 'tutor-note';
+  | 'tutor-note'
+  | 'podcast';
 
 export interface Entity {
   id: string;

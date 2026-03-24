@@ -1,6 +1,7 @@
 /* SlashChip — /command pill flowing within sentences.
  * Three semantic groups: explore (indigo), create (sage), reflect (amber).
- * Inline, inherits line-height, never breaks text flow. */
+ * Inline, inherits line-height, never breaks text flow.
+ * Hint shown via CSS pseudo-element — no layout shift on hover. */
 
 .chip {
   display: inline-flex;
@@ -15,7 +16,7 @@
   vertical-align: baseline;
   line-height: inherit;
   white-space: nowrap;
-  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease;
   position: relative;
 }
 
@@ -26,10 +27,6 @@
 
 .clickable {
   cursor: pointer;
-}
-
-.clickable:hover {
-  box-shadow: 0 0 0 1px rgba(91, 107, 138, 0.08);
 }
 
 /* ─── Icon ────────────────────────────────── */
@@ -46,7 +43,7 @@
 /* ─── Label ───────────────────────────────── */
 
 .label {
-  font-family: var(--font-system);
+  font-family: var(--font-mono, 'IBM Plex Mono', monospace);
   font-size: 0.82em;
   font-weight: 400;
   letter-spacing: 0.3px;
@@ -54,17 +51,31 @@
   opacity: 0.85;
 }
 
-/* ─── Hover hint — appears on hover, absolute right ─── */
+/* ─── Hover hint — CSS-only tooltip, no layout shift ─── */
 
-.hint {
+.chip::after {
+  content: attr(data-hint);
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
   font-family: var(--font-system);
-  font-size: 0.7em;
+  font-size: 10px;
   font-weight: 300;
-  color: var(--ink-faint);
-  letter-spacing: 0.3px;
-  margin-left: 4px;
-  opacity: 0.7;
-  animation: hintFade 0.2s ease both;
+  color: var(--ink-soft);
+  background: var(--paper);
+  border: 1px solid var(--rule-light);
+  border-radius: 2px;
+  padding: 2px 8px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 10;
+}
+
+.chip:hover::after {
+  opacity: 1;
 }
 
 /* ─── Active state — command is executing ─── */
@@ -109,11 +120,6 @@
 
 /* ─── Animations ──────────────────────────── */
 
-@keyframes hintFade {
-  from { opacity: 0; transform: translateX(-2px); }
-  to { opacity: 0.7; transform: translateX(0); }
-}
-
 @keyframes activePulse {
   0%, 100% { border-color: rgba(91, 107, 138, 0.15); }
   50% { border-color: rgba(91, 107, 138, 0.35); }
@@ -121,6 +127,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .chip { transition: none; }
+  .chip::after { transition: none; }
   .active { animation: none; border-color: rgba(91, 107, 138, 0.3); }
-  .hint { animation: none; }
 }

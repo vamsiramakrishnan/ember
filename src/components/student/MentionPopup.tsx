@@ -23,7 +23,7 @@ const TYPE_ICONS: Record<EntityType, string> = {
   term: '≡', text: '▤', question: '?',
   entry: '¶', slide: '▸', card: '⬡', exercise: '◆',
   code: '⟨⟩', diagram: '⊞', image: '▣', file: '⎙',
-  'tutor-note': '✎',
+  'tutor-note': '✎', podcast: '♪',
 };
 
 /** Map entity types to accent color classes. */
@@ -36,7 +36,7 @@ const TYPE_ACCENT: Record<EntityType, string> = {
   card: styles.iconSage ?? '', exercise: styles.iconAmber ?? '',
   code: styles.iconDefault ?? '', diagram: styles.iconIndigo ?? '',
   image: styles.iconDefault ?? '', file: styles.iconDefault ?? '',
-  'tutor-note': styles.iconAmber ?? '',
+  'tutor-note': styles.iconAmber ?? '', podcast: styles.iconSage ?? '',
 };
 
 const TYPE_LABELS: Record<EntityType, string> = {
@@ -44,7 +44,7 @@ const TYPE_LABELS: Record<EntityType, string> = {
   concept: 'concept', term: 'term', text: 'text', question: 'question',
   entry: 'entry', slide: 'slide', card: 'card', exercise: 'exercise',
   code: 'code', diagram: 'diagram', image: 'image', file: 'file',
-  'tutor-note': 'tutor',
+  'tutor-note': 'tutor', podcast: 'podcast',
 };
 
 export function MentionPopup({

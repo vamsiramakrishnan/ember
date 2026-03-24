@@ -5,8 +5,8 @@
  * The chip signals "this is an action" without breaking reading flow.
  *
  * Three states:
- *   Rest: indigo-dim background, subtle border, system font
- *   Hover: background deepens, tooltip shows command description
+ *   Rest: accent-tinted background, subtle border, system font
+ *   Hover: background deepens, hint fades in via CSS (no layout shift)
  *   Active: pulsing border while the command is being executed
  *
  * The icon, colour, and label adapt to the command's semantic group:
@@ -14,7 +14,6 @@
  *   create: sage (growth)
  *   reflect: amber (connection)
  */
-import { useState } from 'react';
 import styles from './SlashChip.module.css';
 
 export interface SlashChipProps {
@@ -53,7 +52,6 @@ const GROUP_ACCENT: Record<string, string> = {
 };
 
 export function SlashChip({ command, active, onClick }: SlashChipProps) {
-  const [hovered, setHovered] = useState(false);
   const meta = COMMAND_META[command] ?? { icon: '/', hint: command, group: 'explore' };
   const accent = GROUP_ACCENT[meta.group] ?? '';
 
@@ -68,15 +66,13 @@ export function SlashChip({ command, active, onClick }: SlashChipProps) {
     <span
       className={cls}
       onClick={onClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
       title={meta.hint}
+      data-hint={meta.hint}
     >
       <span className={styles.icon}>{meta.icon}</span>
       <span className={styles.label}>/{command}</span>
-      {hovered && <span className={styles.hint}>{meta.hint}</span>}
     </span>
   );
 }

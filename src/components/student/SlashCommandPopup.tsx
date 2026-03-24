@@ -21,20 +21,22 @@ export interface SlashCommand {
 
 const s = (c: string | undefined) => c ?? '';
 
+/** Accent colors match the semantic group, consistent with SlashChip rendering:
+ *   explore → indigo, create → sage, reflect → amber */
 const COMMANDS: SlashCommand[] = [
   { id: 'explain', label: 'explain', hint: 'explain a concept in depth', icon: '◇', accent: s(styles.iconIndigo), group: 'explore' },
-  { id: 'research', label: 'research', hint: 'deep-dive with search', icon: '◈', accent: s(styles.iconAmber), group: 'explore' },
-  { id: 'define', label: 'define', hint: 'add a term to your lexicon', icon: '≡', accent: s(styles.iconSage), group: 'explore' },
-  { id: 'visualize', label: 'visualize', hint: 'interactive concept diagram', icon: '◉', accent: s(styles.iconIndigo), group: 'create' },
-  { id: 'draw', label: 'draw', hint: 'hand-drawn concept sketch', icon: '✎', accent: s(styles.iconMargin), group: 'create' },
-  { id: 'timeline', label: 'timeline', hint: 'historical progression', icon: '→', accent: s(styles.iconAmber), group: 'create' },
+  { id: 'research', label: 'research', hint: 'deep-dive with search', icon: '◈', accent: s(styles.iconIndigo), group: 'explore' },
+  { id: 'define', label: 'define', hint: 'add a term to your lexicon', icon: '≡', accent: s(styles.iconIndigo), group: 'explore' },
+  { id: 'visualize', label: 'visualize', hint: 'interactive concept diagram', icon: '◉', accent: s(styles.iconSage), group: 'create' },
+  { id: 'draw', label: 'draw', hint: 'hand-drawn concept sketch', icon: '✎', accent: s(styles.iconSage), group: 'create' },
+  { id: 'timeline', label: 'timeline', hint: 'historical progression', icon: '→', accent: s(styles.iconSage), group: 'create' },
   { id: 'connect', label: 'connect', hint: 'find bridges between ideas', icon: '⟷', accent: s(styles.iconSage), group: 'create' },
-  { id: 'teach', label: 'teach', hint: 'create reading material deck', icon: '▣', accent: s(styles.iconAmber), group: 'create' },
-  { id: 'podcast', label: 'podcast', hint: 'audio discussion about a topic', icon: '♪', accent: s(styles.iconMargin), group: 'create' },
-  { id: 'flashcards', label: 'flashcards', hint: 'study cards for active recall', icon: '◈', accent: s(styles.iconIndigo), group: 'reflect' },
-  { id: 'exercise', label: 'exercise', hint: 'Socratic practice problems', icon: '◇', accent: s(styles.iconSage), group: 'reflect' },
-  { id: 'quiz', label: 'quiz me', hint: 'test your understanding', icon: '?', accent: s(styles.iconDefault), group: 'reflect' },
-  { id: 'summarize', label: 'summarize', hint: 'distill the session so far', icon: '≡', accent: s(styles.iconDefault), group: 'reflect' },
+  { id: 'teach', label: 'teach', hint: 'create reading material deck', icon: '▣', accent: s(styles.iconSage), group: 'create' },
+  { id: 'podcast', label: 'podcast', hint: 'audio discussion about a topic', icon: '♪', accent: s(styles.iconSage), group: 'create' },
+  { id: 'flashcards', label: 'flashcards', hint: 'study cards for active recall', icon: '◈', accent: s(styles.iconAmber), group: 'reflect' },
+  { id: 'exercise', label: 'exercise', hint: 'Socratic practice problems', icon: '◇', accent: s(styles.iconAmber), group: 'reflect' },
+  { id: 'quiz', label: 'quiz me', hint: 'test your understanding', icon: '?', accent: s(styles.iconAmber), group: 'reflect' },
+  { id: 'summarize', label: 'summarize', hint: 'distill the session so far', icon: '≡', accent: s(styles.iconAmber), group: 'reflect' },
 ];
 
 const GROUP_LABELS: Record<string, string> = {

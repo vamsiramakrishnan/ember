@@ -32,6 +32,7 @@ const TYPE_PREFIX: Record<EntityType, string> = {
   image: '▣',
   file: '⎙',
   'tutor-note': '✎',
+  podcast: '♪',
 };
 
 export function MentionChip({ name, entityType, meta, onClick }: MentionChipProps) {
@@ -60,6 +61,7 @@ const TYPE_ACCENT_CLASS: Partial<Record<EntityType, string>> = {
   exercise: styles.accentAmber ?? '',
   code: styles.accentMono ?? '',
   diagram: styles.accentIndigo ?? '',
+  podcast: styles.accentSage ?? '',
 };
 
 /**

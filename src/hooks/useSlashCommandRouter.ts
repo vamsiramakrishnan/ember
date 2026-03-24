@@ -36,6 +36,28 @@ const COMMAND_TIERS: Record<string, ContextTier> = {
   exercise: 2, quiz: 2, podcast: 2,
 };
 
+/**
+ * Add a transient processing indicator, then replace it with the result.
+ * This prevents "researching..." silences from persisting permanently.
+ */
+async function withProcessingIndicator(
+  label: string,
+  addEntryWithId: (entry: NotebookEntry) => string | Promise<string>,
+  patchEntryContent: (id: string, entry: NotebookEntry) => void,
+  work: () => Promise<NotebookEntry | null>,
+): Promise<void> {
+  const placeholderId = await addEntryWithId({ type: 'silence', text: `${label}\u2026` });
+  const result = await work();
+  if (result) {
+    patchEntryContent(placeholderId, result);
+  } else {
+    patchEntryContent(placeholderId, {
+      type: 'tutor-marginalia',
+      content: 'That didn\u2019t work \u2014 try again with a more specific prompt.',
+    });
+  }
+}
+
 export function useSlashCommandRouter({
   addEntry, addEntryWithId, patchEntryContent, respond,
   entries, studentId, notebookId,
@@ -61,10 +83,11 @@ export function useSlashCommandRouter({
 
     switch (command.id) {
       case 'research': {
-        addEntry({ type: 'silence', text: 'researching…' });
-        const prompt = ctxBlock ? `${ctxBlock}\n\nResearch query: ${q}` : q;
-        const result = await research(q, prompt);
-        if (result) addEntry({ type: 'tutor-marginalia', content: result });
+        await withProcessingIndicator('researching', addEntryWithId, patchEntryContent, async () => {
+          const prompt = ctxBlock ? `${ctxBlock}\n\nResearch query: ${q}` : q;
+          const result = await research(q, prompt);
+          return result ? { type: 'tutor-marginalia', content: result } : null;
+        });
         return true;
       }
 
@@ -82,71 +105,69 @@ export function useSlashCommandRouter({
       }
 
       case 'draw': {
-        addEntry({ type: 'silence', text: 'sketching…' });
-        const ill = await generateIllustration(q, entriesRef.current, ctxBlock || undefined);
-        if (ill) {
-          addEntry(ill);
-        } else {
-          addEntry({ type: 'tutor-marginalia', content: 'The sketch could not be generated — try again with a more specific prompt.' });
-        }
+        await withProcessingIndicator('sketching', addEntryWithId, patchEntryContent, async () => {
+          return generateIllustration(q, entriesRef.current, ctxBlock || undefined);
+        });
         return true;
       }
 
       case 'teach': {
-        addEntry({ type: 'silence', text: 'preparing reading material…' });
-        const deck = await generateReadingMaterial(q, entriesRef.current, ctxBlock || undefined);
-        if (deck) {
-          addEntry(deck);
-          if (studentId && notebookId) {
+        await withProcessingIndicator('preparing reading material', addEntryWithId, patchEntryContent, async () => {
+          const deck = await generateReadingMaterial(q, entriesRef.current, ctxBlock || undefined);
+          if (deck && studentId && notebookId) {
             addToLibrary(deck, studentId, notebookId).catch(() => {});
             extractTermsFromMaterial(deck, studentId, notebookId).catch(() => {});
             indexTeachingContent(deck, studentId, notebookId).catch(() => {});
           }
-        }
+          return deck;
+        });
         return true;
       }
 
       case 'flashcards': {
-        addEntry({ type: 'silence', text: 'creating flashcards…' });
-        const fc = await generateFlashcards(q, entriesRef.current, ctxBlock || undefined);
-        if (fc) {
-          addEntry(fc);
-          if (studentId && notebookId) {
+        await withProcessingIndicator('creating flashcards', addEntryWithId, patchEntryContent, async () => {
+          const fc = await generateFlashcards(q, entriesRef.current, ctxBlock || undefined);
+          if (fc && studentId && notebookId) {
             extractTermsFromMaterial(fc, studentId, notebookId).catch(() => {});
             indexTeachingContent(fc, studentId, notebookId).catch(() => {});
           }
-        }
+          return fc;
+        });
         return true;
       }
 
       case 'exercise': {
-        addEntry({ type: 'silence', text: 'designing exercises…' });
-        const ex = await generateExercises(q, entriesRef.current, ctxBlock || undefined);
-        if (ex) {
-          addEntry(ex);
-          if (studentId && notebookId) {
+        await withProcessingIndicator('designing exercises', addEntryWithId, patchEntryContent, async () => {
+          const ex = await generateExercises(q, entriesRef.current, ctxBlock || undefined);
+          if (ex && studentId && notebookId) {
             indexTeachingContent(ex, studentId, notebookId).catch(() => {});
           }
-        }
+          return ex;
+        });
         return true;
       }
 
       case 'podcast': {
-        addEntry({ type: 'silence', text: 'recording podcast…' });
-        const ref: { id?: string } = {};
+        const placeholderId = await addEntryWithId({ type: 'silence', text: 'recording podcast\u2026' });
         const pod = await generatePodcast(
           q, entriesRef.current,
           (_segIdx, segUrl) => {
-            if (!ref.id) return;
-            const prev = entriesRef.current.find((e) => e.id === ref.id);
+            const prev = entriesRef.current.find((e) => e.id === placeholderId);
             if (prev && prev.entry.type === 'podcast') {
               const segs = [...(prev.entry.segments ?? []), segUrl];
-              patchEntryContent(ref.id, { ...prev.entry, segments: segs });
+              patchEntryContent(placeholderId, { ...prev.entry, segments: segs });
             }
           },
           ctxBlock || undefined,
         );
-        if (pod) ref.id = await addEntryWithId(pod);
+        if (pod) {
+          patchEntryContent(placeholderId, pod);
+        } else {
+          patchEntryContent(placeholderId, {
+            type: 'tutor-marginalia',
+            content: 'The podcast could not be generated \u2014 try again with a more specific prompt.',
+          });
+        }
         return true;
       }
 
@@ -185,7 +206,7 @@ export function useSlashCommandRouter({
       default:
         return false;
     }
-  }, [addEntry, respond, research, notebookId, studentId]);
+  }, [addEntry, addEntryWithId, patchEntryContent, respond, research, notebookId, studentId]);
 
   return { route };
 }

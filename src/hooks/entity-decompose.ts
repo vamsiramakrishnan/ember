@@ -65,6 +65,18 @@ export function decomposeEntries(entries: LiveEntry[], notebookId: string): Enti
       case 'thinker-card':
         result.push({ id: le.id, type: 'entry', notebookId, name: e.thinker.name, detail: e.thinker.gift, meta: 'thinker' });
         break;
+      case 'podcast':
+        result.push({ id: le.id, type: 'podcast', notebookId, name: e.topic, detail: e.transcript.slice(0, 80).replace(/\n/g, ' '), meta: 'podcast' });
+        break;
+      case 'visualization':
+        result.push({ id: le.id, type: 'entry', notebookId, name: e.caption ?? 'visualization', detail: '', meta: 'visualization' });
+        break;
+      case 'illustration':
+        result.push({ id: le.id, type: 'entry', notebookId, name: e.caption ?? 'illustration', detail: '', meta: 'illustration' });
+        break;
+      case 'embed':
+        result.push({ id: le.id, type: 'entry', notebookId, name: e.title ?? e.url, detail: e.description ?? '', meta: 'embed' });
+        break;
     }
   }
 

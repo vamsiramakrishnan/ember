@@ -120,7 +120,7 @@ export function InputZone({
 
   const hasChips = useMemo(() => {
     const mentionRe = new RegExp(MENTION_PATTERN.source);
-    return mentionRe.test(value) || /(?:^|\s)\/\w+\s/.test(value);
+    return mentionRe.test(value) || /(?:^|\s)\/(?:draw|visualize|research|explain|summarize|quiz|timeline|connect|define|teach|podcast|flashcards|exercise)(?:\s|$)/.test(value);
   }, [value]);
 
   return (
