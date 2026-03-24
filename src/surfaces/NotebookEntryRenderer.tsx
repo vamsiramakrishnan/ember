@@ -42,9 +42,13 @@ interface Props {
   entry: NotebookEntry;
   /** Callback when a directive is marked complete. Receives the entry content for mastery tracking. */
   onDirectiveComplete?: (content: string, action?: string) => void;
+  /** Entry ID — passed to expandable components. */
+  entryId?: string;
+  /** Callback to replace this entry with an updated version (for expand/patch). */
+  onPatchEntry?: (entry: NotebookEntry) => void;
 }
 
-export function NotebookEntryRenderer({ entry, onDirectiveComplete }: Props) {
+export function NotebookEntryRenderer({ entry, onDirectiveComplete, onPatchEntry }: Props) {
   const { navigateTo } = useEntityNavigation();
 
   const handleNodeClick = useCallback((entityId: string, entityKind: string) => {
@@ -120,7 +124,10 @@ export function NotebookEntryRenderer({ entry, onDirectiveComplete }: Props) {
       return <Illustration dataUrl={entry.dataUrl} caption={entry.caption} />;
     case 'reading-material':
       return <ReadingMaterial title={entry.title} subtitle={entry.subtitle}
-        slides={entry.slides} coverUrl={entry.coverUrl} />;
+        slides={entry.slides} coverUrl={entry.coverUrl}
+        onPatch={onPatchEntry ? (slides, coverUrl) => onPatchEntry({
+          ...entry, slides, coverUrl,
+        }) : undefined} />;
     case 'flashcard-deck':
       return <FlashcardDeck title={entry.title} cards={entry.cards} />;
     case 'exercise-set':

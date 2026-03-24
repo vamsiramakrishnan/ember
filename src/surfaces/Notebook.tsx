@@ -144,6 +144,7 @@ export function Notebook({ onNavigate }: NotebookProps) {
       annotate={annotate} onBranch={onBranch} onFollowUp={onFollowUp}
       onSelectionAction={onSelectionAction}
       onDirectiveComplete={completeDirective}
+      patchEntry={patchEntryContent}
       startEdit={inPlaceEdit.startEdit} saveEdit={inPlaceEdit.saveEdit}
       cancelEdit={inPlaceEdit.cancelEdit} editingId={inPlaceEdit.editingId}
       drag={drag} dragHandlers={dragHandlers}

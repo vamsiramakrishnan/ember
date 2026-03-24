@@ -1,11 +1,8 @@
 /**
  * ReadingSlideView — renders a single slide from a ReadingMaterial deck.
- * Post-spec extension: not in the original component inventory (06).
- * Added to support the /teach command's paginated reading material output.
- * Handles multiple layout variants (title, content, two-column, quote,
+ * Handles layout variants (title, content, two-column, quote,
  * diagram, summary, timeline, table) with structured data rendering.
- * Related: 03-interaction-language.md (tutor voice, pacing),
- *          02-visual-language.md (typography, spacing)
+ * Supports optional AI-generated inline illustrations per slide.
  */
 import { MarkdownContent } from '@/primitives/MarkdownContent';
 import type { ReadingSlide } from '@/types/entries';
@@ -33,51 +30,71 @@ export function ReadingSlideView({ slide, index }: Props) {
       <div className={styles.slideRule} />
       <h4 className={styles.slideHeading}>{slide.heading}</h4>
 
-      {/* Timeline rendering */}
+      {/* Structured layout renderers */}
       {slide.layout === 'timeline' && slide.timeline && slide.timeline.length > 0 ? (
-        <div className={styles.timeline}>
-          {slide.timeline.map((evt, i) => (
-            <div key={i} className={styles.timelineItem}>
-              <span className={styles.timelinePeriod}>{evt.period}</span>
-              <span className={styles.timelineDot} />
-              <div className={styles.timelineContent}>
-                <span className={styles.timelineEvent}>{evt.event}</span>
-                {evt.detail && <span className={styles.timelineDetail}>{evt.detail}</span>}
-              </div>
-            </div>
-          ))}
-        </div>
+        <TimelineView items={slide.timeline} />
       ) : slide.layout === 'table' && slide.tableData ? (
-        <div className={styles.tableWrap}>
-          <table className={styles.table}>
-            <thead>
-              <tr>{slide.tableData.headers.map((h, i) => (
-                <th key={i} className={styles.th}>{h}</th>
-              ))}</tr>
-            </thead>
-            <tbody>
-              {slide.tableData.rows.map((row, ri) => (
-                <tr key={ri}>{row.map((cell, ci) => (
-                  <td key={ci} className={styles.td}>{cell}</td>
-                ))}</tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <TableView data={slide.tableData} />
       ) : slide.layout === 'diagram' && slide.diagramItems ? (
-        <div className={styles.diagramGrid}>
-          {slide.diagramItems.map((item, i) => (
-            <div key={i} className={styles.diagramCard}>
-              <span className={styles.diagramLabel}>{item.label}</span>
-              {item.detail && <span className={styles.diagramDetail}>{item.detail}</span>}
-            </div>
-          ))}
-        </div>
+        <DiagramView items={slide.diagramItems} />
       ) : (
         <div className={styles.slideBody}>
           <MarkdownContent>{slide.body}</MarkdownContent>
         </div>
       )}
+
+      {/* AI-generated inline illustration */}
+      {slide.imageUrl && (
+        <img className={styles.slideIllustration} src={slide.imageUrl}
+          alt={`Illustration for ${slide.heading}`} loading="lazy" />
+      )}
     </article>
+  );
+}
+
+function TimelineView({ items }: { items: Array<{ period: string; event: string; detail?: string }> }) {
+  return (
+    <div className={styles.timeline}>
+      {items.map((evt, i) => (
+        <div key={i} className={styles.timelineItem}>
+          <span className={styles.timelinePeriod}>{evt.period}</span>
+          <span className={styles.timelineDot} />
+          <div className={styles.timelineContent}>
+            <span className={styles.timelineEvent}>{evt.event}</span>
+            {evt.detail && <span className={styles.timelineDetail}>{evt.detail}</span>}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function TableView({ data }: { data: { headers: string[]; rows: string[][] } }) {
+  return (
+    <div className={styles.tableWrap}>
+      <table className={styles.table}>
+        <thead>
+          <tr>{data.headers.map((h, i) => <th key={i} className={styles.th}>{h}</th>)}</tr>
+        </thead>
+        <tbody>
+          {data.rows.map((row, ri) => (
+            <tr key={ri}>{row.map((cell, ci) => <td key={ci} className={styles.td}>{cell}</td>)}</tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function DiagramView({ items }: { items: Array<{ label: string; detail?: string }> }) {
+  return (
+    <div className={styles.diagramGrid}>
+      {items.map((item, i) => (
+        <div key={i} className={styles.diagramCard}>
+          <span className={styles.diagramLabel}>{item.label}</span>
+          {item.detail && <span className={styles.diagramDetail}>{item.detail}</span>}
+        </div>
+      ))}
+    </div>
   );
 }

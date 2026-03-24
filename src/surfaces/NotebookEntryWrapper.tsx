@@ -122,6 +122,10 @@ export const NotebookEntryWrapper = memo(function NotebookEntryWrapper({
           <>
             <NotebookEntryRenderer
               entry={entry}
+              entryId={id}
+              onPatchEntry={(updated) => onEntryAction({
+                type: 'patch-entry', id, entry: updated,
+              })}
               onDirectiveComplete={entry.type === 'tutor-directive'
                 ? (content, action) => onEntryAction({
                   type: 'directive-complete', id, content, action,

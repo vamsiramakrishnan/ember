@@ -327,6 +327,29 @@
   cursor: default;
 }
 
+.toolbarDivider {
+  width: 1px;
+  height: 14px;
+  background: var(--rule-light);
+  flex-shrink: 0;
+}
+
+/* ─── Slide illustration ──────────────────────────── */
+.slideIllustration {
+  width: 100%;
+  max-height: 240px;
+  object-fit: contain;
+  border-radius: 2px;
+  margin-top: 12px;
+  filter: sepia(8%) saturate(85%);
+  opacity: 0;
+  animation: illustrationFadeIn 0.6s ease 0.2s forwards;
+}
+
+@keyframes illustrationFadeIn {
+  to { opacity: 1; }
+}
+
 /* ─── Modal ────────────────────────────────────────── */
 .modalContent {
   max-width: 720px;

@@ -1,17 +1,13 @@
 /**
  * ReadingMaterial — paginated teaching slide deck with progressive disclosure.
  * Post-spec extension: not in the original component inventory (06).
- * Added to support the /teach slash command's structured reading material output.
  * Three view levels: thumbnail → expanded paginated view → full-screen modal.
- * AI-generated block — produced by /teach slash command.
- * Related: 03-interaction-language.md (tutor voice, pacing),
- *          04-information-architecture.md (notebook surface)
+ * Supports iterative expansion (append more slides) and visual enrichment.
  */
 import { useState, useCallback } from 'react';
 import { Lightbox } from '@/primitives/Lightbox';
 import { ReadingSlideView } from './ReadingSlideView';
-import { exportToPptx } from '@/services/reading-material-export';
-import { exportToDocx } from '@/services/docx-export';
+import { DeckToolbar } from './DeckToolbar';
 import type { ReadingSlide } from '@/types/entries';
 import styles from './ReadingMaterial.module.css';
 
@@ -20,14 +16,17 @@ interface ReadingMaterialProps {
   subtitle?: string;
   slides: ReadingSlide[];
   coverUrl?: string;
+  /** Callback to patch this entry with updated slides. */
+  onPatch?: (slides: ReadingSlide[], coverUrl?: string) => void;
 }
 
 type ViewLevel = 'thumbnail' | 'expanded' | 'modal';
 
-export function ReadingMaterial({ title, subtitle, slides, coverUrl }: ReadingMaterialProps) {
+export function ReadingMaterial({
+  title, subtitle, slides, coverUrl, onPatch,
+}: ReadingMaterialProps) {
   const [level, setLevel] = useState<ViewLevel>('thumbnail');
   const [page, setPage] = useState(0);
-  const [exporting, setExporting] = useState(false);
 
   const total = slides.length;
   const prev = useCallback(() => setPage((p) => Math.max(0, p - 1)), []);
@@ -36,18 +35,6 @@ export function ReadingMaterial({ title, subtitle, slides, coverUrl }: ReadingMa
   const collapse = useCallback(() => setLevel('thumbnail'), []);
   const openModal = useCallback(() => setLevel('modal'), []);
   const closeModal = useCallback(() => setLevel('expanded'), []);
-
-  const handleExportPptx = useCallback(async () => {
-    setExporting(true);
-    try { await exportToPptx(title, subtitle, slides); }
-    finally { setExporting(false); }
-  }, [title, subtitle, slides]);
-
-  const handleExportDocx = useCallback(async () => {
-    setExporting(true);
-    try { await exportToDocx(title, subtitle, slides); }
-    finally { setExporting(false); }
-  }, [title, subtitle, slides]);
 
   const isThumb = level === 'thumbnail';
 
@@ -87,22 +74,13 @@ export function ReadingMaterial({ title, subtitle, slides, coverUrl }: ReadingMa
         {/* Expanded inline view */}
         {!isThumb && slideContent}
 
-        {/* Toolbar */}
+        {/* Toolbar with expand/export controls */}
         {!isThumb && (
-          <div className={styles.toolbar}>
-            <button className={styles.actionBtn} onClick={handleExportPptx}
-              disabled={exporting} aria-label="Download as PPTX">
-              {exporting ? '…' : '↓ pptx'}
-            </button>
-            <button className={styles.actionBtn} onClick={handleExportDocx}
-              disabled={exporting} aria-label="Download as DOCX">
-              {exporting ? '…' : '↓ docx'}
-            </button>
-            <button className={styles.actionBtn} onClick={openModal}
-              aria-label="Open full view">↗ full view</button>
-            <button className={styles.actionBtn} onClick={collapse}
-              aria-label="Collapse">↙ collapse</button>
-          </div>
+          <DeckToolbar
+            title={title} subtitle={subtitle} slides={slides}
+            coverUrl={coverUrl} onPatch={onPatch}
+            onOpenModal={openModal} onCollapse={collapse}
+          />
         )}
       </div>
 

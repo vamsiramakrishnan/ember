@@ -12,6 +12,7 @@ import {
   createContext, useContext, useCallback, useMemo,
 } from 'react';
 import type { ReactNode } from 'react';
+import type { NotebookEntry } from '@/types/entries';
 
 // ─── Entry action union ────────────────────────────────────────────
 
@@ -26,7 +27,8 @@ export type EntryAction =
   | { type: 'start-edit'; id: string; entryType: string }
   | { type: 'save-edit'; id: string; content: string; entryType: string }
   | { type: 'cancel-edit' }
-  | { type: 'directive-complete'; id: string; content: string; action?: string };
+  | { type: 'directive-complete'; id: string; content: string; action?: string }
+  | { type: 'patch-entry'; id: string; entry: NotebookEntry };
 
 // ─── Drag state ────────────────────────────────────────────────────
 
@@ -92,6 +94,7 @@ interface NotebookProviderProps {
   onFollowUp: (question: string, context: string) => void;
   onSelectionAction: (entryId: string, actionType: string, text: string) => void;
   onDirectiveComplete: (id: string, content: string, action?: string) => void;
+  patchEntry: (id: string, entry: NotebookEntry) => void;
   startEdit: (id: string, entryType: string) => void;
   saveEdit: (id: string, content: string, entryType: string) => Promise<void>;
   cancelEdit: () => void;
@@ -105,7 +108,7 @@ export function NotebookProvider({
   children,
   crossOut, toggleBookmark, togglePin, annotate,
   onBranch, onFollowUp, onSelectionAction, onDirectiveComplete,
-  startEdit, saveEdit, cancelEdit, editingId,
+  patchEntry, startEdit, saveEdit, cancelEdit, editingId,
   drag, dragHandlers, editPopup,
 }: NotebookProviderProps) {
   const onEntryAction = useCallback((action: EntryAction) => {
@@ -121,11 +124,12 @@ export function NotebookProvider({
       case 'save-edit': void saveEdit(action.id, action.content, action.entryType); break;
       case 'cancel-edit': cancelEdit(); break;
       case 'directive-complete': onDirectiveComplete(action.id, action.content, action.action); break;
+      case 'patch-entry': patchEntry(action.id, action.entry); break;
     }
   }, [
     crossOut, toggleBookmark, togglePin, annotate,
     onBranch, onFollowUp, onSelectionAction, onDirectiveComplete,
-    startEdit, saveEdit, cancelEdit,
+    patchEntry, startEdit, saveEdit, cancelEdit,
   ]);
 
   const value = useMemo(() => ({
