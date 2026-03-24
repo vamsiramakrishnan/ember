@@ -1,18 +1,13 @@
 /**
  * NotebookSelect — the student's desk.
- * Shows their notebooks. They pick one, or start a new exploration.
- * New notebooks are bootstrapped with AI-researched seed data.
+ * New notebooks navigate immediately; content populates progressively
+ * via a multi-wave bootstrap DAG running in the background.
  */
 import { useState, useEffect, useCallback } from 'react';
 import { Store, notify } from '@/persistence';
-import {
-  getNotebooksByStudent,
-  createNotebook,
-} from '@/persistence/repositories/notebooks';
+import { getNotebooksByStudent, createNotebook } from '@/persistence/repositories/notebooks';
 import { createSession } from '@/persistence/repositories/sessions';
-import { createEntry } from '@/persistence/repositories/entries';
-import { bootstrapNotebook } from '@/services/notebook-bootstrap';
-import { generateNotebookIcon } from '@/services/notebook-enrichment';
+import { runBootstrapPipeline } from '@/services/notebook-bootstrap-dag';
 import { useStudent } from '@/contexts/StudentContext';
 import type { NotebookRecord } from '@/persistence/records';
 import { NotebookList } from './NotebookList';
@@ -62,26 +57,17 @@ export function NotebookSelect() {
     });
     notify(Store.Sessions);
 
-    setBootstrapStatus('Researching your topic');
-
-    const [result] = await Promise.all([
-      bootstrapNotebook(student.id, nb.id, title.trim(), question.trim()),
-      generateNotebookIcon(nb.id, title.trim(), question.trim())
-        .catch(() => null),
-    ]);
-
-    if (result.opening) {
-      await createEntry(session.id, {
-        type: 'tutor-marginalia',
-        content: result.opening,
-      });
-      notify(Store.Entries);
-    }
-
+    // Navigate immediately — student watches the notebook fill up
     setTitle('');
     setQuestion('');
     setPhase('list');
     setNotebook(nb);
+
+    // Run all bootstrap work in the background (fire-and-forget)
+    void runBootstrapPipeline(
+      student.id, nb.id, session.id,
+      title.trim(), question.trim(),
+    );
   }, [student, title, question, setNotebook]);
 
   const handleKeyDown = useCallback(
