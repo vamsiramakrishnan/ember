@@ -11,7 +11,7 @@ import { micro } from './agents/config';
 import { askAgent } from './run-agent';
 import type { LiveEntry } from '@/types/entries';
 
-const STYLE = 'The image should feel hand-drawn on warm sepia paper with fountain pen ink. Use cross-hatching for shading, muted accent colours (sage green, indigo, amber) sparingly. No gradients, no neon, no pure black or white. The mood is quiet and scholarly — like a sketch in the margin of a library book.';
+const STYLE = 'The drawing medium is fountain pen on aged ivory paper. All shading is built through careful cross-hatching — parallel lines at varying densities, never solid fills or smooth gradients. The ink is warm dark brown, not pure black. Accent colours (muted sage green, quiet indigo, warm amber) appear only where meaning demands them, applied as thin washes, never bold. No digital effects, no drop shadows, no glow, no neon, no flat vector art. The mood is the quiet warmth of a late-afternoon library. Match the exact colours shown in the style reference palette image.';
 
 /** Does the query contain vague references or @mentions that need resolution? */
 function needsResolution(query: string): boolean {
@@ -59,12 +59,12 @@ export async function buildIllustrationPrompt(
 
   // Fast path: specific query, no resolution needed, no context
   if (!needsResolution(rawQuery) && !context) {
-    return `Create a hand-sketched concept illustration showing ${rawQuery}. The drawing should clearly depict the core idea with simple, evocative pen work — like a diagram a thoughtful professor would sketch during a lecture. Do not include any text or labels in the image. ${STYLE}`;
+    return `A concept illustration showing ${rawQuery}, drawn in fountain pen on warm ivory paper. The composition should clearly depict the core idea with confident, evocative pen work — the kind of explanatory diagram a thoughtful professor draws on a chalkboard margin during a lecture, where every line serves a purpose. Use clean geometric shapes for distinct concepts, connected by thin arrows or flowing lines that show relationships. Build depth through selective cross-hatching, leaving generous paper visible between marks. Do not include any text, labels, letters, or words in the image. ${STYLE}`;
   }
 
   // Fast path: specific query with context — just template it in
   if (!needsResolution(rawQuery) && context) {
-    return `Create a hand-sketched concept illustration showing ${rawQuery}, drawing from the student's recent exploration. The drawing should clearly depict the core idea with simple, evocative pen work. Do not include any text or labels in the image. ${STYLE}\n\nContext from the student's recent notebook:\n${context}`;
+    return `A concept illustration showing ${rawQuery}, drawn in fountain pen on warm ivory paper. This illustration draws from the student's recent exploration — ground the visual in the specific concepts and relationships they have been working with. The composition should clearly depict the core idea with confident pen work: clean shapes for concepts, thin arrows or flowing lines for relationships, cross-hatching for depth. Leave generous paper visible between marks. Do not include any text, labels, letters, or words in the image. ${STYLE}\n\nContext from the student's recent notebook:\n${context}`;
   }
 
   // Slow path: vague references or @mentions — Flash Lite resolves
@@ -83,5 +83,5 @@ export async function buildIllustrationPrompt(
 
   // Fallback: strip @mention syntax and use raw query
   const cleaned = rawQuery.replace(/@\[([^\]]+)\]\([^)]*\)/g, '$1');
-  return `Create a hand-sketched concept illustration showing ${cleaned}. The drawing should clearly depict the core idea with simple, evocative pen work. Do not include any text or labels in the image. ${STYLE}`;
+  return `A concept illustration showing ${cleaned}, drawn in fountain pen on warm ivory paper. The composition should clearly depict the core idea with confident, evocative pen work — clean shapes connected by thin arrows or flowing lines. Build depth through selective cross-hatching, leaving generous paper visible. Do not include any text, labels, letters, or words in the image. ${STYLE}`;
 }

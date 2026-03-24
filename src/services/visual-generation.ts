@@ -18,9 +18,11 @@ import { runImageAgent } from './run-agent';
 import { ILLUSTRATOR_AGENT } from './agents';
 
 // ─── Shared style direction ─────────────────────────────────
-// Gemini best practice: describe a coherent scene, not a feature list.
+// Gemini best practice: narrative paragraphs describing medium, composition,
+// mood. A visual palette reference image is injected by runImageAgent,
+// so we focus on technique and atmosphere here, not hex codes.
 
-const EMBER_AESTHETIC = `The entire image should feel like it was drawn by hand in a well-loved notebook. Use warm sepia-toned paper as the background — the colour of old ivory (#FAF6F1). All marks should be in dark brown fountain pen ink (#2C2825) with fine cross-hatching for shading. The only accent colours, used sparingly, are a muted sage green (#6B8F71), deep indigo (#6B67B2), and warm amber (#C49A3C). No gradients, no neon colours, no pure black, no pure white, no flat-design vector art. The mood is quiet, scholarly, and warm — like finding a beautiful sketch in the margin of a library book.`;
+const EMBER_AESTHETIC = `The drawing medium is fountain pen on aged ivory paper — fine nibs producing delicate, slightly irregular lines that feel genuinely hand-drawn. All shading is built through careful cross-hatching: parallel lines at varying densities to create depth, never solid fills or smooth gradients. The ink is warm dark brown, not pure black. The paper shows through everywhere — it breathes. Accent colours appear only where meaning demands them: a muted sage green for growth, a quiet indigo for inquiry, a warm amber for connection. These accents are applied as thin washes, never bold or saturated. No digital effects, no drop shadows, no glow, no neon, no flat vector art. The mood is the quiet warmth of a late-afternoon library — scholarly, patient, intimate. Match the exact colours shown in the style reference palette.`;
 
 // ─── Portrait generation ────────────────────────────────────
 
@@ -37,7 +39,7 @@ export async function generatePortrait(
     ? ` They belong to the ${tradition} intellectual tradition.`
     : '';
 
-  const prompt = `Create a portrait sketch of ${name} (${dates}).${traditionNote} Show head and shoulders in a three-quarter view, with the subject looking slightly to the side as if lost in thought. Use fine pen cross-hatching to build up the shading, with delicate lines that suggest the texture of skin and fabric. The figure should emerge naturally from the warm paper background with no hard edges — as if sketched by a careful hand during a lecture. Leave the background empty. ${EMBER_AESTHETIC}`;
+  const prompt = `A portrait of ${name} (${dates}) rendered as a careful fountain pen sketch on warm ivory paper.${traditionNote} The composition is head and shoulders, three-quarter view, with the subject gazing slightly to one side as if pausing mid-thought during a conversation about their life's work. The drawing technique is pure cross-hatching — no solid fills, no smooth shading. Fine parallel pen strokes at varying angles build up the volume of the face: denser hatching in the hollows of the cheeks and under the brow, lighter and more spaced lines where the light catches the forehead and bridge of the nose. The hair and clothing are suggested with looser, more gestural strokes — just enough detail to convey period and character, not a photographic likeness. The figure emerges from the paper itself with no background, no border, no frame — the warm ivory paper is visible between every line, as if the portrait was drawn quickly but with great skill in the margin of a notebook during a lecture. The overall impression should be of a thoughtful, intelligent face captured by someone who admired this person's mind. ${EMBER_AESTHETIC}`;
 
   return safeGenerate(prompt);
 }
@@ -54,9 +56,9 @@ export async function generateCoverArt(
   variant: 'book' | 'podcast' | 'deck' = 'book',
 ): Promise<string | null> {
   const variantDirection: Record<string, string> = {
-    book: `Design a book cover for "${title}", a work about ${topic}. The composition should have a centred decorative element — perhaps a symbolic illustration or ornamental motif that represents the subject matter. Surround it with a thin hand-drawn border with subtle corner flourishes, like an old academic press edition. Do not render any text or letters — the title will be overlaid separately.`,
-    podcast: `Design square podcast artwork for "${title}", a discussion about ${topic}. Place an abstract visual concept in the centre — a symbolic representation of the topic rendered as a careful pen illustration. Along the bottom edge, suggest a subtle waveform pattern in sage green, as if sound is woven into the design. Do not include any text or letters.`,
-    deck: `Design a study card cover for "${title}", about ${topic}. Use a geometric pattern that abstractly suggests the subject — repeating shapes, mathematical curves, or natural forms arranged in a structured grid. The pattern should feel both decorative and meaningful. Do not include any text or letters.`,
+    book: `A book cover for "${title}", a work about ${topic}, rendered as a fountain pen illustration on warm ivory paper. The composition places a single centred decorative element — a symbolic illustration or ornamental motif that embodies the subject matter, drawn with fine cross-hatching and delicate pen work. Around it, a thin hand-drawn border with subtle corner flourishes evokes an old academic press edition from the nineteenth century. The illustration has the quality of a woodcut or engraving: precise parallel lines building up tone, no solid fills, no smooth gradients. If the subject suggests a particular visual — a celestial diagram for astronomy, a molecular structure for chemistry, a flowing curve for mathematics — let that shape anchor the centre. One or two accent colours at most, applied as light washes. Do not render any text, letters, or words anywhere — the title will be overlaid separately.`,
+    podcast: `Square podcast artwork for "${title}", a discussion about ${topic}, drawn in fountain pen on warm ivory paper. The centrepiece is an abstract symbolic representation of the topic rendered with careful cross-hatching — think of it as a bookplate or ex libris design, geometrically structured but organically detailed. Along the bottom edge, a subtle waveform pattern in muted sage green suggests sound woven into the design. The overall feel is a hand-printed limited-edition record sleeve from a quiet independent press. Do not include any text, letters, or words.`,
+    deck: `A study card cover for "${title}", about ${topic}, drawn in fountain pen on warm ivory paper. The design uses a geometric pattern that abstractly suggests the subject — repeating shapes, mathematical curves, or natural forms arranged in a structured grid. Each element is drawn with fine pen strokes and selective cross-hatching, like the decorative endpapers of a well-made cloth-bound book. The pattern should feel both decorative and meaningful, hinting at the intellectual structure of the topic. Do not include any text, letters, or words.`,
   };
 
   const prompt = `${variantDirection[variant] ?? variantDirection.book} ${EMBER_AESTHETIC}`;
@@ -77,7 +79,7 @@ export async function generateMnemonic(
     ? ` The concept appears in the context of ${context}.`
     : '';
 
-  const prompt = `Create a small visual mnemonic for the concept "${concept}".${contextNote} This should be a single, iconic image — one clear visual metaphor that makes the concept memorable. Think of it as a tiny margin doodle that a brilliant professor would sketch while explaining an idea: simple, evocative, and immediately recognizable. Use minimal detail — just enough lines to convey the core meaning. Do not include any text, labels, or words. ${EMBER_AESTHETIC}`;
+  const prompt = `A small visual mnemonic for the concept "${concept}" drawn in fountain pen on warm ivory paper.${contextNote} This is a single iconic image — one clear visual metaphor that makes the concept instantly memorable. Think of it as the kind of tiny, perfect doodle a brilliant professor draws in the margin while lecturing: three or four deliberate pen strokes that somehow capture the essence of the idea. The composition is centred and compact, no larger than a postage stamp in feel. Use only contour lines and selective cross-hatching — no solid fills, no colour unless the metaphor specifically demands one accent tone. The image should be immediately recognizable at a glance, like a well-designed icon but with the warmth and slight imperfection of a hand-drawn mark. Leave generous empty paper around it. Do not include any text, letters, labels, or words anywhere in the image. ${EMBER_AESTHETIC}`;
 
   return safeGenerate(prompt);
 }
@@ -91,7 +93,7 @@ export async function generateMnemonic(
 export async function generateInlineSketch(
   description: string,
 ): Promise<string | null> {
-  const prompt = `Create a small concept sketch showing ${description}. This is an inline illustration embedded within tutor prose — imagine a professor drawing a quick diagram on a napkin during office hours to clarify a point. It should be simple and clear: monochrome ink lines on warm paper, with just enough detail to communicate the idea. If it's a diagram, use clean arrows and simple shapes. If it's an illustration, keep it to essential outlines. Do not include any text labels. ${EMBER_AESTHETIC}`;
+  const prompt = `A small explanatory sketch showing ${description}, drawn in fountain pen on warm ivory paper. Imagine a brilliant professor reaching for a napkin during office hours and drawing exactly the right diagram to make an idea click. The composition is compact and centred — this sketch lives inline within a paragraph of text, so it should be visually self-contained. If the concept is a relationship or process, show it with clean arrows connecting simple shapes, each shape drawn with two or three confident pen strokes. If it is an object or phenomenon, render it with loose but precise contour lines and selective cross-hatching only where shadow defines form. Every line should feel intentional — nothing decorative, nothing ornamental. The paper shows through generously between marks. Use accent colours only if the concept has distinct categories that need visual separation. Do not include any text, labels, numbers, or letters anywhere in the image. ${EMBER_AESTHETIC}`;
 
   return safeGenerate(prompt);
 }
@@ -105,7 +107,7 @@ export async function generateInlineSketch(
 export async function generateAmbientTexture(
   topic: string,
 ): Promise<string | null> {
-  const prompt = `Create an extremely subtle abstract texture inspired by the concept of "${topic}". This texture will be displayed at only 3-5% opacity as a page background, so it must be very faint — ghostly outlines, barely-there watermark-like marks, whispered geometry that you can only see if you look closely. Think of it as the grain in old paper that happens to suggest the shapes of ${topic}. The pattern should tile seamlessly at the edges. Do not include any recognizable faces, text, or specific objects — only abstract atmospheric marks that create a mood. ${EMBER_AESTHETIC}`;
+  const prompt = `An extremely subtle abstract texture inspired by the concept of "${topic}", rendered in faint fountain pen marks on warm ivory paper. This texture will be displayed at only three to five percent opacity as a page background, so every mark must be whisper-light — ghostly outlines, barely-there watermarks, the faintest suggestion of geometry that reveals itself only when you lean close. Imagine the natural grain of handmade paper that happens, if you squint, to suggest the shapes and structures of ${topic}: perhaps faint concentric curves, or the shadow of a lattice, or the echo of a natural pattern. The marks should be so light they feel like memory rather than drawing. The pattern should tile seamlessly at all edges with no visible seams or borders. Do not include any recognizable faces, text, specific objects, or sharp lines — only abstract atmospheric marks that create a mood of quiet intellectual warmth. ${EMBER_AESTHETIC}`;
 
   return safeGenerate(prompt);
 }

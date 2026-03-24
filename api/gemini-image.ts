@@ -22,6 +22,8 @@ interface ImageRequestBody {
   useSearch?: boolean;
   aspectRatio?: string;
   imageSize?: string;
+  /** Optional reference images (e.g. style palette) sent as inlineData. */
+  referenceImages?: Array<{ mimeType: string; data: string }>;
 }
 
 export default async function handler(req: Request): Promise<Response> {
@@ -87,11 +89,20 @@ export default async function handler(req: Request): Promise<Response> {
       if (Object.keys(imageConfig).length > 0) geminiConfig.imageConfig = imageConfig;
       if (tools.length > 0) geminiConfig.tools = tools;
 
+      // Build message parts: reference images first, then prompt text
+      const messageParts: Array<Record<string, unknown>> = [];
+      if (body.referenceImages) {
+        for (const ref of body.referenceImages) {
+          messageParts.push({ inlineData: { mimeType: ref.mimeType, data: ref.data } });
+        }
+      }
+      messageParts.push({ text: body.prompt });
+
       const response = await client.models.generateContent({
         model: 'gemini-3.1-flash-image-preview',
         config: geminiConfig,
         contents: [
-          { role: 'user', parts: [{ text: body.prompt }] },
+          { role: 'user', parts: messageParts },
         ],
       });
 
