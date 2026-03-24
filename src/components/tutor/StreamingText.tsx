@@ -16,19 +16,36 @@ interface StreamingTextProps {
   done: boolean;
 }
 
-/** Detect structured JSON output that shouldn't be shown as raw text. */
-function isStructuredJson(text: string): boolean {
+/**
+ * Detect structured JSON and try to extract displayable content.
+ * Returns the extracted text if it's a text-bearing type (marginalia,
+ * question, connection), or 'composing' for visual types (diagram,
+ * thinker-card), or null if it's not JSON.
+ */
+function unwrapJson(text: string): string | 'composing' | null {
   const trimmed = text.trimStart();
-  if (!trimmed.startsWith('{') && !trimmed.startsWith('```')) return false;
-  // Check for common entry type markers in the JSON
-  return /["']type["']\s*:\s*["']/.test(trimmed);
+  if (!trimmed.startsWith('{') && !trimmed.startsWith('```')) return null;
+  if (!/["']type["']\s*:\s*["']/.test(trimmed)) return null;
+
+  // For text-bearing types, extract the content field and show it
+  const contentMatch = trimmed.match(
+    /["']content["']\s*:\s*["']([\s\S]*?)(?:["'](?:\s*[,}])|$)/,
+  );
+  if (contentMatch?.[1]) {
+    // Unescape JSON string escapes
+    return contentMatch[1]
+      .replace(/\\n/g, '\n').replace(/\\"/g, '"')
+      .replace(/\\'/g, "'").replace(/\\\\/g, '\\');
+  }
+
+  // Visual types (concept-diagram, thinker-card) — no inline content
+  return 'composing';
 }
 
 export function StreamingText({ children, done }: StreamingTextProps) {
   const hasContent = children.length > 0;
   const ruleCls = done ? styles.rule : styles.ruleStreaming;
 
-  // Thinking state: no text yet, just a subtle cursor
   if (!hasContent && !done) {
     return (
       <div className={styles.thinkingContainer} aria-busy="true" aria-label="Tutor is thinking">
@@ -38,17 +55,32 @@ export function StreamingText({ children, done }: StreamingTextProps) {
     );
   }
 
-  // While streaming: if the content is structured JSON (concept-diagram,
-  // thinker-card, etc.), show a composing state instead of raw JSON.
-  // The entry will be replaced with the proper component once parsing completes.
-  if (!done && isStructuredJson(children)) {
-    return (
-      <div className={styles.thinkingContainer} aria-busy="true" aria-label="Tutor is composing">
-        <div className={styles.ruleStreaming} />
-        <span className={styles.composingLabel}>composing…</span>
-        <span className={styles.cursor} aria-hidden="true" />
-      </div>
-    );
+  // While streaming: unwrap JSON to show content or composing state
+  if (!done) {
+    const unwrapped = unwrapJson(children);
+    if (unwrapped === 'composing') {
+      return (
+        <div className={styles.thinkingContainer} aria-busy="true" aria-label="Tutor is composing">
+          <div className={styles.ruleStreaming} />
+          <span className={styles.composingLabel}>composing…</span>
+          <span className={styles.cursor} aria-hidden="true" />
+        </div>
+      );
+    }
+    if (unwrapped) {
+      // Show the extracted text content during streaming
+      return (
+        <div className={styles.container} aria-live="polite" aria-busy>
+          <div className={ruleCls} />
+          <div className={styles.body}>
+            <span className={styles.text}>
+              <MarkdownContent>{unwrapped}</MarkdownContent>
+            </span>
+            <span className={styles.cursor} aria-hidden="true" />
+          </div>
+        </div>
+      );
+    }
   }
 
   return (
