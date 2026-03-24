@@ -13,6 +13,10 @@ import type { LiveEntry } from '@/types/entries';
 const MARGIN_CHAR_LIMIT = 200;
 /** Student entry must be substantial enough for a margin note to make sense. */
 const MIN_STUDENT_LENGTH = 20;
+/** Max consecutive margin notes before forcing inline (prevents margin overflow). */
+const MAX_CONSECUTIVE_MARGIN = 3;
+/** Sketch markers disqualify margin placement (need inline rendering). */
+const SKETCH_RE = /\[sketch:/;
 
 const MARGIN_TYPES = new Set(['tutor-marginalia', 'tutor-connection']);
 const STUDENT_TYPES = new Set(['prose', 'question', 'hypothesis', 'scratch']);
@@ -60,21 +64,25 @@ export function useMarginLayout(
     const pairs: MarginPair[] = [];
     const marginalized = new Set<string>();
     const byStudent = new Map<string, MarginPair>();
+    let consecutiveMargin = 0;
 
     for (let i = 0; i < entries.length - 1; i++) {
       const student = entries[i];
       const tutor = entries[i + 1];
-      if (!student || !tutor) continue;
-      if (!STUDENT_TYPES.has(student.entry.type)) continue;
-      if (!MARGIN_TYPES.has(tutor.entry.type)) continue;
+      if (!student || !tutor) { consecutiveMargin = 0; continue; }
+      if (!STUDENT_TYPES.has(student.entry.type)) { consecutiveMargin = 0; continue; }
+      if (!MARGIN_TYPES.has(tutor.entry.type)) { consecutiveMargin = 0; continue; }
 
       const studentContent = 'content' in student.entry
         ? (student.entry as { content: string }).content : '';
       const tutorContent = 'content' in tutor.entry
         ? (tutor.entry as { content: string }).content : '';
 
-      if (studentContent.length < MIN_STUDENT_LENGTH) continue;
-      if (tutorContent.length > MARGIN_CHAR_LIMIT || tutorContent.length === 0) continue;
+      // Skip if too short, too long, has sketches, or too many consecutive
+      if (studentContent.length < MIN_STUDENT_LENGTH) { consecutiveMargin = 0; continue; }
+      if (tutorContent.length > MARGIN_CHAR_LIMIT || tutorContent.length === 0) { consecutiveMargin = 0; continue; }
+      if (SKETCH_RE.test(tutorContent)) { consecutiveMargin = 0; continue; }
+      if (consecutiveMargin >= MAX_CONSECUTIVE_MARGIN) { consecutiveMargin = 0; continue; }
 
       const pair: MarginPair = {
         studentId: student.id, studentIndex: i,
@@ -84,6 +92,7 @@ export function useMarginLayout(
       pairs.push(pair);
       marginalized.add(tutor.id);
       byStudent.set(student.id, pair);
+      consecutiveMargin++;
       i++; // Skip the tutor entry in the next iteration
     }
 
