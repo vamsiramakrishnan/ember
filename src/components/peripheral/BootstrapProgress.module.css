@@ -1,0 +1,126 @@
+/* BootstrapProgress — quiet vertical pipeline for DAG stages.
+ *
+ * The visual language: a handwritten table of contents being composed.
+ * Each line fades in from the left, pulses while active, then settles.
+ * The whole block fades out when bootstrapping finishes. */
+
+.container {
+  padding: 12px 0 8px;
+  padding-left: var(--text-indent);
+  opacity: 0;
+  animation: slideIn 0.6s ease 0.3s forwards;
+}
+
+.fadeOut {
+  animation: slideOut 1.6s ease forwards;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* ─── Node row ──────────────────────────── */
+
+.node {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+  transition: opacity 0.5s ease;
+}
+
+.indicator {
+  font-family: var(--font-system);
+  font-size: 8px;
+  width: 12px;
+  text-align: center;
+  flex-shrink: 0;
+  line-height: 1;
+  transition: opacity 0.4s ease, color 0.4s ease;
+}
+
+.label {
+  font-family: var(--font-system);
+  font-size: 10px;
+  font-weight: 300;
+  letter-spacing: 0.5px;
+  transition: color 0.5s ease, opacity 0.5s ease;
+}
+
+/* ─── Status variants ────────────────────── */
+
+.pending .indicator {
+  color: var(--ink-ghost);
+  opacity: 0.3;
+}
+.pending .label {
+  color: var(--ink-ghost);
+  opacity: 0.35;
+}
+
+.active .indicator {
+  color: var(--margin);
+  opacity: 0.7;
+  animation: pulse 1.6s ease infinite;
+}
+.active .label {
+  color: var(--ink-faint);
+  opacity: 1;
+}
+
+.complete .indicator {
+  color: var(--sage);
+  opacity: 0.5;
+}
+.complete .label {
+  color: var(--ink-ghost);
+  opacity: 0.5;
+}
+
+.error .indicator {
+  color: var(--amber);
+  opacity: 0.5;
+}
+.error .label {
+  color: var(--ink-ghost);
+  opacity: 0.4;
+  text-decoration: line-through;
+}
+
+/* ─── Animations ─────────────────────────── */
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideOut {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-4px); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.8; }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .container { padding-left: 0; }
+  .label { font-size: 9px; }
+  .indicator { font-size: 7px; width: 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .container { animation: none; opacity: 1; }
+  .fadeOut { animation: none; opacity: 0; }
+  .active .indicator { animation: none; opacity: 0.7; }
+  .node { transition: none; }
+  .indicator { transition: none; }
+  .label { transition: none; }
+}

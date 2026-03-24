@@ -8,6 +8,7 @@ import { PinnedThread } from '@/components/student/PinnedThread';
 import { MarginalReference } from '@/components/ambient/MarginalReference';
 import { InputZone } from '@/components/student/InputZone';
 import { TutorActivity } from '@/components/peripheral/TutorActivity';
+import { BootstrapProgress } from '@/components/peripheral/BootstrapProgress';
 import { MentionPopup } from '@/components/student/MentionPopup';
 import { SlashCommandPopup } from '@/components/student/SlashCommandPopup';
 import { MarginNote } from '@/components/tutor/MarginNote';
@@ -150,6 +151,7 @@ export function NotebookContent({
                 onSelect={(c) => popup.handleSlashSelect(c)} onClose={popup.handlePopupClose} />
             )}
             {responsePlans && responsePlans.length > 0 && <ResponsePlanPreview plans={responsePlans} />}
+            <BootstrapProgress />
             <TutorActivity />
             <InputZone onSubmit={(t) => { handleSubmit(t); scrollCtx.clearReference(); }}
               onSubmitTyped={(t, ty) => { handleSubmitTyped(t, ty); scrollCtx.clearReference(); }}

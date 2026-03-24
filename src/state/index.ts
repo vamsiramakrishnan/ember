@@ -116,6 +116,14 @@ export type {
 export { findCrossNotebookBridges } from './cross-notebook-bridge';
 export type { CrossNotebookBridge } from './cross-notebook-bridge';
 
+// Bootstrap progress (ephemeral DAG execution status)
+export {
+  getBootstrapState, subscribeBootstrapState,
+  startBootstrapProgress, updateBootstrapNode,
+  finishBootstrapProgress, resetBootstrapProgress,
+} from './bootstrap-progress';
+export type { BootstrapNodeStatus, BootstrapNodeState } from './bootstrap-progress';
+
 // React hooks
 export { useSessionState } from './useSessionState';
 export { useEntryRelations, useEntryConnections } from './useEntryGraph';

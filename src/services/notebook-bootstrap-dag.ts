@@ -1,18 +1,4 @@
-/**
- * Notebook Bootstrap DAG — rich content generation for new notebooks.
- *
- * Constructs a deterministic multi-wave IntentDAG from the notebook's
- * title and guiding question, then executes it through the standard
- * DAG executor. Each node produces actual notebook entries that appear
- * progressively as the student watches.
- *
- * Runs in parallel with the existing bootstrapNotebook() which handles
- * constellation data seeding (thinkers, vocab, mastery, library).
- *
- * Wave 1 (parallel): research + opening greeting
- * Wave 2 (parallel, depends on research): thinker connections + vocabulary + concept map
- * Wave 3 (depends on wave 2): introductory reading material
- */
+/** Notebook Bootstrap DAG — builds and executes a multi-wave content DAG for new notebooks. */
 import type { IntentDAG, IntentNode } from './intent-dag';
 import type { NodeResult } from './dag-executor';
 import { executeDAG, collectEntries } from './dag-executor';
@@ -23,6 +9,9 @@ import { bootstrapNotebook } from './notebook-bootstrap';
 import { generateNotebookIcon } from './notebook-enrichment';
 import { Store, notify } from '@/persistence';
 import { createEntry } from '@/persistence/repositories/entries';
+import {
+  startBootstrapProgress, updateBootstrapNode, finishBootstrapProgress,
+} from '@/state/bootstrap-progress';
 import type { NotebookEntry } from '@/types/entries';
 
 type EntryCallback = (entries: NotebookEntry[], label: string) => void;
@@ -78,12 +67,17 @@ export async function executeBootstrapDAG(
 ): Promise<NotebookEntry[]> {
   if (!isGeminiAvailable()) return [];
 
+  // Initialize bootstrap progress UI
+  startBootstrapProgress(dag.nodes.map((n) => ({ id: n.id, label: n.label })));
+
   const dispatcher = (
     node: IntentNode, d: IntentDAG,
     prior: Map<string, NodeResult>,
   ) => dispatchNode(node, d, prior, undefined, notebookId);
 
-  const results = await executeDAG(dag, dispatcher, (_id, status, label) => {
+  const results = await executeDAG(dag, dispatcher, (nodeId, status, label) => {
+    // Drive bootstrap progress indicator
+    updateBootstrapNode(nodeId, status);
     if (status === 'active' && onEntries) {
       onEntries([], label);
     }
@@ -110,6 +104,9 @@ export async function executeBootstrapDAG(
       onEntries([entry], label);
     }
   }
+
+  // Signal bootstrap complete — triggers fade-out in the progress component
+  finishBootstrapProgress();
 
   return allEntries;
 }
