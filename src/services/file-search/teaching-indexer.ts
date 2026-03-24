@@ -43,6 +43,7 @@ async function indexReadingMaterial(
     { key: 'title', string_value: title },
     { key: 'slideCount', numeric_value: slides.length },
     { key: 'topics', string_value: topics },
+    { key: 'indexedAt', numeric_value: Date.now() },
   ];
 
   await uploadDocument(
@@ -60,14 +61,14 @@ async function indexFlashcardDeck(
   const lines = cards.map((c, i) =>
     `Card ${i + 1}:\nQ: ${c.front}\nA: ${c.back}${c.concept ? `\nConcept: ${c.concept}` : ''}`,
   );
-  const concepts = cards.map((c) => c.concept).filter(Boolean).join(', ');
-
+  const conceptList = cards.map((c) => c.concept).filter(Boolean) as string[];
   const metadata: MetadataEntry[] = [
     { key: 'type', string_value: 'flashcard' },
     { key: 'notebookId', string_value: notebookId },
     { key: 'title', string_value: title },
     { key: 'cardCount', numeric_value: cards.length },
-    { key: 'concepts', string_value: concepts },
+    { key: 'concepts', string_list_value: conceptList },
+    { key: 'indexedAt', numeric_value: Date.now() },
   ];
 
   await uploadDocument(
@@ -85,15 +86,15 @@ async function indexExerciseSet(
   const lines = exercises.map((e, i) =>
     `Exercise ${i + 1} (${e.format}):\n${e.prompt}${e.concept ? `\nConcept: ${e.concept}` : ''}`,
   );
-  const concepts = exercises.map((e) => e.concept).filter(Boolean).join(', ');
-
+  const conceptList = exercises.map((e) => e.concept).filter(Boolean) as string[];
   const metadata: MetadataEntry[] = [
     { key: 'type', string_value: 'exercise' },
     { key: 'notebookId', string_value: notebookId },
     { key: 'title', string_value: title },
     { key: 'exerciseCount', numeric_value: exercises.length },
     { key: 'difficulty', string_value: difficulty },
-    { key: 'concepts', string_value: concepts },
+    { key: 'concepts', string_list_value: conceptList },
+    { key: 'indexedAt', numeric_value: Date.now() },
   ];
 
   await uploadDocument(
