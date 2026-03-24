@@ -1,0 +1,121 @@
+/* LandingDemoCanvas — spatial concept cards with connectors. */
+
+.canvas {
+  position: relative;
+  min-height: 320px;
+  width: 100%;
+}
+
+/* SVG connector layer */
+.connectors {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.connector {
+  opacity: 0;
+  animation: fadeIn 0.5s ease forwards;
+}
+
+.connLabel {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  fill: var(--ink-ghost);
+  text-anchor: middle;
+  letter-spacing: 0.5px;
+}
+
+/* Concept cards */
+.card {
+  position: absolute;
+  padding: 10px 16px;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: var(--paper);
+  min-width: 120px;
+  z-index: 1;
+  opacity: 0;
+  transform: translateY(8px) scale(0.96);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  cursor: default;
+}
+
+.card.cardRevealed {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.card:hover {
+  border-color: var(--ink-ghost);
+}
+
+.cardLabel {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.3;
+}
+
+.cardSub {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--ink-faint);
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+}
+
+/* Color accents — left border */
+.amber { border-left: 2px solid var(--amber); }
+.indigo { border-left: 2px solid var(--indigo); }
+.sage { border-left: 2px solid var(--sage); }
+
+/* Mode toggle bar */
+.modeBar {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 16px;
+  padding: 6px 0;
+}
+
+.modeActive,
+.modeInactive {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+}
+
+.modeActive {
+  color: var(--ink-soft);
+  border-bottom: 1px solid var(--ink-soft);
+  padding-bottom: 2px;
+}
+
+.modeInactive {
+  color: var(--ink-ghost);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .card { opacity: 1; transform: none; transition: none; }
+  .connector { animation: none; opacity: 1; }
+}
+
+/* Mobile — scale down positions */
+@media (max-width: 640px) {
+  .card { min-width: 100px; padding: 8px 12px; }
+  .cardLabel { font-size: 13px; }
+  .canvas { min-height: 360px; transform: scale(0.8); transform-origin: top left; }
+}

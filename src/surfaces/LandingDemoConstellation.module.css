@@ -1,0 +1,157 @@
+/* LandingDemoConstellation — lexicon + thinker encounters. */
+
+.constellation {
+  max-width: 580px;
+  margin: 0 auto;
+}
+
+/* Sub-navigation tabs */
+.subNav {
+  display: flex;
+  gap: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--rule-light);
+  margin-bottom: 24px;
+}
+
+.subTab {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--ink-ghost);
+  letter-spacing: 0.3px;
+}
+
+.subTabActive {
+  color: var(--ink);
+  border-bottom: 1px solid var(--ink);
+  padding-bottom: 2px;
+}
+
+/* Two-column layout */
+.columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+}
+
+.col {}
+
+.colLabel {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--ink-ghost);
+  margin-bottom: 14px;
+}
+
+/* Lexicon term cards */
+.termCard {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--rule-light);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.termCard.revealed { opacity: 1; transform: translateY(0); }
+
+.termWord {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 3px;
+}
+
+.termDef {
+  font-family: 'Crimson Pro', serif;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--ink-faint);
+  line-height: 1.55;
+  margin-bottom: 8px;
+}
+
+/* Mastery bar */
+.masteryRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.masteryTrack {
+  flex: 1;
+  height: 2px;
+  background: var(--rule-light);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.masteryFill {
+  height: 100%;
+  background: var(--sage);
+  border-radius: 1px;
+  transition: width 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.4s;
+}
+
+.masteryLevel {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  color: var(--ink-ghost);
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+/* Thinker encounter cards */
+.thinkerCard {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--rule-light);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.thinkerCard.revealed { opacity: 1; transform: translateY(0); }
+
+.thinkerName {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 15px;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--ink);
+  margin-bottom: 3px;
+}
+
+.thinkerGift {
+  font-family: 'Crimson Pro', serif;
+  font-size: 12px;
+  color: var(--ink-faint);
+  line-height: 1.5;
+  margin-bottom: 6px;
+}
+
+.thinkerStatus {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.active { color: var(--sage); }
+.dormant { color: var(--ink-ghost); }
+.bridged { color: var(--amber); }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .termCard, .thinkerCard { opacity: 1; transform: none; transition: none; }
+  .masteryFill { transition: none; }
+}
+
+/* Mobile — stack columns */
+@media (max-width: 640px) {
+  .columns { grid-template-columns: 1fr; gap: 20px; }
+  .subNav { gap: 12px; }
+}

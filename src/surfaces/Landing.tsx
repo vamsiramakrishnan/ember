@@ -10,7 +10,7 @@ import { useStudent } from '@/contexts/StudentContext';
 import { useAuth } from '@/auth';
 import { LandingHero } from './LandingHero';
 import { LandingPhilosophy } from './LandingPhilosophy';
-import { LandingNotebook } from './LandingNotebook';
+import { LandingDemo } from './LandingDemo';
 import { LandingPrinciples } from './LandingPrinciples';
 import { LandingThreshold } from './LandingThreshold';
 import type { StudentRecord } from '@/persistence/records';
@@ -52,7 +52,7 @@ export function Landing() {
     <div className={styles.landing}>
       <LandingHero />
       <LandingPhilosophy />
-      <LandingNotebook />
+      <LandingDemo />
       <LandingPrinciples />
       <LandingThreshold
         students={students}
