@@ -147,6 +147,7 @@ export const NotebookEntryWrapper = memo(function NotebookEntryWrapper({
               onSubmit={(q) => onEntryAction({
                 type: 'follow-up', question: q, context: entryContent,
               })}
+              popup={editPopup}
             />
           </div>
         )}
