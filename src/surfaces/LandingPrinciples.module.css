@@ -1,0 +1,55 @@
+/* LandingPrinciples — quiet statements, margin-note style. */
+
+.section {
+  padding: 48px 24px 80px;
+  border-top: 1px solid var(--rule-light);
+}
+
+.column {
+  max-width: 540px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+.principle {
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.principle.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.marginLabel {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 15px;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--margin);
+  margin-bottom: 8px;
+  padding-left: 16px;
+  border-left: 2px solid var(--margin);
+  opacity: 0.7;
+}
+
+.body {
+  font-family: 'Crimson Pro', serif;
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--ink-soft);
+  line-height: 1.75;
+  margin: 0;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .principle {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

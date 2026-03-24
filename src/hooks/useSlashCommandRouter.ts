@@ -10,6 +10,10 @@ import { addToLibrary, extractTermsFromMaterial } from '@/services/teaching-inte
 import { generatePodcast } from '@/services/podcast-gen';
 import { indexTeachingContent } from './useTeachingIndexer';
 import { resolveCommandContext, type ContextTier } from '@/services/command-context';
+import {
+  routeDelve, routeStudy, routeLesson, routeReview,
+  routeCompare, routeOrigins, routeIllustrate, type WorkflowDeps,
+} from './routeWorkflow';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
 import type { SlashCommand } from '@/components/student/SlashCommandPopup';
 
@@ -23,18 +27,21 @@ interface SlashRouterOptions {
   notebookId?: string;
 }
 
-/** Extract the query by stripping the /command from anywhere in text. */
-function stripCommand(text: string): string {
-  return text.replace(/\/\w+\s*/, '').trim();
-}
+const stripCommand = (t: string) => t.replace(/\/\w+\s*/, '').trim();
 
-/** Which tier each command needs. */
 const COMMAND_TIERS: Record<string, ContextTier> = {
-  draw: 1, visualize: 1, timeline: 1, summarize: 1,
-  connect: 2, explain: 2, define: 2,
-  research: 2, teach: 2, flashcards: 2,
-  exercise: 2, quiz: 2, podcast: 2,
+  draw: 1, visualize: 1, timeline: 1, summarize: 1, connect: 2, explain: 2, define: 2,
+  research: 2, teach: 2, flashcards: 2, exercise: 2, quiz: 2, podcast: 2,
+  delve: 2, study: 2, lesson: 2, review: 2, compare: 2, origins: 2, illustrate: 2,
 };
+
+async function withProcessing(
+  label: string, add: (e: NotebookEntry) => string | Promise<string>,
+  patch: (id: string, e: NotebookEntry) => void, work: () => Promise<NotebookEntry | null>,
+) {
+  const id = await add({ type: 'silence', text: `${label}\u2026` });
+  patch(id, await work() ?? { type: 'tutor-marginalia', content: 'That didn\u2019t work \u2014 try again.' });
+}
 
 export function useSlashCommandRouter({
   addEntry, addEntryWithId, patchEntryContent, respond,
@@ -45,12 +52,10 @@ export function useSlashCommandRouter({
   entriesRef.current = entries;
 
   const route = useCallback(async (
-    command: SlashCommand,
-    rawText: string,
+    command: SlashCommand, rawText: string,
   ): Promise<boolean> => {
     const rawQuery = stripCommand(rawText);
-    if (!rawQuery) return false;
-    if (!isGeminiAvailable()) return false;
+    if (!rawQuery || !isGeminiAvailable()) return false;
 
     const tier = COMMAND_TIERS[command.id] ?? 0;
     const ctx = await resolveCommandContext(
@@ -58,134 +63,87 @@ export function useSlashCommandRouter({
     );
     const q = ctx.resolvedQuery;
     const ctxBlock = ctx.formatted;
+    const wp = (l: string, w: () => Promise<NotebookEntry | null>) =>
+      withProcessing(l, addEntryWithId, patchEntryContent, w);
 
     switch (command.id) {
-      case 'research': {
-        addEntry({ type: 'silence', text: 'researching…' });
-        const prompt = ctxBlock ? `${ctxBlock}\n\nResearch query: ${q}` : q;
-        const result = await research(q, prompt);
-        if (result) addEntry({ type: 'tutor-marginalia', content: result });
+      case 'research':
+        return wp('researching', async () => {
+          const p = ctxBlock ? `${ctxBlock}\n\nResearch query: ${q}` : q;
+          const r = await research(q, p);
+          return r ? { type: 'tutor-marginalia', content: r } : null;
+        }).then(() => true);
+      case 'visualize': case 'timeline': case 'connect': {
+        const pre = command.id === 'timeline' ? 'Create a timeline visualization:'
+          : command.id === 'connect' ? 'Show how these ideas connect:'
+          : 'Visualize this concept:';
+        respond({ type: 'question', content: ctxBlock ? `${pre} ${q}\n\n${ctxBlock}` : `${pre} ${q}` });
         return true;
       }
-
-      case 'visualize':
-      case 'timeline':
-      case 'connect': {
-        const prefix = command.id === 'timeline'
-          ? 'Create a timeline visualization:'
-          : command.id === 'connect'
-            ? 'Show how these ideas connect:'
-            : 'Visualize this concept:';
-        const hint = ctxBlock ? `${prefix} ${q}\n\n${ctxBlock}` : `${prefix} ${q}`;
-        respond({ type: 'question', content: hint });
-        return true;
-      }
-
-      case 'draw': {
-        addEntry({ type: 'silence', text: 'sketching…' });
-        const ill = await generateIllustration(q, entriesRef.current, ctxBlock || undefined);
-        if (ill) {
-          addEntry(ill);
-        } else {
-          addEntry({ type: 'tutor-marginalia', content: 'The sketch could not be generated — try again with a more specific prompt.' });
-        }
-        return true;
-      }
-
-      case 'teach': {
-        addEntry({ type: 'silence', text: 'preparing reading material…' });
-        const deck = await generateReadingMaterial(q, entriesRef.current, ctxBlock || undefined);
-        if (deck) {
-          addEntry(deck);
-          if (studentId && notebookId) {
-            addToLibrary(deck, studentId, notebookId).catch(() => {});
-            extractTermsFromMaterial(deck, studentId, notebookId).catch(() => {});
-            indexTeachingContent(deck, studentId, notebookId).catch(() => {});
+      case 'draw':
+        return wp('sketching', () => generateIllustration(q, entriesRef.current, ctxBlock || undefined)).then(() => true);
+      case 'teach':
+        return wp('preparing reading material', async () => {
+          const d = await generateReadingMaterial(q, entriesRef.current, ctxBlock || undefined);
+          if (d && studentId && notebookId) {
+            addToLibrary(d, studentId, notebookId).catch(() => {});
+            extractTermsFromMaterial(d, studentId, notebookId).catch(() => {});
+            indexTeachingContent(d, studentId, notebookId).catch(() => {});
           }
-        }
-        return true;
-      }
-
-      case 'flashcards': {
-        addEntry({ type: 'silence', text: 'creating flashcards…' });
-        const fc = await generateFlashcards(q, entriesRef.current, ctxBlock || undefined);
-        if (fc) {
-          addEntry(fc);
-          if (studentId && notebookId) {
+          return d;
+        }).then(() => true);
+      case 'flashcards':
+        return wp('creating flashcards', async () => {
+          const fc = await generateFlashcards(q, entriesRef.current, ctxBlock || undefined);
+          if (fc && studentId && notebookId) {
             extractTermsFromMaterial(fc, studentId, notebookId).catch(() => {});
             indexTeachingContent(fc, studentId, notebookId).catch(() => {});
           }
-        }
-        return true;
-      }
-
-      case 'exercise': {
-        addEntry({ type: 'silence', text: 'designing exercises…' });
-        const ex = await generateExercises(q, entriesRef.current, ctxBlock || undefined);
-        if (ex) {
-          addEntry(ex);
-          if (studentId && notebookId) {
-            indexTeachingContent(ex, studentId, notebookId).catch(() => {});
-          }
-        }
-        return true;
-      }
-
+          return fc;
+        }).then(() => true);
+      case 'exercise':
+        return wp('designing exercises', async () => {
+          const ex = await generateExercises(q, entriesRef.current, ctxBlock || undefined);
+          if (ex && studentId && notebookId) indexTeachingContent(ex, studentId, notebookId).catch(() => {});
+          return ex;
+        }).then(() => true);
       case 'podcast': {
-        addEntry({ type: 'silence', text: 'recording podcast…' });
-        const ref: { id?: string } = {};
-        const pod = await generatePodcast(
-          q, entriesRef.current,
-          (_segIdx, segUrl) => {
-            if (!ref.id) return;
-            const prev = entriesRef.current.find((e) => e.id === ref.id);
-            if (prev && prev.entry.type === 'podcast') {
-              const segs = [...(prev.entry.segments ?? []), segUrl];
-              patchEntryContent(ref.id, { ...prev.entry, segments: segs });
-            }
-          },
-          ctxBlock || undefined,
-        );
-        if (pod) ref.id = await addEntryWithId(pod);
+        const pid = await addEntryWithId({ type: 'silence', text: 'recording podcast\u2026' });
+        const pod = await generatePodcast(q, entriesRef.current, (_i, url) => {
+          const prev = entriesRef.current.find((e) => e.id === pid);
+          if (prev && prev.entry.type === 'podcast') {
+            patchEntryContent(pid, { ...prev.entry, segments: [...(prev.entry.segments ?? []), url] });
+          }
+        }, ctxBlock || undefined);
+        patchEntryContent(pid, pod ?? { type: 'tutor-marginalia', content: 'The podcast could not be generated \u2014 try again with a more specific prompt.' });
         return true;
       }
-
-      case 'explain': {
-        const hint = ctxBlock
-          ? `Explain in depth: ${q}\n\n${ctxBlock}`
-          : `Explain in depth: ${q}`;
-        respond({ type: 'question', content: hint });
+      case 'explain': case 'summarize': case 'quiz': case 'define': {
+        const prefixes: Record<string, string> = {
+          explain: 'Explain in depth:', summarize: 'Summarize our exploration so far, focusing on:',
+          quiz: 'Quiz me on my understanding of:', define: 'Define and add to my lexicon:',
+        };
+        const pf = prefixes[command.id] ?? '';
+        const t = command.id === 'summarize' ? (q || 'the main ideas') : q;
+        respond({ type: 'question', content: ctxBlock ? `${pf} ${t}\n\n${ctxBlock}` : `${pf} ${t}` });
         return true;
       }
-
-      case 'summarize': {
-        const hint = ctxBlock
-          ? `Summarize our exploration so far, focusing on: ${q || 'the main ideas'}\n\n${ctxBlock}`
-          : `Summarize our exploration so far, focusing on: ${q || 'the main ideas'}`;
-        respond({ type: 'question', content: hint });
+      case 'delve': case 'study': case 'lesson':
+      case 'review': case 'compare': case 'origins': case 'illustrate': {
+        const deps: WorkflowDeps = {
+          addEntryWithId, patchEntryContent, respond, research,
+          entries: () => entriesRef.current, studentId, notebookId,
+        };
+        const wf: Record<string, (q: string, c: string, d: WorkflowDeps) => Promise<void>> = {
+          delve: routeDelve, study: routeStudy, lesson: routeLesson, review: routeReview,
+          compare: routeCompare, origins: routeOrigins, illustrate: routeIllustrate,
+        };
+        await wf[command.id]!(q, ctxBlock, deps);
         return true;
       }
-
-      case 'quiz': {
-        const hint = ctxBlock
-          ? `Quiz me on my understanding of: ${q}\n\n${ctxBlock}`
-          : `Quiz me on my understanding of: ${q}`;
-        respond({ type: 'question', content: hint });
-        return true;
-      }
-
-      case 'define': {
-        const hint = ctxBlock
-          ? `Define and add to my lexicon: ${q}\n\n${ctxBlock}`
-          : `Define and add to my lexicon: ${q}`;
-        respond({ type: 'question', content: hint });
-        return true;
-      }
-
-      default:
-        return false;
+      default: return false;
     }
-  }, [addEntry, respond, research, notebookId, studentId]);
+  }, [addEntry, addEntryWithId, patchEntryContent, respond, research, notebookId, studentId]);
 
   return { route };
 }

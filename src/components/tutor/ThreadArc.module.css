@@ -1,0 +1,61 @@
+/* ThreadArc — L-shaped connector from student text to margin note.
+ * An almost-invisible line that says "these are connected."
+ *
+ * Shape: horizontal line extending right from the column edge,
+ * then a vertical drop to meet the margin note. The corner
+ * is rounded with 4px radius for a hand-drawn quality.
+ *
+ * Layout:
+ *   [student text ····· ┐
+ *                        │  margin note ]
+ *
+ * Positioned absolutely within the entry row. */
+
+.arc {
+  position: absolute;
+  top: 10px;
+  right: -36px;
+  width: 28px;
+  height: 16px;
+  border-right: 1px solid var(--rule);
+  border-top: 1px solid var(--rule);
+  border-radius: 0 4px 0 0;
+  opacity: 0;
+  animation: arcDraw 0.4s ease 0.4s both;
+}
+
+/* Connection arcs use the margin color for subtle emphasis */
+.connectionArc {
+  border-color: color-mix(in srgb, var(--margin) 30%, transparent);
+}
+
+@keyframes arcDraw {
+  from { opacity: 0; width: 0; }
+  to { opacity: 0.4; width: 28px; }
+}
+
+/* ── Responsive — hidden below 900px ─────────────────────────── */
+@media (max-width: 899px) {
+  .arc { display: none; }
+}
+
+/* Wider gap on large screens to bridge the bigger margin offset */
+@media (min-width: 1200px) {
+  .arc { right: -52px; width: 44px; }
+  @keyframes arcDraw {
+    from { opacity: 0; width: 0; }
+    to { opacity: 0.4; width: 44px; }
+  }
+}
+
+@media (min-width: 1440px) {
+  .arc { right: -56px; width: 48px; }
+  @keyframes arcDraw {
+    from { opacity: 0; width: 0; }
+    to { opacity: 0.4; width: 48px; }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arc { animation: none; opacity: 0.4; }
+}

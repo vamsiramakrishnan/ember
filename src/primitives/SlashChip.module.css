@@ -1,13 +1,14 @@
 /* SlashChip — /command pill flowing within sentences.
  * Three semantic groups: explore (indigo), create (sage), reflect (amber).
- * Inline, inherits line-height, never breaks text flow. */
+ * Inline, inherits line-height, never breaks text flow.
+ * Hint shown via CSS pseudo-element — no layout shift on hover. */
 
 .chip {
   display: inline-flex;
   align-items: baseline;
   gap: 3px;
   background: var(--indigo-dim);
-  border: 1px solid rgba(91, 107, 138, 0.12);
+  border: 1px solid var(--indigo-dim);
   border-radius: 2px;
   padding: 0 5px;
   margin: 0 2px;
@@ -15,21 +16,17 @@
   vertical-align: baseline;
   line-height: inherit;
   white-space: nowrap;
-  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: background 0.15s ease, border-color 0.15s ease;
   position: relative;
 }
 
 .chip:hover {
-  background: rgba(91, 107, 138, 0.1);
-  border-color: rgba(91, 107, 138, 0.2);
+  background: var(--indigo-dim);
+  border-color: color-mix(in srgb, var(--indigo) 20%, transparent);
 }
 
 .clickable {
   cursor: pointer;
-}
-
-.clickable:hover {
-  box-shadow: 0 0 0 1px rgba(91, 107, 138, 0.08);
 }
 
 /* ─── Icon ────────────────────────────────── */
@@ -46,7 +43,7 @@
 /* ─── Label ───────────────────────────────── */
 
 .label {
-  font-family: var(--font-system);
+  font-family: var(--font-mono, 'IBM Plex Mono', monospace);
   font-size: 0.82em;
   font-weight: 400;
   letter-spacing: 0.3px;
@@ -54,23 +51,37 @@
   opacity: 0.85;
 }
 
-/* ─── Hover hint — appears on hover, absolute right ─── */
+/* ─── Hover hint — CSS-only tooltip, no layout shift ─── */
 
-.hint {
+.chip::after {
+  content: attr(data-hint);
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
   font-family: var(--font-system);
-  font-size: 0.7em;
+  font-size: 10px;
   font-weight: 300;
-  color: var(--ink-faint);
-  letter-spacing: 0.3px;
-  margin-left: 4px;
-  opacity: 0.7;
-  animation: hintFade 0.2s ease both;
+  color: var(--ink-soft);
+  background: var(--paper);
+  border: 1px solid var(--rule-light);
+  border-radius: 2px;
+  padding: 2px 8px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 10;
+}
+
+.chip:hover::after {
+  opacity: 1;
 }
 
 /* ─── Active state — command is executing ─── */
 
 .active {
-  border-color: rgba(91, 107, 138, 0.25);
+  border-color: color-mix(in srgb, var(--indigo) 25%, transparent);
   animation: activePulse 2s ease-in-out infinite;
 }
 
@@ -78,27 +89,35 @@
 
 .accentIndigo {
   background: var(--indigo-dim);
-  border-color: rgba(91, 107, 138, 0.12);
+  border-color: var(--indigo-dim);
 }
 .accentIndigo .icon,
 .accentIndigo .label { color: var(--indigo); }
-.accentIndigo:hover { background: rgba(91, 107, 138, 0.1); border-color: rgba(91, 107, 138, 0.2); }
+.accentIndigo:hover { background: var(--indigo-dim); border-color: color-mix(in srgb, var(--indigo) 20%, transparent); }
 
 .accentSage {
   background: var(--sage-dim);
-  border-color: rgba(107, 143, 113, 0.12);
+  border-color: var(--sage-dim);
 }
 .accentSage .icon,
 .accentSage .label { color: var(--sage); }
-.accentSage:hover { background: rgba(107, 143, 113, 0.1); border-color: rgba(107, 143, 113, 0.2); }
+.accentSage:hover { background: var(--sage-dim); border-color: color-mix(in srgb, var(--sage) 20%, transparent); }
 
 .accentAmber {
   background: var(--amber-dim);
-  border-color: rgba(196, 154, 60, 0.12);
+  border-color: var(--amber-dim);
 }
 .accentAmber .icon,
 .accentAmber .label { color: var(--amber); }
-.accentAmber:hover { background: rgba(196, 154, 60, 0.1); border-color: rgba(196, 154, 60, 0.2); }
+.accentAmber:hover { background: var(--amber-dim); border-color: color-mix(in srgb, var(--amber) 20%, transparent); }
+
+.accentMargin {
+  background: var(--margin-dim);
+  border-color: var(--margin-dim);
+}
+.accentMargin .icon,
+.accentMargin .label { color: var(--margin); }
+.accentMargin:hover { background: var(--margin-dim); border-color: color-mix(in srgb, var(--margin) 20%, transparent); }
 
 /* ─── Focus ring for keyboard ─────────────── */
 
@@ -109,18 +128,13 @@
 
 /* ─── Animations ──────────────────────────── */
 
-@keyframes hintFade {
-  from { opacity: 0; transform: translateX(-2px); }
-  to { opacity: 0.7; transform: translateX(0); }
-}
-
 @keyframes activePulse {
-  0%, 100% { border-color: rgba(91, 107, 138, 0.15); }
-  50% { border-color: rgba(91, 107, 138, 0.35); }
+  0%, 100% { border-color: var(--indigo-dim); }
+  50% { border-color: color-mix(in srgb, var(--indigo) 35%, transparent); }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .chip { transition: none; }
-  .active { animation: none; border-color: rgba(91, 107, 138, 0.3); }
-  .hint { animation: none; }
+  .chip::after { transition: none; }
+  .active { animation: none; border-color: color-mix(in srgb, var(--indigo) 30%, transparent); }
 }

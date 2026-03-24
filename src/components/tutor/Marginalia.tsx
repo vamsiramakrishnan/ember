@@ -6,6 +6,9 @@
  * Supports inline sketches: if the tutor's text contains `[sketch: description]`
  * markers, they are replaced with AI-generated illustrations inline.
  *
+ * Uses block-mode MarkdownContent to support tables, code, and math
+ * from /delve research and other rich tutor responses.
+ *
  * See: 06-component-inventory.md, Family 2.
  */
 import { MarkdownContent } from '@/primitives/MarkdownContent';
@@ -27,17 +30,17 @@ export function Marginalia({ children }: MarginaliaProps) {
         {hasSketch ? (
           segments.map((seg, i) =>
             seg.type === 'text' ? (
-              <p key={i} className={styles.prose}>
+              <div key={i} className={styles.prose}>
                 <MarkdownContent>{seg.content}</MarkdownContent>
-              </p>
+              </div>
             ) : (
               <InlineSketch key={i} description={seg.description} />
             ),
           )
         ) : (
-          <p className={styles.prose}>
+          <div className={styles.prose}>
             <MarkdownContent>{children}</MarkdownContent>
-          </p>
+          </div>
         )}
       </div>
     </div>

@@ -1,11 +1,8 @@
 /* Ember global styles — material, resets, reduced-motion */
 
-/* ─── Font Loading ────────────────────────────────────
- * font-display: block for body text (wait for fonts)
- * font-display: swap for metadata (show fallback fast)
- * Spec: "No fallback to system serif in the visible UI"
- */
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400&family=IBM+Plex+Mono:wght@300;400&display=block');
+/* Font loading handled by public/index.html <link> tag.
+ * font-display: block ensures no fallback to system fonts.
+ * Spec: "No fallback to system serif in the visible UI" */
 
 *,
 *::before,

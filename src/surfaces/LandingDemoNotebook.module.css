@@ -1,0 +1,162 @@
+/* LandingDemoNotebook — typing animation with smart chips. */
+
+.notebook {
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+/* Prior student entry */
+.priorEntry { margin-bottom: 20px; }
+
+.studentLine {
+  font-family: 'Crimson Pro', serif;
+  font-size: 16.5px;
+  font-weight: 400;
+  color: var(--ink);
+  line-height: 1.78;
+  margin: 0;
+}
+
+/* @mention chip — amber pill */
+.chipMention {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--amber);
+  background: rgba(196, 154, 60, 0.10);
+  padding: 1px 8px;
+  border-radius: 2px;
+  margin: 0 2px;
+  white-space: nowrap;
+  animation: chipAppear 0.4s ease;
+}
+
+/* /slash command chip */
+.commandBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  margin-bottom: 16px;
+}
+
+.chipSlash {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--indigo);
+  background: rgba(91, 107, 138, 0.08);
+  padding: 3px 10px;
+  border-radius: 2px;
+  border: 1px solid rgba(91, 107, 138, 0.15);
+}
+
+.slashIcon {
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+.commandHint {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--ink-ghost);
+  letter-spacing: 0.5px;
+}
+
+/* Tutor response with margin rule */
+.tutorRow {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 12px 0;
+  margin-bottom: 12px;
+}
+
+.marginRule {
+  width: 3px;
+  min-height: 100%;
+  background: var(--margin);
+  opacity: 0.35;
+  border-radius: 1px;
+  flex-shrink: 0;
+  align-self: stretch;
+}
+
+.tutorText {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--margin);
+  line-height: 1.65;
+  margin: 0;
+}
+
+/* Silence cursor */
+.silenceRow {
+  display: flex;
+  justify-content: center;
+  padding: 16px 0;
+}
+
+.cursor {
+  width: 1px;
+  height: 16px;
+  background: var(--margin);
+  animation: emberCursorBlink 1.2s ease infinite;
+}
+
+/* Input zone affordances */
+.inputHint {
+  display: flex;
+  gap: 20px;
+  padding: 12px 0 0;
+  border-top: 1px solid var(--rule-light);
+  margin-top: 16px;
+}
+
+.hintItem {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--ink-ghost);
+  letter-spacing: 0.5px;
+}
+
+.hintKey {
+  color: var(--ink-faint);
+  font-weight: 400;
+}
+
+/* Generic fade-in */
+.fadeIn {
+  animation: fadeSlideUp 0.6s ease both;
+}
+
+@keyframes chipAppear {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .chipMention, .fadeIn { animation: none; }
+  .cursor { animation: none; opacity: 0.3; }
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .studentLine { font-size: 15px; }
+  .tutorText { font-size: 15px; }
+  .inputHint { gap: 12px; }
+}

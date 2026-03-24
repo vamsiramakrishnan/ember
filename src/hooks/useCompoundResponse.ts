@@ -120,10 +120,18 @@ async function executeNode(
   });
 
   try {
+    // Illustrate nodes need the image agent, not the text agent
+    if (node.action === 'illustrate') {
+      const { generateIllustration } = await import('@/services/enrichment');
+      const entry = await generateIllustration(node.content, refs.entries, prompt);
+      const accepted = entry ?? { type: 'tutor-marginalia' as const, content: '_The sketch could not be generated._' };
+      refs.patchEntryContent(streamingId, accepted);
+      return { nodeId: node.id, entries: [accepted], success: !!entry };
+    }
+
     let text: string;
 
     if (node.id === dag.rootId) {
-      // Root node streams tokens into its entry
       const result = await runTextAgentStreaming(TUTOR_AGENT, messages, (_chunk, accumulated) => {
         if (signal.aborted) return;
         refs.patchEntryContent(streamingId, {
@@ -132,7 +140,6 @@ async function executeNode(
       });
       text = result.text;
     } else {
-      // Non-root nodes run without streaming (result patches at end)
       const result = await runTextAgent(TUTOR_AGENT, messages);
       text = result.text;
     }

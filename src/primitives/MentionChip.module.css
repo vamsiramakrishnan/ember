@@ -29,7 +29,7 @@
 }
 .clickable:hover {
   background: var(--amber-dim);
-  border-color: rgba(196, 154, 60, 0.2);
+  border-color: var(--amber-dim);
 }
 
 .prefix {
@@ -69,12 +69,14 @@
 .accentSage .prefix { color: var(--sage); }
 .accentMono .prefix { color: var(--ink-soft); }
 
-.accentAmber { border-color: rgba(180, 130, 60, 0.15); }
-.accentAmber:hover { background: var(--amber-dim); border-color: rgba(180, 130, 60, 0.25); }
-.accentIndigo { border-color: rgba(90, 100, 140, 0.15); }
-.accentIndigo:hover { background: var(--indigo-dim); border-color: rgba(90, 100, 140, 0.25); }
-.accentSage { border-color: rgba(100, 130, 100, 0.15); }
-.accentSage:hover { background: var(--sage-dim); border-color: rgba(100, 130, 100, 0.25); }
+.accentAmber { border-color: var(--amber-dim); }
+.accentAmber:hover { background: var(--amber-dim); border-color: color-mix(in srgb, var(--amber) 20%, transparent); }
+.accentIndigo { border-color: var(--indigo-dim); }
+.accentIndigo:hover { background: var(--indigo-dim); border-color: color-mix(in srgb, var(--indigo) 20%, transparent); }
+.accentSage { border-color: var(--sage-dim); }
+.accentSage:hover { background: var(--sage-dim); border-color: color-mix(in srgb, var(--sage) 20%, transparent); }
+.accentMargin { border-color: var(--margin-dim); }
+.accentMargin:hover { background: var(--margin-dim); border-color: color-mix(in srgb, var(--margin) 20%, transparent); }
 
 /* Focus ring for keyboard navigation */
 .chip:focus-visible {

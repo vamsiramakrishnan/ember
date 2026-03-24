@@ -14,7 +14,7 @@ export function BridgeSuggestion({ children }: BridgeSuggestionProps) {
   return (
     <div className={styles.suggestion}>
       <p className={styles.text}>
-        <MarkdownContent>{children}</MarkdownContent>
+        <MarkdownContent mode="inline">{children}</MarkdownContent>
       </p>
     </div>
   );

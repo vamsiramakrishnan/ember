@@ -1,45 +1,14 @@
 /**
  * SlashCommandPopup — slash command palette triggered by typing / in the InputZone.
  * Post-spec extension: not in the original component inventory (06).
- * Added to support tutor-directed commands (explain, research, flashcards, etc.)
- * that invoke AI-generated content blocks within the notebook flow.
- * Related: 06-component-inventory.md 7.4 (InputZone),
- *          03-interaction-language.md (five interaction modes),
- *          05-ai-contract.md (AI behaviour contract)
+ * Related: 03-interaction-language.md, 05-ai-contract.md
  */
 import { useState, useEffect, useRef } from 'react';
+import { COMMANDS, GROUP_LABELS } from './slash-commands';
+import type { SlashCommand } from './slash-commands';
 import styles from './MentionPopup.module.css';
 
-export interface SlashCommand {
-  id: string;
-  label: string;
-  hint: string;
-  icon: string;
-  accent: string;
-  group: string;
-}
-
-const s = (c: string | undefined) => c ?? '';
-
-const COMMANDS: SlashCommand[] = [
-  { id: 'explain', label: 'explain', hint: 'explain a concept in depth', icon: '◇', accent: s(styles.iconIndigo), group: 'explore' },
-  { id: 'research', label: 'research', hint: 'deep-dive with search', icon: '◈', accent: s(styles.iconAmber), group: 'explore' },
-  { id: 'define', label: 'define', hint: 'add a term to your lexicon', icon: '≡', accent: s(styles.iconSage), group: 'explore' },
-  { id: 'visualize', label: 'visualize', hint: 'interactive concept diagram', icon: '◉', accent: s(styles.iconIndigo), group: 'create' },
-  { id: 'draw', label: 'draw', hint: 'hand-drawn concept sketch', icon: '✎', accent: s(styles.iconMargin), group: 'create' },
-  { id: 'timeline', label: 'timeline', hint: 'historical progression', icon: '→', accent: s(styles.iconAmber), group: 'create' },
-  { id: 'connect', label: 'connect', hint: 'find bridges between ideas', icon: '⟷', accent: s(styles.iconSage), group: 'create' },
-  { id: 'teach', label: 'teach', hint: 'create reading material deck', icon: '▣', accent: s(styles.iconAmber), group: 'create' },
-  { id: 'podcast', label: 'podcast', hint: 'audio discussion about a topic', icon: '♪', accent: s(styles.iconMargin), group: 'create' },
-  { id: 'flashcards', label: 'flashcards', hint: 'study cards for active recall', icon: '◈', accent: s(styles.iconIndigo), group: 'reflect' },
-  { id: 'exercise', label: 'exercise', hint: 'Socratic practice problems', icon: '◇', accent: s(styles.iconSage), group: 'reflect' },
-  { id: 'quiz', label: 'quiz me', hint: 'test your understanding', icon: '?', accent: s(styles.iconDefault), group: 'reflect' },
-  { id: 'summarize', label: 'summarize', hint: 'distill the session so far', icon: '≡', accent: s(styles.iconDefault), group: 'reflect' },
-];
-
-const GROUP_LABELS: Record<string, string> = {
-  explore: 'explore', create: 'create', reflect: 'reflect',
-};
+export type { SlashCommand };
 
 interface SlashCommandPopupProps {
   query: string;
@@ -64,21 +33,21 @@ export function SlashCommandPopup({
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'ArrowDown') {
-        e.preventDefault();
+        e.preventDefault(); e.stopPropagation();
         setSelectedIdx((i) => Math.min(i + 1, filtered.length - 1));
       } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
+        e.preventDefault(); e.stopPropagation();
         setSelectedIdx((i) => Math.max(i - 1, 0));
       } else if (e.key === 'Enter' && filtered[selectedIdx]) {
-        e.preventDefault();
+        e.preventDefault(); e.stopPropagation();
         onSelect(filtered[selectedIdx]);
       } else if (e.key === 'Escape') {
-        e.preventDefault();
+        e.preventDefault(); e.stopPropagation();
         onClose();
       }
     };
-    document.addEventListener('keydown', handleKey);
-    return () => document.removeEventListener('keydown', handleKey);
+    document.addEventListener('keydown', handleKey, true);
+    return () => document.removeEventListener('keydown', handleKey, true);
   }, [filtered, selectedIdx, onSelect, onClose]);
 
   const posStyle = position ? { top: position.top, left: position.left } : undefined;
@@ -95,7 +64,6 @@ export function SlashCommandPopup({
     );
   }
 
-  // Group commands by category (only when showing all)
   const showGroups = !query.trim();
   let lastGroup = '';
 
@@ -118,8 +86,7 @@ export function SlashCommandPopup({
                 {GROUP_LABELS[cmd.group] ?? cmd.group}
               </div>
             )}
-            <button
-              data-idx={i}
+            <button data-idx={i}
               className={`${styles.item} ${i === selectedIdx ? styles.selected : ''}`}
               role="option" aria-selected={i === selectedIdx}
               onClick={() => onSelect(cmd)}

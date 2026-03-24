@@ -15,7 +15,7 @@ export function QuestionBubble({ children }: QuestionBubbleProps) {
   return (
     <p className={styles.bubble}>
       <span className={styles.glyph}>?</span>
-      <MarkdownContent>{children}</MarkdownContent>
+      <MarkdownContent mode="inline">{children}</MarkdownContent>
     </p>
   );
 }

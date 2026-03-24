@@ -8,7 +8,31 @@
   box-sizing: border-box;
 }
 
+/* Wide column — structural chrome only (header, nav, footer).
+ * Content column stays 640px. This wider variant lets the UI
+ * breathe on desktops without violating the sacred column width. */
+.columnWide {
+  composes: column;
+}
+
+@media (min-width: 960px) {
+  .columnWide { max-width: 880px; }
+}
+
+@media (min-width: 1200px) {
+  .columnWide { max-width: 960px; }
+}
+
+@media (min-width: 1440px) {
+  .columnWide { max-width: 1080px; }
+}
+
 /* Tighter padding on narrow mobile */
 @media (max-width: 480px) {
   .column { padding-left: 16px; padding-right: 16px; }
+}
+
+/* Extra-narrow: minimal breathing room */
+@media (max-width: 375px) {
+  .column { padding-left: 12px; padding-right: 12px; }
 }

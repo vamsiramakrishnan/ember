@@ -3,6 +3,7 @@
  * Uses the shared structured-generator pipeline.
  */
 import { generateStructured } from './structured-generator';
+import { refineContent } from './content-refiner';
 import type { NotebookEntry, LiveEntry, Flashcard } from '@/types/entries';
 
 const VALID_ACCENTS = new Set(['sage', 'indigo', 'amber', 'margin']);
@@ -18,7 +19,7 @@ export async function generateFlashcards(
   entries: LiveEntry[],
   enrichedContext?: string,
 ): Promise<NotebookEntry | null> {
-  return generateStructured<RawDeck>(topic, entries, {
+  const raw = await generateStructured<RawDeck>(topic, entries, {
     systemPrompt: SYSTEM_PROMPT,
     validate: (parsed) => {
       if (!parsed.title || !Array.isArray(parsed.cards) || parsed.cards.length === 0) {
@@ -38,6 +39,9 @@ export async function generateFlashcards(
       };
     },
   }, enrichedContext);
+  if (!raw) return null;
+  const { entry: refined } = await refineContent(raw, topic, enrichedContext);
+  return refined;
 }
 
 const SYSTEM_PROMPT = `You are Ember's tutor creating a flashcard deck for active recall.

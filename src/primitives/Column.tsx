@@ -9,12 +9,13 @@ import styles from './Column.module.css';
 interface ColumnProps {
   children: React.ReactNode;
   className?: string;
+  /** Use wider max-width for structural chrome (header, nav). Content stays 640px. */
+  wide?: boolean;
 }
 
-export function Column({ children, className }: ColumnProps) {
-  const cls = className
-    ? `${styles.column} ${className}`
-    : styles.column;
+export function Column({ children, className, wide }: ColumnProps) {
+  const base = wide ? styles.columnWide : styles.column;
+  const cls = className ? `${base} ${className}` : base;
 
   return <div className={cls}>{children}</div>;
 }

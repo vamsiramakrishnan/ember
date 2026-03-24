@@ -14,6 +14,23 @@
   position: relative;
 }
 
+/* Margin anchor — invisible placeholder for marginalized tutor entries.
+ * Preserves the entry ID in the DOM for scroll-to-entry navigation
+ * while the actual content renders as a MarginNote on the student entry. */
+.marginAnchor {
+  height: 0;
+  overflow: hidden;
+}
+
+/* ─── Spatial marginalia: annotation offset ──────────────────
+ * When an entry row contains a MarginNote (from spatial marginalia),
+ * the AnnotationMargin indicator needs to be pushed below the note
+ * to avoid overlap. The MarginNote is ~100-120px tall on average. */
+.entryRow:has(> [role="note"]) [class*="AnnotationMargin_margin"] {
+  top: auto;
+  bottom: -4px;
+}
+
 /* Mode toggle — linear vs canvas */
 .modeToggle {
   display: flex;

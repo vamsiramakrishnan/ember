@@ -7,8 +7,9 @@
  * as warm inline chips, making the input feel polished.
  */
 import { useMemo } from 'react';
-import { MENTION_PATTERN } from '@/primitives/MentionChip';
+import { MentionChip, MENTION_PATTERN } from '@/primitives/MentionChip';
 import { SlashChip } from '@/primitives/SlashChip';
+import { SLASH_COMMAND_PATTERN } from './slash-commands';
 import type { EntityType } from '@/hooks/useEntityIndex';
 import styles from './InputPreview.module.css';
 
@@ -17,52 +18,51 @@ interface InputPreviewProps {
   visible: boolean;
 }
 
-const SLASH_RE = /(?:^|\s)(\/\w+)\s/;
-
-const TYPE_ICONS: Record<string, string> = {
-  notebook: '◉', session: '§', thinker: '◈', concept: '◇',
-  term: '≡', text: '▤', question: '?',
-};
-
 interface Segment {
   type: 'text' | 'mention' | 'slash';
   value: string;
-  icon?: string;
   entityType?: EntityType;
+  entityId?: string;
 }
 
 function tokenize(text: string): Segment[] {
   const segments: Segment[] = [];
-  const regex = new RegExp(MENTION_PATTERN.source, 'g');
+
+  // Combined regex: @mentions OR /commands
+  const mentionSrc = MENTION_PATTERN.source;
+  const slashSrc = `(?:^|\\s)(\\/(?:${SLASH_COMMAND_PATTERN}))(?=\\s|$)`;
+  const combined = new RegExp(`${mentionSrc}|${slashSrc}`, 'g');
+
   let lastIdx = 0;
   let match;
 
-  while ((match = regex.exec(text)) !== null) {
-    if (match.index > lastIdx) {
-      segments.push({ type: 'text', value: text.slice(lastIdx, match.index) });
+  while ((match = combined.exec(text)) !== null) {
+    if (match[1] != null) {
+      // Mention match — groups 1 (name), 2 (type), 3 (id)
+      if (match.index > lastIdx) {
+        segments.push({ type: 'text', value: text.slice(lastIdx, match.index) });
+      }
+      segments.push({
+        type: 'mention',
+        value: match[1],
+        entityType: (match[2] ?? 'concept') as EntityType,
+        entityId: match[3] ?? '',
+      });
+      lastIdx = match.index + match[0].length;
+    } else if (match[4] != null) {
+      // Slash match — group 4, may have leading whitespace
+      const cmdStart = match[0].indexOf('/');
+      const absStart = match.index + cmdStart;
+      if (absStart > lastIdx) {
+        segments.push({ type: 'text', value: text.slice(lastIdx, absStart) });
+      }
+      segments.push({ type: 'slash', value: match[4] });
+      lastIdx = absStart + match[4].length;
     }
-    const etype = (match[2] ?? 'concept') as EntityType;
-    segments.push({
-      type: 'mention',
-      value: match[1] ?? '',
-      icon: TYPE_ICONS[etype] ?? '@',
-      entityType: etype,
-    });
-    lastIdx = match.index + match[0].length;
   }
 
   if (lastIdx < text.length) {
-    const rest = text.slice(lastIdx);
-    const slashMatch = rest.match(SLASH_RE);
-    if (slashMatch && slashMatch.index !== undefined) {
-      const pre = rest.slice(0, slashMatch.index + slashMatch[0].length - (slashMatch[1]?.length ?? 0) - 1);
-      if (pre) segments.push({ type: 'text', value: pre });
-      segments.push({ type: 'slash', value: slashMatch[1] ?? '' });
-      const afterSlash = rest.slice(slashMatch.index + slashMatch[0].length);
-      if (afterSlash) segments.push({ type: 'text', value: afterSlash });
-    } else {
-      segments.push({ type: 'text', value: rest });
-    }
+    segments.push({ type: 'text', value: text.slice(lastIdx) });
   }
 
   return segments;
@@ -79,10 +79,12 @@ export function InputPreview({ value, visible }: InputPreviewProps) {
       {segments.map((seg, i) => {
         if (seg.type === 'mention') {
           return (
-            <span key={i} className={styles.mentionChip}>
-              <span className={styles.chipIcon}>{seg.icon}</span>
-              <span className={styles.chipName}>{seg.value}</span>
-            </span>
+            <MentionChip
+              key={i}
+              name={seg.value}
+              entityType={seg.entityType ?? 'concept'}
+              entityId={seg.entityId ?? ''}
+            />
           );
         }
         if (seg.type === 'slash') {

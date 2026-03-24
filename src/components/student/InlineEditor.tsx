@@ -2,14 +2,13 @@
  * InlineEditor — in-place editing overlay for existing notebook entries.
  * Post-spec extension: not in the original component inventory (06).
  * Added to support editing previously submitted entries without leaving
- * the notebook flow. Reuses @mention and /command chip rendering from InputZone.
+ * the notebook flow. Reuses @mention and /command trigger detection from InputZone.
  * Related: 06-component-inventory.md 7.4 (InputZone),
  *          04-information-architecture.md (notebook surface, permanence)
  */
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { MENTION_PATTERN } from '@/primitives/MentionChip';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { detectTrigger, replaceTrigger } from './trigger-detect';
-import { InputPreview } from './InputPreview';
+import { ChipPreviewBar } from './ChipPreviewBar';
 import styles from './InlineEditor.module.css';
 
 interface InlineEditorProps {
@@ -43,7 +42,6 @@ export function InlineEditor({
   useEffect(() => {
     const el = ref.current;
     if (el) { el.style.height = 'auto'; el.style.height = `${el.scrollHeight}px`; }
-    // After React commits the new value to the DOM, apply any pending cursor position
     if (pendingCursorPos.current !== null && el) {
       const pos = pendingCursorPos.current;
       pendingCursorPos.current = null;
@@ -54,7 +52,6 @@ export function InlineEditor({
     }
   }, [value]);
 
-  // Insert text from popup selection at trigger position
   useEffect(() => {
     if (!insertText || triggerPos.current < 0) return;
     const pos = triggerPos.current;
@@ -97,20 +94,15 @@ export function InlineEditor({
     : entryType === 'hypothesis' ? styles.hypothesis
     : styles.prose;
 
-  const hasChips = useMemo(() => {
-    const mentionRe = new RegExp(MENTION_PATTERN.source);
-    return mentionRe.test(value) || /(?:^|\s)\/\w+\s/.test(value);
-  }, [value]);
-
   return (
     <div className={styles.wrap}>
       <textarea ref={ref}
-        className={`${hasChips ? styles.editorHidden : styles.editor} ${typeCls}`}
+        className={`${styles.editor} ${typeCls}`}
         value={value} onChange={handleChange}
         onKeyDown={handleKeyDown} onBlur={handleBlur}
         placeholder="Continue your thought…"
         rows={1} aria-label="Edit entry" />
-      <InputPreview value={value} visible={hasChips} />
+      <ChipPreviewBar value={value} />
     </div>
   );
 }

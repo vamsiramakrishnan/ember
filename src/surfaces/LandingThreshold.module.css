@@ -1,0 +1,100 @@
+/* LandingThreshold — the door to the notebook. */
+
+.threshold {
+  padding: 64px 24px 80px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.threshold.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.column {
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.rule {
+  width: 40px;
+  height: 1px;
+  background: var(--rule);
+  margin: 0 auto 48px;
+}
+
+.label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink-ghost);
+  margin-bottom: 16px;
+}
+
+.oauthSection {
+  margin-bottom: 40px;
+}
+
+.oauthGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.oauthButton {
+  padding: 12px 16px;
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  cursor: pointer;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  color: var(--ink-soft);
+  transition: border-color 0.3s ease, color 0.3s ease, background 0.3s ease;
+  text-align: center;
+}
+
+.oauthButton:hover {
+  border-color: var(--ink-ghost);
+  color: var(--ink);
+  background: var(--paper-warm);
+}
+
+.oauthButton:first-child {
+  grid-column: 1 / -1;
+}
+
+.dividerRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.dividerLine {
+  flex: 1;
+  height: 1px;
+  background: var(--rule);
+}
+
+.dividerText {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--ink-ghost);
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .threshold {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

@@ -17,7 +17,7 @@
   cursor: pointer;
   text-align: left;
   border-bottom: 1px solid transparent;
-  transition: border-bottom-color 0.2s ease, color 0.2s ease;
+  transition: border-bottom-color 0.15s ease, color 0.15s ease;
 }
 
 .concept:hover {
@@ -58,4 +58,9 @@
   color: var(--ink-faint);
   min-width: 32px;
   text-align: right;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .concept { transition: none; }
+  .fill { transition: none; }
 }

@@ -2,6 +2,9 @@
  * NotebookContent — inner layout for the Notebook surface.
  * Renders past sessions, current session header, mode toggle,
  * pinned threads, and either linear entry list or canvas view.
+ *
+ * Spatial marginalia: short tutor responses render in the right margin
+ * beside the student entry they annotate, with a subtle thread arc.
  * See: 04-information-architecture.md, Surface one.
  */
 import { Column } from '@/primitives/Column';
@@ -14,11 +17,14 @@ import { InputZone } from '@/components/student/InputZone';
 import { TutorActivity } from '@/components/peripheral/TutorActivity';
 import { MentionPopup } from '@/components/student/MentionPopup';
 import { SlashCommandPopup } from '@/components/student/SlashCommandPopup';
+import { MarginNote } from '@/components/tutor/MarginNote';
+import { ThreadArc } from '@/components/tutor/ThreadArc';
 import { NotebookPastSession } from './NotebookPastSession';
 import { NotebookModeToggle } from './NotebookModeToggle';
 import { NotebookEntryWrapper } from './NotebookEntryWrapper';
 import { NotebookCanvas } from './NotebookCanvas';
 import { KnowledgeCanvas } from '@/components/canvas/KnowledgeCanvas';
+import { useMarginLayout, useWideViewport } from '@/hooks/useMarginLayout';
 import type { NotebookMode } from './NotebookModeToggle';
 import type { LiveEntry } from '@/types/entries';
 import type { SessionRecord } from '@/persistence/records';
@@ -55,20 +61,16 @@ export function NotebookContent({
   handleSubmit, handleSubmitTyped, handleSketchSubmit,
 }: NotebookContentProps) {
   const { containerRef: kbNavRef, handleKeyDown: handleKbNav } = useEntryKeyboardNav();
+  const wideViewport = useWideViewport();
+  const layout = useMarginLayout(entries, wideViewport);
 
   return (
     <Column>
-      {past.map((session) => (
-        <NotebookPastSession key={session.id} session={session} />
-      ))}
+      {past.map((s) => <NotebookPastSession key={s.id} session={s} />)}
       {past.length > 0 && <SessionDivider />}
       {current && (
-        <SessionHeader
-          sessionNumber={current.number}
-          date={current.date}
-          timeOfDay={current.timeOfDay}
-          topic={current.topic}
-        />
+        <SessionHeader sessionNumber={current.number} date={current.date}
+          timeOfDay={current.timeOfDay} topic={current.topic} />
       )}
       <NotebookModeToggle mode={mode} setMode={setMode} />
       {pinnedEntries.length > 0 && (
@@ -82,67 +84,46 @@ export function NotebookContent({
       )}
       {mode === 'linear' ? (
         <>
-          <div
-            ref={kbNavRef}
-            className={styles.entryContainer}
-            onDrop={contentDrop.handleDrop}
-            onDragOver={contentDrop.handleDragOver}
-            onKeyDown={handleKbNav}
-            aria-live="polite"
-            aria-relevant="additions"
+          <div ref={kbNavRef} className={styles.entryContainer}
+            onDrop={contentDrop.handleDrop} onDragOver={contentDrop.handleDragOver}
+            onKeyDown={handleKbNav} aria-live="polite" aria-relevant="additions"
           >
-            {marginalRef && (
-              <MarginZone>
-                <MarginalReference>{marginalRef}</MarginalReference>
-              </MarginZone>
-            )}
+            {marginalRef && <MarginZone><MarginalReference>{marginalRef}</MarginalReference></MarginZone>}
             {entries.map((le, i) => {
+              if (layout.isInMargin(le.id)) return (
+                <div key={le.id} data-entry-id={le.id} className={styles.marginAnchor} />
+              );
               const prev = i > 0 ? entries[i - 1] : null;
               const prevIsStudent = prev ? isStudentType(prev.entry.type) : false;
+              const pair = layout.pairForStudent(le.id);
+              const isConn = pair?.tutorType === 'tutor-connection';
               return (
                 <div key={le.id} className={styles.entryRow}>
-                  <NotebookEntryWrapper
-                    liveEntry={le}
-                    index={i + 1}
-                    prevIsStudent={prevIsStudent}
-                  />
+                  <NotebookEntryWrapper liveEntry={le} index={i + 1} prevIsStudent={prevIsStudent} />
+                  {pair && <MarginNote isConnection={isConn}>{pair.tutorContent}</MarginNote>}
+                  {pair && <ThreadArc isConnection={isConn} />}
                 </div>
               );
             })}
           </div>
           <div style={{ position: 'relative' }}>
             {popup.mentionQuery !== null && (
-              <MentionPopup
-                query={popup.mentionQuery}
-                results={popup.mentionResults}
-                onSelect={(e) => popup.handleMentionSelect(e)}
-                onClose={popup.handlePopupClose}
-              />
+              <MentionPopup query={popup.mentionQuery} results={popup.mentionResults}
+                onSelect={(e) => popup.handleMentionSelect(e)} onClose={popup.handlePopupClose} />
             )}
             {popup.slashQuery !== null && (
-              <SlashCommandPopup
-                query={popup.slashQuery}
-                onSelect={(c) => popup.handleSlashSelect(c)}
-                onClose={popup.handlePopupClose}
-              />
+              <SlashCommandPopup query={popup.slashQuery}
+                onSelect={(c) => popup.handleSlashSelect(c)} onClose={popup.handlePopupClose} />
             )}
-            {responsePlans && responsePlans.length > 0 && (
-              <ResponsePlanPreview plans={responsePlans} />
-            )}
+            {responsePlans && responsePlans.length > 0 && <ResponsePlanPreview plans={responsePlans} />}
             <TutorActivity />
-            <InputZone
-              onSubmit={handleSubmit}
-              onSubmitTyped={handleSubmitTyped}
-              onSketchSubmit={handleSketchSubmit}
-              onMentionTrigger={popup.handleMentionTrigger}
-              onSlashTrigger={popup.handleSlashTrigger}
-              onPopupClose={popup.handlePopupClose}
-              onPaste={contentDrop.handlePaste}
-              insertText={popup.pendingInsert}
+            <InputZone onSubmit={handleSubmit} onSubmitTyped={handleSubmitTyped}
+              onSketchSubmit={handleSketchSubmit} onMentionTrigger={popup.handleMentionTrigger}
+              onSlashTrigger={popup.handleSlashTrigger} onPopupClose={popup.handlePopupClose}
+              onPaste={contentDrop.handlePaste} insertText={popup.pendingInsert}
               onInsertConsumed={popup.handleInsertConsumed}
               popupOpen={popup.mentionQuery !== null || popup.slashQuery !== null}
-              disabled={isThinking}
-            />
+              disabled={isThinking} />
           </div>
           <div ref={bottomRef} />
         </>
