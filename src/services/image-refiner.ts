@@ -5,7 +5,8 @@
  */
 import { IMAGE_CRITIC_AGENT } from './agents/image-critic';
 import { ILLUSTRATOR_AGENT } from './agents';
-import { runTextAgent, runImageAgent } from './run-agent';
+import { runImageAgent } from './run-agent';
+import { resilientTextAgent } from './resilient-agent';
 import { setActivityDetail } from '@/state';
 import type { TutorActivityDetail } from '@/state';
 import type { RefinementStep } from './patch-applier';
@@ -92,7 +93,7 @@ async function critiqueImage(
       ? '\n\nThis is the FINAL review pass. Focus on the single most impactful improvement.'
       : '';
 
-    const result = await runTextAgent(IMAGE_CRITIC_AGENT, [{
+    const result = await resilientTextAgent(IMAGE_CRITIC_AGENT, [{
       role: 'user',
       parts: [
         { inlineData: { mimeType, data: imageData } },

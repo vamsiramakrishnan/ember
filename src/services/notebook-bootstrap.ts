@@ -12,7 +12,7 @@
  * as it arrives.
  */
 import { BOOTSTRAP_AGENT } from './agents';
-import { runTextAgent } from './run-agent';
+import { resilientTextAgent } from './resilient-agent';
 import { isGeminiAvailable } from './gemini';
 import { Store, notify } from '@/persistence';
 import { createLexiconEntry } from '@/persistence/repositories/lexicon';
@@ -59,7 +59,7 @@ export async function bootstrapNotebook(
       ? `Notebook: "${title}"\nGuiding question: "${guidingQuestion}"`
       : `Notebook: "${title}"\nNo guiding question — infer the most interesting direction.`;
 
-    const result = await runTextAgent(BOOTSTRAP_AGENT, [{
+    const result = await resilientTextAgent(BOOTSTRAP_AGENT, [{
       role: 'user',
       parts: [{ text: prompt }],
     }]);

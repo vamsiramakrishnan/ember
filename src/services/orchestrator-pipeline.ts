@@ -1,6 +1,6 @@
 /** Orchestrator Pipeline — shared stages for orchestrate() and streamOrchestrate(). */
 import { RESEARCHER_AGENT } from './agents';
-import { runTextAgent } from './run-agent';
+import { resilientTextAgent } from './resilient-agent';
 import { buildGraphContext } from './graph-context';
 import { buildGraph, getDelta, serializeSubgraph } from './knowledge-graph';
 import { assembleContext, type StudentProfile, type NotebookContext, type ResearchContext } from './context-assembler';
@@ -37,7 +37,7 @@ export interface PipelineSetupResult {
 export async function fetchResearch(text: string): Promise<ResearchResult> {
   try {
     const prompt = `Student asked: "${text}"\n\nFactual grounding, historical context, thinker connections. Max 200 words.`;
-    const result = await runTextAgent(RESEARCHER_AGENT, [
+    const result = await resilientTextAgent(RESEARCHER_AGENT, [
       { role: 'user', parts: [{ text: prompt }] },
     ]);
     const context = result.text.trim() ? { facts: result.text } : null;

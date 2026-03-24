@@ -2,7 +2,7 @@
  * Parallel to artifact-refiner.ts but operates on JSON entries.
  * The critic returns field-level corrections applied to entry arrays. */
 import { CONTENT_CRITIC_AGENT } from './agents/content-critic';
-import { runTextAgent } from './run-agent';
+import { resilientTextAgent } from './resilient-agent';
 import { setActivityDetail } from '@/state';
 import type { RefinementStep } from './patch-applier';
 import type { NotebookEntry } from '@/types/entries';
@@ -97,7 +97,7 @@ async function evaluateContent(
       `Each correction: {index, field, value} targeting the ${meta.itemsKey} array.`,
     ].filter(Boolean).join('\n');
 
-    const result = await runTextAgent(CONTENT_CRITIC_AGENT, [{
+    const result = await resilientTextAgent(CONTENT_CRITIC_AGENT, [{
       role: 'user', parts: [{ text: critiquePrompt }],
     }]);
     return parseCritiqueResponse(result.text);

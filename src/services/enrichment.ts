@@ -10,7 +10,8 @@
  * Separated from the orchestrator for single responsibility.
  */
 import { ILLUSTRATOR_AGENT, VISUALISER_AGENT } from './agents';
-import { runImageAgent, runTextAgent } from './run-agent';
+import { runImageAgent } from './run-agent';
+import { resilientTextAgent } from './resilient-agent';
 import { buildIllustrationPrompt } from './illustration-prompt';
 import { EMBER_VIZ_CSS, EMBER_VIZ_JS } from './viz-components';
 import { refineArtifact } from './artifact-refiner';
@@ -31,7 +32,7 @@ export async function generateVisualization(
       .join('\n');
 
     const vizPrompt = buildVisualizationPrompt(prompt, recentContext);
-    const result = await runTextAgent(VISUALISER_AGENT, [{
+    const result = await resilientTextAgent(VISUALISER_AGENT, [{
       role: 'user',
       parts: [{ text: vizPrompt }],
     }]);

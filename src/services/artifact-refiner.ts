@@ -11,7 +11,7 @@
  * meaningful steps showing how the artifact evolved.
  */
 import { CRITIC_AGENT } from './agents';
-import { runTextAgent } from './run-agent';
+import { resilientTextAgent } from './resilient-agent';
 import { applyPatches, type Patch, type RefinementStep } from './patch-applier';
 import { setActivityDetail } from '@/state';
 import type { TutorActivityDetail } from '@/state';
@@ -95,7 +95,7 @@ async function evaluateArtifact(
       `Each patch: {search, replace} for exact match, or {selector, replace} for CSS selector.${graceNote}`,
     ].filter(Boolean).join('\n');
 
-    const result = await runTextAgent(CRITIC_AGENT, [{
+    const result = await resilientTextAgent(CRITIC_AGENT, [{
       role: 'user', parts: [{ text: critiquePrompt }],
     }]);
     return parseCritiqueResponse(result.text);

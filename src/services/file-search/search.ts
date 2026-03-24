@@ -2,9 +2,9 @@
  * File Search Queries — search across indexed student content
  * with metadata filtering for notebook and type scoping.
  */
-import { getGeminiClient } from '../gemini';
+import { getGeminiClient, MODELS } from '../gemini';
 
-const FILE_SEARCH_MODEL = 'gemini-3-flash-preview';
+const FILE_SEARCH_MODEL = MODELS.text;
 
 export interface SearchResult {
   text: string;

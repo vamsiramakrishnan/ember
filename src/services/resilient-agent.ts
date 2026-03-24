@@ -1,9 +1,13 @@
 /**
  * Resilient Agent Runner — tiered fallback for API failures.
  *
- * Tier 1: Try the configured model (gemini-3.1-flash-lite-preview)
- * Tier 2: Retry once after 1s delay (same model — transient errors)
- * Tier 3: Fall back to gemini-2.5-flash-lite
+ * Model-aware fallback:
+ *   gemini-3.1-flash-lite-preview  →  gemini-2.5-flash-lite
+ *   gemini-3-flash-preview         →  gemini-3.1-flash-lite-preview
+ *
+ * Tier 1: Try the configured model
+ * Tier 2: Retry once after delay (same model — transient errors)
+ * Tier 3: Fall back to the mapped fallback model
  *
  * Error-code-aware: 429 (rate limit) and 503 (overloaded) get longer
  * back-off before retry. 400 (bad request) skips straight to fallback.
@@ -16,7 +20,20 @@ import { MODELS } from './gemini';
 import type { AgentConfig } from './agents';
 import type { AgentMessage } from './run-agent';
 
-const FALLBACK_MODEL = MODELS.fallback;
+/**
+ * Model-aware fallback map.
+ * Heavy model (3-flash) falls back to the light model (3.1-flash-lite).
+ * Light model (3.1-flash-lite) falls back to previous-gen lite (2.5-flash-lite).
+ */
+const FALLBACK_MAP: Record<string, string> = {
+  'gemini-3-flash-preview': MODELS.text,       // heavy → light
+  [MODELS.text]: MODELS.fallback,              // light → 2.5-flash-lite
+};
+
+/** Resolve the fallback model for a given primary. */
+function fallbackFor(primary: string): string {
+  return FALLBACK_MAP[primary] ?? MODELS.fallback;
+}
 
 function delay(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
@@ -31,10 +48,8 @@ const GRACEFUL_FALLBACK: AgentTextResult = {
 function extractErrorCode(err: unknown): number | null {
   if (!err || typeof err !== 'object') return null;
   const e = err as Record<string, unknown>;
-  // @google/genai errors often have status or code
   if (typeof e.status === 'number') return e.status;
   if (typeof e.code === 'number') return e.code;
-  // Some errors embed it in the message
   const msg = typeof e.message === 'string' ? e.message : '';
   const match = msg.match(/(\b[45]\d{2}\b)/);
   return match?.[1] ? parseInt(match[1], 10) : null;
@@ -43,9 +58,9 @@ function extractErrorCode(err: unknown): number | null {
 /** Choose delay based on error code. */
 function backoffForError(err: unknown, base: number): number {
   const code = extractErrorCode(err);
-  if (code === 429) return base * 3;    // Rate limit — longer wait
-  if (code === 503) return base * 2;    // Overloaded — moderate wait
-  return base;                           // Default
+  if (code === 429) return base * 3;
+  if (code === 503) return base * 2;
+  return base;
 }
 
 /** Whether this error means the request itself is bad (don't retry same model). */
@@ -54,13 +69,14 @@ function isClientError(err: unknown): boolean {
   return code !== null && code >= 400 && code < 500 && code !== 429;
 }
 
-/** Try the primary model, retry once, then cascade through fallback models. */
+/** Try the primary model, retry once, then fall back to mapped model. */
 export async function resilientTextAgent(
   agent: AgentConfig,
   messages: AgentMessage[],
 ): Promise<AgentTextResult> {
-  // Tier 1: primary model
   let lastErr: unknown;
+
+  // Tier 1: primary model
   try {
     return await runTextAgent(agent, messages);
   } catch (err) {
@@ -68,7 +84,7 @@ export async function resilientTextAgent(
     console.warn('[Ember] Tier 1 failed:', err);
   }
 
-  // Tier 2: retry (skip if client error — same request will fail again)
+  // Tier 2: retry (skip if client error)
   if (!isClientError(lastErr)) {
     await delay(backoffForError(lastErr, 1000));
     try {
@@ -79,15 +95,15 @@ export async function resilientTextAgent(
     }
   }
 
-  // Tier 3: fallback to gemini-2.5-flash-lite
+  // Tier 3: model-aware fallback
+  const fb = fallbackFor(agent.model);
   try {
-    const fallback: AgentConfig = { ...agent, model: FALLBACK_MODEL };
+    const fallback: AgentConfig = { ...agent, model: fb };
     return await runTextAgent(fallback, messages);
   } catch (err) {
-    console.warn(`[Ember] Fallback ${FALLBACK_MODEL} failed:`, err);
+    console.warn(`[Ember] Fallback ${fb} failed:`, err);
   }
 
-  // All tiers failed — return graceful message
   return { ...GRACEFUL_FALLBACK };
 }
 
@@ -99,7 +115,7 @@ export async function resilientStreamingAgent(
 ): Promise<AgentTextResult> {
   let lastErr: unknown;
 
-  // Tier 1: streaming with primary model
+  // Tier 1
   try {
     return await runTextAgentStreaming(agent, messages, onChunk);
   } catch (err) {
@@ -107,7 +123,7 @@ export async function resilientStreamingAgent(
     console.warn('[Ember] Streaming Tier 1 failed:', err);
   }
 
-  // Tier 2: retry streaming (skip on client errors)
+  // Tier 2: retry (skip on client errors)
   if (!isClientError(lastErr)) {
     await delay(backoffForError(lastErr, 1000));
     try {
@@ -118,14 +134,15 @@ export async function resilientStreamingAgent(
     }
   }
 
-  // Tier 3: non-streaming fallback with gemini-2.5-flash-lite
+  // Tier 3: model-aware fallback (non-streaming for reliability)
+  const fb = fallbackFor(agent.model);
   try {
-    const fallback: AgentConfig = { ...agent, model: FALLBACK_MODEL };
+    const fallback: AgentConfig = { ...agent, model: fb };
     const result = await runTextAgent(fallback, messages);
     onChunk(result.text, result.text);
     return result;
   } catch (err) {
-    console.warn(`[Ember] Streaming fallback ${FALLBACK_MODEL} failed:`, err);
+    console.warn(`[Ember] Streaming fallback ${fb} failed:`, err);
   }
 
   const fallbackText = GRACEFUL_FALLBACK.text;
@@ -133,5 +150,4 @@ export async function resilientStreamingAgent(
   return { text: fallbackText, citations: [] };
 }
 
-// Re-export for downstream use
-export { MODELS };
+export { MODELS, fallbackFor };

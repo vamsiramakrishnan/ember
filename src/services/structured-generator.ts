@@ -6,7 +6,7 @@
  * Pattern: system prompt + topic + context → agent → JSON → validate → entry
  */
 import { VISUALISER_AGENT } from './agents';
-import { runTextAgent } from './run-agent';
+import { resilientTextAgent } from './resilient-agent';
 import { parseStructured } from './json-parser';
 import { recentContext } from './entry-utils';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
@@ -48,7 +48,7 @@ export async function generateStructured<T>(
       '\nOutput JSON only.',
     ].join('\n');
 
-    const result = await runTextAgent(agent, [{
+    const result = await resilientTextAgent(agent, [{
       role: 'user',
       parts: [{ text: prompt }],
     }]);
