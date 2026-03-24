@@ -73,7 +73,6 @@ export async function enrichEntity(
 
     const parsed = JSON.parse(result.text) as Record<string, string | undefined>;
     const kind = parsed.kind ?? 'concept';
-    const detail = parsed.detail ?? '';
 
     if (kind === 'thinker') {
       return persistThinker(parsed, studentId, notebookId, sessionTopic);

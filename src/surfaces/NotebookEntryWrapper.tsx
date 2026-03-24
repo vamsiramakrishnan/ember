@@ -11,6 +11,7 @@ import { NotebookEntryRenderer } from './NotebookEntryRenderer';
 import { EntryActions } from './EntryActions';
 import { EntryMeta } from './EntryMeta';
 import { ThreadIndicator } from './ThreadIndicator';
+import { ThreadLink } from '@/components/peripheral/ThreadLink';
 import { TYPE_META, isStudentEntry } from './entryTypeMeta';
 import { useEntryAnchor } from '@/hooks/useEntryAnchor';
 import styles from './NotebookEntryWrapper.module.css';
@@ -149,6 +150,7 @@ export const NotebookEntryWrapper = memo(function NotebookEntryWrapper({
             />
           </div>
         )}
+        <ThreadLink entryId={id} />
       </div>
       {bookmarked && (
         <div className={styles.bookmarkPos}><Bookmark /></div>

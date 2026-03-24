@@ -150,6 +150,19 @@
   color: var(--ink-faint);
 }
 
+/* After Socratic question — echo the tutor's presence */
+.afterQuestion {
+  border-left: 2px solid var(--margin);
+  border-left-color: color-mix(in srgb, var(--margin) 35%, transparent);
+  padding-left: calc(var(--text-indent) - 2px);
+  animation: questionEcho 2s ease-out;
+}
+
+@keyframes questionEcho {
+  0% { border-left-color: var(--margin); }
+  100% { border-left-color: color-mix(in srgb, var(--margin) 35%, transparent); }
+}
+
 /* Warm hint — visible when empty and unfocused */
 .hint {
   position: absolute;

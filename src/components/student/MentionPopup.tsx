@@ -2,7 +2,7 @@
  * MentionPopup — @ mention autocomplete with "Create new" ghost row.
  * See: 06-component-inventory.md 7.4 (InputZone)
  */
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { Entity, EntityType } from '@/hooks/useEntityIndex';
 import styles from './MentionPopup.module.css';
 

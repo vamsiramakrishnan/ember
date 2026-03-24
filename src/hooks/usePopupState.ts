@@ -69,7 +69,7 @@ export function usePopupState(onNavigate?: (surface: Surface) => void) {
     // 3. Fire-and-forget enrichment — runs in background
     if (!enrichingRef.current.has(name.toLowerCase())) {
       enrichingRef.current.set(name.toLowerCase(), true);
-      void enrichEntity(name, '', studentId, notebookId, notebook?.topic ?? '')
+      void enrichEntity(name, '', studentId, notebookId, notebook?.title ?? '')
         .then((result: EnrichmentResult | null) => {
           enrichingRef.current.delete(name.toLowerCase());
           if (result) {

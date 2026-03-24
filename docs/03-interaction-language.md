@@ -112,6 +112,28 @@ There is no character limit. There is no "keep it short" suggestion. If the stud
 
 ---
 
+## Contextual awareness
+
+The notebook is aware of what the student is reading. When the student scrolls up to revisit an older tutor response and then returns to the input area, the system quietly notes the context — showing a faint ghost reference above the cursor: *"responding to: ..."*. This reference is clickable (scrolling back to the original entry) and dismissible. It clears automatically on submission.
+
+This is not a reply mechanism — it does not change the chronological ordering. It is context, not structure. The student writes at the bottom as always, but the tutor receives the additional signal: "the student was re-reading X before writing this."
+
+### Conversational rhythm
+
+Entries that form a natural conversational unit — student thought, tutor response, student follow-up — are visually grouped through breathing. Between unrelated clusters, the spacing increases and a ghost separator (thin `rule-light` line) appears on hover, invisible at rest. Within a cluster, entries are tightly spaced. The rhythm is felt, not drawn.
+
+On wide viewports, a thin conversation ribbon appears in the left margin connecting related entries — like the lines students draw in physical notebooks to connect ideas across a page. These ribbons are purely decorative and disappear on narrow screens.
+
+### Thread navigation
+
+Entries with follow-up relationships show subtle indicators (↳ for downstream follow-ups, ↱ for the prompt that inspired them). Clicking these indicators highlights the connected entries with a brief warm pulse and scrolls to the first one. This allows the student to trace the thread of a conversation without breaking the chronological flow.
+
+### The InputZone as mood
+
+After a Socratic question, the InputZone echoes the question's visual treatment — a subtle left border in `margin` colour that fades from full opacity to 35% over 2 seconds. This creates a "your turn" signal without text or prompts. During scroll, the InputZone fades to 30% opacity — you are reading, not writing. It returns when scrolling stops.
+
+---
+
 ## Temporal continuity
 
 Ember has memory. Session 47 knows everything that happened in Sessions 1 through 46. The tutor refers to past conversations naturally — "you said something three weeks ago about music that connects to this" — without citation markers or explicit callbacks.

@@ -1,12 +1,5 @@
-/**
- * NotebookContent — inner layout for the Notebook surface.
- * Renders past sessions, current session header, mode toggle,
- * pinned threads, and either linear entry list or canvas view.
- *
- * Spatial marginalia: short tutor responses render in the right margin
- * beside the student entry they annotate, with a subtle thread arc.
- * See: 04-information-architecture.md, Surface one.
- */
+/** NotebookContent — inner layout for the Notebook surface. See: 04-information-architecture.md */
+import { useMemo } from 'react';
 import { Column } from '@/primitives/Column';
 import { MarginZone } from '@/primitives/MarginZone';
 import { SessionHeader } from '@/components/peripheral/SessionHeader';
@@ -25,6 +18,11 @@ import { NotebookEntryWrapper } from './NotebookEntryWrapper';
 import { NotebookCanvas } from './NotebookCanvas';
 import { KnowledgeCanvas } from '@/components/canvas/KnowledgeCanvas';
 import { useMarginLayout, useWideViewport } from '@/hooks/useMarginLayout';
+import { useConversationClusters } from '@/hooks/useConversationClusters';
+import { useScrollContext } from '@/hooks/useScrollContext';
+import { ClusterBreath } from '@/components/peripheral/ClusterBreath';
+import { ScrollReference } from '@/components/peripheral/ScrollReference';
+import { ConversationRibbon } from '@/components/peripheral/ConversationRibbon';
 import type { NotebookMode } from './NotebookModeToggle';
 import type { LiveEntry } from '@/types/entries';
 import type { SessionRecord } from '@/persistence/records';
@@ -63,6 +61,21 @@ export function NotebookContent({
   const { containerRef: kbNavRef, handleKeyDown: handleKbNav } = useEntryKeyboardNav();
   const wideViewport = useWideViewport();
   const layout = useMarginLayout(entries, wideViewport);
+  const clusters = useConversationClusters(entries);
+  const scrollCtx = useScrollContext(entries);
+
+  // Group entries by cluster for ribbon rendering
+  const clusterGroups = useMemo(() => {
+    const groups = new Map<number, string[]>();
+    for (const le of entries) {
+      const info = clusters.get(le.id);
+      if (!info) continue;
+      let group = groups.get(info.clusterIndex);
+      if (!group) { group = []; groups.set(info.clusterIndex, group); }
+      group.push(le.id);
+    }
+    return [...groups.values()].filter((g) => g.length >= 2);
+  }, [entries, clusters]);
 
   return (
     <Column>
@@ -89,6 +102,9 @@ export function NotebookContent({
             onKeyDown={handleKbNav} aria-live="polite" aria-relevant="additions"
           >
             {marginalRef && <MarginZone><MarginalReference>{marginalRef}</MarginalReference></MarginZone>}
+            {wideViewport && clusterGroups.map((ids, i) => (
+              <ConversationRibbon key={i} entryIds={ids} />
+            ))}
             {entries.map((le, i) => {
               if (layout.isInMargin(le.id)) return (
                 <div key={le.id} data-entry-id={le.id} className={styles.marginAnchor} />
@@ -97,16 +113,32 @@ export function NotebookContent({
               const prevIsStudent = prev ? isStudentType(prev.entry.type) : false;
               const pair = layout.pairForStudent(le.id);
               const isConn = pair?.tutorType === 'tutor-connection';
+              const cluster = clusters.get(le.id);
               return (
-                <div key={le.id} className={styles.entryRow}>
-                  <NotebookEntryWrapper liveEntry={le} index={i + 1} prevIsStudent={prevIsStudent} />
-                  {pair && <MarginNote isConnection={isConn}>{pair.tutorContent}</MarginNote>}
-                  {pair && <ThreadArc isConnection={isConn} />}
+                <div key={le.id}>
+                  {cluster?.isClusterStart && <ClusterBreath />}
+                  <div className={styles.entryRow}>
+                    <NotebookEntryWrapper liveEntry={le} index={i + 1} prevIsStudent={prevIsStudent} />
+                    {pair && <MarginNote isConnection={isConn}>{pair.tutorContent}</MarginNote>}
+                    {pair && <ThreadArc isConnection={isConn} />}
+                  </div>
                 </div>
               );
             })}
           </div>
-          <div style={{ position: 'relative' }}>
+          <div className={scrollCtx.isScrolling ? styles.inputFaded : styles.inputZone}>
+            {scrollCtx.referenceSnippet && (
+              <ScrollReference
+                snippet={scrollCtx.referenceSnippet}
+                onClear={scrollCtx.clearReference}
+                onScrollTo={() => {
+                  const el = scrollCtx.referencedEntry
+                    ? document.querySelector(`[data-entry-id="${scrollCtx.referencedEntry.id}"]`)
+                    : null;
+                  el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }}
+              />
+            )}
             {popup.mentionQuery !== null && (
               <MentionPopup query={popup.mentionQuery} results={popup.mentionResults}
                 onSelect={(e) => popup.handleMentionSelect(e)}
@@ -119,9 +151,11 @@ export function NotebookContent({
             )}
             {responsePlans && responsePlans.length > 0 && <ResponsePlanPreview plans={responsePlans} />}
             <TutorActivity />
-            <InputZone onSubmit={handleSubmit} onSubmitTyped={handleSubmitTyped}
+            <InputZone onSubmit={(t) => { handleSubmit(t); scrollCtx.clearReference(); }}
+              onSubmitTyped={(t, ty) => { handleSubmitTyped(t, ty); scrollCtx.clearReference(); }}
               onSketchSubmit={handleSketchSubmit} onMentionTrigger={popup.handleMentionTrigger}
               onSlashTrigger={popup.handleSlashTrigger} onPopupClose={popup.handlePopupClose}
+              afterQuestion={entries.length > 0 && entries[entries.length - 1]?.entry.type === 'tutor-question'}
               onPaste={contentDrop.handlePaste} insertText={popup.pendingInsert}
               onInsertConsumed={popup.handleInsertConsumed}
               popupOpen={popup.mentionQuery !== null || popup.slashQuery !== null}

@@ -1,0 +1,28 @@
+/* ConversationRibbon — thread line in the left margin */
+
+.ribbon {
+  position: absolute;
+  left: -28px;
+  width: 2px;
+  background: var(--rule-light);
+  border-radius: 1px;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Visible on hover of nearby entries */
+.ribbon:hover,
+*:hover > .ribbon {
+  opacity: 1;
+}
+
+/* Only show on wide viewports */
+@media (max-width: 800px) {
+  .ribbon { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ribbon { transition: none; }
+}
