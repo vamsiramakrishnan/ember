@@ -56,10 +56,13 @@ export function MentionChip({ name, entityType, entityId, meta, onClick }: Menti
     setShowPreview(false);
   }, []);
 
+  const isStub = entityId.startsWith('stub-');
   const accent = TYPE_ACCENT[entityType] ?? '';
+  const cls = [styles.chip, accent, onClick ? styles.clickable : '', isStub ? styles.enriching : '']
+    .filter(Boolean).join(' ');
   return (
     <span
-      className={`${styles.chip} ${accent} ${onClick ? styles.clickable : ''}`}
+      className={cls}
       onClick={onClick} role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
       onMouseEnter={onEnter} onMouseLeave={onLeave}

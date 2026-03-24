@@ -109,7 +109,9 @@ export function NotebookContent({
           <div style={{ position: 'relative' }}>
             {popup.mentionQuery !== null && (
               <MentionPopup query={popup.mentionQuery} results={popup.mentionResults}
-                onSelect={(e) => popup.handleMentionSelect(e)} onClose={popup.handlePopupClose} />
+                onSelect={(e) => popup.handleMentionSelect(e)}
+                onCreate={popup.handleMentionCreate}
+                onClose={popup.handlePopupClose} />
             )}
             {popup.slashQuery !== null && (
               <SlashCommandPopup query={popup.slashQuery}

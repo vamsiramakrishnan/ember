@@ -24,6 +24,7 @@ import { getEncountersByNotebook } from '@/persistence/repositories/encounters';
 import { getLexiconByNotebook } from '@/persistence/repositories/lexicon';
 import { createRelation } from '@/persistence/repositories/graph';
 import { setBackgroundResults } from './background-results';
+import { enqueueForLabeling } from './entry-meta-labels';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
 
 export async function runBackgroundTasks(
@@ -127,7 +128,13 @@ export async function runBackgroundTasks(
     await Promise.allSettled(tasks);
   }
 
-  // Step 4: Create graph relations between the student's entry and tutor response
+  // Step 4: Enqueue recent entries for meta-label generation
+  for (const le of allEntries.slice(-4)) {
+    const content = 'content' in le.entry ? le.entry.content : '';
+    if (content) enqueueForLabeling(le.id, content);
+  }
+
+  // Step 5: Create graph relations between the student's entry and tutor response
   if (studentEntry) {
     const tutorEntry = allEntries.length > 1
       ? [...allEntries].reverse().find((e) => e.entry.type.startsWith('tutor-'))

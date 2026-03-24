@@ -54,6 +54,16 @@
   margin: 0;
 }
 
+.cardTags {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  font-weight: 300;
+  color: var(--ink-ghost);
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+  display: block;
+}
+
 .empty {
   position: absolute;
   top: 50%;

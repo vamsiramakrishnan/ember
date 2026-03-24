@@ -1,10 +1,6 @@
 /**
- * MentionPopup — @ mention autocomplete popup for the InputZone.
- * Post-spec extension: not in the original component inventory (06).
- * Added to support entity linking within student prose — typing @ triggers
- * fuzzy-matched suggestions for thinkers, concepts, terms, and other entities.
- * Related: 06-component-inventory.md 7.4 (InputZone),
- *          05-ai-contract.md (student model, entity cross-referencing)
+ * MentionPopup — @ mention autocomplete with "Create new" ghost row.
+ * See: 06-component-inventory.md 7.4 (InputZone)
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Entity, EntityType } from '@/hooks/useEntityIndex';
@@ -14,6 +10,7 @@ interface MentionPopupProps {
   query: string;
   results: Entity[];
   onSelect: (entity: Entity) => void;
+  onCreate?: (name: string) => void;
   onClose: () => void;
   position?: { top: number; left: number };
 }
@@ -26,7 +23,6 @@ const TYPE_ICONS: Record<EntityType, string> = {
   'tutor-note': '✎', podcast: '♪',
 };
 
-/** Map entity types to accent color classes. */
 const TYPE_ACCENT: Record<EntityType, string> = {
   notebook: styles.iconMargin ?? '', session: styles.iconDefault ?? '',
   thinker: styles.iconAmber ?? '', concept: styles.iconIndigo ?? '',
@@ -48,48 +44,48 @@ const TYPE_LABELS: Record<EntityType, string> = {
 };
 
 export function MentionPopup({
-  query, results, onSelect, onClose, position,
+  query, results, onSelect, onCreate, onClose, position,
 }: MentionPopupProps) {
+  const showCreate = query.length >= 2 && !!onCreate;
+  const totalItems = results.length + (showCreate ? 1 : 0);
   const [selectedIdx, setSelectedIdx] = useState(0);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => setSelectedIdx(0), [results]);
+  useEffect(() => setSelectedIdx(0), [results, query]);
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        e.stopPropagation();
-        setSelectedIdx((i) => Math.min(i + 1, results.length - 1));
+        e.preventDefault(); e.stopPropagation();
+        setSelectedIdx((i) => Math.min(i + 1, totalItems - 1));
       } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        e.stopPropagation();
+        e.preventDefault(); e.stopPropagation();
         setSelectedIdx((i) => Math.max(i - 1, 0));
-      } else if (e.key === 'Enter' && results[selectedIdx]) {
-        e.preventDefault();
-        e.stopPropagation();
-        onSelect(results[selectedIdx]);
+      } else if (e.key === 'Enter') {
+        e.preventDefault(); e.stopPropagation();
+        if (selectedIdx < results.length) {
+          const entity = results[selectedIdx];
+          if (entity) onSelect(entity);
+        } else if (showCreate) {
+          onCreate(query);
+        }
       } else if (e.key === 'Escape') {
-        e.preventDefault();
-        e.stopPropagation();
+        e.preventDefault(); e.stopPropagation();
         onClose();
       }
     };
-    // Use capture phase to intercept before textarea receives the event
     document.addEventListener('keydown', handleKey, true);
     return () => document.removeEventListener('keydown', handleKey, true);
-  }, [results, selectedIdx, onSelect, onClose]);
+  }, [results, selectedIdx, totalItems, showCreate, query, onSelect, onCreate, onClose]);
 
   useEffect(() => {
     const el = menuRef.current?.querySelector(`[data-idx="${selectedIdx}"]`) as HTMLElement | undefined;
     el?.scrollIntoView({ block: 'nearest' });
   }, [selectedIdx]);
 
-  const handleClick = useCallback((entity: Entity) => onSelect(entity), [onSelect]);
-
   const posStyle = position ? { top: position.top, left: position.left } : undefined;
 
-  if (results.length === 0 && query.length > 0) {
+  if (totalItems === 0 && query.length > 0) {
     return (
       <div className={styles.popup} style={posStyle}>
         <div className={styles.queryBar}>
@@ -101,7 +97,7 @@ export function MentionPopup({
     );
   }
 
-  if (results.length === 0) return null;
+  if (totalItems === 0) return null;
 
   return (
     <div className={styles.popup} style={posStyle} ref={menuRef}
@@ -117,7 +113,7 @@ export function MentionPopup({
           key={entity.id} data-idx={i}
           className={`${styles.item} ${i === selectedIdx ? styles.selected : ''}`}
           role="option" aria-selected={i === selectedIdx}
-          onClick={() => handleClick(entity)}
+          onClick={() => onSelect(entity)}
           onMouseEnter={() => setSelectedIdx(i)}
         >
           <span className={`${styles.icon} ${TYPE_ACCENT[entity.type]}`}>
@@ -131,6 +127,22 @@ export function MentionPopup({
           <span className={styles.type}>{TYPE_LABELS[entity.type]}</span>
         </button>
       ))}
+      {showCreate && (
+        <button
+          data-idx={results.length}
+          className={`${styles.item} ${styles.createRow} ${results.length === selectedIdx ? styles.selected : ''}`}
+          role="option" aria-selected={results.length === selectedIdx}
+          onClick={() => onCreate(query)}
+          onMouseEnter={() => setSelectedIdx(results.length)}
+        >
+          <span className={`${styles.icon} ${styles.iconCreate}`}>+</span>
+          <div className={styles.content}>
+            <span className={styles.createLabel}>Create &ldquo;{query}&rdquo;</span>
+            <span className={styles.createHint}>add as new entity &amp; enrich</span>
+          </div>
+          <span className={styles.type}>new</span>
+        </button>
+      )}
       <div className={styles.footer}>
         <span className={styles.footerHint}>↑↓ navigate</span>
         <span className={styles.footerHint}>↵ select</span>
