@@ -16,6 +16,14 @@ interface StreamingTextProps {
   done: boolean;
 }
 
+/** Detect structured JSON output that shouldn't be shown as raw text. */
+function isStructuredJson(text: string): boolean {
+  const trimmed = text.trimStart();
+  if (!trimmed.startsWith('{') && !trimmed.startsWith('```')) return false;
+  // Check for common entry type markers in the JSON
+  return /["']type["']\s*:\s*["']/.test(trimmed);
+}
+
 export function StreamingText({ children, done }: StreamingTextProps) {
   const hasContent = children.length > 0;
   const ruleCls = done ? styles.rule : styles.ruleStreaming;
@@ -25,6 +33,19 @@ export function StreamingText({ children, done }: StreamingTextProps) {
     return (
       <div className={styles.thinkingContainer} aria-busy="true" aria-label="Tutor is thinking">
         <div className={styles.ruleStreaming} />
+        <span className={styles.cursor} aria-hidden="true" />
+      </div>
+    );
+  }
+
+  // While streaming: if the content is structured JSON (concept-diagram,
+  // thinker-card, etc.), show a composing state instead of raw JSON.
+  // The entry will be replaced with the proper component once parsing completes.
+  if (!done && isStructuredJson(children)) {
+    return (
+      <div className={styles.thinkingContainer} aria-busy="true" aria-label="Tutor is composing">
+        <div className={styles.ruleStreaming} />
+        <span className={styles.composingLabel}>composing…</span>
         <span className={styles.cursor} aria-hidden="true" />
       </div>
     );

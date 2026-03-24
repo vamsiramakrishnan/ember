@@ -56,6 +56,16 @@
   white-space: pre-wrap;
 }
 
+/* Label shown while structured JSON (concept-diagram, etc.) is being
+ * generated. Hides the raw JSON and shows a quiet "composing…" instead. */
+.composingLabel {
+  font-family: var(--font-system);
+  font-size: 10px;
+  font-weight: 300;
+  color: var(--ink-ghost);
+  letter-spacing: 0.5px;
+}
+
 .cursor {
   display: inline-block;
   width: 1px;
