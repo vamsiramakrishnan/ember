@@ -14,7 +14,8 @@ export function useTypewriter(
   const reduced = useRef(false);
 
   useEffect(() => {
-    reduced.current = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    reduced.current = typeof window.matchMedia === 'function'
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }, []);
 
   useEffect(() => {
