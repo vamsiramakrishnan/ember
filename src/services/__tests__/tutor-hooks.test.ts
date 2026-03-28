@@ -93,7 +93,7 @@ describe('tutor-hooks', () => {
       consecutiveTutorEntries: 3,
       phase: 'exploring',
       studentTurnCount: 0,
-    } as ReturnType<typeof state.getSessionState>);
+    } as unknown as ReturnType<typeof state.getSessionState>);
 
     const { quietDownHook } = await import('../tutor-hooks');
     const result = quietDownHook({
@@ -114,7 +114,7 @@ describe('tutor-hooks', () => {
       consecutiveTutorEntries: 1,
       phase: 'exploring',
       studentTurnCount: 0,
-    } as ReturnType<typeof state.getSessionState>);
+    } as unknown as ReturnType<typeof state.getSessionState>);
 
     const { quietDownHook } = await import('../tutor-hooks');
     const result = quietDownHook({
@@ -132,7 +132,7 @@ describe('tutor-hooks', () => {
       consecutiveTutorEntries: 0,
       phase: 'opening',
       studentTurnCount: 0,
-    } as ReturnType<typeof state.getSessionState>);
+    } as unknown as ReturnType<typeof state.getSessionState>);
 
     const { openingPhaseHook } = await import('../tutor-hooks');
     const result = openingPhaseHook({
@@ -150,7 +150,7 @@ describe('tutor-hooks', () => {
       consecutiveTutorEntries: 0,
       phase: 'exploring',
       studentTurnCount: 6,
-    } as ReturnType<typeof state.getSessionState>);
+    } as unknown as ReturnType<typeof state.getSessionState>);
 
     const { closingReflectionHook } = await import('../tutor-hooks');
     const result = closingReflectionHook({

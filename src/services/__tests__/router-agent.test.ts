@@ -2,12 +2,12 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 const mockIsGeminiAvailable = vi.fn(() => true);
 const mockRunTextAgent = vi.fn();
-const mockIsOnCooldown = vi.fn(() => false);
-const mockMarkUsed = vi.fn();
+const mockIsOnCooldown = vi.fn((_key?: string) => false);
+const mockMarkUsed = vi.fn((_key?: string) => {});
 
 vi.mock('../gemini', () => ({
-  isGeminiAvailable: (...args: unknown[]) => mockIsGeminiAvailable(...args),
-  getGeminiClient: vi.fn(() => null),
+  isGeminiAvailable: () => mockIsGeminiAvailable(),
+  getGeminiClient: vi.fn(() => null) as unknown,
   MODELS: {
     text: 'gemini-3.1-flash-lite-preview',
     heavy: 'gemini-3-flash-preview',
@@ -18,7 +18,7 @@ vi.mock('../gemini', () => ({
 }));
 
 vi.mock('../run-agent', () => ({
-  runTextAgent: (...args: unknown[]) => mockRunTextAgent(...args),
+  runTextAgent: (...args: unknown[]) => mockRunTextAgent(...args) as unknown,
 }));
 
 vi.mock('../router-config', () => ({
@@ -27,8 +27,8 @@ vi.mock('../router-config', () => ({
     systemInstruction: 'test', thinkingLevel: 'MINIMAL',
     tools: [], responseModalities: ['TEXT'],
   },
-  isOnCooldown: (...args: unknown[]) => mockIsOnCooldown(...args),
-  markUsed: (...args: unknown[]) => mockMarkUsed(...args),
+  isOnCooldown: (...args: unknown[]) => mockIsOnCooldown(args[0] as string),
+  markUsed: (...args: unknown[]) => mockMarkUsed(args[0] as string),
 }));
 
 import { classifyImmediate } from '../router-agent';
@@ -117,14 +117,16 @@ describe('router-agent', () => {
     const entries: LiveEntry[] = [{
       id: 'e1',
       entry: { type: 'prose', content: 'I think ratios matter' } as LiveEntry['entry'],
-      status: 'final',
+      crossedOut: false,
+      bookmarked: false,
+      pinned: false,
       timestamp: Date.now(),
     }];
 
     await classifyImmediate('Tell me more', entries);
     expect(mockRunTextAgent).toHaveBeenCalled();
-    const callArgs = mockRunTextAgent.mock.calls[0];
-    const prompt = callArgs[1][0].parts[0].text as string;
+    const callArgs = mockRunTextAgent.mock.calls[0] as unknown[];
+    const prompt = ((callArgs[1] as Array<{parts: Array<{text: string}>}>)[0]!.parts[0]!.text) as string;
     expect(prompt).toContain('ratios matter');
   });
 });

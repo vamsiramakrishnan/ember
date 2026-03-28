@@ -16,10 +16,8 @@ import {
   masteryUpdateSchema,
   annotationResultSchema,
   echoResponseSchema,
-  reflectionResponseSchema,
   routingSchema,
   bootstrapSchema,
-  metadataSchema,
   entityEnrichmentSchema,
   entryMetaLabelSchema,
 } from '../schemas';

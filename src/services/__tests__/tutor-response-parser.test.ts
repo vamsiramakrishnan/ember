@@ -62,7 +62,7 @@ describe('parseTutorResponse', () => {
     expect(result?.type).toBe('concept-diagram');
     if (result?.type === 'concept-diagram') {
       expect(result.items).toHaveLength(1);
-      expect(result.items[0].label).toBe('Node1');
+      expect(result.items[0]!.label).toBe('Node1');
     }
   });
 
@@ -76,7 +76,7 @@ describe('parseTutorResponse', () => {
     const result = parseTutorResponse(raw);
     if (result?.type === 'concept-diagram') {
       expect(result.edges).toHaveLength(1);
-      expect(result.edges![0].type).toBe('causes');
+      expect(result.edges![0]!.type).toBe('causes');
       expect(result.title).toBe('Test Diagram');
     }
   });
@@ -100,7 +100,7 @@ describe('parseTutorResponse', () => {
     });
     const result = parseTutorResponse(raw);
     if (result?.type === 'concept-diagram') {
-      expect(result.items[0].mastery).toEqual({ level: 'strong', percentage: 75 });
+      expect(result.items[0]!.mastery).toEqual({ level: 'strong', percentage: 75 });
     }
   });
 
@@ -111,7 +111,7 @@ describe('parseTutorResponse', () => {
     });
     const result = parseTutorResponse(raw);
     if (result?.type === 'concept-diagram') {
-      expect(result.items[0].mastery?.level).toBe('exploring');
+      expect(result.items[0]!.mastery?.level).toBe('exploring');
     }
   });
 
@@ -122,8 +122,8 @@ describe('parseTutorResponse', () => {
     });
     const result = parseTutorResponse(raw);
     if (result?.type === 'concept-diagram') {
-      expect(result.items[0].children).toHaveLength(1);
-      expect(result.items[0].children![0].label).toBe('Child');
+      expect(result.items[0]!.children).toHaveLength(1);
+      expect(result.items[0]!.children![0]!.label).toBe('Child');
     }
   });
 
@@ -134,8 +134,8 @@ describe('parseTutorResponse', () => {
     });
     const result = parseTutorResponse(raw);
     if (result?.type === 'concept-diagram') {
-      expect(result.items[0].accent).toBe('sage');
-      expect(result.items[1].accent).toBeUndefined();
+      expect(result.items[0]!.accent).toBe('sage');
+      expect(result.items[1]!.accent).toBeUndefined();
     }
   });
 
@@ -146,8 +146,8 @@ describe('parseTutorResponse', () => {
     });
     const result = parseTutorResponse(raw);
     if (result?.type === 'concept-diagram') {
-      expect(result.items[0].entityKind).toBe('concept');
-      expect(result.items[1].entityKind).toBeUndefined();
+      expect(result.items[0]!.entityKind).toBe('concept');
+      expect(result.items[1]!.entityKind).toBeUndefined();
     }
   });
 

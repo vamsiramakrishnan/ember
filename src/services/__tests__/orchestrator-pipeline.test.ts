@@ -2,8 +2,6 @@
  * Tests for orchestrator-pipeline.ts — shared pipeline stages.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { LiveEntry } from '@/types/entries';
-
 // Mock all heavy external deps
 vi.mock('../agents', () => ({
   RESEARCHER_AGENT: { model: 'test', systemInstruction: '' },
@@ -108,7 +106,7 @@ describe('runPipelineEnrichment', () => {
 
   it('returns empty array when no enrichment needed', async () => {
     const result = await runPipelineEnrichment(
-      { research: false, visualize: false, illustrate: false, directive: false },
+      { research: false, visualize: false, illustrate: false, directive: false, tutor: true, deepMemory: false, graphExplore: false, reason: '', source: 'fallback' } as import('../router-agent').RoutingDecision,
       'test', [], [],
     );
     expect(result).toEqual([]);
@@ -120,11 +118,11 @@ describe('runPipelineEnrichment', () => {
       type: 'visualization', html: '<div>test</div>',
     });
     const result = await runPipelineEnrichment(
-      { research: false, visualize: true, illustrate: false, directive: false },
+      { research: false, visualize: true, illustrate: false, directive: false, tutor: true, deepMemory: false, graphExplore: false, reason: '', source: 'fallback' } as import('../router-agent').RoutingDecision,
       'test', [], [],
     );
     expect(result).toHaveLength(1);
-    expect(result[0].type).toBe('visualization');
+    expect(result[0]!.type).toBe('visualization');
   });
 });
 
@@ -145,7 +143,7 @@ describe('runPipelineTemporalLayers', () => {
       'test', [], 'nb-1', Promise.resolve(echoEntry),
     );
     expect(result.before).toHaveLength(1);
-    expect(result.before[0].type).toBe('echo');
+    expect(result.before[0]!.type).toBe('echo');
   });
 
   it('includes bridge and reflection in after', async () => {

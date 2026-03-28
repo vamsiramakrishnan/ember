@@ -55,8 +55,9 @@ describe('generateVisualization', () => {
     const result = await generateVisualization('quantum entanglement', []);
     expect(result).not.toBeNull();
     expect(result?.type).toBe('visualization');
-    expect(result?.html).toContain('<div>concept map</div>');
-    expect(result?.html).toContain('<!DOCTYPE html>');
+    const viz = result as Extract<typeof result, { type: 'visualization' }>;
+    expect(viz?.html).toContain('<div>concept map</div>');
+    expect(viz?.html).toContain('<!DOCTYPE html>');
   });
 
   test('strips markdown fences from response', async () => {
@@ -67,7 +68,8 @@ describe('generateVisualization', () => {
     });
 
     const result = await generateVisualization('test', []);
-    expect(result?.html).not.toContain('```');
+    const viz = result as Extract<typeof result, { type: 'visualization' }>;
+    expect(viz?.html).not.toContain('```');
   });
 
   test('returns null when agent returns empty', async () => {

@@ -86,12 +86,12 @@ describe('castJsonValid', () => {
   });
 
   it('returns null for invalid JSON', () => {
-    const always = (v: unknown): v is string => true;
+    const always = (_v: unknown): _v is string => true;
     expect(castJsonValid('not json', always)).toBeNull();
   });
 
   it('returns null for empty input', () => {
-    const always = (v: unknown): v is string => true;
+    const always = (_v: unknown): _v is string => true;
     expect(castJsonValid('', always)).toBeNull();
   });
 });

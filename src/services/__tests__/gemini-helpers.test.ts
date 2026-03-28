@@ -3,12 +3,15 @@
  * and stream processing utilities.
  */
 import { describe, test, expect, vi } from 'vitest';
+import type { GenerateContentResponse } from '@google/genai';
 import {
   buildToolsArray,
   buildConfig,
   collectStreamChunks,
   streamWithCallback,
 } from '../gemini-helpers';
+
+type StreamInput = AsyncIterable<GenerateContentResponse>;
 
 describe('buildToolsArray', () => {
   test('returns empty array when no options', () => {
@@ -84,7 +87,7 @@ describe('collectStreamChunks', () => {
       { candidates: [{ content: { parts: [{ text: 'world' }] } }] },
     ];
     async function* gen() { for (const c of chunks) yield c; }
-    const result = await collectStreamChunks(gen() as ReturnType<typeof gen>);
+    const result = await collectStreamChunks(gen() as unknown as StreamInput);
     expect(result).toBe('Hello world');
   });
 
@@ -95,7 +98,7 @@ describe('collectStreamChunks', () => {
       { candidates: [{ content: { parts: [{ text: '!' }] } }] },
     ];
     async function* gen() { for (const c of chunks) yield c; }
-    const result = await collectStreamChunks(gen() as ReturnType<typeof gen>);
+    const result = await collectStreamChunks(gen() as unknown as StreamInput);
     expect(result).toBe('ok!');
   });
 
@@ -105,13 +108,13 @@ describe('collectStreamChunks', () => {
       { candidates: [{ content: { parts: [{ text: 'data' }] } }] },
     ];
     async function* gen() { for (const c of chunks) yield c; }
-    const result = await collectStreamChunks(gen() as ReturnType<typeof gen>);
+    const result = await collectStreamChunks(gen() as unknown as StreamInput);
     expect(result).toBe('data');
   });
 
   test('returns empty string for empty stream', async () => {
     async function* gen() { /* empty */ }
-    const result = await collectStreamChunks(gen() as ReturnType<typeof gen>);
+    const result = await collectStreamChunks(gen() as unknown as StreamInput);
     expect(result).toBe('');
   });
 });
@@ -124,7 +127,7 @@ describe('streamWithCallback', () => {
     ];
     async function* gen() { for (const c of chunks) yield c; }
     const onChunk = vi.fn();
-    const result = await streamWithCallback(gen() as ReturnType<typeof gen>, onChunk);
+    const result = await streamWithCallback(gen() as unknown as StreamInput, onChunk);
     expect(result).toBe('AB');
     expect(onChunk).toHaveBeenCalledTimes(2);
     expect(onChunk).toHaveBeenCalledWith('A', 'A');
@@ -134,7 +137,7 @@ describe('streamWithCallback', () => {
   test('returns empty string when stream has no text', async () => {
     async function* gen() { /* empty */ }
     const onChunk = vi.fn();
-    const result = await streamWithCallback(gen() as ReturnType<typeof gen>, onChunk);
+    const result = await streamWithCallback(gen() as unknown as StreamInput, onChunk);
     expect(result).toBe('');
     expect(onChunk).not.toHaveBeenCalled();
   });

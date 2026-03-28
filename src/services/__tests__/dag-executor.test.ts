@@ -34,7 +34,7 @@ describe('buildExecutionPlan', () => {
     const plan = buildExecutionPlan(dag);
     expect(plan.waves).toHaveLength(1);
     expect(plan.totalNodes).toBe(1);
-    expect(plan.waves[0].nodes).toHaveLength(1);
+    expect(plan.waves[0]!.nodes).toHaveLength(1);
   });
 
   it('creates two waves for linear dependency', () => {
@@ -44,8 +44,8 @@ describe('buildExecutionPlan', () => {
     ]);
     const plan = buildExecutionPlan(dag);
     expect(plan.waves).toHaveLength(2);
-    expect(plan.waves[0].nodes[0].id).toBe('n0');
-    expect(plan.waves[1].nodes[0].id).toBe('n1');
+    expect(plan.waves[0]!.nodes[0]!.id).toBe('n0');
+    expect(plan.waves[1]!.nodes[0]!.id).toBe('n1');
   });
 
   it('groups parallel nodes in the same wave', () => {
@@ -56,8 +56,8 @@ describe('buildExecutionPlan', () => {
     ]);
     const plan = buildExecutionPlan(dag);
     expect(plan.waves).toHaveLength(2);
-    expect(plan.waves[1].nodes).toHaveLength(2);
-    expect(plan.waves[1].parallel).toBe(true);
+    expect(plan.waves[1]!.nodes).toHaveLength(2);
+    expect(plan.waves[1]!.parallel).toBe(true);
   });
 
   it('marks wave as non-parallel if any node is not parallel', () => {
@@ -67,7 +67,7 @@ describe('buildExecutionPlan', () => {
       makeNode({ id: 'n2', dependsOn: ['n0'], parallel: false }),
     ]);
     const plan = buildExecutionPlan(dag);
-    expect(plan.waves[1].parallel).toBe(false);
+    expect(plan.waves[1]!.parallel).toBe(false);
   });
 
   it('handles diamond dependencies', () => {
@@ -79,18 +79,18 @@ describe('buildExecutionPlan', () => {
     ]);
     const plan = buildExecutionPlan(dag);
     expect(plan.waves).toHaveLength(3);
-    expect(plan.waves[2].nodes[0].id).toBe('n3');
+    expect(plan.waves[2]!.nodes[0]!.id).toBe('n3');
   });
 });
 
 describe('executeDAG', () => {
   it('executes single node', async () => {
     const dag = makeDAG([makeNode()]);
-    const dispatch: NodeDispatcher = vi.fn(async (node) => ({
+    const dispatch = vi.fn(async (node: import('../intent-dag').IntentNode) => ({
       nodeId: node.id,
-      entries: [{ type: 'tutor-marginalia', content: 'response' }],
+      entries: [{ type: 'tutor-marginalia' as const, content: 'response' }],
       success: true,
-    }));
+    })) as unknown as NodeDispatcher;
 
     const results = await executeDAG(dag, dispatch);
     expect(results.size).toBe(1);

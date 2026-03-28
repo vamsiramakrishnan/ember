@@ -63,7 +63,7 @@ describe('run-agent', () => {
       await runTextAgent(agentWithSchema, [
         { role: 'user', parts: [{ text: 'hello' }] },
       ]);
-      const callArg = (proxyTextGeneration as ReturnType<typeof vi.fn>).mock.calls[0][0] as Record<string, unknown>;
+      const callArg = ((proxyTextGeneration as ReturnType<typeof vi.fn>).mock.calls[0] as unknown[])[0] as Record<string, unknown>;
       expect(callArg.responseMimeType).toBe('application/json');
     });
 

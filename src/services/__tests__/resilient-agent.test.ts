@@ -67,7 +67,7 @@ describe('resilient-agent', () => {
       expect(result.text).toBe('fallback response');
       expect(runTextAgent).toHaveBeenCalledTimes(2);
 
-      const secondCall = (runTextAgent as ReturnType<typeof vi.fn>).mock.calls[1][0] as AgentConfig;
+      const secondCall = (runTextAgent as ReturnType<typeof vi.fn>).mock.calls[1]![0] as AgentConfig;
       expect(secondCall.model).toBe('gemini-2.5-flash-lite');
     });
 

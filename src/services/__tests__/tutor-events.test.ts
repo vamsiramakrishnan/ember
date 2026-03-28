@@ -76,7 +76,8 @@ describe('tutor-events', () => {
 
     const longQuery = 'a'.repeat(50);
     emitTutorEvent({ type: 'researching', query: longQuery });
-    const call = vi.mocked(state.setActivityDetail).mock.calls.at(-1);
+    const calls = vi.mocked(state.setActivityDetail).mock.calls;
+    const call = calls[calls.length - 1];
     const detail = call?.[0] as { label: string } | null;
     expect(detail?.label?.length).toBeLessThan(60);
   });

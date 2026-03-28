@@ -113,8 +113,8 @@ describe('parseIntentDAG', () => {
   it('falls back to single-node DAG on failure', async () => {
     const result = await parseIntentDAG('What is gravity?', []);
     expect(result.nodes).toHaveLength(1);
-    expect(result.nodes[0].action).toBe('respond');
-    expect(result.nodes[0].content).toBe('What is gravity?');
+    expect(result.nodes[0]!.action).toBe('respond');
+    expect(result.nodes[0]!.content).toBe('What is gravity?');
     expect(result.isCompound).toBe(false);
     expect(result.rootId).toBe('n0');
   });

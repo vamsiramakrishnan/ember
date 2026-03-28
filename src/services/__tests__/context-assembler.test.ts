@@ -2,8 +2,6 @@
  * Tests for context-assembler.ts — builds layered context window for the tutor.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { LiveEntry } from '@/types/entries';
-
 // Mock background-results before importing assembler
 vi.mock('../background-results', () => ({
   consumeBackgroundResults: vi.fn(() => null),
@@ -30,14 +28,6 @@ vi.mock('../context-layers', () => ({
 
 import { assembleContext, type StudentProfile, type NotebookContext } from '../context-assembler';
 import { consumeBackgroundResults } from '../background-results';
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function _makeLive(type: string, content: string): LiveEntry {
-  return {
-    id: '1', entry: { type, content } as LiveEntry['entry'],
-    crossedOut: false, bookmarked: false, pinned: false, timestamp: Date.now(),
-  };
-}
 
 describe('assembleContext', () => {
   beforeEach(() => {
