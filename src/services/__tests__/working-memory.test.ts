@@ -16,37 +16,49 @@ vi.mock('../run-agent', () => ({
 
 vi.mock('../gemini', () => ({
   isGeminiAvailable: vi.fn(() => true),
+  MODELS: { text: 'test', heavy: 'test', image: 'test', fallback: 'test', gemma: 'test' },
+  getGeminiClient: vi.fn(() => null),
 }));
 
+import {
+  getWorkingMemory,
+  updateWorkingMemory,
+  resetWorkingMemory,
+} from '../working-memory';
+import { isGeminiAvailable } from '../gemini';
+import { runTextAgent } from '../run-agent';
+import type { WorkingMemory } from '../working-memory';
+
 describe('working-memory', () => {
-  beforeEach(async () => {
-    vi.resetModules();
+  beforeEach(() => {
+    vi.clearAllMocks();
     for (const key of Object.keys(mockStorage)) delete mockStorage[key];
+    vi.mocked(isGeminiAvailable).mockReturnValue(true);
+    // Reset the internal module cache by resetting memory for all notebooks
+    resetWorkingMemory('nb1');
+    resetWorkingMemory('unknown');
   });
 
-  test('getWorkingMemory returns null for unknown notebook', async () => {
-    const { getWorkingMemory } = await import('../working-memory');
+  test('getWorkingMemory returns null for unknown notebook', () => {
     expect(getWorkingMemory('unknown')).toBeNull();
   });
 
-  test('getWorkingMemory restores from localStorage', async () => {
+  test('getWorkingMemory restores from localStorage', () => {
     mockStorage['ember:working-memory'] = JSON.stringify({
       nb1: { summary: 'saved summary', turnCount: 3, lastUpdated: 1000 },
     });
 
-    const { getWorkingMemory } = await import('../working-memory');
     const mem = getWorkingMemory('nb1');
     expect(mem).not.toBeNull();
     expect(mem?.summary).toBe('saved summary');
     expect(mem?.turnCount).toBe(3);
   });
 
-  test('resetWorkingMemory clears memory for notebook', async () => {
+  test('resetWorkingMemory clears memory for notebook', () => {
     mockStorage['ember:working-memory'] = JSON.stringify({
       nb1: { summary: 'old', turnCount: 1, lastUpdated: 0 },
     });
 
-    const { getWorkingMemory, resetWorkingMemory } = await import('../working-memory');
     // Load from storage first
     getWorkingMemory('nb1');
     resetWorkingMemory('nb1');
@@ -54,21 +66,13 @@ describe('working-memory', () => {
   });
 
   test('updateWorkingMemory skips when AI not available', async () => {
-    const gemini = await import('../gemini');
-    vi.mocked(gemini.isGeminiAvailable).mockReturnValue(false);
+    vi.mocked(isGeminiAvailable).mockReturnValue(false);
 
-    const { updateWorkingMemory } = await import('../working-memory');
     await updateWorkingMemory('nb1', []);
-    // Should not throw and should not call runTextAgent
-    const runAgent = await import('../run-agent');
-    expect(runAgent.runTextAgent).not.toHaveBeenCalled();
+    expect(runTextAgent).not.toHaveBeenCalled();
   });
 
   test('updateWorkingMemory increments turn count', async () => {
-    const { updateWorkingMemory, getWorkingMemory } = await import('../working-memory');
-
-    // First update: turnCount becomes 1 (not multiple of 3, and no existing summary)
-    // So it should still call the agent since there's no existing summary
     await updateWorkingMemory('nb1', []);
     const mem = getWorkingMemory('nb1');
     expect(mem).not.toBeNull();
@@ -76,21 +80,19 @@ describe('working-memory', () => {
   });
 
   test('updateWorkingMemory only compresses every 3 turns when summary exists', async () => {
-    // Seed with existing memory at turnCount 1
-    mockStorage['ember:working-memory'] = JSON.stringify({
-      nb1: { summary: 'existing', turnCount: 1, lastUpdated: 0 },
-    });
-
-    const runAgent = await import('../run-agent');
-    const { updateWorkingMemory } = await import('../working-memory');
-
-    // Turn 2: should skip compression (turnCount 2, not multiple of 3)
+    // First, create memory with turnCount 1 via the API
+    // (calling updateWorkingMemory creates turn 1 with a summary)
     await updateWorkingMemory('nb1', []);
-    expect(runAgent.runTextAgent).not.toHaveBeenCalled();
+    vi.clearAllMocks();
+    vi.mocked(isGeminiAvailable).mockReturnValue(true);
+
+    // Now turn 2: should skip compression (turnCount 2, not multiple of 3)
+    await updateWorkingMemory('nb1', []);
+    expect(runTextAgent).not.toHaveBeenCalled();
   });
 
   test('WorkingMemory interface shape', () => {
-    const mem: import('../working-memory').WorkingMemory = {
+    const mem: WorkingMemory = {
       summary: 'test summary',
       turnCount: 5,
       lastUpdated: Date.now(),

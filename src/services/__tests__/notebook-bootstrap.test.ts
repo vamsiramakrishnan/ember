@@ -13,6 +13,8 @@ vi.mock('../resilient-agent', () => ({
 
 vi.mock('../gemini', () => ({
   isGeminiAvailable: vi.fn(() => true),
+  MODELS: { text: 'test', heavy: 'test', image: 'test', fallback: 'test', gemma: 'test' },
+  getGeminiClient: vi.fn(() => null),
 }));
 
 vi.mock('@/persistence', () => ({
@@ -38,15 +40,21 @@ vi.mock('@/persistence/repositories/mastery', () => ({
 }));
 
 import { bootstrapNotebook } from '../notebook-bootstrap';
+import { resilientTextAgent } from '../resilient-agent';
+import { isGeminiAvailable } from '../gemini';
+import { createLexiconEntry } from '@/persistence/repositories/lexicon';
+
+const mockResilent = vi.mocked(resilientTextAgent);
+const mockIsAvailable = vi.mocked(isGeminiAvailable);
 
 describe('bootstrapNotebook', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockIsAvailable.mockReturnValue(true);
   });
 
   test('returns not seeded when AI unavailable', async () => {
-    const gemini = await import('../gemini');
-    vi.mocked(gemini.isGeminiAvailable).mockReturnValue(false);
+    mockIsAvailable.mockReturnValue(false);
 
     const result = await bootstrapNotebook('s1', 'nb1', 'Math', 'Why calculus?');
     expect(result.opening).toBeNull();
@@ -54,8 +62,7 @@ describe('bootstrapNotebook', () => {
   });
 
   test('returns opening and seeded on success', async () => {
-    const { resilientTextAgent } = await import('../resilient-agent');
-    vi.mocked(resilientTextAgent).mockResolvedValue({
+    mockResilent.mockResolvedValue({
       text: JSON.stringify({
         opening: 'Welcome to math',
         thinkers: [{ name: 'Newton', dates: '1643-1727', tradition: 'physics', coreIdea: 'calculus', gift: 'motion', bridge: 'limits' }],
@@ -73,8 +80,7 @@ describe('bootstrapNotebook', () => {
   });
 
   test('returns not seeded when response is not JSON', async () => {
-    const { resilientTextAgent } = await import('../resilient-agent');
-    vi.mocked(resilientTextAgent).mockResolvedValue({ text: 'not json', citations: [] });
+    mockResilent.mockResolvedValue({ text: 'not json', citations: [] });
 
     const result = await bootstrapNotebook('s1', 'nb1', 'Math', '');
     expect(result.opening).toBeNull();
@@ -82,8 +88,7 @@ describe('bootstrapNotebook', () => {
   });
 
   test('returns not seeded on error', async () => {
-    const { resilientTextAgent } = await import('../resilient-agent');
-    vi.mocked(resilientTextAgent).mockRejectedValue(new Error('fail'));
+    mockResilent.mockRejectedValue(new Error('fail'));
 
     const result = await bootstrapNotebook('s1', 'nb1', 'Math', 'q');
     expect(result.opening).toBeNull();
@@ -91,8 +96,7 @@ describe('bootstrapNotebook', () => {
   });
 
   test('seeds vocabulary entries', async () => {
-    const { resilientTextAgent } = await import('../resilient-agent');
-    vi.mocked(resilientTextAgent).mockResolvedValue({
+    mockResilent.mockResolvedValue({
       text: JSON.stringify({
         vocabulary: [
           { term: 'a', pronunciation: 'a', definition: 'd1', etymology: 'e1' },
@@ -102,8 +106,7 @@ describe('bootstrapNotebook', () => {
       citations: [],
     });
 
-    const lexicon = await import('@/persistence/repositories/lexicon');
     await bootstrapNotebook('s1', 'nb1', 'Math', 'q');
-    expect(lexicon.createLexiconEntry).toHaveBeenCalledTimes(2);
+    expect(createLexiconEntry).toHaveBeenCalledTimes(2);
   });
 });

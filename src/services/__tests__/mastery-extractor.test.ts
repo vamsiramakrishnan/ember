@@ -5,6 +5,8 @@ import { describe, test, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('../gemini', () => ({
   isGeminiAvailable: vi.fn(() => true),
+  MODELS: { text: 'test', heavy: 'test', image: 'test', fallback: 'test', gemma: 'test' },
+  getGeminiClient: vi.fn(() => null),
 }));
 
 vi.mock('../agents', () => ({
@@ -16,16 +18,21 @@ vi.mock('../resilient-agent', () => ({
 }));
 
 import { extractMasterySignals } from '../mastery-extractor';
+import { resilientTextAgent } from '../resilient-agent';
+import { isGeminiAvailable } from '../gemini';
 import type { MasterySignal } from '../mastery-extractor';
+
+const mockResilent = vi.mocked(resilientTextAgent);
+const mockIsAvailable = vi.mocked(isGeminiAvailable);
 
 describe('extractMasterySignals', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockIsAvailable.mockReturnValue(true);
   });
 
   test('returns null when AI not available', async () => {
-    const gemini = await import('../gemini');
-    vi.mocked(gemini.isGeminiAvailable).mockReturnValue(false);
+    mockIsAvailable.mockReturnValue(false);
 
     const result = await extractMasterySignals([
       { type: 'prose', content: 'text' },
@@ -43,13 +50,12 @@ describe('extractMasterySignals', () => {
   });
 
   test('returns parsed mastery signals on success', async () => {
-    const { resilientTextAgent } = await import('../resilient-agent');
     const signal: MasterySignal = {
       concepts: [{ concept: 'limits', level: 'developing', percentage: 35 }],
       newTerms: [{ term: 'epsilon', definition: 'small positive number' }],
       encounters: [{ thinker: 'Cauchy', coreIdea: 'rigorous analysis' }],
     };
-    vi.mocked(resilientTextAgent).mockResolvedValue({
+    mockResilent.mockResolvedValue({
       text: JSON.stringify(signal),
       citations: [],
     });
@@ -65,8 +71,7 @@ describe('extractMasterySignals', () => {
   });
 
   test('strips markdown fences from response', async () => {
-    const { resilientTextAgent } = await import('../resilient-agent');
-    vi.mocked(resilientTextAgent).mockResolvedValue({
+    mockResilent.mockResolvedValue({
       text: '```json\n{"concepts":[],"newTerms":[],"encounters":[]}\n```',
       citations: [],
     });
@@ -81,8 +86,7 @@ describe('extractMasterySignals', () => {
   });
 
   test('returns null on parse error', async () => {
-    const { resilientTextAgent } = await import('../resilient-agent');
-    vi.mocked(resilientTextAgent).mockResolvedValue({
+    mockResilent.mockResolvedValue({
       text: 'not json',
       citations: [],
     });
@@ -96,8 +100,7 @@ describe('extractMasterySignals', () => {
   });
 
   test('filters entries without content', async () => {
-    const { resilientTextAgent } = await import('../resilient-agent');
-    vi.mocked(resilientTextAgent).mockResolvedValue({
+    mockResilent.mockResolvedValue({
       text: '{"concepts":[],"newTerms":[],"encounters":[]}',
       citations: [],
     });
