@@ -1,8 +1,6 @@
 /* SocraticQuestion (2.2) — The most visually prominent tutor element.
- * Spec: Cormorant Garamond Italic 18px Regular, ink (not margin).
- * Background margin-dim, 2px left border margin, padding 20px 24px,
- * 2px radius, 24px bottom margin. Followed by silence.
- */
+ * Feels like a heavier card — linen-textured, slightly warmer background,
+ * deeper shadow than marginalia. The question that stays with you. */
 
 .block {
   font-family: var(--font-tutor);
@@ -16,12 +14,19 @@
   background: var(--margin-dim);
   border-left: 2px solid var(--margin);
   padding: 20px 24px;
-  border-radius: 2px;
+  border-radius: 3px;
   margin: 4px 0 24px 0;
   box-shadow: var(--depth-resting);
 
   position: relative;
   animation: questionReveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (max-width: 500px) {
+  .block {
+    padding: 16px 18px;
+    font-size: 17px;
+  }
 }
 
 @keyframes questionReveal {

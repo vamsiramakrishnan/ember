@@ -5,23 +5,21 @@
  */
 
 .card {
-  border: 1px solid var(--rule-light);
-  border-radius: 2px;
+  border-radius: 3px;
   background: var(--paper);
   min-width: 140px;
   max-width: 240px;
   cursor: pointer;
   box-shadow: var(--depth-inset);
-  transition: border-color 0.2s ease, box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   animation: cardReveal 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
   position: relative;
   overflow: hidden;
 }
 
 .card:hover {
-  border-color: var(--ink-ghost);
   box-shadow: var(--depth-lifted);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
 }
 
 .card:focus-visible {

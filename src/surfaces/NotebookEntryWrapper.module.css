@@ -17,7 +17,7 @@
 .wrapper:hover,
 .touched {
   background: var(--paper-warm);
-  box-shadow: var(--depth-lifted);
+  box-shadow: var(--depth-inset);
 }
 
 /* ─── Drag states ─────────────────────────────────── */

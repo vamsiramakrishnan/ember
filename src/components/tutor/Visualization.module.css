@@ -15,11 +15,10 @@
 .frameWrap {
   position: relative;
   overflow: hidden;
-  border: 1px solid var(--rule-light);
-  border-radius: 2px;
+  border-radius: 4px;
   background: var(--paper);
   box-shadow: var(--depth-resting);
-  transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+  transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Thumbnail mode: cursor pointer, iframe non-interactive so clicks pass through */
@@ -31,8 +30,8 @@
   pointer-events: none;
 }
 .frameWrap[role="button"]:hover {
-  border-color: var(--ink-ghost);
   box-shadow: var(--depth-lifted);
+  transform: translateY(-2px);
 }
 
 .frame {

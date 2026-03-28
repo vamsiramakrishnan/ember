@@ -5,9 +5,8 @@
  */
 
 .container {
-  border: 1px solid var(--rule-light);
-  border-radius: 2px;
-  padding: 24px 16px;
+  border-radius: 4px;
+  padding: 24px 20px;
   margin-bottom: var(--diagram-gap);
   background: var(--material-diagram);
   box-shadow: var(--depth-resting);

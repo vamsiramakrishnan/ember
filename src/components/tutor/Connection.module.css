@@ -8,17 +8,18 @@
   grid-template-columns: var(--margin-rule-width) 1fr;
   gap: var(--margin-rule-gap);
   margin-bottom: var(--entry-gap);
-  padding: 2px 0;
+  padding: 14px 16px 14px 0;
   background: var(--material-annotation);
-  border-radius: 2px;
+  border-radius: 3px;
+  box-shadow: var(--depth-inset);
   animation: marginFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .rule {
   width: var(--margin-rule-width);
   background-color: var(--margin);
-  opacity: 0.35;
-  border-radius: 1px;
+  opacity: 0.3;
+  border-radius: 3px 0 0 3px;
   min-height: 24px;
 }
 

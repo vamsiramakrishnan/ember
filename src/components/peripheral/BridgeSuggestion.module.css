@@ -1,17 +1,11 @@
 .suggestion {
   background: var(--material-suggestion);
-  border-radius: 2px;
-  padding: 14px 18px;
+  border-radius: 3px;
+  padding: 16px 20px;
   margin-top: 4px;
   margin-bottom: var(--entry-gap);
   border-left: 2px solid var(--sage);
   box-shadow: var(--depth-resting);
-}
-
-@media (max-width: 800px) {
-  .suggestion {
-    padding: 12px 14px;
-  }
 }
 
 .text {
@@ -23,6 +17,12 @@
   line-height: 1.72;
   margin: 0;
   letter-spacing: 0;
+}
+
+@media (max-width: 800px) {
+  .suggestion {
+    padding: 12px 16px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

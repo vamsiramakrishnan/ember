@@ -13,8 +13,8 @@
   margin-left: var(--text-indent);
   margin-bottom: var(--entry-gap);
   border-left: 2px solid var(--indigo);
-  padding: 10px 16px 10px 14px;
+  padding: 12px 18px 12px 16px;
   background: var(--indigo-dim);
-  border-radius: 2px;
+  border-radius: 3px;
   box-shadow: var(--depth-inset);
 }
