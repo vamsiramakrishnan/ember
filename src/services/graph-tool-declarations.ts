@@ -113,6 +113,92 @@ export const GRAPH_TOOL_DECLARATIONS = [
           required: ['entity_id'],
         },
       },
+      {
+        name: 'compose_visual',
+        description: 'Compose a rich concept diagram from real knowledge graph data. Pulls mastery levels, thinker encounters, and graph relationships to build enriched diagram nodes. Also classifies the best layout (flow, tree, radial, pyramid, cycle, timeline, constellation) and checks for an existing diagram to update instead of creating a new one. ALWAYS call this instead of generating raw concept-diagram JSON — it grounds the diagram in the student\'s actual knowledge state.',
+        parameters: {
+          type: 'object',
+          properties: {
+            topic: { type: 'string', description: 'The topic or question the diagram should visualize.' },
+            concepts: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Specific concept names to include in the diagram.',
+            },
+            intent: {
+              type: 'string',
+              enum: ['hierarchy', 'process', 'comparison', 'evolution', 'web', 'cycle', 'layers'],
+              description: 'The structural relationship to visualize. hierarchy=tree, process=flow, comparison=radial, evolution=timeline, web=constellation, cycle=circular loop, layers=pyramid.',
+            },
+            session_id: { type: 'string', description: 'Current session ID — used to find existing diagrams for delta updates.' },
+          },
+          required: ['topic'],
+        },
+      },
+      {
+        name: 'merge_visual_delta',
+        description: 'Update an existing concept diagram instead of creating a new one. Adds new nodes, new edges, and updates mastery data on existing nodes. The student sees their diagram grow organically as they explore.',
+        parameters: {
+          type: 'object',
+          properties: {
+            entry_id: { type: 'string', description: 'The ID of the existing concept-diagram entry to update.' },
+            add_nodes: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  label: { type: 'string' },
+                  subLabel: { type: 'string' },
+                  accent: { type: 'string', enum: ['sage', 'indigo', 'amber', 'margin'] },
+                  detail: { type: 'string' },
+                  entityKind: { type: 'string', enum: ['concept', 'thinker', 'term'] },
+                },
+                required: ['label'],
+              },
+              description: 'New nodes to add to the diagram.',
+            },
+            add_edges: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  from: { type: 'number', description: 'Index of source node (existing or newly added).' },
+                  to: { type: 'number', description: 'Index of target node (existing or newly added).' },
+                  label: { type: 'string' },
+                  type: { type: 'string', enum: ['causes', 'enables', 'contrasts', 'extends', 'requires', 'bridges'] },
+                },
+                required: ['from', 'to'],
+              },
+              description: 'New edges to add.',
+            },
+            update_nodes: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  index: { type: 'number', description: 'Index of the node to update.' },
+                  mastery: {
+                    type: 'object',
+                    properties: {
+                      level: { type: 'string' },
+                      percentage: { type: 'number' },
+                    },
+                  },
+                  detail: { type: 'string' },
+                },
+                required: ['index'],
+              },
+              description: 'Updates to apply to existing nodes.',
+            },
+            new_layout: {
+              type: 'string',
+              enum: ['flow', 'tree', 'radial', 'pyramid', 'cycle', 'timeline', 'constellation', 'graph'],
+              description: 'Change the layout. Omit to keep existing.',
+            },
+          },
+          required: ['entry_id'],
+        },
+      },
     ],
   },
 ];

@@ -38,11 +38,27 @@ CONNECTION (the student touches 2+ domains — emphasisEnd is the character coun
 THINKER CARD (introduce a new thinker relevant to the discussion):
 {"type": "thinker-card", "thinker": {"name": "Full Name", "dates": "YYYY–YYYY", "gift": "Their specific contribution to this topic", "bridge": "How their work connects to the student's question"}}
 
-CONCEPT DIAGRAM (spatial relationships between ideas — use when structure illuminates understanding):
-Simple: {"type": "concept-diagram", "title": "Title", "items": [{"label": "Node", "subLabel": "detail", "accent": "sage"}]}
-Nested: add "children" array and "detail" string to items for expandable trees
-Graph: add "edges": [{"from": 0, "to": 1, "label": "verb", "type": "causes|enables|contrasts|extends|requires|bridges"}] and "entityKind": "concept|thinker|term" to items
-Accents: sage = growth/natural, indigo = inquiry/abstract, amber = connection/bridge, margin = authority
+CONCEPT DIAGRAM — PREFER using the compose_visual tool to build diagrams from real knowledge graph data. If you must generate raw JSON, include a "layout" field:
+
+Layouts (the layout IS the pedagogical argument — choose deliberately):
+- "flow": A → B → C (sequential process, cause chain, algorithm steps)
+- "tree": top-down hierarchy (classification, taxonomy, decomposition)
+- "radial": center concept with radiating connections (properties, spider map)
+- "pyramid": layered foundation-to-peak (priority, abstraction levels, prerequisites)
+- "cycle": circular loop (feedback, iterative process, self-reinforcing systems)
+- "timeline": temporal sequence (historical progression, evolution of ideas — use subLabel for dates)
+- "constellation": force-directed web (complex interconnections, exploration)
+- "graph": general typed-edge graph (default when no clear archetype fits)
+
+Format: {"type": "concept-diagram", "layout": "pyramid", "title": "Title", "items": [...], "edges": [...]}
+Items: {"label": "Node", "subLabel": "detail", "accent": "sage|indigo|amber|margin", "detail": "expanded text", "entityKind": "concept|thinker|term"}
+Nested: add "children" array for tree/pyramid layouts
+Edges: [{"from": 0, "to": 1, "label": "verb", "type": "causes|enables|contrasts|extends|requires|bridges"}]
+
+When to use compose_visual tool instead of raw JSON:
+- You want real mastery data on the nodes (not invented percentages)
+- You want to update an existing diagram instead of creating a new one
+- You want the system to suggest the best layout from the data shape
 
 DIRECTIVE (send the student outside the notebook — use every 3-4 exchanges):
 {"type": "tutor-directive", "content": "Specific, actionable instruction.", "action": "search|read|try|observe|compare"}

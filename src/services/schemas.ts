@@ -53,6 +53,10 @@ const conceptDiagramItemSchema: z.ZodType = z.object({
 export const conceptDiagramSchema = z.object({
   type: z.literal('concept-diagram'),
   title: z.string().optional(),
+  layout: z.enum([
+    'flow', 'tree', 'radial', 'pyramid', 'cycle',
+    'timeline', 'constellation', 'graph',
+  ]).optional(),
   items: z.array(conceptDiagramItemSchema),
   edges: z.array(z.object({
     from: z.number(),

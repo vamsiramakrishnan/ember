@@ -1,4 +1,8 @@
-/* ConceptDiagram (2.4) — interactive concept relationship map */
+/**
+ * ConceptDiagram (2.4) — layout-aware interactive concept map.
+ * Supports: flow, tree, radial, pyramid, cycle, timeline,
+ * constellation, and general graph layouts.
+ */
 
 .container {
   border-top: 1px solid var(--rule);
@@ -21,31 +25,36 @@
   padding: 0 4px;
 }
 
-/* ─── Linear layout ──────────────────────── */
+/* ─── SVG-positioned canvas (all non-tree layouts) ─── */
 
-.flow {
-  display: flex;
-  align-items: stretch;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 0;
-  min-width: min-content;
+.canvas {
+  position: relative;
+  width: 100%;
 }
 
-.step {
-  display: flex;
-  align-items: center;
-  gap: 0;
+.positionedNode {
+  position: absolute;
+  z-index: 1;
 }
 
-.connector {
-  width: 32px;
-  height: 24px;
-  color: var(--ink-faint);
-  flex-shrink: 0;
+.edgeSvg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
 }
 
-/* ─── Tree layout ────────────────────────── */
+.edgeSvgLabel {
+  font-family: var(--font-system);
+  font-size: 9px;
+  fill: var(--ink-faint);
+  letter-spacing: 0.3px;
+}
+
+/* ─── Tree layout (CSS-based for nested children) ─── */
 
 .tree {
   display: flex;
@@ -54,29 +63,20 @@
   padding: 0 4px;
 }
 
-/* ─── Graph layout ───────────────────────── */
+/* ─── Timeline spine ─── */
 
-.graph {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  position: relative;
+.timelineSpine {
+  position: absolute;
+  left: 50%;
+  top: 40px;
+  width: 1px;
+  background: var(--rule);
+  transform: translateX(-50%);
+  z-index: 0;
 }
 
-.graphNodes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  justify-content: center;
-}
+/* ─── Edge labels (accessible text) ─── */
 
-.graphNode {
-  flex: 0 1 auto;
-  min-width: 140px;
-  max-width: 240px;
-}
-
-/* Edge labels — text representation of relationships */
 .edgeLabels {
   display: flex;
   flex-direction: column;
@@ -102,6 +102,8 @@
   font-size: 11px;
 }
 
+/* ─── Animations ─── */
+
 @keyframes diagramReveal {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
@@ -111,22 +113,10 @@
   .container { animation: none; }
 }
 
+/* ─── Responsive ─── */
+
 @media (max-width: 500px) {
-  .flow {
-    flex-direction: column;
-    gap: 4px;
-    align-items: center;
-  }
-  .connector {
-    transform: rotate(90deg);
-    width: 24px;
-    height: 32px;
-  }
-  .graphNodes {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .graphNode {
-    max-width: 100%;
+  .container {
+    overflow-x: scroll;
   }
 }

@@ -1,143 +1,185 @@
 /**
  * Concept Diagram (2.4)
- * Interactive, nestable, graph-linked relationship map between ideas.
+ * Interactive, layout-aware relationship map between ideas.
  *
- * Three layout modes:
- * 1. Linear flow: nodes connected left-to-right (default for ≤5 nodes)
- * 2. Graph layout: nodes with typed edges rendered as SVG bezier curves
- * 3. Tree layout: nodes with children rendered as expandable tree
+ * Layout modes (the tutor's pedagogical choice):
+ * - flow: A → B → C (process, cause chain)
+ * - tree: top-down hierarchy (classification, taxonomy)
+ * - radial: center node with radiating connections
+ * - pyramid: layered foundation-to-peak
+ * - cycle: circular loop (feedback, iterative process)
+ * - timeline: temporal sequence with date anchors
+ * - constellation: force-directed mini-canvas
+ * - graph: general typed-edge graph (default)
  *
- * Every node can:
- * - Expand to reveal children and detail text
- * - Show mastery level as a ghost bar
- * - Link to the knowledge graph via entityId
- * - Display typed badges (concept/thinker/term/question)
+ * All layouts render through DiagramCard for consistent visual treatment
+ * (mastery arcs, density scaling, entity linking, expand/collapse).
  *
  * See: 06-component-inventory.md, Family 2.
  */
-import { useRef, useCallback } from 'react';
-import type { DiagramNode, DiagramEdge } from '@/types/entries';
-import { ConceptDiagramNode } from './ConceptDiagramNode';
-import { GraphEdges } from './GraphEdges';
+import { useMemo, useRef, useState, useEffect } from 'react';
+import type { DiagramNode, DiagramEdge, DiagramLayout } from '@/types/entries';
+import { computeLayout, inferLayout } from './diagram-layout-engines';
+import type { EdgePathData } from './diagram-layout-engines';
+import { DiagramCard } from './DiagramCard';
 import styles from './ConceptDiagram.module.css';
 
 interface ConceptDiagramProps {
   items: DiagramNode[];
   edges?: DiagramEdge[];
   title?: string;
+  layout?: DiagramLayout;
   onNodeClick?: (entityId: string, entityKind: string) => void;
 }
 
-export function ConceptDiagram({ items, edges, title, onNodeClick }: ConceptDiagramProps) {
+const EDGE_COLORS: Record<string, string> = {
+  causes: 'var(--margin)',
+  enables: 'var(--sage)',
+  contrasts: 'var(--amber)',
+  extends: 'var(--indigo)',
+  requires: 'var(--ink-faint)',
+  bridges: 'var(--amber)',
+};
+
+const EDGE_DASH: Record<string, string> = {
+  causes: 'none',
+  enables: '6 4',
+  contrasts: '2 3',
+  extends: 'none',
+  requires: 'none',
+  bridges: '6 4',
+};
+
+const EDGE_WIDTH: Record<string, number> = {
+  causes: 1.5,
+  enables: 1.2,
+  contrasts: 1.2,
+  extends: 0.8,
+  requires: 1,
+  bridges: 1.2,
+};
+
+/** Count edges per node for density scaling. */
+function connectionCounts(
+  items: DiagramNode[], edges: DiagramEdge[],
+): Map<number, number> {
+  const counts = new Map<number, number>();
+  for (let i = 0; i < items.length; i++) counts.set(i, 0);
+  for (const e of edges) {
+    counts.set(e.from, (counts.get(e.from) ?? 0) + 1);
+    counts.set(e.to, (counts.get(e.to) ?? 0) + 1);
+  }
+  return counts;
+}
+
+export function ConceptDiagram({
+  items, edges = [], title, layout: layoutProp, onNodeClick,
+}: ConceptDiagramProps) {
   if (items.length === 0) return null;
 
-  const hasTree = items.some((n) => n.children && n.children.length > 0);
-  const hasEdges = edges && edges.length > 0;
-
-  // Choose layout: tree if nested, graph if edges, linear otherwise
-  const layout = hasTree ? 'tree' : hasEdges ? 'graph' : 'linear';
-
-  return (
-    <div className={styles.container} role="figure" aria-label={title ?? 'Concept diagram'}>
-      {title && <p className={styles.title}>{title}</p>}
-
-      {layout === 'tree' && (
-        <TreeLayout items={items} onNodeClick={onNodeClick} />
-      )}
-
-      {layout === 'graph' && (
-        <GraphLayout items={items} edges={edges!} onNodeClick={onNodeClick} />
-      )}
-
-      {layout === 'linear' && (
-        <LinearLayout items={items} onNodeClick={onNodeClick} />
-      )}
-    </div>
-  );
-}
-
-// ─── Linear layout (original, upgraded) ───────────────────
-
-function LinearLayout({ items, onNodeClick }: {
-  items: DiagramNode[];
-  onNodeClick?: (id: string, kind: string) => void;
-}) {
-  return (
-    <div className={styles.flow}>
-      {items.map((node, i) => (
-        <div key={node.entityId ?? i} className={styles.step}>
-          {i > 0 && <LinearConnector />}
-          <ConceptDiagramNode node={node} onNodeClick={onNodeClick} />
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function LinearConnector() {
-  return (
-    <svg className={styles.connector} viewBox="0 0 32 24" aria-hidden="true">
-      <path d="M 0 12 L 24 12" stroke="currentColor" strokeWidth="1" fill="none" />
-      <path d="M 20 7 L 27 12 L 20 17" stroke="currentColor" strokeWidth="1" fill="none" />
-    </svg>
-  );
-}
-
-// ─── Tree layout (for nested nodes) ──────────────────────
-
-function TreeLayout({ items, onNodeClick }: {
-  items: DiagramNode[];
-  onNodeClick?: (id: string, kind: string) => void;
-}) {
-  return (
-    <div className={styles.tree}>
-      {items.map((node, i) => (
-        <ConceptDiagramNode
-          key={node.entityId ?? i}
-          node={node}
-          depth={0}
-          onNodeClick={onNodeClick}
-        />
-      ))}
-    </div>
-  );
-}
-
-// ─── Graph layout (nodes + typed edges) ──────────────────
-
-function GraphLayout({ items, edges, onNodeClick }: {
-  items: DiagramNode[];
-  edges: DiagramEdge[];
-  onNodeClick?: (id: string, kind: string) => void;
-}) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const nodesRef = useRef<Map<number, HTMLDivElement>>(new Map());
+  const [containerWidth, setContainerWidth] = useState(640);
 
-  const setNodeRef = useCallback((index: number, el: HTMLDivElement | null) => {
-    if (el) nodesRef.current.set(index, el);
-    else nodesRef.current.delete(index);
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const measure = () => setContainerWidth(el.clientWidth || 640);
+    measure();
+    if (typeof ResizeObserver === 'undefined') return;
+    const obs = new ResizeObserver(measure);
+    obs.observe(el);
+    return () => obs.disconnect();
   }, []);
 
+  const resolvedLayout = layoutProp ?? inferLayout(items, edges);
+
+  // For tree layout with children, delegate to recursive DiagramCard rendering
+  const isTreeWithChildren = resolvedLayout === 'tree' &&
+    items.some((n) => n.children && n.children.length > 0);
+
+  const layoutResult = useMemo(() => {
+    if (isTreeWithChildren) return null; // Tree with children uses CSS, not SVG positioning
+    const h = resolvedLayout === 'constellation'
+      ? Math.min(containerWidth * 0.65, 480)
+      : resolvedLayout === 'radial' || resolvedLayout === 'cycle'
+        ? Math.min(containerWidth * 0.7, 440)
+        : resolvedLayout === 'timeline'
+          ? items.length * 120 + 80
+          : resolvedLayout === 'pyramid'
+            ? (Math.ceil((-1 + Math.sqrt(1 + 8 * items.length)) / 2)) * 120 + 80
+            : 160;
+    return computeLayout(resolvedLayout, items, edges, containerWidth, h);
+  }, [resolvedLayout, items, edges, containerWidth, isTreeWithChildren]);
+
+  const counts = useMemo(() => connectionCounts(items, edges), [items, edges]);
+
   return (
-    <div className={styles.graph} ref={containerRef}>
-      <GraphEdges
-        edges={edges}
-        nodeRefs={nodesRef.current}
-        containerRef={containerRef}
-      />
-      <div className={styles.graphNodes}>
-        {items.map((node, i) => (
-          <div
-            key={node.entityId ?? i}
-            ref={(el) => setNodeRef(i, el)}
-            className={styles.graphNode}
-          >
-            <ConceptDiagramNode node={node} onNodeClick={onNodeClick} />
-          </div>
-        ))}
-      </div>
-      {/* Text fallback for edge labels — remains for accessibility */}
-      {edges.some((e) => e.label) && (
+    <div
+      className={styles.container}
+      ref={containerRef}
+      role="figure"
+      aria-label={title ?? 'Concept diagram'}
+      data-layout={resolvedLayout}
+    >
+      {title && <p className={styles.title}>{title}</p>}
+
+      {isTreeWithChildren ? (
+        <div className={styles.tree}>
+          {items.map((node, i) => (
+            <DiagramCard
+              key={node.entityId ?? i}
+              node={node}
+              depth={0}
+              connectionCount={counts.get(i) ?? 0}
+              onNodeClick={onNodeClick}
+              renderChildren
+            />
+          ))}
+        </div>
+      ) : layoutResult ? (
+        <div
+          className={styles.canvas}
+          style={{
+            minHeight: layoutResult.minHeight,
+            position: 'relative',
+          }}
+        >
+          {/* SVG edge layer */}
+          <EdgeLayer edgePaths={layoutResult.edgePaths} minWidth={layoutResult.minWidth} minHeight={layoutResult.minHeight} />
+
+          {/* Positioned nodes */}
+          {items.map((node, i) => {
+            const pos = layoutResult.positions.get(i);
+            if (!pos) return null;
+            return (
+              <div
+                key={node.entityId ?? i}
+                className={styles.positionedNode}
+                style={{
+                  left: pos.x,
+                  top: pos.y,
+                  transform: 'translate(-50%, -50%)',
+                }}
+              >
+                <DiagramCard
+                  node={node}
+                  connectionCount={counts.get(i) ?? 0}
+                  onNodeClick={onNodeClick}
+                  renderChildren={false}
+                />
+              </div>
+            );
+          })}
+
+          {/* Timeline spine indicator */}
+          {resolvedLayout === 'timeline' && (
+            <div className={styles.timelineSpine} style={{ height: layoutResult.minHeight - 80 }} />
+          )}
+        </div>
+      ) : null}
+
+      {/* Edge labels — accessible text representation */}
+      {edges.length > 0 && edges.some((e) => e.label) && (
         <div className={styles.edgeLabels} aria-label="Relationships">
           {edges.filter((e) => e.label).map((edge, i) => (
             <span key={i} className={styles.edgeLabel}>
@@ -151,5 +193,61 @@ function GraphLayout({ items, edges, onNodeClick }: {
         </div>
       )}
     </div>
+  );
+}
+
+// ─── SVG Edge Layer ─────────────────────────────────────────────
+
+function EdgeLayer({ edgePaths, minWidth, minHeight }: {
+  edgePaths: EdgePathData[];
+  minWidth: number;
+  minHeight: number;
+}) {
+  if (edgePaths.length === 0) return null;
+
+  return (
+    <svg
+      className={styles.edgeSvg}
+      viewBox={`0 0 ${minWidth} ${minHeight}`}
+      preserveAspectRatio="xMidYMid meet"
+      aria-hidden="true"
+    >
+      <defs>
+        <marker
+          id="diagram-arrow"
+          markerWidth="6" markerHeight="4"
+          refX="5" refY="2" orient="auto"
+        >
+          <path d="M 0 0 L 6 2 L 0 4" fill="none"
+            stroke="var(--ink-faint)" strokeWidth="0.8" />
+        </marker>
+      </defs>
+      {edgePaths.map((path, i) => {
+        if (!path.d) return null;
+        const edgeType = path.edge.type ?? 'requires';
+        return (
+          <g key={i}>
+            <path
+              d={path.d}
+              fill="none"
+              stroke={EDGE_COLORS[edgeType] ?? 'var(--ink-faint)'}
+              strokeWidth={EDGE_WIDTH[edgeType] ?? 1}
+              strokeDasharray={EDGE_DASH[edgeType] ?? 'none'}
+              markerEnd="url(#diagram-arrow)"
+            />
+            {path.edge.label && (
+              <text
+                x={path.labelX}
+                y={path.labelY}
+                textAnchor="middle"
+                className={styles.edgeSvgLabel}
+              >
+                {path.edge.label}
+              </text>
+            )}
+          </g>
+        );
+      })}
+    </svg>
   );
 }
