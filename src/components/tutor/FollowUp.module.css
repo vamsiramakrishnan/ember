@@ -3,8 +3,14 @@
 
 .trigger {
   composes: ghostTrigger from '../../primitives/ContextPanel.module.css';
-  margin-top: 6px;
+  margin-top: 4px;
   display: block;
+}
+
+@media (max-width: 800px) {
+  .trigger {
+    margin-top: 2px;
+  }
 }
 
 .container {

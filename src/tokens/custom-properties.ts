@@ -75,5 +75,18 @@ export function getTokenCSS(): string {
   /* Surface transitions */
   --surface-fade-duration: ${motion.surfaceFadeDuration};
   --surface-fade-ease: ${motion.surfaceFadeEase};
+}
+
+/* Tighter vertical rhythm on narrow screens */
+@media (max-width: 800px) {
+  :root {
+    --entry-gap: 12px;
+    --scratch-bottom: 8px;
+    --diagram-gap: 18px;
+    --section-gap: 24px;
+    --silence-gap: 32px;
+    --column-padding: 18px;
+    --margin-rule-gap: 12px;
+  }
 }`;
 }

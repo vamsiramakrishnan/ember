@@ -11,6 +11,12 @@
   scroll-margin-top: 80px;
 }
 
+@media (max-width: 800px) {
+  .wrapper {
+    padding: 2px 0;
+  }
+}
+
 .wrapper:hover,
 .touched {
   background: var(--paper-warm);
@@ -158,21 +164,31 @@
 
 @media (max-width: 800px) {
   .handle {
-    position: static;
-    opacity: 0.6;
-    margin-right: 8px;
+    position: absolute;
+    left: -4px;
+    top: -1px;
+    opacity: 0;
+    margin-right: 0;
     flex-shrink: 0;
+  }
+
+  .grip {
+    display: none;
   }
 
   .wrapper:hover .handle,
   .touched .handle { opacity: 1; }
 
   .actions {
-    position: static;
+    position: absolute;
+    top: auto;
+    bottom: -2px;
+    right: 0;
     flex-direction: row;
-    opacity: 0.6;
-    margin-top: 4px;
-    margin-left: var(--text-indent);
+    opacity: 0;
+    margin-top: 0;
+    margin-left: 0;
+    gap: 4px;
   }
 
   .wrapper:hover .actions,
