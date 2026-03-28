@@ -7,7 +7,7 @@
  * See: 06-component-inventory.md, Family 4.
  */
 import { useState, useCallback } from 'react';
-import type { LayoutNode, CanvasNode, GraphEdge } from '@/types/graph-canvas';
+import type { LayoutNode } from '@/types/graph-canvas';
 import styles from './GraphCardNode.module.css';
 
 interface Neighbor {
