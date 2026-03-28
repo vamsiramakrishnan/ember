@@ -7,6 +7,11 @@ import { useGeminiTutor } from '../useGeminiTutor';
 
 vi.mock('@/services/gemini', () => ({
   isGeminiAvailable: vi.fn().mockReturnValue(false),
+  getGeminiClient: vi.fn().mockReturnValue(null),
+  MODELS: {
+    text: 'gemini-test', heavy: 'gemini-test', image: 'gemini-test',
+    fallback: 'gemini-test', gemma: 'gemini-test',
+  },
 }));
 
 vi.mock('@/services/orchestrator', () => ({

@@ -13,6 +13,20 @@ Object.defineProperty(globalThis, 'indexedDB', {
   configurable: true,
 });
 
+// Provide matchMedia stub (jsdom doesn't include it)
+if (typeof window !== 'undefined' && typeof window.matchMedia !== 'function') {
+  window.matchMedia = ((query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    addListener: () => {},
+    removeListener: () => {},
+    dispatchEvent: () => false,
+  })) as typeof window.matchMedia;
+}
+
 // Ensure structuredClone is available (jsdom may not have it)
 if (typeof globalThis.structuredClone === 'undefined') {
   globalThis.structuredClone = <T>(val: T): T =>

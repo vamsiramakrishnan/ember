@@ -52,7 +52,7 @@ export function fuzzyScore(query: string, target: string): number {
 
   let qi = 0;
   let score = 0;
-  let lastMatchIdx = -1;
+  let lastMatchIdx = -2;
 
   for (let ti = 0; ti < t.length && qi < q.length; ti++) {
     if (t[ti] === q[qi]) {

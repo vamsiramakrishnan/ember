@@ -2,19 +2,22 @@ import { describe, test, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
 vi.mock('../LandingHero.module.css', () => ({ default: {} }));
+vi.mock('../LandingDemoNotebook', () => ({
+  LandingDemoNotebook: () => <div data-testid="demo-notebook" />,
+}));
 
 import { LandingHero } from '../LandingHero';
 
 describe('LandingHero', () => {
-  test('renders the title "ember"', () => {
+  test('renders the title', () => {
     render(<LandingHero />);
-    expect(screen.getByText('ember')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
   });
 
   test('renders the tagline', () => {
     render(<LandingHero />);
     expect(
-      screen.getByText('a quiet room with a good mind in it'),
+      screen.getByText(/unhurried learning environment/i),
     ).toBeInTheDocument();
   });
 

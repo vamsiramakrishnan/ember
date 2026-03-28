@@ -7,7 +7,7 @@
  *
  * Respects prefers-reduced-motion by snapping to final positions.
  */
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import type { CanvasNode, GraphEdge, LayoutNode } from '@/types/graph-canvas';
 
 interface ForceOptions { width: number; height: number; enabled: boolean }
@@ -112,6 +112,9 @@ export function useForceLayout(
   const tickCount = useRef(0);
   const rafRef = useRef(0);
 
+  // Stabilize node identity — only re-init when the set of IDs changes
+  const nodeKey = useMemo(() => nodes.map((n) => n.id).join(','), [nodes]);
+
   // Re-initialize when node set changes
   useEffect(() => {
     const layout = initLayout(nodes, width, height);
@@ -123,16 +126,23 @@ export function useForceLayout(
     nodesRef.current = layout;
     tickCount.current = 0;
     setLayoutNodes([...layout]);
-  }, [nodes, width, height]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nodeKey, width, height]);
+
+  // Keep edges in a ref to avoid unstable array reference in effect deps
+  const edgesRef = useRef(edges);
+  edgesRef.current = edges;
+  const edgeKey = useMemo(() => edges.map((e) => `${e.from}-${e.to}`).join(','), [edges]);
 
   // Animation loop
   useEffect(() => {
     if (!enabled || nodesRef.current.length === 0) return;
 
+    const currentEdges = edgesRef.current;
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReduced) {
       for (let i = 0; i < MAX_TICKS; i++) {
-        tick(nodesRef.current, edges, width, height);
+        tick(nodesRef.current, currentEdges, width, height);
         if (isSettled(nodesRef.current)) break;
       }
       setLayoutNodes([...nodesRef.current]);
@@ -141,7 +151,7 @@ export function useForceLayout(
 
     const step = () => {
       if (tickCount.current >= MAX_TICKS || isSettled(nodesRef.current)) return;
-      tick(nodesRef.current, edges, width, height);
+      tick(nodesRef.current, edgesRef.current, width, height);
       tickCount.current++;
       setLayoutNodes([...nodesRef.current]);
       rafRef.current = requestAnimationFrame(step);
@@ -149,7 +159,8 @@ export function useForceLayout(
     rafRef.current = requestAnimationFrame(step);
 
     return () => cancelAnimationFrame(rafRef.current);
-  }, [enabled, edges, width, height]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enabled, edgeKey, width, height]);
 
   const pinNode = useCallback((id: string, x: number, y: number) => {
     const node = nodesRef.current.find((n) => n.id === id);

@@ -1,5 +1,5 @@
 import { describe, test, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 
 // Mock the heavy dependencies InputZone pulls in
 vi.mock('@/hooks/useEntryInference', () => ({
@@ -56,12 +56,16 @@ describe('InputZone', () => {
     expect(onSubmit).toHaveBeenCalledWith('Hello world');
   });
 
-  test('clears input after submission', () => {
+  test('clears input after submission', async () => {
+    vi.useFakeTimers();
     const onSubmit = vi.fn();
     render(<InputZone onSubmit={onSubmit} />);
     const textarea = screen.getByRole('textbox') as HTMLTextAreaElement;
     fireEvent.change(textarea, { target: { value: 'Hello world' } });
     fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: false });
+    // InputZone uses a 200ms morph delay before clearing
+    act(() => { vi.advanceTimersByTime(250); });
     expect(textarea.value).toBe('');
+    vi.useRealTimers();
   });
 });
