@@ -40,7 +40,7 @@ export function ConceptDiagramNode({ node, depth = 0, onNodeClick }: Props) {
     }
   };
 
-  const accentClass = node.accent ? styles[node.accent] : '';
+  const accentClass = node.accent ? (styles[node.accent] ?? '') : '';
   const depthClass = depth > 0 ? styles.nested : '';
 
   return (

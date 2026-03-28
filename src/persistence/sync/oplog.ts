@@ -144,14 +144,21 @@ export async function getLastSyncTimestamp(): Promise<number | null> {
   if (!db.objectStoreNames.contains(OPLOG_STORE)) return null;
   const tx = db.transaction(OPLOG_STORE, 'readonly');
   const index = tx.objectStore(OPLOG_STORE).index('by-timestamp');
-  const cursor = index.openCursor(null, 'prev');
+  const cursorReq = index.openCursor(null, 'prev');
   return new Promise((resolve) => {
-    cursor.onsuccess = () => {
-      const c = cursor.result;
-      if (c && (c.value as OplogRecord).synced === 1) {
+    cursorReq.onsuccess = () => {
+      const c = cursorReq.result;
+      if (!c) {
+        resolve(null);
+        return;
+      }
+      if ((c.value as OplogRecord).synced === 1) {
         resolve((c.value as OplogRecord).timestamp);
-      } else { resolve(null); }
+      } else {
+        // This record isn't synced — continue to the next (older) one
+        c.continue();
+      }
     };
-    cursor.onerror = () => resolve(null);
+    cursorReq.onerror = () => resolve(null);
   });
 }

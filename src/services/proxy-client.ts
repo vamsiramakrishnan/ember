@@ -96,28 +96,32 @@ async function readImageNdjson(res: Response): Promise<{
   let buffer = '';
   let result: { images: Array<{ data: string; mimeType: string }>; text: string } | null = null;
 
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
 
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split('\n');
-    buffer = lines.pop() ?? '';
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() ?? '';
 
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed) continue;
-      try {
-        const parsed = JSON.parse(trimmed) as Record<string, unknown>;
-        if (parsed.error) throw new Error(String(parsed.error));
-        if (parsed.status === 'generating') continue; // heartbeat — skip
-        if (Array.isArray(parsed.images)) {
-          result = parsed as { images: Array<{ data: string; mimeType: string }>; text: string };
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+        try {
+          const parsed = JSON.parse(trimmed) as Record<string, unknown>;
+          if (parsed.error) throw new Error(String(parsed.error));
+          if (parsed.status === 'generating') continue; // heartbeat — skip
+          if (Array.isArray(parsed.images)) {
+            result = parsed as { images: Array<{ data: string; mimeType: string }>; text: string };
+          }
+        } catch (e) {
+          if (e instanceof Error && e.message !== trimmed) throw e;
         }
-      } catch (e) {
-        if (e instanceof Error && e.message !== trimmed) throw e;
       }
     }
+  } finally {
+    reader.releaseLock();
   }
 
   if (!result) throw new Error('No image data received');

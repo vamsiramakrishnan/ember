@@ -26,22 +26,26 @@ export async function readNdjsonStream(
   let accumulated = '';
   let buffer = '';
 
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
 
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split('\n');
-    buffer = lines.pop() ?? '';
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() ?? '';
 
-    for (const line of lines) {
-      accumulated = parseLine(line, accumulated, onChunk);
+      for (const line of lines) {
+        accumulated = parseLine(line, accumulated, onChunk);
+      }
     }
-  }
 
-  // Process any remaining buffer
-  if (buffer.trim()) {
-    accumulated = parseLine(buffer, accumulated, onChunk);
+    // Process any remaining buffer
+    if (buffer.trim()) {
+      accumulated = parseLine(buffer, accumulated, onChunk);
+    }
+  } finally {
+    reader.releaseLock();
   }
 
   return accumulated;

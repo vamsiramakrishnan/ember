@@ -40,7 +40,11 @@ export function useScrollContext(entries: LiveEntry[]): ScrollContext {
       scrollTimer.current = setTimeout(() => setIsScrolling(false), 300);
     };
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (scrollTimer.current) clearTimeout(scrollTimer.current);
+      if (dwellTimer.current) clearTimeout(dwellTimer.current);
+    };
   }, []);
 
   // Intersection observer — track which entry is in the center of viewport

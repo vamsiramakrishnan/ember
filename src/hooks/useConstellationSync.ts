@@ -31,6 +31,10 @@ export function useConstellationSync(entries: LiveEntry[]) {
       let masteryChanged = false;
       let curiositiesChanged = false;
 
+      // Hoist DB reads outside the loop to avoid N+1 queries
+      let existingEncounters = await getEncountersByNotebook(notebook.id);
+      let existingCuriosities = await getCuriositiesByNotebook(notebook.id);
+
       for (const le of entries) {
         if (processedRef.current.has(le.id)) continue;
         processedRef.current.add(le.id);
@@ -40,15 +44,14 @@ export function useConstellationSync(entries: LiveEntry[]) {
 
         // Apply encounter projections
         for (const enc of projection.encounters) {
-          const existing = await getEncountersByNotebook(notebook.id);
-          const already = existing.some(
+          const already = existingEncounters.some(
             (e) => e.thinker.toLowerCase() === enc.thinkerName.toLowerCase(),
           );
           if (!already) {
             await createEncounter({
               studentId: student.id,
               notebookId: notebook.id,
-              ref: String(existing.length + 1).padStart(3, '0'),
+              ref: String(existingEncounters.length + 1).padStart(3, '0'),
               thinker: enc.thinkerName,
               tradition: '',
               coreIdea: enc.coreIdea,
@@ -59,6 +62,8 @@ export function useConstellationSync(entries: LiveEntry[]) {
               status: 'active',
             });
             encountersChanged = true;
+            // Refresh after insert so subsequent iterations see the new record
+            existingEncounters = await getEncountersByNotebook(notebook.id);
           }
         }
 
@@ -76,8 +81,7 @@ export function useConstellationSync(entries: LiveEntry[]) {
 
         // Apply curiosity projections
         for (const cur of projection.curiosities) {
-          const existing = await getCuriositiesByNotebook(notebook.id);
-          const already = existing.some(
+          const already = existingCuriosities.some(
             (c) => c.question === cur.question,
           );
           if (!already) {
@@ -87,6 +91,7 @@ export function useConstellationSync(entries: LiveEntry[]) {
               question: cur.question,
             });
             curiositiesChanged = true;
+            existingCuriosities = await getCuriositiesByNotebook(notebook.id);
           }
         }
       }
