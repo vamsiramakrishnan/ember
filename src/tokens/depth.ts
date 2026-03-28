@@ -1,84 +1,101 @@
 /**
- * Ember depth tokens — paper-on-paper layering.
+ * Ember depth tokens — physical notebook layering.
  *
- * Three-layer shadow model: every shadow is built from three
- * components that simulate real physical light:
- *   1. Contact shadow — tight, sharp, right at the edge
- *   2. Form shadow — medium diffusion, defines the shape
- *   3. Ambient shadow — large, barely-there, creates atmosphere
+ * Three-tier depth hierarchy:
  *
- * Shadow colour: always warm brown (#2C2825), never grey or black.
- * Light direction: reading lamp, above and slightly right.
+ * WRITTEN — text on the page. No depth. Student prose and tutor
+ *   annotations live on the same surface, differentiated by ink
+ *   colour and typeface, not elevation. The left rule is enough.
  *
- * Material backgrounds use subtle gradients rather than flat tints —
- * light falls from above, so the top is slightly warmer/brighter
- * than the bottom. This creates the feel of physical paper stocks
- * without looking like a UI gradient.
+ * PINNED — pressed into or adhered to the page. Socratic questions
+ *   are worn into the page (inset, not raised). Bridge suggestions
+ *   are sticky notes (small offset shadow, slight asymmetry).
+ *
+ * OBJECT — physical things placed on the notebook. Thinker cards
+ *   are index cards (asymmetric shadow, slight tilt). Diagrams
+ *   are printed card stock (clean resting shadow). Visualizations
+ *   are glossy clippings (deeper shadow, thumbnail/expand).
+ *
+ * Shadow colour: warm brown (#2C2825), never grey.
+ * Light source: reading lamp, top-left. Shadows fall bottom-right.
  */
 
 export const depth = {
-  /** Flat on the page — student prose, scratch notes.
-   *  No shadow. The default. */
-  flat: 'none',
+  /** Written on the page. No shadow. */
+  none: 'none',
 
-  /** Barely lifted — annotation slips, hypothesis cards.
-   *  Like a slip of tracing paper laid on the page. */
-  inset: [
-    '0 0.5px 1px rgba(44, 40, 37, 0.045)',
-    '0 2px 6px rgba(44, 40, 37, 0.025)',
+  /** Pressed into the page — a question read so many times the page
+   *  is slightly worn. Inner glow, not outer shadow. */
+  pressed: 'inset 0 1px 3px rgba(44, 40, 37, 0.04)',
+
+  /** Adhered — a sticky note or clipping taped to the page.
+   *  Asymmetric: heavier bottom-right (light is top-left). */
+  adhered: [
+    '0 1px 1px rgba(44, 40, 37, 0.04)',
+    '1px 2px 6px rgba(44, 40, 37, 0.045)',
+    '2px 6px 16px rgba(44, 40, 37, 0.025)',
   ].join(', '),
 
-  /** Resting on the page — tutor cards, diagrams, directives.
-   *  Like a card or photograph placed on the notebook. */
+  /** Resting — a card or printout placed on the desk.
+   *  Three-layer: contact + form + ambient. Slightly asymmetric. */
   resting: [
-    '0 0.5px 1px rgba(44, 40, 37, 0.05)',   // contact
-    '0 3px 8px rgba(44, 40, 37, 0.04)',       // form
-    '0 12px 28px rgba(44, 40, 37, 0.025)',    // ambient
+    '0 1px 1px rgba(44, 40, 37, 0.05)',
+    '1px 3px 8px rgba(44, 40, 37, 0.04)',
+    '2px 10px 24px rgba(44, 40, 37, 0.025)',
   ].join(', '),
 
-  /** Lifted — hovered entry, active interaction.
-   *  Like picking up a card from the desk. */
+  /** Lifted — picking up a card from the desk.
+   *  Shadow spreads and softens as the object rises. */
   lifted: [
-    '0 1px 2px rgba(44, 40, 37, 0.05)',      // contact
-    '0 6px 16px rgba(44, 40, 37, 0.045)',     // form
-    '0 20px 48px rgba(44, 40, 37, 0.03)',     // ambient
+    '0 2px 3px rgba(44, 40, 37, 0.04)',
+    '2px 8px 20px rgba(44, 40, 37, 0.05)',
+    '4px 20px 48px rgba(44, 40, 37, 0.03)',
   ].join(', '),
 
-  /** Floating — modal, lightbox, popover.
-   *  Like holding a page up to the reading lamp. */
+  /** Floating — modal, lightbox. Held up to the lamp. */
   floating: [
-    '0 2px 4px rgba(44, 40, 37, 0.05)',
-    '0 10px 24px rgba(44, 40, 37, 0.06)',
-    '0 32px 80px rgba(44, 40, 37, 0.04)',
+    '0 4px 6px rgba(44, 40, 37, 0.04)',
+    '4px 16px 32px rgba(44, 40, 37, 0.06)',
+    '8px 32px 80px rgba(44, 40, 37, 0.04)',
   ].join(', '),
 } as const;
 
 /**
- * Material backgrounds — subtle top-to-bottom gradients that
- * simulate light falling on different paper stocks.
- *
- * Not flat tints. The slight gradient makes the material feel
- * physical — light pools slightly at the top where the reading
- * lamp catches the edge of the paper.
+ * Material backgrounds — only for physical objects, not for text.
+ * Text entries (marginalia, connection, reflection) get NO material.
+ * Their ink colour IS their material.
  */
 export const material = {
-  /** Student's writing paper — the base page. */
+  /** No material — text written on the page. */
   page: 'transparent',
 
-  /** Tutor's annotation paper — aged parchment, warm at the top. */
-  annotation: 'linear-gradient(180deg, rgba(184, 86, 79, 0.035) 0%, rgba(184, 86, 79, 0.012) 100%)',
+  /** Worn page — where a question has been re-read many times.
+   *  Barely visible warmth, like foxing on old paper. */
+  worn: 'rgba(184, 86, 79, 0.04)',
 
-  /** Knowledge card — library card stock, cool and even. */
-  card: 'linear-gradient(180deg, rgba(44, 40, 37, 0.02) 0%, rgba(44, 40, 37, 0.008) 100%)',
+  /** Sticky note — sage-tinted, slightly translucent. */
+  stickyNote: [
+    'linear-gradient(170deg,',
+    '  rgba(107, 143, 113, 0.08) 0%,',
+    '  rgba(107, 143, 113, 0.05) 100%)',
+  ].join(''),
 
-  /** Suggestion / bridge — sage tissue paper, translucent. */
-  suggestion: 'linear-gradient(180deg, rgba(107, 143, 113, 0.07) 0%, rgba(107, 143, 113, 0.035) 100%)',
+  /** Index card — warm cream, heavier stock feel. */
+  indexCard: [
+    'linear-gradient(175deg,',
+    '  rgba(246, 241, 234, 0.9) 0%,',
+    '  rgba(237, 230, 219, 0.6) 100%)',
+  ].join(''),
 
-  /** Diagram / visualization — warm cream card stock. */
-  diagram: 'linear-gradient(180deg, rgba(246, 241, 234, 0.8) 0%, rgba(237, 230, 219, 0.4) 100%)',
+  /** Printed card stock — warm white, clean. */
+  cardStock: [
+    'linear-gradient(178deg,',
+    '  rgba(249, 244, 237, 0.85) 0%,',
+    '  rgba(242, 236, 227, 0.5) 100%)',
+  ].join(''),
 
-  /** Reflection — the lightest vellum overlay. */
-  vellum: 'linear-gradient(180deg, rgba(44, 40, 37, 0.015) 0%, transparent 100%)',
+  /** Glossy clipping — slightly cooler, higher contrast surface. */
+  clipping: 'rgba(246, 241, 234, 0.95)',
 } as const;
 
 export type DepthLevel = keyof typeof depth;

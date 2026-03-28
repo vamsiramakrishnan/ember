@@ -1,6 +1,8 @@
-/* SocraticQuestion (2.2) — The most visually prominent tutor element.
- * Feels like a heavier card — linen-textured, slightly warmer background,
- * deeper shadow than marginalia. The question that stays with you. */
+/* SocraticQuestion (2.2) — The question that stays with you.
+ * Pressed INTO the page, not floating above it. The warm tint
+ * suggests foxing — the page is slightly discoloured where this
+ * question has been re-read many times. Inset shadow reinforces
+ * the "pressed in" physicality. */
 
 .block {
   font-family: var(--font-tutor);
@@ -11,12 +13,12 @@
   line-height: 1.75;
   letter-spacing: 0;
 
-  background: var(--margin-dim);
+  background: var(--material-worn);
   border-left: 2px solid var(--margin);
-  padding: 20px 24px;
-  border-radius: 3px;
+  padding: 18px 24px;
+  border-radius: 1px;
   margin: 4px 0 24px 0;
-  box-shadow: var(--depth-resting);
+  box-shadow: var(--depth-pressed);
 
   position: relative;
   animation: questionReveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -24,7 +26,7 @@
 
 @media (max-width: 500px) {
   .block {
-    padding: 16px 18px;
+    padding: 14px 18px;
     font-size: 17px;
   }
 }

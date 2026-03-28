@@ -5,10 +5,10 @@
  */
 
 .container {
-  border-radius: 4px;
+  border-radius: 2px;
   padding: 24px 20px;
   margin-bottom: var(--diagram-gap);
-  background: var(--material-diagram);
+  background: var(--material-card-stock);
   box-shadow: var(--depth-resting);
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;

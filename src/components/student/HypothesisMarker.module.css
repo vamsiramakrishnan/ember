@@ -1,7 +1,7 @@
 /* HypothesisMarker (1.3) — Student's guess/prediction.
- * Spec: Crimson Pro 18px Regular, ink, 2px left border indigo 40% opacity,
- * 14px left padding, indigo-dim background, 2px radius, 20px margin.
- */
+ * Pinned to the page. The indigo tint and left border are the
+ * depth signal — like the student underlined it and drew a
+ * bracket in the margin. No outer shadow. */
 
 .marker {
   font-family: var(--font-student);
@@ -13,8 +13,7 @@
   margin-left: var(--text-indent);
   margin-bottom: var(--entry-gap);
   border-left: 2px solid var(--indigo);
-  padding: 12px 18px 12px 16px;
+  padding: 10px 16px 10px 14px;
   background: var(--indigo-dim);
-  border-radius: 3px;
-  box-shadow: var(--depth-inset);
+  border-radius: 1px;
 }

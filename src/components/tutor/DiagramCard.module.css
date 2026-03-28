@@ -5,13 +5,13 @@
  */
 
 .card {
-  border-radius: 3px;
+  border-radius: 2px;
   background: var(--paper);
   min-width: 140px;
   max-width: 240px;
   cursor: pointer;
-  box-shadow: var(--depth-inset);
-  transition: box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: var(--depth-adhered);
+  transition: box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   animation: cardReveal 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
   position: relative;
   overflow: hidden;

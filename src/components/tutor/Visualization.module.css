@@ -15,10 +15,10 @@
 .frameWrap {
   position: relative;
   overflow: hidden;
-  border-radius: 4px;
-  background: var(--paper);
+  border-radius: 2px;
+  background: var(--material-clipping);
   box-shadow: var(--depth-resting);
-  transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Thumbnail mode: cursor pointer, iframe non-interactive so clicks pass through */

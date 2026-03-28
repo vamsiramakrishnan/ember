@@ -77,20 +77,21 @@ export function getTokenCSS(): string {
   --surface-fade-duration: ${motion.surfaceFadeDuration};
   --surface-fade-ease: ${motion.surfaceFadeEase};
 
-  /* Depth — paper-on-paper layering */
-  --depth-flat: ${depth.flat};
-  --depth-inset: ${depth.inset};
+  /* Depth — physical notebook layering */
+  --depth-none: ${depth.none};
+  --depth-pressed: ${depth.pressed};
+  --depth-adhered: ${depth.adhered};
   --depth-resting: ${depth.resting};
   --depth-lifted: ${depth.lifted};
   --depth-floating: ${depth.floating};
 
-  /* Material tints — different paper stocks */
+  /* Material — only for physical objects on the page */
   --material-page: ${material.page};
-  --material-annotation: ${material.annotation};
-  --material-card: ${material.card};
-  --material-suggestion: ${material.suggestion};
-  --material-diagram: ${material.diagram};
-  --material-vellum: ${material.vellum};
+  --material-worn: ${material.worn};
+  --material-sticky-note: ${material.stickyNote};
+  --material-index-card: ${material.indexCard};
+  --material-card-stock: ${material.cardStock};
+  --material-clipping: ${material.clipping};
 }
 
 /* Tighter vertical rhythm on narrow screens */

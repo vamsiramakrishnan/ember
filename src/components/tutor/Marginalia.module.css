@@ -1,17 +1,14 @@
-/* Marginalia (2.1) — Tutor's prose response, annotation in the margin.
- * Feels like an annotation slip laid on the student's page —
- * warm parchment tint, gentle shadow, the red rule is the binding
- * edge of the slip. */
+/* Marginalia (2.1) — Tutor's prose annotation in the margin.
+ * Written ON the page, not floating above it. The left rule and
+ * terracotta ink are the only depth signals. No background, no shadow.
+ * The tutor wrote this in the margin with a different pen. */
 
 .container {
   display: grid;
   grid-template-columns: var(--margin-rule-width) 1fr;
   gap: var(--margin-rule-gap);
   margin-bottom: var(--entry-gap);
-  padding: 14px 16px 14px 0;
-  background: var(--material-annotation);
-  border-radius: 3px;
-  box-shadow: var(--depth-inset);
+  padding-top: 2px;
   animation: marginFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
@@ -19,7 +16,7 @@
   width: var(--margin-rule-width);
   background-color: var(--margin);
   opacity: 0.3;
-  border-radius: 3px 0 0 3px;
+  border-radius: 1px;
   min-height: 24px;
 }
 
@@ -32,9 +29,7 @@
   letter-spacing: 0;
 }
 
-.prose {
-  margin: 0;
-}
+.prose { margin: 0; }
 
 @keyframes marginFadeIn {
   from { opacity: 0; transform: translateY(7px); }
@@ -42,9 +37,6 @@
 }
 
 @media (max-width: 500px) {
-  .container {
-    padding: 10px 12px 10px 0;
-  }
   .text {
     font-size: 16.5px;
     line-height: 1.68;
