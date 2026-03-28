@@ -24,11 +24,15 @@ In linear mode, elements obey these rules:
 
 **Vertical stacking.** Every element sits below the one before it, separated by its specified bottom margin. There is no horizontal arrangement in linear mode (except for the margin zone on wide screens, which is reserved for the tutor's ambient elements).
 
-**Voice alternation.** The natural rhythm of the notebook alternates between the student's voice and the tutor's voice. Two consecutive tutor elements (e.g., marginalia followed immediately by a Socratic question) are permitted, but three are not. The tutor does not monologue. Conversely, multiple consecutive student elements are always permitted — the student can write as much as they want before the tutor speaks.
+**Voice alternation.** The natural rhythm of the notebook alternates between the student's voice and the tutor's voice. Compound responses (see 03-interaction-language.md, §Compound responses) permit sequences of tutor elements that form a single pedagogical move — a connection followed by a thinker card followed by a Socratic question. But the two-beat rule constrains these: at most two heavy elements and one light element per compound response. The tutor does not monologue. Conversely, multiple consecutive student elements are always permitted — the student can write as much as they want before the tutor speaks.
 
 **Gravity.** New elements always appear at the bottom of the notebook. The student cannot insert an element between two existing elements in linear mode. This preserves chronological integrity — the notebook is a record of thinking in time.
 
-**Permanence.** Elements in the notebook are permanent. They can be crossed out (rendered in `ink-ghost` with a horizontal strike) but not deleted. The student cannot edit a submitted element — they can write a new one that revises or corrects it. This is a philosophical commitment: the notebook is honest about the process of thought, including its false starts and corrections.
+**Permanence and revision.** The notebook preserves the record of thought. Submitted entries are not deleted. They can be crossed out (rendered in `ink-ghost` with a horizontal strike), which marks them as superseded while preserving them as a visible trace of thinking. Mistakes are part of the record. Notebooks don't have undo.
+
+However, permanence operates at the level of the *intellectual record*, not at the level of keystrokes. The student can correct a typographical error or rephrase for clarity within a recently submitted entry — this is editing in the sense of a writer reviewing their page, not in the sense of rewriting history. The system preserves the entry's original timestamp and marks edited entries with a quiet "(edited)" notation in `ink-ghost` IBM Plex Mono 9px. The tutor sees both the original and revised text in its context window.
+
+The distinction is: *what you thought* is permanent; *how you typed it* is not. A student who writes "I think the answr is gravity" and corrects it to "I think the answer is gravity" is fixing a typo. A student who writes "I think the answer is gravity" and changes it to "I think the answer is magnetism" is revising their thinking — the original should be preserved as a cross-out, not silently replaced. The system enforces this by limiting in-place edits to a brief window after submission (implementation-dependent, but no more than a few minutes) and by requiring cross-out for substantive changes thereafter.
 
 ### Spatial mode: the canvas
 
@@ -162,6 +166,60 @@ Marginalia (tutor: "Notice the root 'harmonia' — it means 'to fit together'")
 
 This pattern enriches the Lexicon view over time. Each term accumulates etymological depth through the natural flow of sessions, not through a separate "etymology lesson."
 
+### Pattern 8: The structured teaching sequence
+
+When the tutor needs to teach through structured material rather than conversational marginalia.
+
+```
+Connection (tutor: "You asked about how computers decide things.
+   Let me show you the idea that started it all.")
+  → Reading Material (tutor: "Boolean Algebra" — 4 slides,
+     from Boole's original insight to modern logic gates)
+    → [Student reads at their own pace]
+      → Silence
+        → Exercise Set (tutor: 3 problems applying Boolean logic
+           to decisions the student encounters)
+          → Socratic Question (tutor: "Now — what can Boolean logic
+             not express? What kinds of decisions break the model?")
+```
+
+The structured teaching sequence respects the two-beat rule by separating the teaching moves with student actions. The reading material is one response. The exercise set is a separate response, delivered only after the student has engaged with the reading. The sequence feels like a single teaching arc, but it unfolds across multiple conversational turns.
+
+### Pattern 9: The media response
+
+When the student brings something from outside the notebook.
+
+```
+Image Entry (student: photo of a whiteboard from school)
+  → Marginalia (tutor: "I can see the diagram your teacher drew.
+     The way they've shown the forces is interesting —
+     but notice what's missing.")
+    → Inline Response (tutor: targeting a specific part of the image,
+       intent: 'explain')
+      → Socratic Question (tutor: "Your teacher drew gravity as a
+         single arrow. What happens when you consider the other body?")
+```
+
+Media entries are treated as student contributions — the tutor responds to them with the same intellectual seriousness as prose. The inline response (9.1) allows the tutor to address a specific aspect of the uploaded content rather than responding to the whole.
+
+### Pattern 10: The practice loop
+
+When the student is at the mastery edge and needs repetition to solidify understanding.
+
+```
+Socratic Question (tutor)
+  → Silence
+    → Prose Entry (student: demonstrates understanding)
+      → Marginalia (tutor: confirms and extends)
+        → Flashcard Deck (tutor: crystallises the key concepts
+           from this sequence into recall cards)
+          → Directive (tutor: "Try explaining harmonic ratios
+             to someone at home tonight. The test of understanding
+             is whether you can make someone else see it.")
+```
+
+The practice loop uses flashcards and directives as consolidation tools — they appear only after the student has demonstrated understanding through conversation. They are never the opening move. The directive extends learning beyond the notebook, which is important: aristocratic tutoring happened in a life, not in an app.
+
 ---
 
 ## The grammar of voices
@@ -178,7 +236,9 @@ The student has access to both linear and spatial tools. They can write, sketch,
 
 The tutor's elements are offset from the main column — either by the 3px margin rule (for marginalia), by the tinted background (for Socratic questions), or by the right-margin position (for ambient references). They are set in Cormorant Garamond — more formal, more authoritative, but lighter in weight. The tutor's ink is `margin` — a warm terracotta that sits beside the student's `ink` without competing.
 
-The tutor has access to a smaller set of tools than the student. The tutor can write marginalia, ask questions, create concept diagrams, introduce thinkers, place ambient references, and create cards. The tutor cannot create canvases, draw connectors, or pin threads. The spatial arrangement is the student's domain.
+The tutor has access to a larger palette than the original seven families: marginalia, questions, concept diagrams, thinker introductions, ambient references, cards, reading materials, flashcard decks, exercise sets, illustrations, visualizations, podcasts, code cells, directives, reflections, and citations (see Family 9 in the Component Inventory). But a larger palette does not mean a louder voice. The extended elements obey the same rules: they sit in the margin, they are introduced with context, and they never exceed the two-beat compound response rule. A flashcard deck is still marginalia in spirit — the tutor placing something on the desk for the student to pick up when they're ready.
+
+The tutor cannot create canvases, draw connectors, or pin threads. The spatial arrangement is the student's domain.
 
 ### The system's voice: metadata, structure, periphery
 

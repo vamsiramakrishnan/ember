@@ -121,6 +121,45 @@ All body text — student writing, tutor marginalia, descriptions — is set wit
 
 System text (IBM Plex Mono) uses a tighter 1.4 line-height, because it is meant to be glanced at, not read.
 
+### Responsive adjustments
+
+The scale above is the canonical scale at desktop widths (768px and above). On narrower viewports, type sizes adjust to maintain readability at shorter reading distances (a phone held in the hand, approximately 25–35cm). The adjustments are minimal — Ember is not a mobile-first product, and the notebook metaphor assumes a surface large enough to write on — but they prevent text from becoming physically difficult to read on small screens.
+
+| Role | ≥768px (canonical) | 480–767px | <480px |
+|---|---|---|---|
+| Page title | 28px | 24px | 22px |
+| Section header | 20px | 18px | 17px |
+| Tutor marginalia | 17.5px | 16.5px | 16px |
+| Tutor question | 18px | 17px | 16px |
+| Student text | 18px | 17px | 16px |
+| Body secondary | 15px | 14px | 14px |
+| Thinker name | 22px | 20px | 18px |
+| Section label | 13px | 12px | 12px |
+| System metadata | 11px | 11px | 10px |
+
+At the smallest breakpoint, the student's input text is set at 16px to prevent iOS auto-zoom on focus. Line-height remains 1.75–1.80 at all breakpoints — the generous leading is essential regardless of screen size.
+
+### Rendered markdown content
+
+The tutor's responses (Marginalia, Socratic Question, Reading Material) and the student's prose entries are rendered as markdown. The following typography applies to rendered elements within those containers:
+
+| Rendered element | Typeface | Size | Weight | Colour | Notes |
+|---|---|---|---|---|---|
+| Paragraph | Inherits container | — | — | — | Matches the enclosing element's type style |
+| Bold (`**text**`) | Inherits | — | 500 | — | Medium weight, never heavier |
+| Italic (`*text*`) | Inherits | — | — | — | Italic variant of container face |
+| Inline code (`` `code` ``) | IBM Plex Mono | 0.88em | 400 | `ink-soft` | `paper-deep` background, 2px 5px padding, 2px radius |
+| Code block (``` ``` ```) | IBM Plex Mono | 13px | 400 | `ink` | `paper-warm` background, 12px 16px padding, 2px radius |
+| Blockquote | Inherits | — | — | `ink-faint` | 1px `rule` left border, 16px left padding |
+| Table header | Cormorant Garamond | 13px | 500 | `ink` | Uppercase, 1px letter-spacing, `paper-deep` background |
+| Table cell | Crimson Pro | 14px | 400 | `ink-soft` | 10px 12px padding, 1px `rule-light` borders |
+| List item | Inherits | — | — | — | Bullet: `·` in `ink-ghost`, 8px left of text |
+| Link | Inherits | — | — | `margin` | Underline in `margin-dim`, no colour change on hover |
+| Math (KaTeX) | KaTeX default | 1.0em | — | `ink` | Centred for display, inline otherwise, `paper-warm` background on display |
+| Horizontal rule | — | — | — | `rule` | 1px, 60% column width, centred, 24px vertical margin |
+
+When markdown renders inside a tutor container (Marginalia, Socratic Question), all typefaces inherit the tutor's voice (Cormorant Garamond). When it renders inside a student container (Prose Entry), all typefaces inherit the student's voice (Crimson Pro). The rendered elements never introduce a third voice — the markdown is transparent to the voice system.
+
 ---
 
 ## Spacing
@@ -166,6 +205,18 @@ Design principles and body content beneath a heading are indented 38px from the 
 Ember's surfaces are flat. There are no box shadows, no elevation layers, no card-like surfaces floating above backgrounds. The metaphor is a page on a desk — a single plane. The only depth comes from the contrast between ink and paper.
 
 If a surface must be distinguished (the question block, the mastery suggestion), it is done through a background tint so subtle it barely registers consciously. The tint values are 7–10% opacity of the accent colour. This creates the sense of a faint watercolour wash, not of a coloured card.
+
+### Ambient texture
+
+The notebook's background carries a faint, generative texture layer — a visual atmosphere derived from the session's topic. A session exploring orbital mechanics may carry the ghost of star charts; a session on language may carry the ghost of manuscript pages. The texture is rendered at 4% opacity over the `paper` background, tiling at 512×512px. It is perceptible only at the threshold of consciousness — the student never notices it, but would notice its absence.
+
+The ambient texture is not decoration. It serves the governing metaphor: a desk in a library accumulates the atmosphere of the books that have been open on it. The texture is that atmosphere — a residue of subject matter, not an illustration of it.
+
+Constraints:
+- Maximum opacity: 4%. Higher values compete with ink.
+- Colour range: monochromatic, derived from `ink-ghost`. No colour that would register as an accent.
+- Subject matter: abstract, textural, suggestive. Never representational (no planets, no portraits, no equations). The texture should feel like a watermark, not a wallpaper.
+- Fallback: if texture generation fails or is unavailable, the background is plain `paper`. The texture is always optional.
 
 ### Borders and rules
 
