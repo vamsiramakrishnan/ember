@@ -1,10 +1,12 @@
 /**
  * KnowledgeCanvas — relationship-driven knowledge graph visualization.
- * Renders warm paper cards (GraphCardNode) over organic SVG edges (GraphEdgeLayer),
- * driven by force-directed layout. Drag cards to rearrange; click to focus.
+ * was: fixed 900x520px, no inline expansion, no density encoding
+ * now: responsive container, inline card expansion, edge-weight styling,
+ *      connection-count density scaling on cards
+ *
  * See: 06-component-inventory.md, Family 4.
  */
-import { useCallback, useRef, useMemo } from 'react';
+import { useCallback, useRef, useMemo, useState, useEffect } from 'react';
 import { useGraphCanvas } from '@/hooks/useGraphCanvas';
 import { useForceLayout } from '@/hooks/useForceLayout';
 import { useGraphPositions } from '@/hooks/useGraphPositions';
@@ -13,17 +15,36 @@ import { CanvasMode } from './CanvasMode';
 import { GraphCardNode } from './GraphCardNode';
 import { GraphEdgeLayer } from './GraphEdgeLayer';
 import { GraphFilters } from './GraphFilters';
-import { GraphDetail } from './GraphDetail';
 import type { SavedPosition } from '@/types/graph-canvas';
 import styles from './KnowledgeCanvas.module.css';
 
-const CANVAS_WIDTH = 900;
-const CANVAS_HEIGHT = 520;
+/** was: fixed 900x520, now: measured from container, min 600x400 */
+const MIN_WIDTH = 600;
+const MIN_HEIGHT = 400;
 
 export function KnowledgeCanvas() {
   const { notebook } = useStudent();
   const notebookId = notebook?.id ?? null;
   const containerRef = useRef<HTMLDivElement>(null);
+  const [dimensions, setDimensions] = useState({ width: 900, height: 520 });
+
+  /* Responsive: measure container on mount and resize.
+   * was: hardcoded CANVAS_WIDTH/HEIGHT
+   * now: fills available space, minimum 600x400 */
+  useEffect(() => {
+    const measure = () => {
+      if (!containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      setDimensions({
+        width: Math.max(rect.width, MIN_WIDTH),
+        height: Math.max(Math.min(rect.width * 0.58, 640), MIN_HEIGHT),
+      });
+    };
+    measure();
+    const obs = new ResizeObserver(measure);
+    if (containerRef.current) obs.observe(containerRef.current);
+    return () => obs.disconnect();
+  }, []);
 
   const {
     nodes, edges, allNodes, filters, toggleFilter,
@@ -31,7 +52,7 @@ export function KnowledgeCanvas() {
   } = useGraphCanvas();
 
   const { layoutNodes, pinNode } = useForceLayout(nodes, edges, {
-    width: CANVAS_WIDTH, height: CANVAS_HEIGHT, enabled: true,
+    width: dimensions.width, height: dimensions.height, enabled: true,
   });
 
   const onRestored = useCallback((positions: SavedPosition[]) => {
@@ -39,6 +60,22 @@ export function KnowledgeCanvas() {
   }, [pinNode]);
 
   const { savePositions } = useGraphPositions(notebookId, nodes, onRestored);
+
+  /* Precompute per-node data: connection count + neighbor list.
+   * was: computed only for focused node, now: available for all nodes */
+  const nodeData = useMemo(() => {
+    const map = new Map<string, { count: number; neighbors: { id: string; label: string; kind: string }[] }>();
+    for (const node of allNodes) {
+      const connected = edges.filter((e) => e.from === node.id || e.to === node.id);
+      const neighbors = connected.map((e) => {
+        const otherId = e.from === node.id ? e.to : e.from;
+        const o = allNodes.find((n) => n.id === otherId);
+        return o ? { id: o.id, label: o.label, kind: o.kind } : null;
+      }).filter((n): n is NonNullable<typeof n> => n !== null);
+      map.set(node.id, { count: connected.length, neighbors });
+    }
+    return map;
+  }, [allNodes, edges]);
 
   const dragRef = useRef<{ id: string; ox: number; oy: number } | null>(null);
 
@@ -68,22 +105,6 @@ export function KnowledgeCanvas() {
   const onNodeHoverIn = useCallback((id: string) => setHoverId(id), [setHoverId]);
   const onNodeHoverOut = useCallback(() => setHoverId(null), [setHoverId]);
 
-  const focusNode = useMemo(
-    () => (focusId ? allNodes.find((n) => n.id === focusId) ?? null : null),
-    [focusId, allNodes],
-  );
-  const focusNeighbors = useMemo(() => {
-    if (!focusId) return [];
-    return edges
-      .filter((e) => e.from === focusId || e.to === focusId)
-      .map((e) => {
-        const otherId = e.from === focusId ? e.to : e.from;
-        const o = allNodes.find((n) => n.id === otherId);
-        return o ? { id: o.id, label: o.label, type: o.kind } : null;
-      })
-      .filter((n): n is NonNullable<typeof n> => n !== null);
-  }, [focusId, edges, allNodes]);
-
   const activeId = focusId ?? hoverId;
   const activeSet = useMemo(() => {
     if (!activeId) return null;
@@ -98,33 +119,41 @@ export function KnowledgeCanvas() {
   const isEmpty = nodes.length === 0;
 
   return (
-    <CanvasMode label="knowledge graph" minHeight={CANVAS_HEIGHT + 80}>
+    <CanvasMode label="knowledge graph" minHeight={dimensions.height + 80}>
       <GraphFilters filters={filters} onToggle={toggleFilter} />
       {isEmpty ? (
         <p className={styles.empty}>
           Concepts, thinkers, and connections will appear here as you explore.
         </p>
       ) : (
-        <div ref={containerRef} className={styles.field} onClick={onBgClick}
-          style={{ width: CANVAS_WIDTH, height: CANVAS_HEIGHT }}>
+        <div
+          ref={containerRef}
+          className={styles.field}
+          onClick={onBgClick}
+          style={{ height: dimensions.height }}
+        >
           <GraphEdgeLayer
             nodes={layoutNodes} edges={edges}
             focusId={focusId} hoverId={hoverId}
-            width={CANVAS_WIDTH} height={CANVAS_HEIGHT}
+            width={dimensions.width} height={dimensions.height}
           />
-          {layoutNodes.map((node) => (
-            <GraphCardNode key={node.id} node={node}
-              focused={focusId === node.id}
-              dimmed={activeSet !== null && !activeSet.has(node.id)}
-              onMouseDown={onNodeMouseDown}
-              onMouseEnter={onNodeHoverIn}
-              onMouseLeave={onNodeHoverOut}
-              onClick={setFocusId}
-            />
-          ))}
+          {layoutNodes.map((node) => {
+            const data = nodeData.get(node.id);
+            return (
+              <GraphCardNode key={node.id} node={node}
+                focused={focusId === node.id}
+                dimmed={activeSet !== null && !activeSet.has(node.id)}
+                connectionCount={data?.count ?? 0}
+                neighbors={data?.neighbors ?? []}
+                onMouseDown={onNodeMouseDown}
+                onMouseEnter={onNodeHoverIn}
+                onMouseLeave={onNodeHoverOut}
+                onClick={setFocusId}
+              />
+            );
+          })}
         </div>
       )}
-      {focusNode && <GraphDetail node={focusNode} neighbors={focusNeighbors} />}
     </CanvasMode>
   );
 }

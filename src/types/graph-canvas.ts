@@ -21,6 +21,9 @@ export interface CanvasNode {
 export interface GraphEdge {
   from: string;
   to: string;
+  /** The relation type (e.g., "explores", "bridges-to") — used for edge styling. */
+  relation: string;
+  /** Optional descriptive label (metadata text). */
   label?: string;
   weight: number;
 }

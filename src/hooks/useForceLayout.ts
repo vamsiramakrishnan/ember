@@ -1,5 +1,10 @@
 /**
  * useForceLayout — force-directed layout for the knowledge graph.
+ * was: uniform attraction (0.005) regardless of edge weight
+ * now: attraction scales with edge.weight, kind-based repulsion modifiers
+ * reason: stronger relationships should pull nodes closer; related concepts
+ *         should cluster while different kinds maintain visual separation
+ *
  * Respects prefers-reduced-motion by snapping to final positions.
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -7,11 +12,20 @@ import type { CanvasNode, GraphEdge, LayoutNode } from '@/types/graph-canvas';
 
 interface ForceOptions { width: number; height: number; enabled: boolean }
 
-const REPULSION = 3000;
-const ATTRACTION = 0.005;
+/* was: REPULSION=3000, ATTRACTION=0.005 (fixed)
+ * now: ATTRACTION_BASE=0.003, scaled by edge.weight (0.003–0.012)
+ * reason: weighted attraction creates meaningful clusters */
+const REPULSION = 3500;
+const ATTRACTION_BASE = 0.003;
+const ATTRACTION_WEIGHT_SCALE = 0.003;
 const DAMPING = 0.85;
 const MIN_VELOCITY = 0.1;
 const MAX_TICKS = 300;
+
+/** Same-kind nodes repel less — they cluster gently.
+ * was: uniform repulsion, now: 0.7x for same-kind pairs
+ * reason: concepts should drift toward concepts, thinkers toward thinkers */
+const SAME_KIND_REPULSION_FACTOR = 0.7;
 
 function initLayout(nodes: CanvasNode[], width: number, height: number): LayoutNode[] {
   const cx = width / 2;
@@ -43,12 +57,14 @@ function tick(nodes: LayoutNode[], edges: GraphEdge[], width: number, height: nu
       const dx = node.x - other.x;
       const dy = node.y - other.y;
       const dist = Math.max(Math.sqrt(dx * dx + dy * dy), 1);
-      const force = REPULSION / (dist * dist);
+      /* Same-kind repulsion is reduced so similar nodes cluster */
+      const kindFactor = node.kind === other.kind ? SAME_KIND_REPULSION_FACTOR : 1;
+      const force = (REPULSION * kindFactor) / (dist * dist);
       fx += (dx / dist) * force;
       fy += (dy / dist) * force;
     }
 
-    // Attraction along edges
+    // Attraction along edges — scaled by weight
     for (const edge of edges) {
       let other: LayoutNode | undefined;
       if (edge.from === node.id) other = nodes.find((n) => n.id === edge.to);
@@ -56,8 +72,11 @@ function tick(nodes: LayoutNode[], edges: GraphEdge[], width: number, height: nu
       if (!other) continue;
       const dx = other.x - node.x;
       const dy = other.y - node.y;
-      fx += dx * ATTRACTION;
-      fy += dy * ATTRACTION;
+      /* was: fixed 0.005, now: base + weight contribution
+       * stronger edges pull nodes closer together */
+      const strength = ATTRACTION_BASE + edge.weight * ATTRACTION_WEIGHT_SCALE;
+      fx += dx * strength;
+      fy += dy * strength;
     }
 
     // Centering force
@@ -112,7 +131,6 @@ export function useForceLayout(
 
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReduced) {
-      // Run simulation to completion synchronously
       for (let i = 0; i < MAX_TICKS; i++) {
         tick(nodesRef.current, edges, width, height);
         if (isSettled(nodesRef.current)) break;
