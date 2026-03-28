@@ -1,4 +1,7 @@
-/* LandingHero — the first breath. The page opens. */
+/* LandingHero — split layout: tagline left, notebook demo right.
+ * was: centered title only
+ * now: two-column hero with live notebook preview
+ * reason: show what Ember is from the first screen */
 
 .hero {
   min-height: 100vh;
@@ -6,12 +9,26 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 48px 24px;
+  padding: 80px 24px 48px;
   position: relative;
+  gap: 48px;
 }
 
+/* On wide screens: two-column split */
+@media (min-width: 860px) {
+  .hero {
+    flex-direction: row;
+    gap: 64px;
+    padding: 48px 48px;
+    max-width: 1120px;
+    margin: 0 auto;
+  }
+}
+
+/* ─── Left column: title + tagline ─── */
+
 .content {
-  text-align: center;
+  flex: 0 1 420px;
   opacity: 0;
   transform: translateY(12px);
   transition: opacity 1.2s ease, transform 1.2s ease;
@@ -22,24 +39,39 @@
   transform: translateY(0);
 }
 
-.title {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 64px;
+.timestamp {
+  font-family: var(--font-system);
+  font-size: 11px;
   font-weight: 300;
-  letter-spacing: 8px;
-  color: var(--ink);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink-ghost);
+  display: block;
   margin-bottom: 16px;
-  text-transform: lowercase;
-  line-height: 1.1;
+}
+
+.title {
+  font-family: var(--font-tutor);
+  font-size: 42px;
+  font-weight: 300;
+  color: var(--ink);
+  line-height: 1.15;
+  letter-spacing: -0.3px;
+  margin: 0 0 20px;
+}
+
+.titleEmphasis {
+  font-style: italic;
+  font-family: var(--font-tutor);
 }
 
 .tagline {
-  font-family: 'Crimson Pro', serif;
-  font-size: 18px;
-  font-weight: 300;
+  font-family: var(--font-student);
+  font-size: 17px;
+  font-weight: 400;
   color: var(--ink-faint);
-  letter-spacing: 0.5px;
-  line-height: 1.6;
+  line-height: 1.7;
+  max-width: 380px;
 }
 
 /* Blinking cursor — like a patient mind waiting */
@@ -47,11 +79,64 @@
   width: 1px;
   height: 20px;
   background: var(--margin);
-  margin: 32px auto 0;
+  margin-top: 28px;
   animation: emberCursorBlink 1.2s ease infinite;
 }
 
-/* Scroll invitation — a thin descending line */
+/* ─── Right column: notebook frame ─── */
+
+.frameWrap {
+  flex: 0 1 560px;
+  opacity: 0;
+  transform: translateY(10px) perspective(1000px) rotateX(2deg) rotateY(-1deg);
+  transition: opacity 1.4s ease 0.3s, transform 1.4s cubic-bezier(0.16, 1, 0.3, 1) 0.3s;
+}
+
+.frameWrap.frameRevealed {
+  opacity: 1;
+  transform: translateY(0) perspective(1000px) rotateX(0deg) rotateY(0deg);
+}
+
+.frame {
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  overflow: hidden;
+  background: var(--paper-warm);
+}
+
+.titleBar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--rule-light);
+  background: var(--paper);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--rule);
+}
+
+.barLabel {
+  font-family: var(--font-tutor);
+  font-size: 13px;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--ink-faint);
+  margin-left: auto;
+}
+
+.viewport {
+  min-height: 360px;
+  padding: 28px 32px 24px;
+  overflow: hidden;
+}
+
+/* ─── Scroll hint ─── */
+
 .scrollHint {
   position: absolute;
   bottom: 40px;
@@ -69,11 +154,7 @@
   display: block;
   width: 1px;
   height: 40px;
-  background: linear-gradient(
-    to bottom,
-    var(--ink-ghost) 0%,
-    transparent 100%
-  );
+  background: linear-gradient(to bottom, var(--ink-ghost) 0%, transparent 100%);
   animation: scrollPulse 2.4s ease infinite;
 }
 
@@ -82,16 +163,25 @@
   50% { opacity: 0.6; transform: translateY(6px); }
 }
 
-/* Reduced motion */
+/* ─── Reduced motion ─── */
 @media (prefers-reduced-motion: reduce) {
   .content { opacity: 1; transform: none; transition: none; }
+  .frameWrap { opacity: 1; transform: none; transition: none; }
   .cursor { animation: none; opacity: 0.3; }
   .scrollHint { opacity: 1; transition: none; }
   .scrollLine { animation: none; opacity: 0.4; }
 }
 
-/* Mobile: smaller title */
+/* ─── Mobile: stack vertically, smaller title ─── */
+@media (max-width: 860px) {
+  .content { text-align: center; flex: none; }
+  .tagline { margin: 0 auto; }
+  .cursor { margin: 28px auto 0; }
+  .frameWrap { flex: none; width: 100%; max-width: 560px; }
+}
+
 @media (max-width: 640px) {
-  .title { font-size: 48px; letter-spacing: 6px; }
+  .title { font-size: 32px; }
   .tagline { font-size: 16px; }
+  .viewport { min-height: 320px; padding: 20px 16px 16px; }
 }
