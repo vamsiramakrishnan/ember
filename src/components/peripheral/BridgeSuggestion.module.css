@@ -1,10 +1,16 @@
 .suggestion {
   background: var(--sage-dim);
   border-radius: 2px;
-  padding: 16px 20px;
-  margin-top: 8px;
-  margin-bottom: 20px;
+  padding: 14px 18px;
+  margin-top: 4px;
+  margin-bottom: var(--entry-gap);
   border-left: 2px solid var(--sage);
+}
+
+@media (max-width: 800px) {
+  .suggestion {
+    padding: 12px 14px;
+  }
 }
 
 .text {

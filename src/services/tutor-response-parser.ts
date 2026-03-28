@@ -72,6 +72,19 @@ function mapToEntry(parsed: Record<string, unknown>): NotebookEntry | null {
       layout: validLayout(parsed.layout),
     };
   }
+  // System types that may appear in responses
+  if (type === 'silence') {
+    return {
+      type: 'silence',
+      text: typeof parsed.text === 'string' ? parsed.text : undefined,
+    };
+  }
+  if (type === 'tutor-reflection' && typeof parsed.content === 'string') {
+    return { type: 'tutor-reflection', content: parsed.content };
+  }
+  if (type === 'bridge-suggestion' && typeof parsed.content === 'string') {
+    return { type: 'bridge-suggestion', content: parsed.content };
+  }
   // Fallback: if it has content, treat as marginalia
   if (typeof parsed.content === 'string') {
     return { type: 'tutor-marginalia', content: parsed.content };

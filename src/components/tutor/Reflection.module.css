@@ -1,8 +1,8 @@
 /* Reflection — session synthesis. More spacious than marginalia. */
 
 .container {
-  padding: 24px 0;
-  margin: 16px 0;
+  padding: 16px 0;
+  margin: 8px 0 var(--entry-gap);
 }
 
 .rule {
@@ -21,6 +21,18 @@
   line-height: 1.8;
   text-align: center;
   letter-spacing: 0;
-  margin: 16px 0;
-  padding: 0 32px;
+  margin: 12px 0;
+  padding: 0 24px;
+}
+
+@media (max-width: 800px) {
+  .container {
+    padding: 10px 0;
+    margin: 4px 0 var(--entry-gap);
+  }
+  .text {
+    font-size: 14px;
+    margin: 8px 0;
+    padding: 0 16px;
+  }
 }
