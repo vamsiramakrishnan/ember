@@ -118,6 +118,7 @@ describe('proxy-client', () => {
         }
         return { done: true, value: undefined };
       }),
+      releaseLock: vi.fn(),
     };
 
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
@@ -142,6 +143,7 @@ describe('proxy-client', () => {
         }
         return { done: true, value: undefined };
       }),
+      releaseLock: vi.fn(),
     };
 
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
