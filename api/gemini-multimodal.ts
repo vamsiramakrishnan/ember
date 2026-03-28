@@ -77,6 +77,9 @@ export default async function handler(req: Request): Promise<Response> {
     ? EXTRACT_PROMPT
     : (body.prompt ?? DEFAULT_ANALYSE_PROMPT);
 
+  const startMs = Date.now();
+  console.log(JSON.stringify({ fn: 'gemini-multimodal', event: 'request', mode: body.mode ?? 'analyse', mimeType: body.mimeType, search: !!body.useSearch }));
+
   try {
     const response = await client.models.generateContentStream({
       model: 'gemini-3.1-flash-lite-preview',
@@ -103,12 +106,15 @@ export default async function handler(req: Request): Promise<Response> {
       }
     }
 
+    const text = chunks.join('');
+    console.log(JSON.stringify({ fn: 'gemini-multimodal', event: 'done', chars: text.length, durationMs: Date.now() - startMs }));
     return new Response(
-      JSON.stringify({ text: chunks.join('') }),
+      JSON.stringify({ text }),
       { headers: { 'Content-Type': 'application/json' } },
     );
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';
+    console.error(JSON.stringify({ fn: 'gemini-multimodal', event: 'error', durationMs: Date.now() - startMs, error: message }));
     return new Response(
       JSON.stringify({ error: message }),
       { status: 502, headers: { 'Content-Type': 'application/json' } },

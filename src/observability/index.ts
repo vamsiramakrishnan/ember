@@ -8,7 +8,7 @@ export type { LogLevel, LogContext, Logger } from './logger';
 export { initSentry, captureError, captureMessage, setUser, clearUser } from './sentry';
 export { mark, measure, trackInteraction, trackRender, reportWebVitals } from './perf';
 export type { PerfMetric } from './perf';
-export { initAnalytics, trackEvent } from './analytics';
+export { initAnalytics, trackEvent, trackWebVital } from './analytics';
 export { initOtel, traced, tracedSync, getTracer, isOtelEnabled } from './otel';
 export {
   traceAgentDispatch, traceDbOp, traceCrdtSync,

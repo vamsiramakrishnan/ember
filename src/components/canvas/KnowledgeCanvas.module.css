@@ -1,9 +1,10 @@
-/* KnowledgeCanvas — relationship-driven graph layout */
+/* KnowledgeCanvas — relationship-driven graph layout.
+ * was: fixed 900x520, now: responsive, fills container width
+ * reason: cramped canvas limits spatial exploration */
 
 .field {
   position: relative;
-  margin: 0 auto;
-  max-width: 100%;
+  width: 100%;
   overflow: visible;
 }
 

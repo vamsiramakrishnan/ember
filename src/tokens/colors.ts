@@ -24,6 +24,8 @@ export const colors = {
   margin: '#B8564F',
   /** Background tint for tutor's questions. 7% opacity. */
   marginDim: 'rgba(184, 86, 79, 0.07)',
+  /** Text selection highlight. 15% opacity — visible but warm. */
+  selectionHighlight: 'rgba(196, 154, 60, 0.22)',
 
   /** Mastery, growth, fluency. Cloth-bound green. */
   sage: '#6B8F71',

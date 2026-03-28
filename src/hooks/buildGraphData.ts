@@ -53,6 +53,7 @@ export function buildGraphData(
     edges.push({
       from: r.from,
       to: r.to,
+      relation: r.type,
       weight: r.weight ?? 1,
       label: r.meta,
     });

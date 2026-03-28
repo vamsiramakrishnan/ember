@@ -28,7 +28,7 @@ describe('useForceLayout', () => {
   ];
 
   const edges: GraphEdge[] = [
-    { from: 'n1', to: 'n2', weight: 1 },
+    { from: 'n1', to: 'n2', relation: 'explores', weight: 1 },
   ];
 
   it('initializes layout nodes from input', () => {

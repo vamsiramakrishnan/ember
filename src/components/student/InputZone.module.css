@@ -35,6 +35,15 @@
   scrollbar-color: var(--rule-light) transparent;
 }
 
+/* Submission morph: text shifts from input color to entry color before clearing.
+ * was: instant clear, now: 200ms color transition to ink-soft
+ * reason: smooths the transition from "writing" to "written" (audit P9) */
+.textareaSubmitting {
+  color: var(--ink-faint);
+  transition: color 200ms ease;
+  pointer-events: none;
+}
+
 .textarea::placeholder,
 .textareaHidden::placeholder {
   color: transparent;
@@ -163,12 +172,15 @@
   100% { border-left-color: color-mix(in srgb, var(--margin) 35%, transparent); }
 }
 
-/* Warm hint — visible when empty and unfocused */
+/* Warm hint — visible when empty and unfocused.
+ * was: font-family: var(--font-student) (Crimson Pro)
+ * now: font-family: var(--font-tutor) (Cormorant Garamond)
+ * reason: the placeholder represents the tutor's gentle invitation, not the student's voice */
 .hint {
   position: absolute;
   top: 24px;
   left: var(--text-indent);
-  font-family: var(--font-student);
+  font-family: var(--font-tutor);
   font-size: 16px;
   font-weight: 300;
   font-style: italic;
@@ -233,6 +245,7 @@
   .hint, .affordances { transition: none; }
   .cursor { animation: none; opacity: 0.3; }
   .sketchToggle { transition: none; }
+  .textareaSubmitting { transition: none; }
   .typeIndicator,
   .typeIndicatorQuestion,
   .typeIndicatorHypothesis,

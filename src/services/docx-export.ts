@@ -6,26 +6,16 @@ import {
   Document, Packer, Paragraph, HeadingLevel, BorderStyle,
 } from 'docx';
 import { renderDocxSlide } from './docx-visual-aids';
+import { DOCX_COLORS } from './docx-constants';
 import type { ReadingSlide } from '@/types/entries';
 
-export const DOCX_COLORS = {
-  ink: '2C2825', inkSoft: '5C5550', inkFaint: '9B9590',
-  paper: 'F6F1EA', sage: '6B8F71', indigo: '5B6B8A',
-  amber: 'C49A3C', margin: 'B8564F', rule: 'DDD6CC',
-};
+// Re-export for existing consumers
+export { DOCX_COLORS, stripMd } from './docx-constants';
 
 const ACCENT_HEX: Record<string, string> = {
   sage: DOCX_COLORS.sage, indigo: DOCX_COLORS.indigo,
   amber: DOCX_COLORS.amber, margin: DOCX_COLORS.margin,
 };
-
-export function stripMd(md: string): string {
-  return md
-    .replace(/\*\*(.+?)\*\*/g, '$1').replace(/\*(.+?)\*/g, '$1')
-    .replace(/_(.+?)_/g, '$1').replace(/`(.+?)`/g, '$1')
-    .replace(/^#{1,6}\s+/gm, '').replace(/^[-*+]\s+/gm, '• ')
-    .trim();
-}
 
 export async function exportToDocx(
   title: string, subtitle: string | undefined, slides: ReadingSlide[],

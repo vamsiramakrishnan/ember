@@ -3,9 +3,12 @@
  * The design principles and intellectual foundation of Ember.
  * See: 04-information-architecture.md, Surface three.
  */
+import { useEffect } from 'react';
 import { Column } from '@/primitives/Column';
 import { Text } from '@/primitives/Text';
 import { Rule } from '@/primitives/Rule';
+import { PhilosophyStarfield } from './PhilosophyStarfield';
+import { traceSurfaceRender } from '@/observability';
 import { spacing } from '@/tokens/spacing';
 import styles from './Philosophy.module.css';
 
@@ -72,9 +75,11 @@ function PrincipleBlock({ principle }: { principle: Principle }) {
 }
 
 export function Philosophy() {
+  useEffect(() => { const done = traceSurfaceRender('Philosophy'); return done; }, []);
   return (
     <Column>
       <div className={styles.container}>
+        <PhilosophyStarfield />
         <Text variant="pageTitle" as="h1" style={{ marginBottom: 16 }}>
           Philosophy
         </Text>

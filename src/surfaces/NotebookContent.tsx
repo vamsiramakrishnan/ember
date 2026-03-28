@@ -32,6 +32,7 @@ import type { usePopupState } from '@/hooks/usePopupState';
 import { isStudentEntry as isStudentType } from './entryTypeMeta';
 import { useEntryKeyboardNav } from '@/hooks/useEntryKeyboardNav';
 import { ResponsePlanPreview } from '@/components/tutor/ResponsePlanPreview';
+import { NotebookEmptyState } from './NotebookEmptyState';
 import type { ResponsePlan } from '@/hooks/useResponseOrchestrator';
 import styles from './Notebook.module.css';
 
@@ -106,7 +107,9 @@ export function NotebookContent({
             {wideViewport && clusterGroups.map((ids, i) => (
               <ConversationRibbon key={i} entryIds={ids} />
             ))}
-            {entries.map((le, i) => {
+            {entries.length === 0 ? (
+              <NotebookEmptyState />
+            ) : entries.map((le, i) => {
               if (layout.isInMargin(le.id)) return (
                 <div key={le.id} data-entry-id={le.id} className={styles.marginAnchor} />
               );

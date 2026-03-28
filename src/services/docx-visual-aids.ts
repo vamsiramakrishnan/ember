@@ -6,7 +6,7 @@ import {
   Paragraph, TextRun, TableRow, TableCell, Table,
   WidthType, ShadingType, BorderStyle, AlignmentType,
 } from 'docx';
-import { DOCX_COLORS as C, stripMd } from './docx-export';
+import { DOCX_COLORS as C, stripMd } from './docx-constants';
 import type { ReadingSlide } from '@/types/entries';
 
 type DocxItem = Paragraph | Table;

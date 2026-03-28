@@ -4,7 +4,8 @@
  * Encounters, and Library drawn from prototypes.
  * See: 04-information-architecture.md, Surface two.
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { traceSurfaceRender, trackEvent } from '@/observability';
 import { Column } from '@/primitives/Column';
 import { Text } from '@/primitives/Text';
 import { Rule } from '@/primitives/Rule';
@@ -27,10 +28,15 @@ const viewTabs: { id: ConstellationView; label: string }[] = [
 ];
 
 export function Constellation() {
+  useEffect(() => { const done = traceSurfaceRender('Constellation'); return done; }, []);
   const { concepts, threads, thinkers, lexicon, encounters, library } =
     useMasteryData();
   const { notebook } = useStudent();
   const [view, setView] = useState<ConstellationView>('overview');
+  const handleViewChange = (v: ConstellationView) => {
+    setView(v);
+    trackEvent('constellation-tab', { view: v });
+  };
   const subtitle = notebook?.summary || notebook?.description;
 
   return (
@@ -67,7 +73,7 @@ export function Constellation() {
         )}
         <nav className={styles.subNav} aria-label="Constellation views">
           {viewTabs.map((tab) => (
-            <button key={tab.id} onClick={() => setView(tab.id)}
+            <button key={tab.id} onClick={() => handleViewChange(tab.id)}
               className={tab.id === view ? styles.subTabActive : styles.subTab}
               aria-current={tab.id === view ? 'page' : undefined}>
               {tab.label}

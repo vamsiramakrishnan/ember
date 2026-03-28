@@ -5,20 +5,82 @@
   min-height: 100vh;
 }
 
-/* Footer — the quiet closing */
+/* Footer — the quiet closing, now with two columns.
+ * was: single centered line, now: richer layout with links */
 .footer {
   padding: 48px 24px 56px;
-  text-align: center;
   border-top: 1px solid var(--rule-light);
 }
 
+.footerInner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+@media (min-width: 640px) {
+  .footerInner {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+}
+
+.footerBrand {
+  text-align: center;
+}
+
+@media (min-width: 640px) {
+  .footerBrand { text-align: left; }
+}
+
+.footerLogo {
+  font-family: var(--font-tutor);
+  font-size: 18px;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--ink-faint);
+  margin: 0 0 4px;
+}
+
 .footerText {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-system);
   font-size: 10px;
   font-weight: 300;
   color: var(--ink-ghost);
   letter-spacing: 1.5px;
   text-transform: lowercase;
+  margin: 0;
+}
+
+.footerLinks {
+  display: flex;
+  gap: 24px;
+}
+
+.footerLink {
+  font-family: var(--font-tutor);
+  font-size: 14px;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--ink-faint);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease, color 0.2s ease;
+  cursor: pointer;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  padding: 0;
+}
+
+.footerLink:hover {
+  color: var(--ink-soft);
+  border-bottom-color: var(--rule);
 }
 
 /* ─── Shared styles used by LandingStudentList ─── */

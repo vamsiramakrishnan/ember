@@ -11,6 +11,7 @@ import { useAuth } from '@/auth';
 import { LandingHero } from './LandingHero';
 import { LandingPhilosophy } from './LandingPhilosophy';
 import { LandingDemo } from './LandingDemo';
+import { LandingFeatures } from './LandingFeatures';
 import { LandingPrinciples } from './LandingPrinciples';
 import { LandingThreshold } from './LandingThreshold';
 import type { StudentRecord } from '@/persistence/records';
@@ -53,6 +54,7 @@ export function Landing() {
       <LandingHero />
       <LandingPhilosophy />
       <LandingDemo />
+      <LandingFeatures />
       <LandingPrinciples />
       <LandingThreshold
         students={students}
@@ -62,9 +64,18 @@ export function Landing() {
         signInWithOAuth={signInWithOAuth}
       />
       <footer className={styles.footer}>
-        <p className={styles.footerText}>
-          ember — aristocratic tutoring for every child
-        </p>
+        <div className={styles.footerInner}>
+          <div className={styles.footerBrand}>
+            <p className={styles.footerLogo}>Ember</p>
+            <p className={styles.footerText}>
+              aristocratic tutoring for every child
+            </p>
+          </div>
+          <nav className={styles.footerLinks}>
+            <button className={styles.footerLink}>Philosophy</button>
+            <button className={styles.footerLink}>Privacy</button>
+          </nav>
+        </div>
       </footer>
     </div>
   );

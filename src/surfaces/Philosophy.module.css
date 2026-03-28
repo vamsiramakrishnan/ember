@@ -1,5 +1,6 @@
 .container {
   margin-top: var(--session-header-top);
+  position: relative; /* was: static, now: relative, reason: anchor for starfield layer */
 }
 
 .question {

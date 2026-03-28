@@ -6,6 +6,7 @@
 import { DB_NAME, DB_VERSION, stores, type StoreName } from './schema';
 import { promisify, txDone as txComplete } from './idb-utils';
 import { createOplogStores } from './sync/oplog';
+import { traceDbOp } from '@/observability';
 
 let dbInstance: IDBDatabase | null = null;
 
@@ -75,10 +76,12 @@ export async function getByIndex<T>(
 
 /** Put a single record (insert or update). */
 export async function put<T>(storeName: StoreName, record: T): Promise<void> {
-  const db = await openDB();
-  const tx = db.transaction(storeName, 'readwrite');
-  tx.objectStore(storeName).put(record);
-  await txComplete(tx);
+  return traceDbOp('put', storeName, async () => {
+    const db = await openDB();
+    const tx = db.transaction(storeName, 'readwrite');
+    tx.objectStore(storeName).put(record);
+    await txComplete(tx);
+  });
 }
 
 /** Batch put — atomic write of multiple records to the same store. */
@@ -86,11 +89,13 @@ export async function putBatch<T>(
   storeName: StoreName,
   records: T[],
 ): Promise<void> {
-  const db = await openDB();
-  const tx = db.transaction(storeName, 'readwrite');
-  const store = tx.objectStore(storeName);
-  for (const record of records) store.put(record);
-  await txComplete(tx);
+  return traceDbOp('putBatch', storeName, async () => {
+    const db = await openDB();
+    const tx = db.transaction(storeName, 'readwrite');
+    const store = tx.objectStore(storeName);
+    for (const record of records) store.put(record);
+    await txComplete(tx);
+  });
 }
 
 /** Delete a record by key. */

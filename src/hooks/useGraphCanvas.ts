@@ -52,6 +52,7 @@ export function useGraphCanvas() {
       .map((r) => ({
         from: r.from,
         to: r.to,
+        relation: r.type,
         label: r.meta,
         weight: r.weight,
       }));
