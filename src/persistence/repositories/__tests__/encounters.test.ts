@@ -15,11 +15,11 @@ vi.mock('../../ids', () => ({
 }));
 
 import {
-  createEncounter, getEncounter, getEncountersByNotebook,
+  createEncounter, getEncountersByNotebook,
   getAllEncounters, getEncountersByThinker, getEncountersByStatus,
   updateEncounterStatus,
 } from '../encounters';
-import { put, get, getByIndex, getAll, patch } from '../../engine';
+import { put, getByIndex, getAll, patch } from '../../engine';
 
 describe('encounters repository', () => {
   beforeEach(() => vi.clearAllMocks());

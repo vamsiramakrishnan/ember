@@ -57,7 +57,7 @@ describe('Entity type', () => {
       'tutor-note', 'podcast',
     ];
     const entity: Entity = {
-      id: 'test-id', type: types[0], name: 'Test', detail: 'Detail',
+      id: 'test-id', type: types[0]!, name: 'Test', detail: 'Detail',
     };
     expect(entity.type).toBe('notebook');
   });

@@ -24,7 +24,7 @@ import {
   persistStudentTurn, persistTutorTurn, persistTutorActivity,
   loadSessionState,
 } from '../session-state-persistence';
-import { appendEvent, getSessionEvents, deriveSessionState } from '@/persistence/repositories/events';
+import { appendEvent, getSessionEvents } from '@/persistence/repositories/events';
 
 describe('session-state-persistence', () => {
   beforeEach(() => {

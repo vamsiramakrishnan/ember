@@ -31,7 +31,8 @@ vi.mock('../context-layers', () => ({
 import { assembleContext, type StudentProfile, type NotebookContext } from '../context-assembler';
 import { consumeBackgroundResults } from '../background-results';
 
-function makeLive(type: string, content: string): LiveEntry {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function _makeLive(type: string, content: string): LiveEntry {
   return {
     id: '1', entry: { type, content } as LiveEntry['entry'],
     crossedOut: false, bookmarked: false, pinned: false, timestamp: Date.now(),

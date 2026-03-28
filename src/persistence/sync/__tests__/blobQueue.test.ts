@@ -2,7 +2,7 @@
  * Tests for blobQueue — blob upload queue.
  * Validates the API contracts by mocking the IDB engine.
  */
-import { describe, test, expect, beforeEach, vi } from 'vitest';
+import { describe, test, expect, beforeEach } from 'vitest';
 import { createMockIndexedDB } from '../../../test/idb-mock';
 import * as engine from '../../engine';
 

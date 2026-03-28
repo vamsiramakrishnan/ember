@@ -10,7 +10,7 @@ vi.mock('@/persistence/repositories/graph', () => ({
 }));
 
 import { useEntryRelations, useEntryConnections } from '../useEntryGraph';
-import { addRelation, clearGraph } from '../entry-graph';
+import { addRelation } from '../entry-graph';
 import { relations, index, listeners } from '../entry-graph-internals';
 
 describe('useEntryGraph hooks', () => {

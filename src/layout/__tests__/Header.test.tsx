@@ -1,5 +1,5 @@
 import { describe, test, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 
 vi.mock('../Header.module.css', () => ({ default: {} }));
 vi.mock('../Navigation.module.css', () => ({ default: {} }));

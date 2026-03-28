@@ -8,8 +8,7 @@ import type { LiveEntry } from '@/types/entries';
 function live(entry: Record<string, unknown>, id = 'e1'): LiveEntry {
   return {
     id, entry: entry as LiveEntry['entry'],
-    revealed: true, stale: false,
-    crossedOut: false, bookmarked: false, pinned: false,
+    crossedOut: false, bookmarked: false, pinned: false, timestamp: Date.now(),
   };
 }
 

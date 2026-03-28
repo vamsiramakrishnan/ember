@@ -2,7 +2,7 @@
  * Tests for sync types — verifies type shapes exist.
  */
 import { describe, test, expect } from 'vitest';
-import type { SyncOperation, SyncAdapter, SyncStatus, SyncState, BlobUpload } from '../types';
+import type { SyncOperation, SyncStatus, SyncState, BlobUpload } from '../types';
 
 describe('sync types', () => {
   test('SyncOperation shape', () => {

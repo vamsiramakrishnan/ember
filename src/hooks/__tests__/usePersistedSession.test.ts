@@ -9,12 +9,12 @@ const mockGetAllSessions = vi.fn();
 
 vi.mock('@/persistence', () => ({
   Store: { Sessions: 'sessions' },
-  useStore: <T>(_store: string, fetcher: () => Promise<T>, fallback: T) => {
+  useStore: (_store: string, fetcher: () => Promise<unknown>, fallback: unknown) => {
     const { useState, useEffect } = require('react');
-    const [data, setData] = useState<T>(fallback);
+    const [data, setData] = useState(fallback);
     const [loading, setLoading] = useState(true);
     useEffect(() => {
-      fetcher().then((d: T) => { setData(d); setLoading(false); });
+      fetcher().then((d: unknown) => { setData(d); setLoading(false); });
     }, []);
     return { data, loading };
   },

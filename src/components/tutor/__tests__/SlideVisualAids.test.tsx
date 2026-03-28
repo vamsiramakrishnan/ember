@@ -99,7 +99,7 @@ describe('MatrixView', () => {
     const data = {
       topLabel: 'High', bottomLabel: 'Low',
       leftLabel: 'Left', rightLabel: 'Right',
-      quadrants: ['Q1', 'Q2', 'Q3', 'Q4'],
+      quadrants: ['Q1', 'Q2', 'Q3', 'Q4'] as [string, string, string, string],
     };
     render(<MatrixView data={data} />);
     expect(screen.getByText('High')).toBeInTheDocument();

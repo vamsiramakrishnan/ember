@@ -17,8 +17,8 @@ import type { NotebookEntry, LiveEntry } from '@/types/entries';
 
 function makeLiveEntry(entry: NotebookEntry, id = 'e1'): LiveEntry {
   return {
-    id, entry, revealed: true, stale: false,
-    crossedOut: false, bookmarked: false, pinned: false,
+    id, entry,
+    crossedOut: false, bookmarked: false, pinned: false, timestamp: Date.now(),
   };
 }
 
@@ -79,11 +79,11 @@ describe('composition-guard', () => {
     // echo is in SYSTEM_TYPES, so it always passes the composition guard
     const entries: LiveEntry[] = [
       makeLiveEntry({ type: 'prose' as const, content: 'a' }, 'e1'),
-      makeLiveEntry({ type: 'echo' as const, content: 'echo', originalEntryId: 'e0' }, 'e2'),
+      makeLiveEntry({ type: 'echo' as const, content: 'echo' }, 'e2'),
       makeLiveEntry({ type: 'prose' as const, content: 'b' }, 'e3'),
       makeLiveEntry({ type: 'prose' as const, content: 'c' }, 'e4'),
     ];
-    const echo = { type: 'echo' as const, content: 'another echo', originalEntryId: 'e1' };
+    const echo = { type: 'echo' as const, content: 'another echo',  };
     const verdict = checkComposition(echo, entries);
     expect(verdict.action).toBe('emit');
   });
@@ -94,10 +94,10 @@ describe('composition-guard', () => {
     );
     // Put echo at the beginning (index 0)
     entries[0] = makeLiveEntry(
-      { type: 'echo' as const, content: 'old echo', originalEntryId: 'x' },
+      { type: 'echo' as const, content: 'old echo' },
       'echo-0',
     );
-    const echo = { type: 'echo' as const, content: 'new echo', originalEntryId: 'e1' };
+    const echo = { type: 'echo' as const, content: 'new echo',  };
     const verdict = checkComposition(echo, entries);
     expect(verdict.action).toBe('emit');
   });

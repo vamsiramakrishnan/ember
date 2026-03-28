@@ -1,5 +1,5 @@
 import { describe, test, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 
 vi.mock('@/primitives/Lightbox', () => ({
   Lightbox: ({ open, children }: { open: boolean; children: React.ReactNode }) =>

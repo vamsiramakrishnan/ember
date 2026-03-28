@@ -16,7 +16,7 @@ vi.mock('../../ids', () => ({
 
 import {
   createSession, getSession, getSessionsByNotebook,
-  getSessionsByStudent, getAllSessions, updateSession, getLatestSession,
+  getSessionsByStudent, getAllSessions, getLatestSession,
 } from '../sessions';
 import { put, get, getAll, getByIndex } from '../../engine';
 

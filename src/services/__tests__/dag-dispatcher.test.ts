@@ -3,7 +3,6 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { IntentNode, IntentDAG } from '../intent-dag';
-import type { NodeResult } from '../dag-executor';
 
 // Mock all external deps
 vi.mock('../agents', () => ({
@@ -76,7 +75,7 @@ describe('dispatchNode', () => {
       emptyDAG, new Map(),
     );
     expect(result.success).toBe(true);
-    expect(result.entries[0].type).toBe('silence');
+    expect(result.entries[0]!.type).toBe('silence');
   });
 
   it('dispatches respond to tutor agent', async () => {
@@ -94,7 +93,7 @@ describe('dispatchNode', () => {
       emptyDAG, new Map(),
     );
     expect(result.success).toBe(true);
-    expect(result.entries[0].type).toBe('illustration');
+    expect(result.entries[0]!.type).toBe('illustration');
   });
 
   it('dispatches teach to reading material generator', async () => {
@@ -103,7 +102,7 @@ describe('dispatchNode', () => {
       emptyDAG, new Map(),
     );
     expect(result.success).toBe(true);
-    expect(result.entries[0].type).toBe('reading-material');
+    expect(result.entries[0]!.type).toBe('reading-material');
   });
 
   it('dispatches flashcards to flashcard generator', async () => {
@@ -112,7 +111,7 @@ describe('dispatchNode', () => {
       emptyDAG, new Map(),
     );
     expect(result.success).toBe(true);
-    expect(result.entries[0].type).toBe('flashcard-deck');
+    expect(result.entries[0]!.type).toBe('flashcard-deck');
   });
 
   it('dispatches exercise to exercise generator', async () => {
@@ -121,7 +120,7 @@ describe('dispatchNode', () => {
       emptyDAG, new Map(),
     );
     expect(result.success).toBe(true);
-    expect(result.entries[0].type).toBe('exercise-set');
+    expect(result.entries[0]!.type).toBe('exercise-set');
   });
 
   it('handles illustration failure gracefully', async () => {

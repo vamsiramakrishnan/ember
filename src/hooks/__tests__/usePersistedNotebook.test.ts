@@ -14,12 +14,12 @@ const mockNotify = vi.fn();
 vi.mock('@/persistence', () => ({
   Store: { Entries: 'entries' },
   notify: (...args: unknown[]) => mockNotify(...args),
-  useStoreQuery: <T>(_store: string, fetcher: () => Promise<T>, fallback: T, _deps: unknown[]) => {
+  useStoreQuery: (_store: string, fetcher: () => Promise<unknown>, fallback: unknown, _deps: unknown[]) => {
     const { useState, useEffect } = require('react');
-    const [data, setData] = useState<T>(fallback);
+    const [data, setData] = useState(fallback);
     const [loading, setLoading] = useState(true);
     useEffect(() => {
-      fetcher().then((d: T) => { setData(d); setLoading(false); });
+      fetcher().then((d: unknown) => { setData(d); setLoading(false); });
     }, []);
     return { data, loading };
   },

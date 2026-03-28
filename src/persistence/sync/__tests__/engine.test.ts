@@ -27,7 +27,7 @@ vi.mock('../../emitter', () => ({
 // We need to test the actual sync engine module
 // But since it has module-level state, test the public API
 import {
-  registerAdapter, sync, getSyncStatus, onSyncStatus, startSync, stopSync,
+  registerAdapter, sync, getSyncStatus, onSyncStatus, stopSync,
 } from '../engine';
 import type { SyncAdapter } from '../types';
 

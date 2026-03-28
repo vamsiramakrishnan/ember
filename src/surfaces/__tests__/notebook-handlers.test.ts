@@ -10,7 +10,7 @@ vi.mock('@/state', () => ({
 }));
 
 import { deriveMarginalRef, handleSelectionAction, handleFollowUp } from '../notebook-handlers';
-import type { LiveEntry, NotebookEntry } from '@/types/entries';
+import type { LiveEntry } from '@/types/entries';
 
 function makeLive(entry: Record<string, unknown>, id = 'e1'): LiveEntry {
   return {

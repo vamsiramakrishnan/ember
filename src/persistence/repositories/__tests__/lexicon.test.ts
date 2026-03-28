@@ -17,7 +17,7 @@ vi.mock('../../ids', () => ({
 
 import {
   createLexiconEntry, getLexiconEntry, getLexiconByNotebook,
-  getAllLexicon, getLexiconByLevel, updateLexiconEntry, deleteLexiconEntry,
+  getAllLexicon, getLexiconByLevel, deleteLexiconEntry,
 } from '../lexicon';
 import { put, get, getByIndex, getAll, del } from '../../engine';
 

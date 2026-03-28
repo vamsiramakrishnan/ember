@@ -20,14 +20,14 @@ describe('buildConversationMessages', () => {
   it('appends latest text as final user message', () => {
     const messages = buildConversationMessages([], 'Hello tutor');
     expect(messages).toHaveLength(1);
-    expect(messages[0].role).toBe('user');
-    expect(messages[0].parts[0].text).toBe('Hello tutor');
+    expect(messages[0]!.role).toBe('user');
+    expect(messages[0]!.parts[0]!.text).toBe('Hello tutor');
   });
 
   it('prepends context prefix to latest text', () => {
     const messages = buildConversationMessages([], 'Hello', 'CONTEXT');
-    expect(messages[0].parts[0].text).toContain('CONTEXT');
-    expect(messages[0].parts[0].text).toContain('Hello');
+    expect(messages[0]!.parts[0]!.text).toContain('CONTEXT');
+    expect(messages[0]!.parts[0]!.text).toContain('Hello');
   });
 
   it('maps student entries to user messages', () => {
@@ -35,9 +35,9 @@ describe('buildConversationMessages', () => {
       makeLive('prose', 'Student writes', 'e1'),
     ];
     const messages = buildConversationMessages(entries, 'Latest');
-    expect(messages[0].role).toBe('user');
-    expect(messages[0].parts[0].text).toContain('[prose]');
-    expect(messages[0].parts[0].text).toContain('Student writes');
+    expect(messages[0]!.role).toBe('user');
+    expect(messages[0]!.parts[0]!.text).toContain('[prose]');
+    expect(messages[0]!.parts[0]!.text).toContain('Student writes');
   });
 
   it('maps tutor entries to model messages', () => {
@@ -45,8 +45,8 @@ describe('buildConversationMessages', () => {
       makeLive('tutor-marginalia', 'Tutor says', 'e1'),
     ];
     const messages = buildConversationMessages(entries, 'Latest');
-    expect(messages[0].role).toBe('model');
-    expect(messages[0].parts[0].text).toBe('Tutor says');
+    expect(messages[0]!.role).toBe('model');
+    expect(messages[0]!.parts[0]!.text).toBe('Tutor says');
   });
 
   it('limits to last 12 entries', () => {
@@ -76,9 +76,9 @@ describe('buildConversationMessages', () => {
       makeLive('question', 'Q2', 'e3'),
     ];
     const messages = buildConversationMessages(entries, 'Q3');
-    expect(messages[0].role).toBe('user');
-    expect(messages[1].role).toBe('model');
-    expect(messages[2].role).toBe('user');
-    expect(messages[3].role).toBe('user'); // latest
+    expect(messages[0]!.role).toBe('user');
+    expect(messages[1]!.role).toBe('model');
+    expect(messages[2]!.role).toBe('user');
+    expect(messages[3]!.role).toBe('user'); // latest
   });
 });

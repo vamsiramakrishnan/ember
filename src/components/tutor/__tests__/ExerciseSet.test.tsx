@@ -1,4 +1,4 @@
-import { describe, test, expect, vi } from 'vitest';
+import { describe, test, expect } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 
 import { ExerciseSet } from '../ExerciseSet';
@@ -7,13 +7,15 @@ import type { Exercise } from '@/types/entries';
 const exercises: Exercise[] = [
   {
     prompt: 'Explain Newton\'s first law',
-    format: 'short-answer',
+    format: 'open-response',
+    approach: 'Describe how objects remain at rest or in uniform motion unless acted upon by a net force',
     hints: ['Think about inertia', 'Consider the absence of forces'],
     concept: 'mechanics',
   },
   {
     prompt: 'Derive E=mc²',
-    format: 'proof',
+    format: 'explain',
+    approach: 'Start from Lorentz transformation and show mass-energy equivalence',
     hints: ['Start with Lorentz transformation'],
     concept: 'relativity',
   },

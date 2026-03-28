@@ -21,7 +21,6 @@ vi.mock('../../ids', () => ({
 
 import {
   createRelation, createRelations, deleteRelation,
-  getOutgoing, getIncoming, getByNotebook, getAllRelations,
   followChain, findPath, getNeighborhood,
 } from '../graph';
 import { put, getByIndex, del } from '../../engine';

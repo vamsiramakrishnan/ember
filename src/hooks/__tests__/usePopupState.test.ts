@@ -1,7 +1,7 @@
 /**
  * Tests for usePopupState — @mention and /slash command popup management.
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { usePopupState } from '../usePopupState';
 
@@ -75,7 +75,7 @@ describe('usePopupState', () => {
 
   it('handles slash command selection', () => {
     const { result } = renderHook(() => usePopupState());
-    const cmd = { id: 'research', label: 'Research', description: 'Research a topic' };
+    const cmd = { id: 'research', label: 'Research', hint: 'Research a topic', icon: '', accent: '', group: '' };
     act(() => { result.current.handleSlashSelect(cmd); });
     expect(result.current.pendingInsert).toBe('/Research ');
     expect(result.current.activeSlashCommand).toMatchObject({ id: 'research' });
@@ -83,7 +83,7 @@ describe('usePopupState', () => {
 
   it('consumeSlashCommand clears and returns', () => {
     const { result } = renderHook(() => usePopupState());
-    const cmd = { id: 'draw', label: 'Draw', description: 'Draw' };
+    const cmd = { id: 'draw', label: 'Draw', hint: 'Draw', icon: '', accent: '', group: '' };
     act(() => { result.current.handleSlashSelect(cmd); });
 
     let consumed;

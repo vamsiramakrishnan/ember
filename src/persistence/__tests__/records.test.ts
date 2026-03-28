@@ -3,9 +3,8 @@
  */
 import { describe, test, expect } from 'vitest';
 import type {
-  StudentRecord, NotebookRecord, SessionRecord,
-  EntryRecord, LexiconRecord, EncounterRecord,
-  LibraryRecord, MasteryRecord, CuriosityRecord,
+  StudentRecord, NotebookRecord,
+  EntryRecord,
   BlobRecord, CanvasRecord,
 } from '../records';
 
