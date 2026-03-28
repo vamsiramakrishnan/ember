@@ -1,0 +1,24 @@
+/* SurfaceCrossfade — opacity crossfade between surfaces.
+ * was: instant mount/unmount, now: 250ms out + 300ms in
+ * reason: surfaces should feel spatial, not like tab switches */
+
+.visible {
+  opacity: 1;
+}
+
+.fadingOut {
+  opacity: 0;
+  transition: opacity 250ms var(--surface-fade-ease);
+}
+
+.fadingIn {
+  opacity: 1;
+  transition: opacity 300ms var(--surface-fade-ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fadingOut,
+  .fadingIn {
+    transition: none;
+  }
+}

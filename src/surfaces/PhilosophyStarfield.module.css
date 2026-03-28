@@ -1,0 +1,41 @@
+/* PhilosophyStarfield — ambient star-point layer with drift and parallax.
+ * was: absent, now: 60 dots in 3 depth layers with 120s drift and ±4px parallax
+ * reason: Philosophy ("The Star Chart") needs ambient spatial quality */
+
+.starfield {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+  color: var(--ink); /* was: n/a, now: ink, reason: stars derive from warm ink base */
+}
+
+.svg {
+  width: 100%;
+  height: 100%;
+  animation: starDrift var(--starfield-drift-duration) linear infinite;
+}
+
+/* Depth layers — parallax applied via JS transform, CSS handles transition lag */
+.layerNear,
+.layerMid,
+.layerFar {
+  transition: var(--parallax-transition); /* was: n/a, now: 600ms ease-out, reason: lag = depth */
+  will-change: transform;
+}
+
+@keyframes starDrift {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(1.5px, 0.8px); }
+  50% { transform: translate(0.5px, 1.5px); }
+  75% { transform: translate(-1px, 0.5px); }
+  100% { transform: translate(0, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .svg { animation: none; }
+  .layerNear,
+  .layerMid,
+  .layerFar { transition: none; }
+}

@@ -4,7 +4,7 @@
  * See: 02-visual-language.md, Typography section.
  */
 import React from 'react';
-import { typeScale, type TypeVariant } from '@/tokens/typography';
+import { typeScale, fontFamily, type TypeVariant } from '@/tokens/typography';
 import { colors, type ColorToken } from '@/tokens/colors';
 
 interface TextProps {
@@ -29,6 +29,9 @@ export function Text({
   color,
 }: TextProps) {
   const spec = typeScale[variant];
+  /* Disable oldstyle numerals on system (monospace) text — lining figures align better.
+   * was: onum inherited from html, now: lining-nums on system variants */
+  const isSystemFont = spec.fontFamily === fontFamily.system;
   const resolved: React.CSSProperties = {
     fontFamily: spec.fontFamily,
     fontSize: spec.fontSize,
@@ -37,6 +40,7 @@ export function Text({
     letterSpacing: spec.letterSpacing,
     lineHeight: spec.lineHeight,
     fontStyle: 'fontStyle' in spec ? (spec as { fontStyle: string }).fontStyle : undefined,
+    fontVariantNumeric: isSystemFont ? 'lining-nums' : undefined,
     margin: 0,
     ...style,
   };

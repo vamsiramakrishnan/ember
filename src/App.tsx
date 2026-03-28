@@ -16,6 +16,7 @@ import { registerAdapter, startSync } from '@/persistence/sync';
 import { createAdapterFromEnv } from '@/persistence/sync/supabase';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { SurfaceErrorBoundary } from '@/components/SurfaceErrorBoundary';
+import { SurfaceCrossfade } from '@/layout/SurfaceCrossfade';
 import { initObservability } from '@/observability';
 import type { Surface } from '@/layout/Navigation';
 
@@ -119,7 +120,9 @@ function AppContent() {
       <Shell>
         <Header activeSurface={surface} onNavigate={setSurface} />
         <main style={{ minHeight: '80vh' }}>
-          <ActiveSurface surface={surface} onNavigate={setSurface} />
+          <SurfaceCrossfade surfaceKey={surface}>
+            <ActiveSurface surface={surface} onNavigate={setSurface} />
+          </SurfaceCrossfade>
         </main>
         <Footer />
       </Shell>

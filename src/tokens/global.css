@@ -14,7 +14,18 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  font-feature-settings: 'kern' 1, 'liga' 1;
+  /* was: 'kern' 1, 'liga' 1
+   * now: added 'onum' 1 — oldstyle (hanging) numerals for book-quality text
+   * reason: Cormorant Garamond and Crimson Pro have beautiful oldstyle figures */
+  font-feature-settings: 'kern' 1, 'liga' 1, 'onum' 1;
+}
+
+/* Disable oldstyle numerals on monospace/system text where lining figures matter.
+ * was: onum inherited from html, now: lnum on monospace elements
+ * reason: IBM Plex Mono needs aligned lining figures for metadata, mastery values */
+code, kbd, samp, pre {
+  font-feature-settings: 'kern' 1, 'liga' 1, 'onum' 0;
+  font-variant-numeric: lining-nums;
 }
 
 body {
@@ -27,12 +38,25 @@ body {
   font-weight: 400;
   min-height: 100vh;
   line-height: 1.80;
+  /* Typographic refinements for book-quality prose.
+   * was: absent, now: hanging-punctuation + hyphens
+   * reason: quotation marks should hang into margins; long words should hyphenate */
+  hanging-punctuation: first last;
+  hyphens: auto;
+  -webkit-hyphens: auto;
 }
 
-/* Selection: warm terracotta tint — the tutor's colour */
+/* Selection: warm amber tint — the reading lamp's glow.
+ * was: var(--margin-dim) at 7% opacity — nearly invisible
+ * now: var(--selection-highlight) amber at 22% — visible but warm
+ * reason: text selection is a functional control, needs to be readable */
 ::selection {
-  background-color: var(--margin-dim);
-  color: var(--ink);
+  background-color: var(--selection-highlight);
+  color: inherit;
+}
+::-moz-selection {
+  background-color: var(--selection-highlight);
+  color: inherit;
 }
 
 /* Focus rings: warm, not blue. Margin colour. */
@@ -40,6 +64,23 @@ body {
   outline: 1.5px solid var(--margin);
   outline-offset: 3px;
   border-radius: 2px;
+}
+
+/* Scrollbar: thin, warm, unobtrusive.
+ * was: OS default (thick, grey, cold), now: 4px warm ink at 15%
+ * reason: the most frequent interaction surface shouldn't break the material illusion */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(44, 40, 37, 0.15) transparent; /* ink at 15% on transparent */
+}
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(44, 40, 37, 0.15); /* was: OS default, now: ink at 15% */
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(44, 40, 37, 0.28); /* slightly more visible on hover */
 }
 
 @media (prefers-reduced-motion: no-preference) {

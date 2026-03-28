@@ -39,6 +39,10 @@ export function InputZone({
   const [isFocused, setIsFocused] = useState(false);
   const [sketchMode, setSketchMode] = useState(false);
   const [forcedType, setForcedType] = useState<StudentEntryType | null>(null);
+  /* Submission morph: brief color transition before clearing.
+   * was: instant clear, now: 200ms color morph → clear
+   * reason: smooths the most frequent interaction in the app (audit P9) */
+  const [submitting, setSubmitting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const triggerPos = useRef(-1);
   const pendingCursorPos = useRef<number | null>(null);
@@ -67,9 +71,14 @@ export function InputZone({
 
   const submit = useCallback((text: string, type?: StudentEntryType) => {
     const resolved = type ?? forcedType;
+    /* Morph phase: text stays visible but shifts color for 200ms before clearing */
+    setSubmitting(true);
     if (resolved && onSubmitTyped) onSubmitTyped(text, resolved);
     else onSubmit?.(text);
-    setValue(''); setForcedType(null); triggerPos.current = -1; onPopupClose?.();
+    setTimeout(() => {
+      setValue(''); setForcedType(null); triggerPos.current = -1; onPopupClose?.();
+      setSubmitting(false);
+    }, 200);
   }, [forcedType, onSubmit, onSubmitTyped, onPopupClose]);
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -124,7 +133,7 @@ export function InputZone({
           onClick={(e) => { e.stopPropagation(); setForcedType(null); }}>esc</button>
       </div>}
       <textarea ref={textareaRef}
-        className={styles.textarea}
+        className={`${styles.textarea} ${submitting ? styles.textareaSubmitting : ''}`}
         value={value} onChange={handleChange}
         onFocus={() => setIsFocused(true)} onBlur={() => setIsFocused(false)}
         onKeyDown={handleKeyDown} onPaste={onPaste}

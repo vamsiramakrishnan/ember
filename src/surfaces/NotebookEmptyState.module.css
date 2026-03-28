@@ -1,0 +1,56 @@
+/* NotebookEmptyState — the inviting blank page.
+ * was: absent (blank gap), now: ruled lines + cursor + marginal whisper
+ * reason: the empty notebook should feel inviting, not broken */
+
+.container {
+  position: relative;
+  min-height: 50vh;
+}
+
+/* Faint ruled lines — barely visible, like ghost lines in a quality notebook */
+.rules {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.rule {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: var(--rule-light);
+  opacity: 0.4; /* was: n/a, now: rule-light at 40% — subliminal */
+}
+
+/* Blinking cursor at ~40% from top — the reading position */
+.cursorArea {
+  position: absolute;
+  top: 40%;
+  left: var(--text-indent);
+  display: flex;
+  align-items: center;
+}
+
+.cursor {
+  width: 1px;
+  height: 22px;
+  background-color: var(--ink);
+  animation: emberCursorBlink var(--cursor-cycle) ease infinite;
+}
+
+/* Marginal whisper — the tutor's gentle presence */
+.whisper {
+  font-family: var(--font-tutor); /* was: n/a, now: Cormorant Garamond — tutor's voice */
+  font-size: 13px;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--ink-ghost);
+  line-height: 1.6;
+  margin: 0;
+  margin-top: 40%; /* Align vertically with the cursor */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cursor { animation: none; opacity: 0.3; }
+}

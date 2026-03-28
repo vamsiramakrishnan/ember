@@ -23,6 +23,7 @@ export function getTokenCSS(): string {
   /* Accents */
   --margin: ${colors.margin};
   --margin-dim: ${colors.marginDim};
+  --selection-highlight: ${colors.selectionHighlight};
   --sage: ${colors.sage};
   --sage-dim: ${colors.sageDim};
   --indigo: ${colors.indigo};
@@ -66,5 +67,13 @@ export function getTokenCSS(): string {
   --cursor-opacity-max: ${motion.cursorOpacityMax};
   --tab-transition: ${motion.tabTransition};
   --mastery-transition: ${motion.masteryTransition};
+
+  /* Philosophy starfield */
+  --starfield-drift-duration: ${motion.starfieldDriftDuration};
+  --parallax-transition: ${motion.parallaxTransition};
+
+  /* Surface transitions */
+  --surface-fade-duration: ${motion.surfaceFadeDuration};
+  --surface-fade-ease: ${motion.surfaceFadeEase};
 }`;
 }

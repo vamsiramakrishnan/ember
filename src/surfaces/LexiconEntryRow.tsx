@@ -4,7 +4,7 @@
  * Layer 3 (click to expand etymology + cross-refs).
  * See: 06-component-inventory.md
  */
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { colors } from '@/tokens/colors';
 import { useEntityNavigation } from '@/hooks/useEntityNavigation';
 import type { LexiconEntry } from '@/types/lexicon';
@@ -23,6 +23,21 @@ interface Props { entry: LexiconEntry }
 export function LexiconEntryRow({ entry }: Props) {
   const { navigateTo } = useEntityNavigation();
   const [expanded, setExpanded] = useState(false);
+  /* Dwell state: 400ms hover reveals etymology inline without full expansion.
+   * was: absent (hover only changed background), now: 400ms dwell bloom
+   * reason: the bloom interaction is part of the Lexicon's identity (audit P8) */
+  const [dwelling, setDwelling] = useState(false);
+  const dwellTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  const handleMouseEnter = useCallback(() => {
+    if (expanded || !entry.etymology) return;
+    dwellTimerRef.current = setTimeout(() => setDwelling(true), 400);
+  }, [expanded, entry.etymology]);
+
+  const handleMouseLeave = useCallback(() => {
+    if (dwellTimerRef.current) clearTimeout(dwellTimerRef.current);
+    setDwelling(false);
+  }, []);
 
   const handleTermClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -39,6 +54,8 @@ export function LexiconEntryRow({ entry }: Props) {
   return (
     <div
       className={`${styles.entry} ${expanded ? styles.entryExpanded : ''}`}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       data-term={entry.term}
       onClick={() => hasDetail && setExpanded(!expanded)}
       role={hasDetail ? 'button' : undefined}
@@ -64,6 +81,14 @@ export function LexiconEntryRow({ entry }: Props) {
         </div>
         <span className={styles.masteryLabel}>{entry.percentage}%</span>
       </div>
+
+      {/* Dwell bloom: lightweight etymology preview on 400ms hover */}
+      {dwelling && !expanded && entry.etymology && (
+        <div className={styles.dwellBloom}>
+          <span className={styles.metaLabel}>Etymology</span>
+          <p className={styles.dwellEtymology}>{entry.etymology}</p>
+        </div>
+      )}
 
       {expanded && (
         <div className={styles.detail}>

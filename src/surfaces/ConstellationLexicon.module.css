@@ -119,6 +119,29 @@
   text-align: right;
 }
 
+/* ─── Dwell bloom: lightweight etymology preview on 400ms hover ─── */
+/* was: absent, now: inline bloom with 300ms height/opacity animation
+ * reason: the Lexicon's signature interaction — etymology on dwell (audit P8) */
+
+.dwellBloom {
+  margin-top: 10px;
+  overflow: hidden;
+  animation: dwellReveal 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.dwellEtymology {
+  font-family: var(--font-system);
+  font-size: 11px;
+  color: var(--ink-faint);
+  line-height: 1.5;
+  margin: 0;
+}
+
+@keyframes dwellReveal {
+  from { opacity: 0; max-height: 0; }
+  to { opacity: 1; max-height: 80px; }
+}
+
 /* ─── Layer 3: expanded detail ───────────────────── */
 
 .detail {
@@ -186,4 +209,5 @@
 @media (prefers-reduced-motion: reduce) {
   .entry, .expandHint { transition: none; }
   .detail { animation: none; }
+  .dwellBloom { animation: none; }
 }

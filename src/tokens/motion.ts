@@ -36,6 +36,15 @@ export const motion = {
 
   /** "Take your time" prompt fade-in. */
   gentlePromptFade: '2s',
+
+  /** Philosophy starfield drift — imperceptibly slow. */
+  starfieldDriftDuration: '120s',
+  /** Parallax transition lag — creates depth perception. */
+  parallaxTransition: '600ms ease-out',
+  /** Surface crossfade duration. */
+  surfaceFadeDuration: '0.3s',
+  /** Surface crossfade easing. */
+  surfaceFadeEase: 'ease',
 } as const;
 
 export type MotionToken = keyof typeof motion;

@@ -6,6 +6,7 @@
 import { Column } from '@/primitives/Column';
 import { Text } from '@/primitives/Text';
 import { Rule } from '@/primitives/Rule';
+import { PhilosophyStarfield } from './PhilosophyStarfield';
 import { spacing } from '@/tokens/spacing';
 import styles from './Philosophy.module.css';
 
@@ -75,6 +76,7 @@ export function Philosophy() {
   return (
     <Column>
       <div className={styles.container}>
+        <PhilosophyStarfield />
         <Text variant="pageTitle" as="h1" style={{ marginBottom: 16 }}>
           Philosophy
         </Text>
