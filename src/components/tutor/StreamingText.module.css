@@ -1,49 +1,80 @@
 /**
- * StreamingText — progressive text reveal with tutor's margin rule.
- * Thinking state: compact cursor. Streaming state: text with cursor.
+ * StreamingText — the tutor's response coming into being.
+ *
+ * The entry itself is the thinking indicator. Narration appears
+ * as ghost-weight tutor text — the tutor whispering what they're
+ * about to write. Skeletons show the shape of structured content.
  */
 
-/* Thinking state — just the cursor, minimal vertical footprint */
-.thinkingContainer {
-  display: grid;
-  grid-template-columns: var(--margin-rule-width) 1fr;
-  gap: var(--margin-rule-gap);
-  padding: 8px 0;
-  align-items: center;
-}
-
-/* Active streaming / done state */
+/* Shared grid for all phases — same layout as Marginalia */
 .container {
   display: grid;
   grid-template-columns: var(--margin-rule-width) 1fr;
   gap: var(--margin-rule-gap);
   margin-bottom: var(--entry-gap);
   padding-top: 2px;
+  min-height: 28px;
 }
 
+/* ─── Rule states ─────────────────────────────────── */
+
+/* Phase 1: arriving — the rule fades in slowly */
+.ruleArriving {
+  width: var(--margin-rule-width);
+  background-color: var(--margin);
+  border-radius: 1px;
+  min-height: 20px;
+  animation: ruleArrive 1.2s cubic-bezier(0.16, 1, 0.3, 1) both,
+             ruleBreathe 2.4s ease-in-out 1.2s infinite;
+}
+
+/* Phase 2-3: streaming — gentle breathing */
+.ruleStreaming {
+  width: var(--margin-rule-width);
+  background-color: var(--margin);
+  opacity: 0.3;
+  border-radius: 1px;
+  min-height: 20px;
+  animation: ruleBreathe 2.4s ease-in-out infinite;
+}
+
+/* Phase 4: done — solid, still */
 .rule {
   width: var(--margin-rule-width);
   background-color: var(--margin);
-  opacity: 0.35;
+  opacity: 0.3;
   border-radius: 1px;
   min-height: 24px;
 }
 
-.ruleStreaming {
-  width: var(--margin-rule-width);
-  background-color: var(--margin);
-  opacity: 0.35;
-  border-radius: 1px;
-  min-height: 20px;
-  animation: rulePulse 2s ease-in-out infinite;
-}
+/* ─── Body layout ─────────────────────────────────── */
 
 .body {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0;
+  min-height: 24px;
 }
+
+/* ─── Whisper: narration as ghost tutor text ───────── */
+/* The tutor whispering what they're about to write.
+ * Same font as marginalia, lighter weight, lower opacity.
+ * Fades in gently, fades out when real text arrives. */
+
+.whisper {
+  font-family: var(--font-tutor);
+  font-size: 15px;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--margin);
+  opacity: 0.35;
+  line-height: 1.75;
+  letter-spacing: 0.2px;
+  animation: whisperIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ─── Streaming text ──────────────────────────────── */
 
 .text {
   font-family: var(--font-tutor);
@@ -56,8 +87,8 @@
   white-space: pre-wrap;
 }
 
-/* Label shown while structured JSON (concept-diagram, etc.) is being
- * generated. Hides the raw JSON and shows a quiet "composing…" instead. */
+/* ─── Composing label (for semantic buffer) ────────── */
+
 .composingLabel {
   font-family: var(--font-system);
   font-size: 10px;
@@ -66,28 +97,146 @@
   letter-spacing: 0.5px;
 }
 
+/* ─── Cursor ──────────────────────────────────────── */
+
 .cursor {
   display: inline-block;
-  width: 1px;
-  height: 22px;
+  width: 1.5px;
+  height: 18px;
   background-color: var(--margin);
+  opacity: 0.4;
   margin-left: 2px;
   vertical-align: text-bottom;
-  animation: emberCursorBlink var(--cursor-cycle) ease infinite;
+  border-radius: 1px;
+  animation: cursorBreathe var(--cursor-cycle) ease-in-out infinite;
 }
 
-@keyframes rulePulse {
-  0%, 100% { opacity: 0.35; }
-  50% { opacity: 0.50; }
+/* ─── Skeleton placeholders ───────────────────────── */
+/* Ghost shapes showing WHAT is coming — diagram nodes,
+ * thinker circle, text lines. Pulsing gently. */
+
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 8px 0;
+  animation: whisperIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
+
+.skeletonLabel {
+  font-family: var(--font-tutor);
+  font-size: 13px;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--margin);
+  opacity: 0.3;
+  letter-spacing: 0.2px;
+}
+
+.skeletonNodes {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.skeletonNode {
+  width: 48px;
+  height: 28px;
+  border-radius: 2px;
+  background: var(--margin);
+  opacity: 0.06;
+  animation: skeletonPulse 2s ease-in-out infinite;
+}
+
+.skeletonNode:nth-child(2) { animation-delay: 0.15s; }
+.skeletonNode:nth-child(3) { animation-delay: 0.3s; }
+
+.skeletonEdge {
+  width: 24px;
+  height: 1px;
+  background: var(--margin);
+  opacity: 0.1;
+}
+
+.skeletonThinker {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.skeletonCircle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--margin);
+  opacity: 0.06;
+  flex-shrink: 0;
+  animation: skeletonPulse 2s ease-in-out infinite;
+}
+
+.skeletonLines {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.skeletonLine {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--margin);
+  opacity: 0.05;
+  animation: skeletonPulse 2s ease-in-out infinite;
+}
+
+.skeletonLine:nth-child(2) { animation-delay: 0.2s; }
+
+/* ─── Animations ──────────────────────────────────── */
+
+@keyframes ruleArrive {
+  from { opacity: 0; transform: scaleY(0.3); }
+  to { opacity: 0.25; transform: scaleY(1); }
+}
+
+@keyframes ruleBreathe {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.35; }
+}
+
+@keyframes whisperIn {
+  from { opacity: 0; transform: translateX(-4px); }
+  to { opacity: 0.35; transform: translateX(0); }
+}
+
+@keyframes cursorBreathe {
+  0%, 100% { opacity: 0.1; }
+  50% { opacity: 0.45; }
+}
+
+@keyframes skeletonPulse {
+  0%, 100% { opacity: 0.04; }
+  50% { opacity: 0.09; }
+}
+
+/* ─── Reduced motion ──────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
-  .ruleStreaming {
-    animation: none;
-    opacity: 0.35;
+  .ruleArriving { animation: none; opacity: 0.25; }
+  .ruleStreaming { animation: none; opacity: 0.3; }
+  .cursor { animation: none; opacity: 0.3; }
+  .whisper { animation: none; }
+  .skeleton { animation: none; }
+  .skeletonNode, .skeletonCircle, .skeletonLine { animation: none; opacity: 0.06; }
+}
+
+/* ─── Mobile ──────────────────────────────────────── */
+
+@media (max-width: 500px) {
+  .text {
+    font-size: 16.5px;
+    line-height: 1.68;
   }
-  .cursor {
-    animation: none;
-    opacity: 0;
+  .whisper {
+    font-size: 14px;
   }
 }
