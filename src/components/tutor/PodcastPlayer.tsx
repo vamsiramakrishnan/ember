@@ -8,6 +8,7 @@
  */
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useWaveform } from '@/hooks/useWaveform';
+import { revokeTtsUrl } from '@/services/tts-synthesize';
 import styles from './PodcastPlayer.module.css';
 
 interface PodcastPlayerProps {
@@ -42,6 +43,17 @@ export function PodcastPlayer({
   const currentUrl = playlist[segIndex] ?? '';
   const { canvasRef, updateProgress, getProgressFromClick } =
     useWaveform(currentUrl || null);
+
+  // Revoke blob URLs on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      for (const url of playlist) {
+        if (url.startsWith('blob:')) revokeTtsUrl(url);
+      }
+    };
+  // Only clean up on unmount, not on playlist changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Auto-advance to next segment when current ends
   useEffect(() => {

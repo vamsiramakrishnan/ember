@@ -3,7 +3,7 @@
  * Respects prefers-reduced-motion by snapping to final positions.
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
-import type { GraphNode, GraphEdge, LayoutNode } from '@/types/graph-canvas';
+import type { CanvasNode, GraphEdge, LayoutNode } from '@/types/graph-canvas';
 
 interface ForceOptions { width: number; height: number; enabled: boolean }
 
@@ -13,7 +13,7 @@ const DAMPING = 0.85;
 const MIN_VELOCITY = 0.1;
 const MAX_TICKS = 300;
 
-function initLayout(nodes: GraphNode[], width: number, height: number): LayoutNode[] {
+function initLayout(nodes: CanvasNode[], width: number, height: number): LayoutNode[] {
   const cx = width / 2;
   const cy = height / 2;
   const radius = Math.min(width, height) * 0.3;
@@ -83,7 +83,7 @@ function isSettled(nodes: LayoutNode[]): boolean {
 }
 
 export function useForceLayout(
-  nodes: GraphNode[],
+  nodes: CanvasNode[],
   edges: GraphEdge[],
   options: ForceOptions,
 ) {

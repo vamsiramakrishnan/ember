@@ -1,13 +1,21 @@
-/* KnowledgeCanvas — empty state styling */
+/* KnowledgeCanvas — relationship-driven graph layout */
+
+.field {
+  position: relative;
+  margin: 0 auto;
+  max-width: 100%;
+  overflow: visible;
+}
 
 .empty {
-  font-family: var(--font-system);
-  font-size: 12px;
+  font-family: var(--font-tutor);
+  font-size: 14px;
   font-weight: 300;
+  font-style: italic;
   color: var(--ink-ghost);
   text-align: center;
-  padding: 80px 24px;
+  padding: 100px 24px;
   margin: 0;
-  letter-spacing: 0.5px;
-  line-height: 1.6;
+  letter-spacing: 0.3px;
+  line-height: 1.7;
 }

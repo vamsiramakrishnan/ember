@@ -3,7 +3,7 @@
  * A student is the top-level entity. Everything belongs to a student.
  */
 import { Store } from '../schema';
-import { get, getAll, put } from '../engine';
+import { get, getAll, put, patch } from '../engine';
 import { createId } from '../ids';
 import type { StudentRecord } from '../records';
 
@@ -40,11 +40,9 @@ export async function updateStudent(
   id: string,
   updates: Partial<Pick<StudentRecord, 'name' | 'displayName' | 'totalMinutes'>>,
 ): Promise<void> {
-  const existing = await get<StudentRecord>(Store.Students, id);
-  if (!existing) return;
-  await put(Store.Students, {
+  await patch<StudentRecord>(Store.Students, id, (existing) => ({
     ...existing,
     ...updates,
     updatedAt: Date.now(),
-  });
+  }));
 }

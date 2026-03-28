@@ -5,11 +5,11 @@
 import React, { useCallback } from 'react';
 import { colors } from '@/tokens/colors';
 import { fontFamily } from '@/tokens/typography';
-import type { GraphNode } from './graph-layout';
+import type { PositionedNode } from './graph-layout';
 import { visualNodeType, type VisualNodeType } from './graph-layout';
 
 interface GraphNodeElementProps {
-  node: GraphNode;
+  node: PositionedNode;
   focused: boolean;
   dimmed: boolean;
   onMouseDown: (id: string, e: React.MouseEvent) => void;

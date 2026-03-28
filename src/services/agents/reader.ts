@@ -3,6 +3,7 @@
  * flash-lite + MINIMAL thinking.
  */
 import { EMBER_DESIGN_CONTEXT, type AgentConfig } from './config';
+import { MODELS } from '../gemini';
 
 const INSTRUCTION = `${EMBER_DESIGN_CONTEXT}
 
@@ -21,7 +22,7 @@ or {"type": "tutor-question", "content": "..."}`;
 
 export const READER_AGENT: AgentConfig = {
   name: 'Reader',
-  model: 'gemini-3.1-flash-lite-preview',
+  model: MODELS.text,
   systemInstruction: INSTRUCTION,
   thinkingLevel: 'MINIMAL',
   tools: [],

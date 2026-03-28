@@ -2,7 +2,8 @@
  * Parallel to artifact-refiner.ts but operates on JSON entries.
  * The critic returns field-level corrections applied to entry arrays. */
 import { CONTENT_CRITIC_AGENT } from './agents/content-critic';
-import { runTextAgent } from './run-agent';
+import { resilientTextAgent } from './resilient-agent';
+import { parseCritiqueResponse } from './critique-parser';
 import { setActivityDetail } from '@/state';
 import type { RefinementStep } from './patch-applier';
 import type { NotebookEntry } from '@/types/entries';
@@ -97,31 +98,25 @@ async function evaluateContent(
       `Each correction: {index, field, value} targeting the ${meta.itemsKey} array.`,
     ].filter(Boolean).join('\n');
 
-    const result = await runTextAgent(CONTENT_CRITIC_AGENT, [{
+    const result = await resilientTextAgent(CONTENT_CRITIC_AGENT, [{
       role: 'user', parts: [{ text: critiquePrompt }],
     }]);
-    return parseCritiqueResponse(result.text);
+    return toCritiqueResult(result.text);
   } catch {
     return { score: 10, issues: [], corrections: [] };
   }
 }
 
-function parseCritiqueResponse(text: string): CritiqueResult {
-  try {
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) return { score: 10, issues: [], corrections: [] };
-    const parsed = JSON.parse(jsonMatch[0]) as Record<string, unknown>;
-    return {
-      score: typeof parsed.score === 'number' ? parsed.score : 10,
-      issues: Array.isArray(parsed.issues) ? parsed.issues as string[] : [],
-      corrections: Array.isArray(parsed.corrections)
-        ? (parsed.corrections as Correction[]).filter(
-            (c) => typeof c.index === 'number' && typeof c.field === 'string' && c.value != null)
-        : [],
-    };
-  } catch {
-    return { score: 10, issues: [], corrections: [] };
-  }
+function toCritiqueResult(text: string): CritiqueResult {
+  const { score, issues, raw } = parseCritiqueResponse(text);
+  return {
+    score,
+    issues,
+    corrections: Array.isArray(raw.corrections)
+      ? (raw.corrections as Correction[]).filter(
+          (c) => typeof c.index === 'number' && typeof c.field === 'string' && c.value != null)
+      : [],
+  };
 }
 
 function getItems(entry: NotebookEntry, cType: ContentType): unknown[] {

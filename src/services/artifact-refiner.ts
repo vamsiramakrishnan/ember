@@ -11,8 +11,9 @@
  * meaningful steps showing how the artifact evolved.
  */
 import { CRITIC_AGENT } from './agents';
-import { runTextAgent } from './run-agent';
+import { resilientTextAgent } from './resilient-agent';
 import { applyPatches, type Patch, type RefinementStep } from './patch-applier';
+import { parseCritiqueResponse } from './critique-parser';
 import { setActivityDetail } from '@/state';
 import type { TutorActivityDetail } from '@/state';
 
@@ -95,33 +96,27 @@ async function evaluateArtifact(
       `Each patch: {search, replace} for exact match, or {selector, replace} for CSS selector.${graceNote}`,
     ].filter(Boolean).join('\n');
 
-    const result = await runTextAgent(CRITIC_AGENT, [{
+    const result = await resilientTextAgent(CRITIC_AGENT, [{
       role: 'user', parts: [{ text: critiquePrompt }],
     }]);
-    return parseCritiqueResponse(result.text);
+    return toCritiqueResult(result.text);
   } catch {
     return { score: 10, issues: [], patches: [] };
   }
 }
 
-function parseCritiqueResponse(text: string): CritiqueResult {
-  try {
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) return { score: 10, issues: [], patches: [] };
-    const parsed = JSON.parse(jsonMatch[0]) as Record<string, unknown>;
-    return {
-      score: typeof parsed.score === 'number' ? parsed.score : 10,
-      issues: Array.isArray(parsed.issues) ? parsed.issues as string[] : [],
-      patches: Array.isArray(parsed.patches)
-        ? (parsed.patches as Array<{ search?: unknown; replace?: unknown; selector?: unknown }>)
-            .filter((p): p is Patch =>
-              typeof p.replace === 'string' &&
-              (typeof p.search === 'string' || typeof p.selector === 'string'))
-        : [],
-    };
-  } catch {
-    return { score: 10, issues: [], patches: [] };
-  }
+function toCritiqueResult(text: string): CritiqueResult {
+  const { score, issues, raw } = parseCritiqueResponse(text);
+  return {
+    score,
+    issues,
+    patches: Array.isArray(raw.patches)
+      ? (raw.patches as Array<{ search?: unknown; replace?: unknown; selector?: unknown }>)
+          .filter((p): p is Patch =>
+            typeof p.replace === 'string' &&
+            (typeof p.search === 'string' || typeof p.selector === 'string'))
+      : [],
+  };
 }
 
 function buildContractHints(contract?: ChangeContract): string {

@@ -4,7 +4,7 @@
  * Sketch entries have their blobs stored separately (content-addressed).
  */
 import { Store } from '../schema';
-import { get, put, getByIndex } from '../engine';
+import { get, getAll, put, getByIndex, patch } from '../engine';
 import { transact } from '../transaction';
 import { createId, nextOrder } from '../ids';
 import { storeDataUrl } from './blobs';
@@ -110,9 +110,11 @@ export async function updateEntry(
   id: string,
   updates: Partial<Pick<EntryRecord, 'crossedOut' | 'bookmarked' | 'pinned' | 'order' | 'annotations'>>,
 ): Promise<void> {
-  const existing = await get<EntryRecord>(Store.Entries, id);
-  if (!existing) return;
-  await put(Store.Entries, { ...existing, ...updates, updatedAt: Date.now() });
+  await patch<EntryRecord>(Store.Entries, id, (existing) => ({
+    ...existing,
+    ...updates,
+    updatedAt: Date.now(),
+  }));
 }
 
 /** Update the entry content in-place (used for streaming updates). */
@@ -120,20 +122,18 @@ export async function updateEntryContent(
   id: string,
   entry: NotebookEntry,
 ): Promise<void> {
-  const existing = await get<EntryRecord>(Store.Entries, id);
-  if (!existing) return;
-  await put(Store.Entries, {
+  await patch<EntryRecord>(Store.Entries, id, (existing) => ({
     ...existing,
     type: entry.type,
     entry,
     updatedAt: Date.now(),
-  });
+  }));
 }
 
-/** Get all pinned entries across all sessions. */
+/** Get all pinned entries across all sessions.
+ * Note: IDB cannot index booleans, so the 'by-pinned' index is unreliable.
+ * We scan all entries and filter in JS. This is fine for reasonable entry counts. */
 export async function getPinnedEntries(): Promise<EntryRecord[]> {
-  const results = await getByIndex<EntryRecord>(
-    Store.Entries, 'by-pinned', 1,
-  );
-  return results;
+  const all = await getAll<EntryRecord>(Store.Entries);
+  return all.filter((e) => e.pinned);
 }

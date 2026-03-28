@@ -1,0 +1,64 @@
+/* ThreadLink — subtle relation indicator with click-to-navigate */
+
+.container {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+  padding-left: var(--text-indent, 19px);
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  font-weight: 300;
+  color: var(--ink-ghost);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 2px;
+  transition: color 0.2s ease, background-color 0.2s ease;
+  opacity: 0;
+}
+
+/* Show on entry hover */
+*:hover > .container .link,
+.container:focus-within .link {
+  opacity: 1;
+}
+
+.link:hover {
+  color: var(--ink-faint);
+  background: var(--paper-warm);
+}
+
+.arrow {
+  font-size: 11px;
+  line-height: 1;
+}
+
+.count {
+  letter-spacing: 0.5px;
+}
+
+/* Thread highlight class — applied dynamically via JS */
+:global(.thread-highlight) {
+  background: var(--amber-dim) !important;
+  outline: 1px solid color-mix(in srgb, var(--amber) 20%, transparent);
+  outline-offset: 2px;
+  border-radius: 2px;
+  transition: background 0.3s ease, outline 0.3s ease;
+}
+
+.link:focus-visible {
+  outline: 2px solid var(--margin);
+  outline-offset: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .link { transition: none; }
+  :global(.thread-highlight) { transition: none; }
+}

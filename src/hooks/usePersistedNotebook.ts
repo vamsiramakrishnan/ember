@@ -3,7 +3,7 @@
  * Reads entries from persistence, writes back on every mutation.
  * Supports cross-out, bookmark, pin, annotations, and streaming.
  */
-import { useCallback, useRef, useState, useEffect } from 'react';
+import { useCallback, useRef, useState, useEffect, useMemo } from 'react';
 import { Store, useStoreQuery, notify } from '@/persistence';
 import { createEntry, getEntriesBySession, updateEntry, updateEntryContent } from '@/persistence/repositories/entries';
 import { createId } from '@/persistence/ids';
@@ -33,14 +33,14 @@ export function usePersistedNotebook(sessionId: string | null) {
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, []);
 
-  const entries = dbEntries.map((le) => {
+  const entries = useMemo(() => dbEntries.map((le) => {
     const contentPatch = localPatches.get(le.id);
     const meta = metaPatches.get(le.id);
     let result = le;
     if (contentPatch) result = { ...result, entry: contentPatch };
     if (meta) result = { ...result, ...meta };
     return result;
-  });
+  }), [dbEntries, localPatches, metaPatches]);
 
   // Reconcile content patches with DB
   // eslint-disable-next-line react-hooks/exhaustive-deps

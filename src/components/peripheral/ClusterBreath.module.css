@@ -1,0 +1,25 @@
+/* ClusterBreath — breathing gap between conversation clusters */
+
+.breath {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.line {
+  width: 64px;
+  height: 1px;
+  background: var(--rule-light);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.breath:hover .line {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .line { transition: none; }
+}

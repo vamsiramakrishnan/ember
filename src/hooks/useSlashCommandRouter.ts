@@ -1,6 +1,8 @@
 /** useSlashCommandRouter — routes /commands to agent pipelines. */
 import { useCallback, useRef } from 'react';
 import { isGeminiAvailable } from '@/services/gemini';
+import { setTutorActivity } from '@/state';
+import { narrateStep, cancelNarration } from '@/services/status-narrator';
 import { useResearcher } from './useResearcher';
 import { generateIllustration } from '@/services/enrichment';
 import { generateReadingMaterial } from '@/services/reading-material-gen';
@@ -35,12 +37,37 @@ const COMMAND_TIERS: Record<string, ContextTier> = {
   delve: 2, study: 2, lesson: 2, review: 2, compare: 2, origins: 2, illustrate: 2,
 };
 
+/** Step label → TutorActivityStep mapping for slash commands. */
+const SLASH_STEP_MAP: Record<string, 'enriching' | 'visualizing' | 'illustrating' | 'researching'> = {
+  'preparing reading material': 'enriching',
+  'creating flashcards': 'enriching',
+  'designing exercises': 'enriching',
+  'sketching': 'illustrating',
+  'researching': 'researching',
+  'recording podcast': 'enriching',
+};
+
 async function withProcessing(
-  label: string, add: (e: NotebookEntry) => string | Promise<string>,
-  patch: (id: string, e: NotebookEntry) => void, work: () => Promise<NotebookEntry | null>,
+  label: string,
+  add: (e: NotebookEntry) => string | Promise<string>,
+  patch: (id: string, e: NotebookEntry) => void,
+  work: () => Promise<NotebookEntry | null>,
+  query?: string,
 ) {
   const id = await add({ type: 'silence', text: `${label}\u2026` });
-  patch(id, await work() ?? { type: 'tutor-marginalia', content: 'That didn\u2019t work \u2014 try again.' });
+
+  // Activate tutor activity so TutorActivity + StatusNarrator render
+  const step = SLASH_STEP_MAP[label] ?? 'enriching';
+  setTutorActivity(true, false, { step, label: `${label}\u2026` });
+  if (query) narrateStep(step, query);
+
+  try {
+    const result = await work();
+    patch(id, result ?? { type: 'tutor-marginalia', content: 'That didn\u2019t work \u2014 try again.' });
+  } finally {
+    cancelNarration();
+    setTutorActivity(false, false, null);
+  }
 }
 
 export function useSlashCommandRouter({
@@ -64,7 +91,7 @@ export function useSlashCommandRouter({
     const q = ctx.resolvedQuery;
     const ctxBlock = ctx.formatted;
     const wp = (l: string, w: () => Promise<NotebookEntry | null>) =>
-      withProcessing(l, addEntryWithId, patchEntryContent, w);
+      withProcessing(l, addEntryWithId, patchEntryContent, w, q);
 
     switch (command.id) {
       case 'research':

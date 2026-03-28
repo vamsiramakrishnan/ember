@@ -5,6 +5,7 @@
  * that the illustrator can apply via image+text→image.
  */
 import { EMBER_DESIGN_CONTEXT, TOOLS, type AgentConfig } from './config';
+import { MODELS } from '../gemini';
 
 const INSTRUCTION = `${EMBER_DESIGN_CONTEXT}
 
@@ -30,7 +31,7 @@ Use Google Search to verify factual claims shown in the illustration.`;
 
 export const IMAGE_CRITIC_AGENT: AgentConfig = {
   name: 'ImageCritic',
-  model: 'gemini-3-flash-preview',
+  model: MODELS.heavy,
   systemInstruction: INSTRUCTION,
   thinkingLevel: 'HIGH',
   tools: [TOOLS.googleSearch],

@@ -1,8 +1,8 @@
 /**
- * GraphDetail — shows metadata for the focused graph node.
- * Appears at the bottom of the canvas. Quiet, paper background, rule border.
+ * GraphDetail — metadata panel for the focused graph node.
+ * Warm, typographically refined, appears below the graph field.
  */
-import type { GraphNode } from '@/types/graph-canvas';
+import type { CanvasNode } from '@/types/graph-canvas';
 import styles from './GraphDetail.module.css';
 
 interface Neighbor {
@@ -12,60 +12,32 @@ interface Neighbor {
 }
 
 interface GraphDetailProps {
-  node: GraphNode;
+  node: CanvasNode;
   neighbors: Neighbor[];
 }
 
 export function GraphDetail({ node, neighbors }: GraphDetailProps) {
   return (
     <div className={styles.container} role="region" aria-label={`Details for ${node.label}`}>
-      {node.kind === 'concept' && <ConceptDetail node={node} />}
-      {node.kind === 'thinker' && <ThinkerDetail node={node} />}
-      {node.kind === 'term' && <TermDetail node={node} />}
-      {node.kind === 'curiosity' && <CuriosityDetail node={node} />}
+      <div className={styles.header}>
+        <span className={styles.name}>{node.label}</span>
+        <span className={styles.kind}>{node.kind}</span>
+      </div>
+      {node.detail && <p className={styles.detail}>{node.detail}</p>}
+      {node.dates && <span className={styles.meta}>{node.dates}</span>}
+      {node.mastery !== undefined && node.mastery > 0 && (
+        <div className={styles.masteryRow}>
+          <div className={styles.masteryTrack}>
+            <div className={styles.masteryFill} style={{ width: `${node.mastery}%` }} />
+          </div>
+          <span className={styles.masteryLabel}>{node.mastery}%</span>
+        </div>
+      )}
       {neighbors.length > 0 && (
         <p className={styles.neighbors}>
-          Connected to: {neighbors.map((n) => n.label).join(', ')}
+          {neighbors.map((n) => n.label).join(' · ')}
         </p>
       )}
-    </div>
-  );
-}
-
-function ConceptDetail({ node }: { node: GraphNode }) {
-  return (
-    <div>
-      <span className={styles.conceptLabel}>{node.label}</span>
-      {node.mastery !== undefined && (
-        <span className={styles.meta}>{node.mastery}% mastery</span>
-      )}
-    </div>
-  );
-}
-
-function ThinkerDetail({ node }: { node: GraphNode }) {
-  return (
-    <div>
-      <span className={styles.thinkerName}>{node.label}</span>
-      {node.detail && <span className={styles.meta}>{node.detail}</span>}
-      {node.dates && <span className={styles.meta}>{node.dates}</span>}
-    </div>
-  );
-}
-
-function TermDetail({ node }: { node: GraphNode }) {
-  return (
-    <div>
-      <span className={styles.termLabel}>{node.label}</span>
-      {node.detail && <span className={styles.meta}>{node.detail}</span>}
-    </div>
-  );
-}
-
-function CuriosityDetail({ node }: { node: GraphNode }) {
-  return (
-    <div>
-      <span className={styles.curiosityLabel}>{node.label}</span>
     </div>
   );
 }

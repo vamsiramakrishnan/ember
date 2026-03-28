@@ -1,0 +1,352 @@
+/* SlideVisualAids — CSS for data-driven slide visuals */
+
+/* ─── Shared accent tints ─────────────────────────── */
+.accent_sage { --va: var(--sage); }
+.accent_indigo { --va: var(--indigo); }
+.accent_amber { --va: var(--amber); }
+.accent_margin { --va: var(--margin); }
+
+/* ─── Stat Cards ──────────────────────────────────── */
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+}
+.statCard {
+  padding: 16px 12px;
+  border: 1px solid var(--rule-light);
+  border-radius: 2px;
+  background: var(--paper-warm);
+  border-top: 3px solid var(--va, var(--rule));
+  text-align: center;
+}
+.statValue {
+  display: block;
+  font-family: var(--font-tutor);
+  font-size: 28px;
+  font-weight: 300;
+  color: var(--va, var(--ink));
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+}
+.statLabel {
+  display: block;
+  font-family: var(--font-system);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-top: 6px;
+}
+.statDetail {
+  display: block;
+  font-family: var(--font-student);
+  font-size: 12px;
+  color: var(--ink-faint);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+/* ─── Process Flow ────────────────────────────────── */
+.processFlow {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.processItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  position: relative;
+}
+.processNum {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  border: 1.5px solid var(--va, var(--ink-ghost));
+  font-family: var(--font-system);
+  font-size: 11px;
+  color: var(--va, var(--ink-faint));
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.processContent { flex: 1; padding-bottom: 8px; }
+.processStep {
+  display: block;
+  font-family: var(--font-tutor);
+  font-size: 15px;
+  color: var(--ink);
+}
+.processDetail {
+  display: block;
+  font-family: var(--font-student);
+  font-size: 13px;
+  color: var(--ink-faint);
+  margin-top: 2px;
+  line-height: 1.5;
+}
+.processArrow {
+  font-family: var(--font-system);
+  font-size: 14px;
+  color: var(--ink-ghost);
+  position: absolute;
+  left: 7px; bottom: -2px;
+  transform: rotate(90deg);
+}
+
+/* ─── Pyramid ─────────────────────────────────────── */
+.pyramid {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.pyramidLayer {
+  padding: 10px 16px;
+  border: 1px solid var(--rule-light);
+  border-radius: 2px;
+  background: var(--paper-warm);
+  border-left: 3px solid var(--va, var(--rule));
+  text-align: center;
+  transition: width 0.3s ease;
+}
+.pyramidLabel {
+  display: block;
+  font-family: var(--font-tutor);
+  font-size: 14px;
+  color: var(--ink);
+}
+.pyramidDetail {
+  display: block;
+  font-family: var(--font-student);
+  font-size: 12px;
+  color: var(--ink-faint);
+  margin-top: 2px;
+}
+
+/* ─── Comparison ──────────────────────────────────── */
+.comparison { }
+.compHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+.compLabel {
+  font-family: var(--font-tutor);
+  font-size: 16px;
+  color: var(--va, var(--ink));
+  font-weight: 400;
+}
+.compVs {
+  font-family: var(--font-system);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink-ghost);
+}
+.compColumns {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 16px;
+}
+.compDivider {
+  width: 1px;
+  background: var(--rule);
+  min-height: 40px;
+}
+.compList {
+  list-style: none;
+  margin: 0; padding: 0;
+}
+.compList li {
+  font-family: var(--font-student);
+  font-size: 13px;
+  color: var(--ink-soft);
+  line-height: 1.6;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--rule-light);
+}
+.compList li:last-child { border-bottom: none; }
+
+/* ─── Funnel ──────────────────────────────────────── */
+.funnel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.funnelStage {
+  padding: 10px 16px;
+  background: var(--paper-warm);
+  border: 1px solid var(--rule-light);
+  border-radius: 2px;
+  border-top: 2px solid var(--va, var(--rule));
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: width 0.3s ease;
+}
+.funnelLabel {
+  font-family: var(--font-tutor);
+  font-size: 14px;
+  color: var(--ink);
+  flex: 1;
+}
+.funnelValue {
+  font-family: var(--font-system);
+  font-size: 12px;
+  color: var(--va, var(--ink-faint));
+  font-weight: 500;
+}
+.funnelDetail {
+  font-family: var(--font-student);
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+/* ─── Cycle ───────────────────────────────────────── */
+.cycle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  position: relative;
+}
+.cycleStep {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--rule-light);
+  border-radius: 2px;
+  background: var(--paper-warm);
+  border-left: 3px solid var(--va, var(--rule));
+  position: relative;
+}
+.cycleNum {
+  font-family: var(--font-system);
+  font-size: 10px;
+  color: var(--va, var(--ink-faint));
+  width: 18px; height: 18px;
+  border: 1px solid var(--va, var(--ink-ghost));
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.cycleLabel {
+  font-family: var(--font-tutor);
+  font-size: 14px;
+  color: var(--ink);
+  flex: 1;
+}
+.cycleDetail {
+  font-family: var(--font-student);
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+.cycleArrow {
+  font-family: var(--font-system);
+  font-size: 12px;
+  color: var(--ink-ghost);
+  position: absolute;
+  left: 18px; bottom: -11px;
+  z-index: 1;
+}
+.cycleStep:last-of-type .cycleArrow { display: none; }
+.cycleReturn {
+  font-family: var(--font-system);
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--ink-ghost);
+  margin-top: 6px;
+}
+
+/* ─── Checklist ───────────────────────────────────── */
+.checklist {
+  list-style: none;
+  margin: 0; padding: 0;
+}
+.checkItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--rule-light);
+}
+.checkItem:last-child { border-bottom: none; }
+.checkMark {
+  font-family: var(--font-system);
+  font-size: 14px;
+  color: var(--ink-ghost);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.checked .checkMark { color: var(--sage); }
+.checkText {
+  font-family: var(--font-student);
+  font-size: 14px;
+  color: var(--ink-soft);
+  line-height: 1.6;
+}
+.checked .checkText { color: var(--ink); }
+
+/* ─── Matrix ──────────────────────────────────────── */
+.matrix {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.matrixTop, .matrixBottom {
+  font-family: var(--font-system);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.matrixBody {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+.matrixLeft, .matrixRight {
+  font-family: var(--font-system);
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  writing-mode: vertical-lr;
+  text-align: center;
+  flex-shrink: 0;
+}
+.matrixLeft { transform: rotate(180deg); }
+.matrixGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  flex: 1;
+}
+.matrixCell {
+  padding: 14px 12px;
+  border: 1px solid var(--rule-light);
+  border-radius: 2px;
+  background: var(--paper-warm);
+  border-top: 2px solid var(--va, var(--rule));
+  font-family: var(--font-student);
+  font-size: 13px;
+  color: var(--ink-soft);
+  text-align: center;
+  line-height: 1.5;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ─── Reduced motion ──────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .pyramidLayer, .funnelStage { transition: none; }
+}

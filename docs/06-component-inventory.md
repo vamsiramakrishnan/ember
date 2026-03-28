@@ -585,3 +585,305 @@ These elements appear only within the Constellation surface (Surface 2). They pr
 - Hover: `paper-warm` background, 200ms ease transition
 
 **Behaviour.** Primary text cards represent the student's current reading, inferred from session content. The AI introduces texts through connections and marginalia. When a text is referenced enough to become part of the student's intellectual landscape, it appears here.
+
+---
+
+## Family 9: Extended Content Elements
+
+As Ember has matured, the tutor's repertoire has expanded beyond the original prose-and-diagram vocabulary. The following elements emerged from real tutoring needs: some concepts are best explored through structured practice, some through media, some through code. Each element earns its place by serving a pedagogical function that the original seven families cannot.
+
+These elements obey the same laws as every other block: they are typed, they reference only the token system, they sit inside the 640px column, they never interrupt the student, and they appear only when the tutor's pedagogical judgment calls for them. They are marginalia in a richer hand — not a departure from the notebook metaphor, but an acknowledgment that a tutor's desk has more on it than just a pen.
+
+---
+
+### 9.1 — Inline Response
+
+**What it is.** A targeted tutor annotation on a specific passage the student wrote. Where marginalia (2.1) responds to the student's general thread of thought, the inline response addresses a particular sentence or phrase — the equivalent of a tutor underlining a passage and writing a note in the margin beside it.
+
+**Visual specification.**
+- Quoted text: Crimson Pro, 15px, `ink-faint`, 1px left border in `rule`, 16px left padding, `paper-deep` background
+- Quote clamp: maximum 4 visible lines, fades if longer
+- Intent label: IBM Plex Mono, 9px, `ink-ghost`, uppercase, 2px letter-spacing. Reads "on", "defining", or "connecting" depending on intent
+- Response: identical to Marginalia (2.1) — CSS grid with 3px margin rule, Cormorant Garamond 17.5px in `margin`
+- Animation: 0.7s ease reveal
+
+**Behaviour.** Inline responses are generated when the tutor identifies a specific claim, definition, or connection in the student's writing that warrants direct engagement. The quoted passage provides context; the response provides annotation. The three intents (explain, define, connect) map to different pedagogical moves but share the same visual treatment.
+
+**Compositional rules.** Inline responses follow student entries. They are never consecutive — at most one per student entry.
+
+---
+
+### 9.2 — Reading Material
+
+**What it is.** A structured sequence of slides the tutor assembles when a concept benefits from sustained, ordered exposition. Not a lecture — a curated reading, like a tutor pulling three pages from three different books and laying them in sequence on the desk.
+
+**Visual specification.**
+- Container: 1px `rule` border, `paper` background, 16px vertical margin
+- Cover art (optional): 48×48px, 2px radius, sepia-tinted
+- Icon (if no cover): Cormorant Garamond, 20px, `amber`
+- Title: Cormorant Garamond, 19px, `ink`, −0.2px letter-spacing
+- Subtitle: Crimson Pro, 14px, Light (300), `ink-faint`
+- Badge: IBM Plex Mono, 9px, `ink-ghost`, uppercase, 1.5px letter-spacing
+- Slide heading: Cormorant Garamond, 20px, `ink`
+- Slide body: Crimson Pro, 15px, `ink-soft`, line-height 1.75
+- Slide rule accent: 2px top border, semantic colour (`sage`, `indigo`, `amber`, or `margin`)
+- Navigation: 1px `rule-light` borders, `ink-faint` arrows, 0.15s transitions
+
+**Three disclosure levels.** Collapsed (title only), expanded inline (paginated slides within the notebook flow), and modal (full-screen reading). The student controls the level. The default is collapsed — the tutor places the reading on the desk; the student decides whether to open it.
+
+**Behaviour.** Reading materials are generated for topics that exceed the scope of a single marginalia entry. They are always preceded by a connection or marginalia explaining their relevance. The tutor never drops a reading without context.
+
+**Compositional rules.** Reading materials are followed by silence or a Socratic question. They are never followed by another tutor element — the student needs time to process.
+
+---
+
+### 9.3 — Flashcard Deck
+
+**What it is.** A set of recall-practice cards the tutor generates when the student has encountered enough new terms or concepts to benefit from spaced retrieval. The flashcard deck is not gamification — it is the oldest study tool in existence, formalised.
+
+**Visual specification.**
+- Container: 1px `rule` border, `paper` background, 16px vertical margin
+- Header icon: Cormorant Garamond, 18px, `indigo`
+- Title: Cormorant Garamond, 17px, `ink`, −0.1px letter-spacing
+- Card: maximum 480px wide, minimum 180px tall, `perspective: 800px`
+- Front face: `paper` background, 1px `rule` border, 24px padding
+- Back face: `paper-warm` background, same border and padding
+- Flip animation: `rotateY(180deg)`, 0.5s cubic-bezier(0.16, 1, 0.3, 1)
+- Side labels ("question" / "answer"): IBM Plex Mono, 9px, `ink-ghost`, uppercase, 2px letter-spacing
+- Front text: Cormorant Garamond, 18px, `ink`, centred, line-height 1.65
+- Back text: Crimson Pro, 15px, `ink-soft`, centred, line-height 1.75
+- Progress: IBM Plex Mono, 10px, `ink-ghost`
+
+**Behaviour.** Collapsed by default (title + card count). The student opens the deck when ready. Cards flip on click/tap. Navigation arrows move between cards. No scoring, no streaks, no completion percentage — the student uses the deck as they would use physical flashcards. The tutor can reference deck contents in later sessions.
+
+**Compositional rules.** Flashcard decks follow marginalia or a Socratic sequence. They are never the first element in a session.
+
+---
+
+### 9.4 — Exercise Set
+
+**What it is.** A sequence of practice problems the tutor poses when the student needs to test their understanding through application. Not a quiz — there is no score. Each exercise is a thinking prompt with progressive hints.
+
+**Visual specification.**
+- Container: 1px `rule` border, `paper` background, 16px vertical margin
+- Header icon: Cormorant Garamond, 18px, `sage`
+- Title: Cormorant Garamond, 17px, `ink`
+- Difficulty badge: IBM Plex Mono, 9px, `sage`, uppercase
+- Format label: IBM Plex Mono, 9px, `ink-ghost`, uppercase, 2px letter-spacing
+- Prompt: Cormorant Garamond Italic, 18px, `ink`, line-height 1.75
+- Concept tag: IBM Plex Mono, 9px, `indigo`, uppercase
+- Hint text: Crimson Pro, 14px, `ink-faint`, line-height 1.70
+- Hint reveal: "show hint" button, `indigo` text, disappears after reveal
+
+**Behaviour.** Collapsed by default. Exercises are ordered by difficulty within the set. Hints are revealed one at a time — the student must attempt the problem before requesting help. The exercise set does not collect answers; it presents problems. The student responds in the notebook's InputZone, below the exercise set, as they would with any Socratic question.
+
+**Compositional rules.** Exercise sets follow a teaching sequence — marginalia, concept diagram, or reading material. They are never the opening move.
+
+---
+
+### 9.5 — Illustration
+
+**What it is.** A generated or referenced image the tutor places in the notebook when visual explanation exceeds what a concept diagram can convey. Where concept diagrams (2.4) show relationships between labelled nodes, illustrations show the thing itself — a diagram of orbital mechanics, a rendering of a waveform, a reproduction of a historical map.
+
+**Visual specification.**
+- Image: maximum height 320px, `object-fit: contain`, 1px `rule` border, 2px radius
+- Caption: IBM Plex Mono, 10px, Light (300), `ink-ghost`, uppercase, 1px letter-spacing
+- Expand hint: IBM Plex Mono, 9px, uppercase, fades in on hover
+- Lightbox: centred modal, maximum height `calc(100vh − 96px)`
+
+**Behaviour.** Illustrations are progressive — thumbnail in the notebook flow, lightbox on click. They are always captioned. They are always preceded by marginalia that provides context. The tutor never places an image without explanation.
+
+**Compositional rules.** Illustrations follow marginalia or connections. They can precede a Socratic question ("Look at this. What do you notice?").
+
+---
+
+### 9.6 — Visualization
+
+**What it is.** An interactive, code-generated visual — a simulation, a dynamic chart, a manipulable diagram. Where illustrations (9.5) are static, visualizations respond to the student. They are the closest Ember comes to the embodied learning that static notebooks cannot provide.
+
+**Visual specification.**
+- Container: 1px `rule` border, 2px radius, `paper` background
+- Thumbnail mode: clipped to 280px height, gradient fade to `paper` at bottom
+- Expand hint: IBM Plex Mono, 9px, `ink-faint`, uppercase, positioned below fade
+- Expanded mode: full content height, maximum 1200px
+- Caption: IBM Plex Mono, 10px, Light (300), `ink-ghost`, lowercase, 1px letter-spacing
+- Loading skeleton: gradient pulse, `paper` → `paper-warm` → `paper`, 1.8s cycle
+
+**Behaviour.** Rendered in a sandboxed iframe (`allow-scripts allow-same-origin`). The iframe reports its content height via `postMessage`. Progressive disclosure: thumbnail → expanded inline → modal lightbox. The student controls the level.
+
+**Compositional rules.** Visualizations follow a teaching sequence. They are never orphaned — always preceded by context and often followed by a Socratic question that asks the student to interact with the visualization and report what they observe.
+
+---
+
+### 9.7 — Podcast
+
+**What it is.** An audio segment the tutor generates or references when a concept benefits from narrative exposition or when the student's learning mode favours listening. Not entertainment — a focused audio explanation, like a tutor talking through an idea while the student listens and takes notes.
+
+**Visual specification.**
+- Container: `paper-deep` background, 1px `rule-light` border, 2px radius, 20px padding
+- Label: IBM Plex Mono, 9px, `ink-ghost`, uppercase, 2px letter-spacing
+- Topic: Cormorant Garamond, 20px, Light (300), `ink`, line-height 1.3
+- Play button: 36px circle, 1px `rule` border, `paper` background, `ink-soft` icon
+- Waveform: 48px height, canvas-rendered, seekable
+- Time: IBM Plex Mono, 10px, Light (300), `ink-faint`
+- Transcript toggle: IBM Plex Mono, 10px, Light (300), `ink-faint`
+- Transcript: Crimson Pro, 14px, `ink-soft`, pre-wrap, maximum 200px scrollable height
+
+**Behaviour.** Multi-segment support with auto-advance. Transcript is collapsible. Cover art is optional. The waveform is seekable by click/tap. The podcast does not autoplay — the student initiates.
+
+**Compositional rules.** Podcasts are rare — one per session at most. They follow marginalia that explains what the student will hear and why.
+
+---
+
+### 9.8 — Code Cell
+
+**What it is.** An editable code block for subjects where the student is learning through programming — mathematics expressed as computation, data analysis, algorithmic thinking. The code cell is the notebook's concession to the fact that some ideas are best expressed in a formal language.
+
+**Visual specification.**
+- Container: 2px `rule` left border, `text-indent` left padding, 12px vertical margin
+- Language label: IBM Plex Mono, 9px, `ink-ghost`, uppercase, 2px letter-spacing
+- Run button: IBM Plex Mono, 9px, `ink-ghost`, 1px `rule` border, 2px radius
+- Source: IBM Plex Mono, 13px, `ink`, `paper-warm` background, 12px 16px padding, 2px radius
+- Editor: IBM Plex Mono, 13px, `paper-warm` background, 1px `margin` border, minimum 80px height
+- Standard output: IBM Plex Mono, 12px, `ink-soft`, pre-wrap
+- Error output: IBM Plex Mono, 12px, `amber`, pre-wrap
+
+**Behaviour.** Click to enter edit mode. Run button executes the cell (if execution is available). Output appears below. The code cell maintains the notebook's permanence principle — executed code becomes part of the record. The student can edit and re-run, but earlier executions are preserved.
+
+**Compositional rules.** Code cells are interspersed with prose and tutor marginalia. The tutor may create a code cell with a partial implementation and ask the student to complete it — a Socratic probe in formal language.
+
+---
+
+### 9.9 — Directive
+
+**What it is.** An explicit instruction from the tutor — not a question, not a suggestion, but a thing to do. "Read the first chapter of this text." "Draw what you think the orbit looks like." "Explain this concept to someone at dinner tonight." Directives are the tutor's way of assigning work that happens outside the notebook.
+
+**Visual specification.**
+- Rule: 24px width, 1px height, `indigo` at 30% opacity (→ `sage` on completion)
+- Body: 16px left padding, 2px `indigo` left border (→ `sage` on completion)
+- Action label: IBM Plex Mono, 9px, `indigo`, uppercase (→ `sage` on completion)
+- Text: Cormorant Garamond, 16px, `ink-soft`, line-height 1.75
+- Completion: opacity reduces to 0.55, checkmark glyph in `sage`, 0.4s reveal animation
+- Completed label: IBM Plex Mono, 9px, `sage`, Light (300), 1px letter-spacing
+
+**Behaviour.** The student can mark a directive as complete. Completion is recorded with a timestamp. Completed directives remain visible but fade to peripheral visibility. The tutor can reference completed directives in later sessions.
+
+**Compositional rules.** Directives follow a teaching sequence. They are never the first element. They are often the last element before silence — the tutor assigns something and waits.
+
+---
+
+### 9.10 — Reflection
+
+**What it is.** A session-level synthesis placed by the tutor at the natural end of a session's intellectual arc. Not a "what we learned today" summary — a quiet observation about the shape of the student's thinking. The equivalent of a tutor pausing, looking at the notebook, and saying: "Do you see what happened here?"
+
+**Visual specification.**
+- Container: 24px vertical padding, 16px vertical margin
+- Top rule: 40% width, 1px height, `rule`, centred
+- Bottom rule: same
+- Text: Cormorant Garamond Italic, 15px, Light (300), `ink-faint`, line-height 1.80, centred, 32px horizontal padding
+
+**Behaviour.** Reflections are rare — at most one per session, and only when the session has produced genuine intellectual movement. They are never congratulatory. They name a pattern, draw a thread, or pose an open question that the student carries away.
+
+**Compositional rules.** Reflections appear at the end of a session, before the session divider. They are never followed by another tutor element.
+
+---
+
+### 9.11 — Streaming Text
+
+**What it is.** Not a content element — a transient state. When the tutor is composing a response, the streaming text element shows the response materialising word by word. It is the digital equivalent of watching someone write in the margin of your notebook.
+
+**Visual specification.**
+- Layout: identical to Marginalia (2.1) — CSS grid with margin rule
+- Rule: margin rule at 35% opacity, with a slow pulse animation (2s, 0.35 → 0.50 opacity) during streaming
+- Text: Cormorant Garamond, 17.5px, `margin`, line-height 1.78, pre-wrap
+- Cursor: 1px × 22px, `margin`, `emberCursorBlink` animation, positioned at text end
+- Composing label: IBM Plex Mono, 10px, Light (300), `ink-ghost`, 0.5px letter-spacing
+
+**Behaviour.** The streaming text element appears when the tutor begins generating a response. It shows the text arriving in real time via semantic buffering — incomplete code blocks, math expressions, and tables are masked until their delimiters close. When streaming completes, the element is replaced by the final typed element (Marginalia, SocraticQuestion, etc.).
+
+**Compositional rules.** Streaming text occupies the position where the final element will appear. It is always transient.
+
+---
+
+### 9.12 — Media Entries
+
+The notebook accepts media from the student's world — photographs, documents, embedded links. These are not pedagogical tools; they are the student bringing something to the desk. A photo of a whiteboard from school. A PDF chapter their teacher assigned. A link to a video they found interesting.
+
+#### Image Entry
+
+**Visual specification.**
+- Container: 12px vertical margin, `text-indent` left padding
+- Image: 100% maximum width, 2px radius, 1px `rule` border, lazy-loaded
+- Caption: IBM Plex Mono, 11px, Light (300), `ink-faint`, 0.3px letter-spacing, 6px top margin
+
+#### File Upload Entry
+
+**Visual specification.**
+- Container: 12px vertical margin, `text-indent` left padding
+- File card: flex row, 12px gap, 12px 16px padding, 1px `rule` border, 2px radius
+- Icon: IBM Plex Mono, 16px, `ink-faint` (mimetype-based: ◻ image, ▤ document, ≡ text, { } code, ◇ other)
+- Name: Crimson Pro, 15px, `ink`, text-overflow ellipsis
+- Size: IBM Plex Mono, 10px, `ink-ghost`, 0.5px letter-spacing
+- AI summary (optional): Cormorant Garamond Italic, 15px, `ink-soft`, line-height 1.70, 36px left padding
+
+#### Document Entry
+
+**Visual specification.**
+- Container: 12px vertical margin, `text-indent` left padding
+- PDF preview (if applicable): 100% width, 360px height (240px mobile), 1px `rule` border, 2px radius
+- Document card: flex row, `paper-warm` background, 1px `rule` border, 2px radius, 16px padding
+- Icon: 24px, `ink-faint`
+- Name: Crimson Pro, 16px, `ink`
+- Metadata: IBM Plex Mono, 10px, `ink-faint`, 0.5px letter-spacing
+- Extracted text: 16px left padding, 1px `rule` left border, Crimson Pro 14px `ink-soft`, line-height 1.70, maximum 200px scrollable
+
+#### Embed Entry
+
+**Visual specification.**
+- Bookmark card: flex row, 12px gap, 14px 16px padding, 1px `rule` border, 2px radius
+- Hover: `ink-ghost` border, `paper-warm` background, 0.2s transition
+- Favicon: 16×16px, 2px radius
+- Title: Crimson Pro, 15px, `ink`, line-height 1.3
+- Description: Crimson Pro, 13px, `ink-faint`, line-height 1.5, 2-line clamp
+- Domain: IBM Plex Mono, 10px, `ink-faint`, 0.5px letter-spacing
+- Video (YouTube/Vimeo): 16:9 aspect ratio, 1px `rule` border, 2px radius
+- PDF: 100% width, 400px height (280px mobile), 1px `rule` border
+
+**Behaviour.** Media entries are created by the student through paste, drag-and-drop, or file selection. The tutor can see media entries and respond to them — "I see you've uploaded a diagram. Tell me what you notice about the symmetry." Media entries are permanent per the notebook's rules.
+
+**Compositional rules.** Media entries follow the student's flow. They can appear between any two student elements. The tutor's response to a media entry uses standard marginalia.
+
+---
+
+### 9.13 — Citation
+
+**What it is.** A source attribution block appended to tutor responses when the tutor's knowledge is grounded in specific retrievable sources. Not a bibliography — a quiet acknowledgment that the tutor's claims are traceable.
+
+**Visual specification.**
+- Container: 8px vertical margin, `text-indent` left padding
+- Label: IBM Plex Mono, 9px, `ink-faint`, uppercase, 1.5px letter-spacing
+- Source pills: inline-flex, 3px 8px padding, 1px `rule-light` border, 2px radius
+- Source hover: `ink-ghost` border
+- Domain: IBM Plex Mono, 10px, `ink-faint`, 0.3px letter-spacing
+- Title: Crimson Pro, 11px, `ink-faint`, maximum 200px, text-overflow ellipsis
+
+**Behaviour.** Citations appear below the tutor element they reference. They are visually peripheral — small, faint, ignorable. The student can click a citation to open the source. Citations are never annotated or explained; they exist as a quiet provenance trail.
+
+**Compositional rules.** Citations are attached to the tutor element they cite. They are never standalone.
+
+---
+
+### 9.14 — Carousel
+
+**What it is.** A horizontal arrangement for elements that benefit from side-by-side comparison — a set of thinker cards, a sequence of concept diagrams, a row of related illustrations. The carousel is not a slideshow; it is a shelf.
+
+**Visual specification.**
+- Container: 16px vertical margin, `text-indent` left padding
+- Label (optional): IBM Plex Mono, 9px, `ink-faint`, uppercase, 1.5px letter-spacing
+- Track: horizontal scroll-snap (mandatory, start-aligned), hidden scrollbar, 16px gap
+- Child items: 240–300px width, `scroll-snap-align: start`
+- Dot indicators: 5px circles, `ink-ghost` default, `margin` active, 6px gap, 0.2s transitions
+
+**Behaviour.** Children scroll horizontally with snap. Dot indicators show position (only rendered if more than one item). The carousel does not autoplay, does not loop, and does not animate between items. It scrolls as a physical shelf scrolls — by the student's hand.
+
+**Compositional rules.** Carousels contain cards, thinker cards, or illustrations. They do not contain prose, questions, or interactive elements. Maximum one carousel per tutor response.

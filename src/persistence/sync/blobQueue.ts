@@ -4,22 +4,9 @@
  * Synced status stored as 0/1 (IndexedDB indexes need numeric keys).
  */
 import { openDB } from '../engine';
+import { promisify, txDone } from '../idb-utils';
 
 const BLOB_QUEUE_STORE = 'blob_queue';
-
-function promisify<T>(req: IDBRequest<T>): Promise<T> {
-  return new Promise((resolve, reject) => {
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-}
-
-function txDone(tx: IDBTransaction): Promise<void> {
-  return new Promise((resolve, reject) => {
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-}
 
 /** Queue a blob for upload. */
 export async function queueBlobUpload(

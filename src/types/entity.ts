@@ -100,7 +100,7 @@ export interface EntryEntity extends EntityMeta {
   sessionId: string;
   order: number;
   entryType: EntryType;
-  content: EntryContent;
+  content: NotebookEntry;
   crossedOut: boolean;
   bookmarked: boolean;
   pinned: boolean;
@@ -122,17 +122,9 @@ export type EntityKind = Entity['kind'];
 // ─── Entry content types ──────────────────────────────────
 // Flat discriminated union — no nesting.
 
-export type EntryType =
-  | 'prose' | 'scratch' | 'hypothesis' | 'question' | 'sketch'
-  | 'tutor-marginalia' | 'tutor-question' | 'tutor-connection'
-  | 'concept-diagram' | 'thinker-card'
-  | 'code-cell' | 'image' | 'file-upload' | 'embed' | 'document'
-  | 'visualization' | 'illustration'
-  | 'silence' | 'divider' | 'echo' | 'bridge-suggestion'
-  | 'tutor-reflection' | 'tutor-directive' | 'citation'
-  | 'streaming-text';
+/** Derived from NotebookEntry discriminant — always in sync. */
+export type EntryType = NotebookEntry['type'];
 
-export type EntryContent = NotebookEntry;
 
 // ─── Relations ────────────────────────────────────────────
 

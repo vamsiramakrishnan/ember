@@ -38,6 +38,14 @@ The three surfaces are derived from the physical spaces of aristocratic tutoring
 
 Past sessions are accessible by scrolling beyond the top of the current session. The transition is marked by a subtle date divider — a thin ruled line with the session date in `ink-ghost` IBM Plex Mono. There is no "load more" button. The notebook is continuous, like a physical notebook. You flip backward.
 
+**The long notebook.** After a year of use, the notebook may contain hundreds of sessions and thousands of entries. Continuous scroll remains the primary access model — the notebook is still a notebook. But a 200-session notebook needs findability that a 5-session notebook does not. Three mechanisms address this without violating the metaphor:
+
+*Session scrubber.* On viewports wider than 800px, a thin vertical track appears in the right margin when the student scrolls into past sessions. Each session is represented by a 2px tick mark, with the current viewport position indicated by a small marker. The student can drag the marker to jump between sessions. The scrubber is invisible at rest and fades in on scroll — it is a page edge, not a sidebar. Rendered in `ink-ghost` at 20% opacity.
+
+*Temporal landmarks.* Session dividers (5.2) gain visual weight as temporal distance increases. The divider between yesterday's session and today's is a thin ruled line. The divider between last month and this month gains a month label. The divider between last year and this year gains a year label. These labels appear automatically and scale with the notebook's history, providing the equivalent of section tabs in a physical notebook.
+
+*Tutor-mediated retrieval.* The student does not search the notebook directly — there is no search bar. Instead, the student asks the tutor: "When did we talk about Fourier?" The tutor uses the knowledge graph's `search_history` tool to locate the relevant session and responds with an Echo (6.2) that links to it. This preserves the conversational model: the notebook is a dialogue, and finding something in it is part of the dialogue.
+
 ---
 
 ## Surface two: The Constellation
@@ -62,8 +70,19 @@ When a concept reaches fluency, the system offers a bridge — a quiet suggestio
 
 **Navigation within the Constellation.** The four aspects of the intellectual map (Overview, Lexicon, Encounters, Library) are accessed through quiet sub-navigation labels beneath the surface title. These are Cormorant Garamond at 14px, styled identically to the main navigation tabs but lighter — the active view has an `ink` underline, inactive views are `ink-faint`. The default view is Overview, showing Active Threads, Fluency, and Thinkers in Orbit. The student can switch views to examine their lexicon, encounter history, or reading list.
 
+**When the student visits, and why.** Each sub-view serves a specific reflective task. Without defined tasks, the Constellation becomes a museum — present, labelled, inert. The design must know what brings the student here.
+
+*Overview* — "What am I working on?" The student visits the Overview when they sit down to a new session and want to remember where they left off, or when they feel scattered and want to see the shape of their current inquiry. The active threads and fluency map answer this. Typical frequency: beginning of a session, once or twice a week.
+
+*Lexicon* — "What did I decide that word means?" The student visits the Lexicon when they encounter a term in their reading or in a tutor response and can't recall their own definition, or when they want to see how their understanding of a concept has evolved. The progressive disclosure (term → definition → etymology → cross-references) supports both quick lookup and deep reflection. Typical frequency: during a session, when a familiar term feels uncertain.
+
+*Encounters* — "When did I meet this thinker?" The student visits Encounters when the tutor references a connection to a thinker and the student wants the full context — what were they thinking about when they first met Kepler? What session was that? The encounter ledger is a temporal record, not a catalogue. It answers "when and why", not "who and what." Typical frequency: rarely — perhaps once a month, prompted by a tutor's echo or connection.
+
+*Library* — "What am I reading?" The student visits the Library to see which texts are on the desk, how deeply they've engaged with each, and whether a text has connections to their open questions. The library is deliberately small (three to five texts) because it reflects current focus, not historical breadth. Typical frequency: when starting a new text or when the tutor suggests a reading.
+
+*Knowledge Canvas* — "What does my thinking look like?" The student visits the Canvas when they want a spatial, bird's-eye view of how their concepts relate. This is a force-directed graph — concepts as nodes, relationships as edges — computed from the knowledge graph. The student can pan, zoom, and click nodes to see detail, but cannot edit the layout. The canvas is a map for orientation, not a tool for manipulation. It answers the question that lists cannot: "What is the shape of what I know?" Typical frequency: occasionally, when the student feels reflective about the breadth of their exploration rather than the depth of a single thread.
+
 **What it does not contain:**
-- A graph visualisation (nodes and edges on a canvas). The Constellation is a list, not a diagram. Graphs are visually impressive but cognitively expensive — they demand interpretation. The list is for reading, not for parsing.
 - Comparative metrics (percentile rankings, class averages, pace indicators)
 - Goals or targets
 - Gamification elements (streaks, badges, levels, unlockables)
@@ -136,7 +155,7 @@ Beneath the three surfaces lies a persistent knowledge graph — a traversable v
 
 **Edges:** references, connections, bridges, annotations, cross-references, introduces, explores, prompted-by.
 
-The graph is invisible to the student. They never see "knowledge graph" or "connections" as UI elements. Instead, the graph enables three things that were previously impossible:
+The graph is invisible to the student in the Notebook. They never see "knowledge graph" or "connections" as labels. Instead, the graph serves the tutor's intelligence and — in one carefully bounded context — offers the student a spatial view of their own thinking.
 
 **1. The tutor sees structurally.** When the student writes about harmonic ratios, the tutor's context includes not just the last 12 entries but the graph neighbourhood: which concepts are adjacent, which thinkers are connected, which questions are open, which gaps exist between strong and weak understanding. This is Layer 6 of the context assembler.
 
@@ -144,14 +163,18 @@ The graph is invisible to the student. They never see "knowledge graph" or "conn
 
 **3. Concept journeys.** The tutor can trace how the student's understanding of any concept evolved over time: first encounter, subsequent references, mastery changes, related discoveries. This enables the Echo (6.2) and Connection (2.3) patterns with precision — the tutor cites the student's own intellectual history.
 
+**4. The Knowledge Canvas.** The Constellation's Overview includes an optional spatial view — a force-directed graph rendering of the student's concept space. This is the one place where the graph becomes visible. It is accessed through the Constellation's sub-navigation, not surfaced proactively. The canvas shows concepts as nodes, with edges representing the relationships the tutor has identified. The student can pan, zoom, and click nodes to see detail, but cannot edit the graph — the spatial arrangement is computed, not authored. The canvas is a *map*, not a tool. It answers the question: "What does my thinking look like from above?"
+
+The knowledge canvas is deliberately separate from the Constellation's list views (Lexicon, Encounters, Library). The lists are for reading and reflection — scanning, finding, remembering. The canvas is for orientation — seeing the shape of one's knowledge as a whole. These are different cognitive tasks and they warrant different presentations. The canvas is never the default view. It is visited intentionally, the way one looks at a map before continuing a walk.
+
 **What the graph does not do:**
 
 - It does not generate notifications ("You have 3 unresolved questions!")
-- It does not create visible network diagrams in the Constellation (Constellation is a list, not a graph visualisation)
 - It does not rank or score the student's "knowledge coverage"
 - It does not suggest a curriculum path
+- It does not appear in the Notebook surface — the Notebook is for thinking, not for surveying
 
-The graph is infrastructure for intelligence, not a feature to be shown.
+The graph is primarily infrastructure for intelligence. Its one visible surface — the knowledge canvas — exists because some students think spatially, and denying them a spatial view of their own intellectual landscape would be a failure of the design's own principles.
 
 ---
 

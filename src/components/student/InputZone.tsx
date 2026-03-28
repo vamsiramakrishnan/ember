@@ -26,12 +26,14 @@ interface InputZoneProps {
   onInsertConsumed?: () => void;
   popupOpen?: boolean;
   disabled?: boolean;
+  /** Whether the last tutor entry was a Socratic question. */
+  afterQuestion?: boolean;
 }
 
 export function InputZone({
   onSubmit, onSubmitTyped, onSketchSubmit,
   onMentionTrigger, onSlashTrigger, onPopupClose, onPaste,
-  insertText, onInsertConsumed, popupOpen, disabled,
+  insertText, onInsertConsumed, popupOpen, disabled, afterQuestion,
 }: InputZoneProps) {
   const [value, setValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
@@ -113,7 +115,8 @@ export function InputZone({
   const displayType = forcedType ? typeLabels[forcedType] || forcedType : inferredType ? typeLabels[inferredType] : '';
 
   return (
-    <div className={styles.container} onClick={() => textareaRef.current?.focus()}>
+    <div className={`${styles.container} ${afterQuestion ? styles.afterQuestion : ''}`}
+      onClick={() => textareaRef.current?.focus()}>
       <BlockInserter onSelect={handleBlockSelect} />
       {forcedType && <div className={styles.forcedTypeBar}>
         <span className={styles.forcedTypeLabel}>{forcedType}</span>

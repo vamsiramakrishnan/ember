@@ -8,6 +8,8 @@ import { runAgenticLoop, runAgenticLoopStreaming, type AgenticResult } from './a
 import { getGeminiClient, isGeminiAvailable } from './gemini';
 import { parseTutorResponse } from './tutor-response-parser';
 import { setActivityDetail } from '@/state';
+import { narrateStep, cancelNarration } from './status-narrator';
+import { log, traceAgentDispatch } from '@/observability';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
 import type { DeferredAction } from './tool-executor';
 import type { GraphDeferredAction } from './graph-tools';
@@ -61,6 +63,7 @@ export async function orchestrate(
   profile?: StudentProfile | null,
   notebookCtx?: NotebookContext | null,
   lastSyncTimestamp?: number,
+  signal?: AbortSignal,
 ): Promise<OrchestratorResult> {
   if (!isGeminiAvailable()) return { entries: [], deferredActions: [] };
 
@@ -68,29 +71,37 @@ export async function orchestrate(
     studentText, entries, studentId, notebookId, lastSyncTimestamp,
     profile ?? null, notebookCtx ?? null,
   );
+  if (signal?.aborted) return { entries: [], deferredActions: [] };
   const results: NotebookEntry[] = [];
 
   setActivityDetail({ step: 'thinking', label: 'thinking...' });
+  narrateStep('thinking', studentText);
+  log.breadcrumb('orchestrator', 'tutor dispatch starting', { notebookId });
   let agenticResult: AgenticResult | null = null;
   try {
-    if (getGeminiClient()) {
-      agenticResult = await runAgenticLoop(
-        TUTOR_AGENT, setup.contextMessages,
-        { studentId, notebookId },
-      );
-    } else {
+    agenticResult = await traceAgentDispatch('tutor', TUTOR_AGENT.model, async () => {
+      if (getGeminiClient()) {
+        return runAgenticLoop(
+          TUTOR_AGENT, setup.contextMessages,
+          { studentId, notebookId },
+          signal,
+        );
+      }
       const result = await resilientTextAgent(TUTOR_AGENT, setup.contextMessages);
-      agenticResult = { text: result.text, toolCalls: [], deferredActions: [] };
       if (result.citations.length > 0) {
         results.push({ type: 'citation', sources: result.citations });
       }
-    }
+      return { text: result.text, toolCalls: [], deferredActions: [] };
+    });
+    if (signal?.aborted) return { entries: results, deferredActions: [] };
     const entry = parseTutorResponse(agenticResult.text);
     if (entry) results.push(entry);
   } catch (err) {
-    console.error('[Ember] Tutor error:', err);
+    log.error('Tutor dispatch failed', err instanceof Error ? err : undefined, { notebookId });
   }
 
+  cancelNarration();
+  if (signal?.aborted) return { entries: results, deferredActions: agenticResult?.deferredActions ?? [] };
   const post = await collectPostTutor(setup, studentText, entries, notebookId);
   results.unshift(...post.before);
   results.push(...post.after);
@@ -107,6 +118,7 @@ export async function streamOrchestrate(
   profile?: StudentProfile | null,
   notebookCtx?: NotebookContext | null,
   lastSyncTimestamp?: number,
+  signal?: AbortSignal,
 ): Promise<OrchestratorResult> {
   if (!isGeminiAvailable()) return { entries: [], deferredActions: [] };
 
@@ -114,32 +126,40 @@ export async function streamOrchestrate(
     studentText, entries, studentId, notebookId, lastSyncTimestamp,
     profile ?? null, notebookCtx ?? null,
   );
+  if (signal?.aborted) return { entries: [], deferredActions: [] };
   const results: NotebookEntry[] = [];
 
   setActivityDetail({ step: 'streaming', label: 'writing...' });
+  cancelNarration(); // Stop narration once streaming begins
+  log.breadcrumb('orchestrator', 'streaming tutor dispatch', { notebookId });
   let agenticResult: AgenticResult | null = null;
   try {
-    if (getGeminiClient()) {
-      agenticResult = await runAgenticLoopStreaming(
-        TUTOR_AGENT, setup.contextMessages,
-        { studentId, notebookId },
-        onChunk,
-      );
-    } else {
+    agenticResult = await traceAgentDispatch('tutor-stream', TUTOR_AGENT.model, async () => {
+      if (getGeminiClient()) {
+        return runAgenticLoopStreaming(
+          TUTOR_AGENT, setup.contextMessages,
+          { studentId, notebookId },
+          onChunk,
+          signal,
+        );
+      }
       const result = await resilientStreamingAgent(
         TUTOR_AGENT, setup.contextMessages, onChunk,
       );
-      agenticResult = { text: result.text, toolCalls: [], deferredActions: [] };
       if (result.citations.length > 0) {
         results.push({ type: 'citation', sources: result.citations });
       }
-    }
+      return { text: result.text, toolCalls: [], deferredActions: [] };
+    });
+    if (signal?.aborted) return { entries: results, deferredActions: [] };
     const entry = parseTutorResponse(agenticResult.text);
     if (entry) results.push(entry);
   } catch (err) {
-    console.error('[Ember] Streaming tutor error:', err);
+    log.error('Streaming tutor dispatch failed', err instanceof Error ? err : undefined, { notebookId });
   }
 
+  cancelNarration();
+  if (signal?.aborted) return { entries: results, deferredActions: agenticResult?.deferredActions ?? [] };
   const post = await collectPostTutor(setup, studentText, entries, notebookId);
   results.unshift(...post.before);
   results.push(...post.after);

@@ -4,6 +4,7 @@
  * Returns structured JSON with score, issues, and SEARCH/REPLACE patches.
  */
 import { EMBER_DESIGN_CONTEXT, TOOLS, type AgentConfig } from './config';
+import { MODELS } from '../gemini';
 
 const INSTRUCTION = `${EMBER_DESIGN_CONTEXT}
 
@@ -37,7 +38,7 @@ Use Google Search to verify factual claims. Use URL context to check sources.`;
 
 export const CRITIC_AGENT: AgentConfig = {
   name: 'Critic',
-  model: 'gemini-3-flash-preview',
+  model: MODELS.heavy,
   systemInstruction: INSTRUCTION,
   thinkingLevel: 'HIGH',
   tools: [TOOLS.googleSearch, TOOLS.urlContext],

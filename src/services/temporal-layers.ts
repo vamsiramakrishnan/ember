@@ -9,7 +9,7 @@
  * Counters are per-notebook and persisted to localStorage via temporal-counters.
  */
 import { ECHO_AGENT, REFLECTION_AGENT, RESEARCHER_AGENT } from './agents';
-import { runTextAgent } from './run-agent';
+import { resilientTextAgent } from './resilient-agent';
 import { isGeminiAvailable } from './gemini';
 import { getMasteryByNotebook } from '@/persistence/repositories/mastery';
 import { createRelation } from '@/persistence/repositories/graph';
@@ -48,7 +48,7 @@ export async function generateEcho(
   if (!pastStudent) return null;
 
   try {
-    const result = await runTextAgent(ECHO_AGENT, [{
+    const result = await resilientTextAgent(ECHO_AGENT, [{
       role: 'user',
       parts: [{ text: `Current student entry: "${studentText}"\n\nPast entries:\n${pastStudent}` }],
     }]);
@@ -83,7 +83,7 @@ export async function generateBridge(
     );
     if (developing.length === 0) return null;
     const concepts = developing.map((m) => `${m.concept} (${m.percentage}%)`).join(', ');
-    const result = await runTextAgent(RESEARCHER_AGENT, [{
+    const result = await resilientTextAgent(RESEARCHER_AGENT, [{
       role: 'user',
       parts: [{
         text: `Student is developing mastery in: ${concepts}.\nThey just wrote: "${studentText}"\n\nSuggest ONE intellectual bridge — a connection to a domain they haven't explored yet. One sentence. No preamble.`,
@@ -122,7 +122,7 @@ export async function generateReflection(
   }).join('\n');
 
   try {
-    const result = await runTextAgent(REFLECTION_AGENT, [{
+    const result = await resilientTextAgent(REFLECTION_AGENT, [{
       role: 'user',
       parts: [{ text: `Last ${entries.slice(-12).length} entries:\n${recent}` }],
     }]);

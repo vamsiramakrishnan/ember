@@ -125,6 +125,28 @@
   line-height: 1.2;
 }
 
+/* ─── Create new entity ghost row ────────────────── */
+.createRow {
+  border-top: 1px solid var(--rule-light);
+}
+.iconCreate {
+  color: var(--sage);
+  font-weight: 500;
+  font-size: 15px;
+}
+.createLabel {
+  font-family: var(--font-student);
+  font-size: 14px;
+  color: var(--ink-soft);
+  font-style: italic;
+}
+.createHint {
+  font-family: var(--font-system);
+  font-size: 10px;
+  color: var(--ink-ghost);
+  letter-spacing: 0.3px;
+}
+
 /* ─── Empty state ────────────────────────────────── */
 .empty {
   padding: 16px 14px;

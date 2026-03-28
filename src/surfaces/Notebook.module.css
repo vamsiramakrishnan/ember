@@ -68,9 +68,21 @@
   border-bottom-color: var(--ink-faint);
 }
 
+/* ─── InputZone container with scroll-fade ────────── */
+.inputZone {
+  position: relative;
+  transition: opacity 0.4s ease;
+}
+
+.inputFaded {
+  composes: inputZone;
+  opacity: 0.3;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .modeButton,
   .modeActive {
     transition: none;
   }
+  .inputZone, .inputFaded { transition: none; }
 }

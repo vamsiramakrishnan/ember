@@ -44,8 +44,6 @@ export type { HtmlGenerationOptions } from './gemini-html';
 export { analyseImage, extractTextFromImage } from './gemini-multimodal';
 export type { MultimodalAnalysisOptions } from './gemini-multimodal';
 
-// Tutor prompt (shared by tutor agent and multimodal reader)
-export { TUTOR_SYSTEM_PROMPT } from './tutor-prompt';
 
 // Mastery extraction
 export { extractMasterySignals } from './mastery-extractor';

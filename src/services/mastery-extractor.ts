@@ -10,7 +10,7 @@
  */
 import { isGeminiAvailable } from './gemini';
 import { RESEARCHER_AGENT } from './agents';
-import { runTextAgent } from './run-agent';
+import { resilientTextAgent } from './resilient-agent';
 
 export interface MasterySignal {
   concepts: Array<{
@@ -59,7 +59,7 @@ export async function extractMasterySignals(
     .join('\n');
 
   try {
-    const result = await runTextAgent(RESEARCHER_AGENT, [{
+    const result = await resilientTextAgent(RESEARCHER_AGENT, [{
       role: 'user',
       parts: [{ text: `${EXTRACTION_PROMPT}\n\nConversation:\n${conversation}` }],
     }]);

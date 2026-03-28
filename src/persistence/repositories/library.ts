@@ -4,7 +4,7 @@
  * Constellation → Library sub-view.
  */
 import { Store } from '../schema';
-import { get, getAll, put, getByIndex } from '../engine';
+import { get, getAll, put, getByIndex, patch } from '../engine';
 import { createId } from '../ids';
 import type { LibraryRecord } from '../records';
 
@@ -48,7 +48,9 @@ export async function updateLibraryEntry(
   id: string,
   updates: Partial<Pick<LibraryRecord, 'isCurrent' | 'annotationCount' | 'quote'>>,
 ): Promise<void> {
-  const existing = await get<LibraryRecord>(Store.Library, id);
-  if (!existing) return;
-  await put(Store.Library, { ...existing, ...updates, updatedAt: Date.now() });
+  await patch<LibraryRecord>(Store.Library, id, (existing) => ({
+    ...existing,
+    ...updates,
+    updatedAt: Date.now(),
+  }));
 }

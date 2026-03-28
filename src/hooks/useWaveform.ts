@@ -67,17 +67,20 @@ export function useWaveform(audioUrl: string | null) {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    const abortCtrl = new AbortController();
     const ctx = new AudioContext();
-    fetch(audioUrl)
+    fetch(audioUrl, { signal: abortCtrl.signal })
       .then((r) => r.arrayBuffer())
       .then((buf) => ctx.decodeAudioData(buf))
       .then((decoded) => {
+        if (abortCtrl.signal.aborted) return;
         const rect = canvas.getBoundingClientRect();
         const count = Math.floor(rect.width / (BAR_WIDTH + BAR_GAP));
         barsRef.current = extractBars(decoded, count);
         drawOnCanvas();
       })
       .catch(() => {
+        if (abortCtrl.signal.aborted) return;
         // Fallback: random bars if decode fails
         const rect = canvas.getBoundingClientRect();
         const count = Math.floor(rect.width / (BAR_WIDTH + BAR_GAP));
@@ -87,7 +90,7 @@ export function useWaveform(audioUrl: string | null) {
         drawOnCanvas();
       });
 
-    return () => { void ctx.close(); };
+    return () => { abortCtrl.abort(); void ctx.close(); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [audioUrl]);
 

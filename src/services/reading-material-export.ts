@@ -7,6 +7,7 @@ import {
   addTwoColumnLayout, addDiagramLayout, addSummaryLayout,
   addTimelineLayout, addTableLayout,
 } from './pptx-visual-aids';
+import { addRichVisual } from './pptx-rich-visuals';
 import type { ReadingSlide } from '@/types/entries';
 
 /** Ember palette mapped to PPTX hex values (no # prefix). */
@@ -75,7 +76,10 @@ export async function exportToPptx(
     const accent = slide.accent ? ACCENT_HEX[slide.accent] ?? C.rule : C.rule;
     addDecoRule(s, accent);
 
-    if (slide.layout === 'title') {
+    // Try rich visual layouts first (stat-cards, process-flow, etc.)
+    if (addRichVisual(s, slide)) {
+      // handled
+    } else if (slide.layout === 'title') {
       addTitleLayout(s, slide);
     } else if (slide.layout === 'quote') {
       addQuoteLayout(s, slide);

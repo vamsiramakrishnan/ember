@@ -1,5 +1,5 @@
 /**
- * buildGraphData — pure function that assembles GraphNode[] and GraphEdge[]
+ * buildGraphData — pure function that assembles CanvasNode[] and GraphEdge[]
  * from persistence records. Extracted from useGraphCanvas for the 150-line rule.
  */
 import type {
@@ -9,7 +9,7 @@ import type {
   LexiconRecord,
 } from '@/persistence/records';
 import type { Relation } from '@/types/entity';
-import type { GraphNode, GraphNodeKind, GraphEdge } from '@/types/graph-canvas';
+import type { CanvasNode, GraphNodeKind, GraphEdge } from '@/types/graph-canvas';
 
 /** Relation types that represent containment/structure, not knowledge links. */
 const STRUCTURAL_TYPES = new Set([
@@ -24,8 +24,8 @@ export function buildGraphData(
   lexicon: LexiconRecord[],
   curiosities: CuriosityRecord[],
   relations: Relation[],
-): { nodes: GraphNode[]; edges: GraphEdge[] } {
-  const nodeMap = new Map<string, GraphNode>();
+): { nodes: CanvasNode[]; edges: GraphEdge[] } {
+  const nodeMap = new Map<string, CanvasNode>();
 
   for (const m of mastery) {
     nodeMap.set(m.id, makeNode(m.id, 'concept', m.concept, {
@@ -73,7 +73,7 @@ function makeNode(
   kind: GraphNodeKind,
   label: string,
   source?: NodeSource,
-): GraphNode {
+): CanvasNode {
   const detail = source?.tradition ?? source?.status;
   return {
     id,

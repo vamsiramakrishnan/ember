@@ -122,7 +122,7 @@ export function useGeminiTutor({
 
         const result = await streamOrchestrate(
           studentEntry.content, entriesRef.current, student.id, notebook.id,
-          onChunk, profile, notebookCtx, lastSyncRef.current,
+          onChunk, profile, notebookCtx, lastSyncRef.current, signal,
         );
         if (signal.aborted) return;
         lastSyncRef.current = Date.now();

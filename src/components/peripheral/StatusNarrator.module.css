@@ -1,0 +1,61 @@
+/* StatusNarrator — streaming narration text display.
+ * Whisper-quiet, warm, specific. Replaces or augments the
+ * static label in TutorActivity with Gemma-generated narration.
+ *
+ * The text appears character by character, like watching
+ * someone write in the margin of a notebook. */
+
+.narration {
+  font-family: var(--font-system);
+  font-size: 10px;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--ink-ghost);
+  letter-spacing: 0.3px;
+  opacity: 0;
+  animation: narrateFadeIn 0.4s ease forwards;
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 280px;
+  text-overflow: ellipsis;
+}
+
+/* Thin blinking cursor at the end of streaming text */
+.cursor {
+  display: inline-block;
+  width: 1px;
+  height: 10px;
+  background: var(--margin);
+  opacity: 0.4;
+  margin-left: 2px;
+  vertical-align: baseline;
+  animation: cursorBlink 1.2s ease infinite;
+}
+
+@keyframes narrateFadeIn {
+  from { opacity: 0; transform: translateX(-4px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes cursorBlink {
+  0%, 100% { opacity: 0.1; }
+  50% { opacity: 0.5; }
+}
+
+@media (max-width: 480px) {
+  .narration {
+    font-size: 9px;
+    max-width: 180px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .narration {
+    animation: none;
+    opacity: 1;
+  }
+  .cursor {
+    animation: none;
+    opacity: 0.3;
+  }
+}

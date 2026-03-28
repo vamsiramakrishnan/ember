@@ -9,7 +9,7 @@
 import * as engine from './engine';
 import { transact as rawTransact, type TxOperation } from './transaction';
 import { notify, notifyStores } from './emitter';
-import { recordOp } from './sync/oplog';
+import { recordOp, recordOpBatch } from './sync/oplog';
 import { queueBlobUpload } from './sync/blobQueue';
 import type { StoreName } from './schema';
 
@@ -40,17 +40,21 @@ export async function reactivePut<T>(
   }
 }
 
-/** Batch put: write locally, notify, record each in oplog. */
+/** Batch put: write locally, notify, record all ops in a single transaction. */
 export async function reactivePutBatch<T>(
   store: StoreName,
   records: T[],
 ): Promise<void> {
   await engine.putBatch(store, records);
   notify(store);
-  for (const record of records) {
-    const key = extractKey(record, store);
-    await recordOp(store, 'put', key, record);
-  }
+  await recordOpBatch(
+    records.map((record) => ({
+      store,
+      action: 'put' as const,
+      key: extractKey(record, store),
+      payload: record,
+    })),
+  );
 }
 
 /** Delete: write locally, notify, record in oplog. */

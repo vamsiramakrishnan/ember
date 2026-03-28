@@ -33,39 +33,43 @@ export async function readAudioStream(
   let mimeType = 'audio/L16;rate=24000';
   let chunkCount = 0;
 
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
 
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split('\n');
-    buffer = lines.pop() ?? '';
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() ?? '';
 
-    for (const line of lines) {
-      if (!line.trim()) continue;
-      try {
-        const parsed = JSON.parse(line) as {
-          audio?: string;
-          done?: boolean;
-          mimeType?: string;
-          error?: string;
-        };
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          const parsed = JSON.parse(line) as {
+            audio?: string;
+            done?: boolean;
+            mimeType?: string;
+            error?: string;
+          };
 
-        if (parsed.error) throw new Error(parsed.error);
+          if (parsed.error) throw new Error(parsed.error);
 
-        if (parsed.audio) {
-          chunks.push(base64ToBytes(parsed.audio));
-          chunkCount++;
-          onProgress?.(chunkCount);
+          if (parsed.audio) {
+            chunks.push(base64ToBytes(parsed.audio));
+            chunkCount++;
+            onProgress?.(chunkCount);
+          }
+
+          if (parsed.done && parsed.mimeType) {
+            mimeType = parsed.mimeType;
+          }
+        } catch (e) {
+          if (e instanceof Error && e.message !== '') throw e;
         }
-
-        if (parsed.done && parsed.mimeType) {
-          mimeType = parsed.mimeType;
-        }
-      } catch (e) {
-        if (e instanceof Error && e.message !== '') throw e;
       }
     }
+  } finally {
+    reader.releaseLock();
   }
 
   if (chunks.length === 0) {

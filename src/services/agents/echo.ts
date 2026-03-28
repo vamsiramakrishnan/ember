@@ -3,6 +3,7 @@
  * and generates a paraphrased callback. The notebook remembers.
  */
 import { EMBER_DESIGN_CONTEXT, type AgentConfig } from './config';
+import { MODELS } from '../gemini';
 import { echoResponseSchema } from '@/services/schemas';
 
 const INSTRUCTION = `${EMBER_DESIGN_CONTEXT}
@@ -26,7 +27,7 @@ Or to skip:
 
 export const ECHO_AGENT: AgentConfig = {
   name: 'Echo',
-  model: 'gemini-3.1-flash-lite-preview',
+  model: MODELS.text,
   systemInstruction: INSTRUCTION,
   thinkingLevel: 'MINIMAL',
   tools: [],

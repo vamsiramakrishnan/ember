@@ -3,6 +3,7 @@
  * flash + HIGH thinking for careful analysis.
  */
 import { EMBER_DESIGN_CONTEXT, TOOLS, type AgentConfig } from './config';
+import { MODELS } from '../gemini';
 
 const INSTRUCTION = `${EMBER_DESIGN_CONTEXT}
 
@@ -21,7 +22,7 @@ Respond with clear, factual prose. Include thinker names, dates, and specific id
 
 export const RESEARCHER_AGENT: AgentConfig = {
   name: 'Researcher',
-  model: 'gemini-3-flash-preview',
+  model: MODELS.heavy,
   systemInstruction: INSTRUCTION,
   thinkingLevel: 'HIGH',
   tools: [TOOLS.googleSearch, TOOLS.urlContext],

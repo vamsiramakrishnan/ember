@@ -5,7 +5,9 @@
  */
 import { IMAGE_CRITIC_AGENT } from './agents/image-critic';
 import { ILLUSTRATOR_AGENT } from './agents';
-import { runTextAgent, runImageAgent } from './run-agent';
+import { runImageAgent } from './run-agent';
+import { resilientTextAgent } from './resilient-agent';
+import { parseCritiqueResponse } from './critique-parser';
 import { setActivityDetail } from '@/state';
 import type { TutorActivityDetail } from '@/state';
 import type { RefinementStep } from './patch-applier';
@@ -92,14 +94,14 @@ async function critiqueImage(
       ? '\n\nThis is the FINAL review pass. Focus on the single most impactful improvement.'
       : '';
 
-    const result = await runTextAgent(IMAGE_CRITIC_AGENT, [{
+    const result = await resilientTextAgent(IMAGE_CRITIC_AGENT, [{
       role: 'user',
       parts: [
         { inlineData: { mimeType, data: imageData } },
         { text: `Original request: "${prompt}"${graceNote}\n\nEvaluate this illustration.` },
       ],
     }]);
-    return parseImageCritique(result.text);
+    return toImageCritique(result.text);
   } catch {
     return { score: 10, issues: [], editInstructions: '' };
   }
@@ -127,18 +129,12 @@ async function editImage(
   return null;
 }
 
-function parseImageCritique(text: string): ImageCritiqueResult {
-  try {
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) return { score: 10, issues: [], editInstructions: '' };
-    const parsed = JSON.parse(jsonMatch[0]) as Record<string, unknown>;
-    return {
-      score: typeof parsed.score === 'number' ? parsed.score : 10,
-      issues: Array.isArray(parsed.issues) ? parsed.issues as string[] : [],
-      editInstructions: typeof parsed.editInstructions === 'string'
-        ? parsed.editInstructions : '',
-    };
-  } catch {
-    return { score: 10, issues: [], editInstructions: '' };
-  }
+function toImageCritique(text: string): ImageCritiqueResult {
+  const { score, issues, raw } = parseCritiqueResponse(text);
+  return {
+    score,
+    issues,
+    editInstructions: typeof raw.editInstructions === 'string'
+      ? raw.editInstructions : '',
+  };
 }

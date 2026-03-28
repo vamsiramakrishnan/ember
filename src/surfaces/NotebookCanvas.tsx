@@ -9,7 +9,8 @@ import { useCallback, useRef } from 'react';
 import { CanvasMode } from '@/components/canvas/CanvasMode';
 import { Connector } from '@/components/canvas/Connector';
 import { useCanvasPositions } from '@/hooks/useCanvasPositions';
-import { cardContent } from './canvas-helpers';
+import { useMetaLabels } from '@/hooks/useMetaLabels';
+import { cardContent, cardAccent } from './canvas-helpers';
 import type { LiveEntry } from '@/types/entries';
 import styles from './NotebookCanvas.module.css';
 
@@ -19,6 +20,7 @@ const ARROW_STEP = 10;
 
 export function NotebookCanvas({ sessionId, entries }: Props) {
   const { positions, connections, updatePosition } = useCanvasPositions(sessionId, entries);
+  const { getLabel } = useMetaLabels(entries);
   const dragRef = useRef<{
     id: string; startX: number; startY: number; origX: number; origY: number;
   } | null>(null);
@@ -103,18 +105,30 @@ export function NotebookCanvas({ sessionId, entries }: Props) {
           if (!entry) return null;
           const card = cardContent(entry);
           if (!card) return null;
+          const accent = cardAccent(entry.entry.type);
+          const cls = [styles.card, accent ? styles[accent] : ''].filter(Boolean).join(' ');
           return (
             <div
-              key={pos.id} className={styles.card}
-              style={{ left: pos.x, top: pos.y, width: pos.width ?? 160 }}
+              key={pos.id} className={cls}
+              style={{ left: pos.x, top: pos.y, width: pos.width ?? 180 }}
               tabIndex={0} role="button"
               aria-label={`${card.label}: ${card.body.slice(0, 40)}`}
               onMouseDown={(e) => onMouseDown(pos.id, e)}
               onTouchStart={(e) => onTouchStart(pos.id, e)}
               onKeyDown={(e) => onKeyDown(pos.id, e)}
             >
-              <span className={styles.cardLabel}>{card.label}</span>
-              <p className={styles.cardBody}>{card.body}</p>
+              {(() => {
+                const meta = getLabel(pos.id);
+                return (
+                  <>
+                    <span className={styles.cardLabel}>{meta?.title ?? card.label}</span>
+                    <p className={styles.cardBody}>{card.body}</p>
+                    {meta?.tags && meta.tags.length > 0 && (
+                      <span className={styles.cardTags}>{meta.tags.join(' \u00b7 ')}</span>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           );
         })}

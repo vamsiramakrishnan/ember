@@ -144,14 +144,15 @@ export function Notebook({ onNavigate }: NotebookProps) {
       annotate={annotate} onBranch={onBranch} onFollowUp={onFollowUp}
       onSelectionAction={onSelectionAction}
       onDirectiveComplete={completeDirective}
+      patchEntry={patchEntryContent}
       startEdit={inPlaceEdit.startEdit} saveEdit={inPlaceEdit.saveEdit}
       cancelEdit={inPlaceEdit.cancelEdit} editingId={inPlaceEdit.editingId}
       drag={drag} dragHandlers={dragHandlers}
-      editPopup={{
+      editPopup={useMemo(() => ({
         onMentionTrigger: popup.handleMentionTrigger, onSlashTrigger: popup.handleSlashTrigger,
         onPopupClose: popup.handlePopupClose, pendingInsert: popup.pendingInsert,
         onInsertConsumed: popup.handleInsertConsumed,
-      }}
+      }), [popup.handleMentionTrigger, popup.handleSlashTrigger, popup.handlePopupClose, popup.pendingInsert, popup.handleInsertConsumed])}
     >
       <NotebookContent
         entries={entries} pinnedEntries={pinnedEntries} past={past} current={current}

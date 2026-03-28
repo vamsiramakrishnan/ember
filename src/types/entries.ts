@@ -94,7 +94,11 @@ export interface ReadingSlide {
   /** Optional speaker/tutor notes (not shown in main view). */
   notes?: string;
   /** Layout variant for visual treatment. */
-  layout: 'title' | 'content' | 'two-column' | 'quote' | 'diagram' | 'summary' | 'timeline' | 'table';
+  layout:
+    | 'title' | 'content' | 'two-column' | 'quote' | 'diagram'
+    | 'summary' | 'timeline' | 'table'
+    | 'stat-cards' | 'process-flow' | 'pyramid' | 'comparison'
+    | 'funnel' | 'cycle' | 'checklist' | 'matrix';
   /** Optional accent for the slide's decorative rule. */
   accent?: 'sage' | 'indigo' | 'amber' | 'margin';
   /** Structured timeline data (for layout='timeline'). */
@@ -103,6 +107,29 @@ export interface ReadingSlide {
   tableData?: { headers: string[]; rows: string[][] };
   /** Structured diagram items with optional edges (for layout='diagram'). */
   diagramItems?: Array<{ label: string; detail?: string }>;
+  /** Key metrics (for layout='stat-cards'). 2-4 cards with large value + label. */
+  statCards?: Array<{ value: string; label: string; detail?: string }>;
+  /** Sequential process steps (for layout='process-flow'). */
+  processSteps?: Array<{ step: string; detail?: string }>;
+  /** Hierarchical pyramid layers, top (narrowest) to bottom (widest). */
+  pyramidLayers?: Array<{ label: string; detail?: string }>;
+  /** Side-by-side comparison with labeled columns. */
+  comparisonData?: {
+    leftLabel: string; rightLabel: string;
+    leftPoints: string[]; rightPoints: string[];
+  };
+  /** Narrowing funnel stages from widest to narrowest. */
+  funnelStages?: Array<{ stage: string; value?: string; detail?: string }>;
+  /** Circular process loop steps. */
+  cycleSteps?: Array<{ step: string; detail?: string }>;
+  /** Key takeaway checklist. */
+  checklistItems?: Array<{ item: string; checked?: boolean }>;
+  /** 2×2 quadrant matrix with axis labels. */
+  matrixData?: {
+    topLabel: string; bottomLabel: string;
+    leftLabel: string; rightLabel: string;
+    quadrants: [string, string, string, string];
+  };
   /** AI-generated illustration for this slide (data URL). */
   imageUrl?: string;
 }

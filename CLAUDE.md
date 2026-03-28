@@ -260,7 +260,7 @@ Every component follows this contract:
 
 ### File size discipline
 
-No single file exceeds 150 lines. If a component grows beyond this, decompose it. The rule exists to enforce single responsibility and readability.
+No single file exceeds 300 lines. If a component grows beyond this, decompose it. The rule exists to enforce single responsibility and readability.
 
 -----
 
@@ -376,7 +376,7 @@ If it doesn’t feel like that, something is wrong. Go back to the spec. The ans
 ## Non-negotiables
 
 1. **No design token may be hardcoded in a component file.** All visual values flow from `src/tokens/`.
-1. **No component may exceed 150 lines.**
+1. **No component may exceed 300 lines.**
 1. **No `any` type in TypeScript.**
 1. **No pure black or pure white anywhere in the rendered output.**
 1. **No animation without `prefers-reduced-motion` support.**

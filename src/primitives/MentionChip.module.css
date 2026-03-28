@@ -78,6 +78,24 @@
 .accentMargin { border-color: var(--margin-dim); }
 .accentMargin:hover { background: var(--margin-dim); border-color: color-mix(in srgb, var(--margin) 20%, transparent); }
 
+/* Ghost / enriching state — pulsing border while async enrichment runs */
+.enriching {
+  border-color: var(--ink-ghost);
+  border-style: dashed;
+  animation: chipPulse 1.5s ease-in-out infinite;
+}
+.enriching .name {
+  color: var(--ink-faint);
+}
+.enriching .prefix {
+  opacity: 0.4;
+}
+
+@keyframes chipPulse {
+  0%, 100% { border-color: var(--ink-ghost); }
+  50% { border-color: var(--rule); }
+}
+
 /* Focus ring for keyboard navigation */
 .chip:focus-visible {
   outline: 1px solid var(--margin);

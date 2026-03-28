@@ -31,7 +31,16 @@ export function buildTtsPrompt(script: string, topic: string): string {
   ].join('\n');
 }
 
-/** Synthesize a single script segment to a WAV blob URL. */
+/**
+ * Revoke a previously created TTS blob URL to free memory.
+ * Call this when audio playback is finished or component unmounts.
+ */
+export function revokeTtsUrl(url: string): void {
+  try { URL.revokeObjectURL(url); } catch { /* ignore */ }
+}
+
+/** Synthesize a single script segment to a WAV blob URL.
+ *  Caller MUST call revokeTtsUrl() when done to avoid memory leaks. */
 export async function synthesizeSegment(
   script: string, topic: string,
 ): Promise<string | null> {

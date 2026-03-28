@@ -8,6 +8,7 @@
  * flash-lite + MINIMAL — runs in background, ~100ms per call.
  */
 import { EMBER_DESIGN_CONTEXT, type AgentConfig } from './config';
+import { MODELS } from '../gemini';
 import { annotationResultSchema } from '@/services/schemas';
 
 const INSTRUCTION = `${EMBER_DESIGN_CONTEXT}
@@ -43,7 +44,7 @@ Respond with ONLY JSON:
 
 export const ANNOTATOR_AGENT: AgentConfig = {
   name: 'Annotator',
-  model: 'gemini-3.1-flash-lite-preview',
+  model: MODELS.text,
   systemInstruction: INSTRUCTION,
   thinkingLevel: 'MINIMAL',
   responseSchema: annotationResultSchema,

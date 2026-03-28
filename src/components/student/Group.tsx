@@ -21,10 +21,15 @@ export function Group({ children, previewText }: GroupProps) {
     <div className={styles.group}>
       <div className={styles.groupRule} />
       {collapsed ? (
-        <div className={styles.collapsedLabel} onClick={() => setCollapsed(false)}>
+        <button
+          className={styles.collapsedLabel}
+          onClick={() => setCollapsed(false)}
+          type="button"
+          aria-expanded={false}
+        >
           <span>{previewText ?? 'Grouped items'}</span>
           <span className={styles.countBadge}>+ {count - 1} more</span>
-        </div>
+        </button>
       ) : (
         <>
           <div className={styles.items}>{children}</div>

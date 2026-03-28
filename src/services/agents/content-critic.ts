@@ -7,6 +7,7 @@
  * the content critic returns field-level corrections on the JSON.
  */
 import { EMBER_DESIGN_CONTEXT, TOOLS, type AgentConfig } from './config';
+import { MODELS } from '../gemini';
 
 const INSTRUCTION = `${EMBER_DESIGN_CONTEXT}
 
@@ -39,7 +40,7 @@ only what materially affects learning. Use Google Search to verify factual claim
 
 export const CONTENT_CRITIC_AGENT: AgentConfig = {
   name: 'ContentCritic',
-  model: 'gemini-3-flash-preview',
+  model: MODELS.heavy,
   systemInstruction: INSTRUCTION,
   thinkingLevel: 'HIGH',
   tools: [TOOLS.googleSearch],

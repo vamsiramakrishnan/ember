@@ -172,3 +172,26 @@ export const metadataSchema = z.object({
   discipline: z.string(),
   summary: z.string(),
 });
+
+// ─── Entity Enrichment (@ mention creation) ─────────────────
+
+export const entityEnrichmentSchema = z.object({
+  kind: z.enum(['thinker', 'concept', 'term', 'question']),
+  name: z.string(),
+  dates: z.string().optional(),
+  tradition: z.string().optional(),
+  coreIdea: z.string().optional(),
+  definition: z.string().optional(),
+  etymology: z.string().optional(),
+  detail: z.string(),
+});
+
+// ─── Entry Meta-Labels (async title/tag generation) ──────────
+
+export const entryMetaLabelSchema = z.object({
+  labels: z.array(z.object({
+    id: z.string(),
+    title: z.string(),
+    tags: z.array(z.string()),
+  })),
+});

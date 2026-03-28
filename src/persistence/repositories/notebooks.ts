@@ -4,7 +4,7 @@
  * e.g. "Music & Mathematics", "The Nature of Light"
  */
 import { Store } from '../schema';
-import { get, put, getByIndex } from '../engine';
+import { get, put, getByIndex, patch } from '../engine';
 import { createId } from '../ids';
 import type { NotebookRecord } from '../records';
 
@@ -50,11 +50,9 @@ export async function updateNotebook(
     'iconDataUrl' | 'tags' | 'summary' | 'discipline'
   >>,
 ): Promise<void> {
-  const existing = await get<NotebookRecord>(Store.Notebooks, id);
-  if (!existing) return;
-  await put(Store.Notebooks, {
+  await patch<NotebookRecord>(Store.Notebooks, id, (existing) => ({
     ...existing,
     ...updates,
     updatedAt: Date.now(),
-  });
+  }));
 }

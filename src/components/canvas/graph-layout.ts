@@ -6,12 +6,15 @@ import type { GraphNode as BaseGraphNode, GraphEdge, NodeType } from '@/services
 
 export type { GraphEdge };
 
+/** Utility type: adds spatial coordinates to any node type. */
+export type Positioned<T> = T & { x: number; y: number };
+
 /**
- * A graph node with spatial position and optional mastery.
+ * A domain graph node with spatial position and optional mastery.
  * Extends the base GraphNode from the knowledge graph service
  * with rendering-specific fields.
  */
-export interface GraphNode extends BaseGraphNode {
+export interface PositionedNode extends BaseGraphNode {
   x: number;
   y: number;
   mastery?: number;

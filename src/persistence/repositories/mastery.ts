@@ -3,7 +3,7 @@
  * Scoped to notebook — each notebook has its own mastery map.
  */
 import { Store } from '../schema';
-import { getAll, put, getByIndex, putBatch } from '../engine';
+import { getAll, put, getByIndex, putBatch, upsertByIndex } from '../engine';
 import { createId } from '../ids';
 import type { MasteryRecord, CuriosityRecord } from '../records';
 import type { MasteryLevel } from '@/types/mastery';
@@ -15,25 +15,21 @@ export async function upsertMastery(params: {
   level: MasteryLevel;
   percentage: number;
 }): Promise<MasteryRecord> {
-  const existing = await getByIndex<MasteryRecord>(
-    Store.Mastery, 'by-concept', [params.notebookId, params.concept],
+  return upsertByIndex<MasteryRecord>(
+    Store.Mastery,
+    'by-concept',
+    [params.notebookId, params.concept],
+    (existing) => ({ ...existing, ...params, updatedAt: Date.now() }),
+    () => {
+      const now = Date.now();
+      return {
+        id: createId(),
+        createdAt: now,
+        updatedAt: now,
+        ...params,
+      };
+    },
   );
-  const now = Date.now();
-
-  if (existing[0]) {
-    const updated = { ...existing[0], ...params, updatedAt: now };
-    await put(Store.Mastery, updated);
-    return updated;
-  }
-
-  const record: MasteryRecord = {
-    id: createId(),
-    createdAt: now,
-    updatedAt: now,
-    ...params,
-  };
-  await put(Store.Mastery, record);
-  return record;
 }
 
 export async function getMasteryByNotebook(
