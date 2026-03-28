@@ -7,3 +7,6 @@ dist
 .vercel
 supabase/.temp/
 .claude/worktrees/
+.claude/skills/
+.agents/skills/
+skills-lock.json
