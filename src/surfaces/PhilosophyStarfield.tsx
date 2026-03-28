@@ -25,6 +25,10 @@ function seededRandom(seed: number): () => number {
   };
 }
 
+/** viewBox is 1000x2000 — radii of 1–2.5 are truly tiny at this scale. */
+const VB_W = 1000;
+const VB_H = 2000;
+
 function generateStars(count: number): Star[] {
   const rand = seededRandom(42);
   const stars: Star[] = [];
@@ -32,10 +36,10 @@ function generateStars(count: number): Star[] {
     const layerRoll = rand();
     const layer = layerRoll < 0.2 ? 'near' : layerRoll < 0.55 ? 'mid' : 'far';
     stars.push({
-      cx: rand() * 100,
-      cy: rand() * 100,
-      r: layer === 'near' ? 1.5 + rand() * 1 : layer === 'mid' ? 1 + rand() * 0.5 : 0.5 + rand() * 0.5,
-      opacity: layer === 'near' ? 0.12 + rand() * 0.08 : layer === 'mid' ? 0.08 + rand() * 0.06 : 0.04 + rand() * 0.04,
+      cx: rand() * VB_W,
+      cy: rand() * VB_H,
+      r: layer === 'near' ? 1.8 + rand() * 0.7 : layer === 'mid' ? 1.0 + rand() * 0.5 : 0.6 + rand() * 0.4,
+      opacity: layer === 'near' ? 0.10 + rand() * 0.06 : layer === 'mid' ? 0.06 + rand() * 0.04 : 0.03 + rand() * 0.03,
       layer,
     });
   }
@@ -99,8 +103,8 @@ export function PhilosophyStarfield() {
     layerStars.map((s, i) => (
       <circle
         key={i}
-        cx={`${s.cx}%`}
-        cy={`${s.cy}%`}
+        cx={s.cx}
+        cy={s.cy}
         r={s.r}
         fill="currentColor"
         opacity={s.opacity}
@@ -111,8 +115,8 @@ export function PhilosophyStarfield() {
     <div ref={containerRef} className={styles.starfield} aria-hidden="true">
       <svg
         className={styles.svg}
-        viewBox="0 0 100 100"
-        preserveAspectRatio="none"
+        viewBox={`0 0 ${VB_W} ${VB_H}`}
+        preserveAspectRatio="xMidYMid slice"
         xmlns="http://www.w3.org/2000/svg"
       >
         <g ref={farRef} className={styles.layerFar}>{renderStars(farStars)}</g>
