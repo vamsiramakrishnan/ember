@@ -15,10 +15,11 @@
 .frameWrap {
   position: relative;
   overflow: hidden;
-  border: 1px solid var(--rule);
+  border: 1px solid var(--rule-light);
   border-radius: 2px;
   background: var(--paper);
-  transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: var(--depth-resting);
+  transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
 }
 
 /* Thumbnail mode: cursor pointer, iframe non-interactive so clicks pass through */
@@ -31,6 +32,7 @@
 }
 .frameWrap[role="button"]:hover {
   border-color: var(--ink-ghost);
+  box-shadow: var(--depth-lifted);
 }
 
 .frame {

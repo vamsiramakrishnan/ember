@@ -16,4 +16,5 @@
   padding: 10px 16px 10px 14px;
   background: var(--indigo-dim);
   border-radius: 2px;
+  box-shadow: var(--depth-inset);
 }

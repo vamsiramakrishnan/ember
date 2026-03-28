@@ -6,7 +6,7 @@
   position: relative;
   padding: 4px 0;
   border-radius: 2px;
-  transition: background 0.15s ease;
+  transition: background 0.2s ease, box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   scroll-margin-top: 80px;
 }
 
@@ -17,6 +17,7 @@
 .wrapper:hover,
 .touched {
   background: var(--paper-warm);
+  box-shadow: var(--depth-lifted);
 }
 
 /* ─── Drag states ─────────────────────────────────── */
@@ -207,5 +208,6 @@
   .wrapper, .handle, .actions, .action, .followUpZone, .dragOver {
     transition: none;
   }
+  .wrapper:hover, .touched { box-shadow: none; }
   .highlighted { animation: none; background: var(--amber-dim); }
 }

@@ -3,6 +3,8 @@
 .container {
   padding: 16px 0;
   margin: 8px 0 var(--entry-gap);
+  background: var(--material-vellum);
+  border-radius: 2px;
 }
 
 .rule {

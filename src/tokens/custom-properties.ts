@@ -6,6 +6,7 @@
 import { colors } from './colors';
 import { spacing } from './spacing';
 import { motion } from './motion';
+import { depth, material } from './depth';
 
 export function getTokenCSS(): string {
   return `:root {
@@ -75,6 +76,21 @@ export function getTokenCSS(): string {
   /* Surface transitions */
   --surface-fade-duration: ${motion.surfaceFadeDuration};
   --surface-fade-ease: ${motion.surfaceFadeEase};
+
+  /* Depth — paper-on-paper layering */
+  --depth-flat: ${depth.flat};
+  --depth-inset: ${depth.inset};
+  --depth-resting: ${depth.resting};
+  --depth-lifted: ${depth.lifted};
+  --depth-floating: ${depth.floating};
+
+  /* Material tints — different paper stocks */
+  --material-page: ${material.page};
+  --material-annotation: ${material.annotation};
+  --material-card: ${material.card};
+  --material-suggestion: ${material.suggestion};
+  --material-diagram: ${material.diagram};
+  --material-vellum: ${material.vellum};
 }
 
 /* Tighter vertical rhythm on narrow screens */
