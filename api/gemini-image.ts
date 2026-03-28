@@ -65,6 +65,9 @@ export default async function handler(req: Request): Promise<Response> {
   const write = (obj: unknown) => writer.write(encoder.encode(JSON.stringify(obj) + '\n'));
 
   // Fire-and-forget: run generation in background, write results to stream
+  const startMs = Date.now();
+  console.log(`[gemini-image] search=${!!body.useSearch} refs=${body.referenceImages?.length ?? 0} promptLen=${body.prompt.length}`);
+
   void (async () => {
     try {
       // Heartbeat — tells the client (and Vercel) we're alive
@@ -123,9 +126,11 @@ export default async function handler(req: Request): Promise<Response> {
         }
       }
 
+      console.log(`[gemini-image] done images=${images.length} duration=${Date.now() - startMs}ms`);
       await write({ images, text: textChunks.join('') });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
+      console.error(`[gemini-image] failed duration=${Date.now() - startMs}ms error="${message}"`);
       await write({ error: message });
     } finally {
       await writer.close();

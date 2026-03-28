@@ -67,6 +67,8 @@ export default async function handler(req: Request): Promise<Response> {
   }
 
   const model = body.model ?? 'gemini-3.1-flash-lite-preview';
+  const startMs = Date.now();
+  console.log(`[gemini-text] model=${model} messages=${body.messages.length} thinking=${body.thinkingLevel ?? 'none'}`);
 
   try {
     const response = await client.models.generateContentStream({
@@ -77,6 +79,7 @@ export default async function handler(req: Request): Promise<Response> {
 
     // Stream chunks back as newline-delimited JSON
     const encoder = new TextEncoder();
+    let chunkCount = 0;
     const stream = new ReadableStream({
       async start(controller) {
         try {
@@ -85,14 +88,17 @@ export default async function handler(req: Request): Promise<Response> {
             if (!parts) continue;
             for (const part of parts) {
               if ('text' in part && part.text) {
+                chunkCount++;
                 controller.enqueue(
                   encoder.encode(JSON.stringify({ text: part.text }) + '\n'),
                 );
               }
             }
           }
+          console.log(`[gemini-text] done chunks=${chunkCount} duration=${Date.now() - startMs}ms`);
           controller.close();
         } catch (err) {
+          console.error(`[gemini-text] stream error: ${err instanceof Error ? err.message : err}`);
           controller.error(err);
         }
       },
@@ -106,6 +112,7 @@ export default async function handler(req: Request): Promise<Response> {
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';
+    console.error(`[gemini-text] failed model=${model} duration=${Date.now() - startMs}ms error="${message}"`);
     return new Response(
       JSON.stringify({ error: message }),
       { status: 502, headers: { 'Content-Type': 'application/json' } },

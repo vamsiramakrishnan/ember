@@ -45,6 +45,8 @@ export default async function handler(req: Request): Promise<Response> {
   const client = new GoogleGenAI({ apiKey });
   const model = body.model || 'gemini-2.5-flash-preview-tts';
   const encoder = new TextEncoder();
+  const startMs = Date.now();
+  console.log(`[gemini-tts] model=${model} speakers=${body.speakers.length} scriptLen=${body.script.length}`);
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -82,12 +84,14 @@ export default async function handler(req: Request): Promise<Response> {
           );
         }
 
+        console.log(`[gemini-tts] done duration=${Date.now() - startMs}ms mimeType=${mimeType}`);
         controller.enqueue(
           encoder.encode(JSON.stringify({ done: true, mimeType }) + '\n'),
         );
         controller.close();
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'TTS failed';
+        console.error(`[gemini-tts] failed duration=${Date.now() - startMs}ms error="${msg}"`);
         controller.enqueue(
           encoder.encode(JSON.stringify({ error: msg }) + '\n'),
         );

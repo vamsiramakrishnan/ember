@@ -89,6 +89,9 @@ ${body.context ? `Student context: ${body.context}\n\n` : ''}Concept to visualis
 
 Return ONLY the complete HTML — no markdown fences, no explanation. The HTML should be a complete document starting with <!DOCTYPE html>.`;
 
+  const startMs = Date.now();
+  console.log(`[gemini-html] promptLen=${body.prompt.length} search=${!!body.useSearch}`);
+
   try {
     const response = await client.models.generateContentStream({
       model: 'gemini-3-flash-preview',
@@ -103,13 +106,18 @@ Return ONLY the complete HTML — no markdown fences, no explanation. The HTML s
     const stream = new ReadableStream({
       async start(controller) {
         try {
+          let bytes = 0;
           for await (const chunk of response) {
             if (chunk.text) {
-              controller.enqueue(encoder.encode(chunk.text));
+              const encoded = encoder.encode(chunk.text);
+              bytes += encoded.byteLength;
+              controller.enqueue(encoded);
             }
           }
+          console.log(`[gemini-html] done bytes=${bytes} duration=${Date.now() - startMs}ms`);
           controller.close();
         } catch (err) {
+          console.error(`[gemini-html] stream error: ${err instanceof Error ? err.message : err}`);
           controller.error(err);
         }
       },
@@ -123,6 +131,7 @@ Return ONLY the complete HTML — no markdown fences, no explanation. The HTML s
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';
+    console.error(`[gemini-html] failed duration=${Date.now() - startMs}ms error="${message}"`);
     return new Response(
       JSON.stringify({ error: message }),
       { status: 502, headers: { 'Content-Type': 'application/json' } },
