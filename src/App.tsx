@@ -3,7 +3,7 @@
  * Flow: Landing (pick student) → NotebookSelect (pick notebook) → Surfaces.
  * Initialises persistence, observability, and seeds demo data on first run.
  */
-import { lazy, Suspense, useState, useEffect } from 'react';
+import { lazy, Suspense, useState, useEffect, useCallback } from 'react';
 import { Shell } from '@/layout/Shell';
 import { Header } from '@/layout/Header';
 import { Footer } from '@/layout/Footer';
@@ -17,7 +17,7 @@ import { createAdapterFromEnv } from '@/persistence/sync/supabase';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { SurfaceErrorBoundary } from '@/components/SurfaceErrorBoundary';
 import { SurfaceCrossfade } from '@/layout/SurfaceCrossfade';
-import { initObservability } from '@/observability';
+import { initObservability, trackEvent, setUser } from '@/observability';
 import type { Surface } from '@/layout/Navigation';
 
 /* Lazy-loaded surfaces — each in its own chunk */
@@ -84,6 +84,17 @@ function AppContent() {
   const [surface, setSurface] = useState<Surface>('notebook');
   const { resolveEntity, resolveByName } = useEntityResolver();
 
+  /* Instrument: set Sentry user context when student is selected */
+  useEffect(() => {
+    if (student) setUser(student.id, student.name);
+  }, [student]);
+
+  /* Instrument: track surface navigation */
+  const handleNavigate = useCallback((s: Surface) => {
+    setSurface(s);
+    trackEvent('surface-switch', { surface: s });
+  }, []);
+
   // No student selected → show landing
   if (!student) {
     return (
@@ -99,7 +110,7 @@ function AppContent() {
   if (!notebook) {
     return (
       <Shell>
-        <Header activeSurface={surface} onNavigate={setSurface} />
+        <Header activeSurface={surface} onNavigate={handleNavigate} />
         <main style={{ minHeight: '80vh' }}>
           <Suspense fallback={<SurfaceLoader />}>
             <NotebookSelect />
@@ -113,15 +124,15 @@ function AppContent() {
   // Full experience — wrapped in entity navigation for deep linking
   return (
     <EntityNavigationProvider
-      onSurfaceChange={setSurface}
+      onSurfaceChange={handleNavigate}
       resolveEntity={resolveEntity}
       resolveByName={resolveByName}
     >
       <Shell>
-        <Header activeSurface={surface} onNavigate={setSurface} />
+        <Header activeSurface={surface} onNavigate={handleNavigate} />
         <main style={{ minHeight: '80vh' }}>
           <SurfaceCrossfade surfaceKey={surface}>
-            <ActiveSurface surface={surface} onNavigate={setSurface} />
+            <ActiveSurface surface={surface} onNavigate={handleNavigate} />
           </SurfaceCrossfade>
         </main>
         <Footer />

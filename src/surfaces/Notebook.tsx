@@ -27,12 +27,14 @@ import type { ResponsePlan } from '@/hooks/useResponseOrchestrator';
 import { NotebookContent } from './NotebookContent';
 import { handleBranch, handleSelectionAction, handleFollowUp, deriveMarginalRef } from './notebook-handlers';
 import type { NotebookMode } from './NotebookModeToggle';
+import { trackEvent, traceSurfaceRender } from '@/observability';
 import type { NotebookEntry } from '@/types/entries';
 import type { Surface } from '@/layout/Navigation';
 
 interface NotebookProps { onNavigate?: (surface: Surface) => void }
 
 export function Notebook({ onNavigate }: NotebookProps) {
+  useEffect(() => { const done = traceSurfaceRender('Notebook'); return done; }, []);
   const { student, notebook, setNotebook } = useStudent();
   const { current, past, startNewSession, loading: sessionsLoading } = useSessionManager();
 
@@ -94,6 +96,7 @@ export function Notebook({ onNavigate }: NotebookProps) {
     void addEntry(entry);
     recordStudentTurn(entry.type);
     setStudentFocus({ type: 'writing' });
+    trackEvent('entry-submit', { type: entry.type });
     respond(entry);
     void checkAndUpdate(entriesRef.current);
   }, [addEntry, respond, checkAndUpdate]);

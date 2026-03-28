@@ -68,7 +68,7 @@ export default async function handler(req: Request): Promise<Response> {
 
   const model = body.model ?? 'gemini-3.1-flash-lite-preview';
   const startMs = Date.now();
-  console.log(`[gemini-text] model=${model} messages=${body.messages.length} thinking=${body.thinkingLevel ?? 'none'}`);
+  console.log(JSON.stringify({ fn: 'gemini-text', event: 'request', model, messages: body.messages.length, thinking: body.thinkingLevel ?? 'none' }));
 
   try {
     const response = await client.models.generateContentStream({
@@ -95,10 +95,10 @@ export default async function handler(req: Request): Promise<Response> {
               }
             }
           }
-          console.log(`[gemini-text] done chunks=${chunkCount} duration=${Date.now() - startMs}ms`);
+          console.log(JSON.stringify({ fn: 'gemini-text', event: 'done', chunks: chunkCount, durationMs: Date.now() - startMs }));
           controller.close();
         } catch (err) {
-          console.error(`[gemini-text] stream error: ${err instanceof Error ? err.message : err}`);
+          console.error(JSON.stringify({ fn: 'gemini-text', event: 'stream-error', error: err instanceof Error ? err.message : String(err) }));
           controller.error(err);
         }
       },
@@ -112,7 +112,7 @@ export default async function handler(req: Request): Promise<Response> {
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';
-    console.error(`[gemini-text] failed model=${model} duration=${Date.now() - startMs}ms error="${message}"`);
+    console.error(JSON.stringify({ fn: 'gemini-text', event: 'error', model, durationMs: Date.now() - startMs, error: message }));
     return new Response(
       JSON.stringify({ error: message }),
       { status: 502, headers: { 'Content-Type': 'application/json' } },

@@ -3,6 +3,7 @@
  * Uses the browser Performance API and custom marks/measures.
  */
 import { log } from './logger';
+import { trackWebVital } from './analytics';
 
 export interface PerfMetric {
   name: string;
@@ -88,14 +89,18 @@ export function reportWebVitals(): void {
       type: 'vital',
     };
     pushMetric(metric);
-    log.info('Web Vital: LCP', { valueMs: Math.round(entry.startTime) });
+    const lcpMs = Math.round(entry.startTime);
+    log.info('Web Vital: LCP', { valueMs: lcpMs });
+    trackWebVital('LCP', lcpMs, lcpMs < 2500 ? 'good' : lcpMs < 4000 ? 'needs-improvement' : 'poor');
   });
 
   observe('first-input', (entry) => {
     const fid = (entry as PerformanceEventTiming).processingStart - entry.startTime;
     const metric: PerfMetric = { name: 'FID', value: fid, timestamp: Date.now(), type: 'vital' };
     pushMetric(metric);
-    log.info('Web Vital: FID', { valueMs: Math.round(fid) });
+    const fidMs = Math.round(fid);
+    log.info('Web Vital: FID', { valueMs: fidMs });
+    trackWebVital('FID', fidMs, fidMs < 100 ? 'good' : fidMs < 300 ? 'needs-improvement' : 'poor');
   });
 
   observe('layout-shift', (entry) => {
@@ -121,7 +126,9 @@ export function reportWebVitals(): void {
     const nav = navEntries[0] as PerformanceNavigationTiming;
     const ttfb = nav.responseStart - nav.requestStart;
     pushMetric({ name: 'TTFB', value: ttfb, timestamp: Date.now(), type: 'vital' });
-    log.info('Web Vital: TTFB', { valueMs: Math.round(ttfb) });
+    const ttfbMs = Math.round(ttfb);
+    log.info('Web Vital: TTFB', { valueMs: ttfbMs });
+    trackWebVital('TTFB', ttfbMs, ttfbMs < 800 ? 'good' : ttfbMs < 1800 ? 'needs-improvement' : 'poor');
   }
 }
 

@@ -66,7 +66,7 @@ export default async function handler(req: Request): Promise<Response> {
 
   // Fire-and-forget: run generation in background, write results to stream
   const startMs = Date.now();
-  console.log(`[gemini-image] search=${!!body.useSearch} refs=${body.referenceImages?.length ?? 0} promptLen=${body.prompt.length}`);
+  console.log(JSON.stringify({ fn: 'gemini-image', event: 'request', search: !!body.useSearch, refs: body.referenceImages?.length ?? 0, promptLen: body.prompt.length }));
 
   void (async () => {
     try {
@@ -126,11 +126,11 @@ export default async function handler(req: Request): Promise<Response> {
         }
       }
 
-      console.log(`[gemini-image] done images=${images.length} duration=${Date.now() - startMs}ms`);
+      console.log(JSON.stringify({ fn: 'gemini-image', event: 'done', images: images.length, durationMs: Date.now() - startMs }));
       await write({ images, text: textChunks.join('') });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
-      console.error(`[gemini-image] failed duration=${Date.now() - startMs}ms error="${message}"`);
+      console.error(JSON.stringify({ fn: 'gemini-image', event: 'error', durationMs: Date.now() - startMs, error: message }));
       await write({ error: message });
     } finally {
       await writer.close();

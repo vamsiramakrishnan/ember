@@ -90,7 +90,7 @@ ${body.context ? `Student context: ${body.context}\n\n` : ''}Concept to visualis
 Return ONLY the complete HTML — no markdown fences, no explanation. The HTML should be a complete document starting with <!DOCTYPE html>.`;
 
   const startMs = Date.now();
-  console.log(`[gemini-html] promptLen=${body.prompt.length} search=${!!body.useSearch}`);
+  console.log(JSON.stringify({ fn: 'gemini-html', event: 'request', promptLen: body.prompt.length, search: !!body.useSearch }));
 
   try {
     const response = await client.models.generateContentStream({
@@ -114,10 +114,10 @@ Return ONLY the complete HTML — no markdown fences, no explanation. The HTML s
               controller.enqueue(encoded);
             }
           }
-          console.log(`[gemini-html] done bytes=${bytes} duration=${Date.now() - startMs}ms`);
+          console.log(JSON.stringify({ fn: 'gemini-html', event: 'done', bytes, durationMs: Date.now() - startMs }));
           controller.close();
         } catch (err) {
-          console.error(`[gemini-html] stream error: ${err instanceof Error ? err.message : err}`);
+          console.error(JSON.stringify({ fn: 'gemini-html', event: 'stream-error', error: err instanceof Error ? err.message : String(err) }));
           controller.error(err);
         }
       },
@@ -131,7 +131,7 @@ Return ONLY the complete HTML — no markdown fences, no explanation. The HTML s
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';
-    console.error(`[gemini-html] failed duration=${Date.now() - startMs}ms error="${message}"`);
+    console.error(JSON.stringify({ fn: 'gemini-html', event: 'error', durationMs: Date.now() - startMs, error: message }));
     return new Response(
       JSON.stringify({ error: message }),
       { status: 502, headers: { 'Content-Type': 'application/json' } },
