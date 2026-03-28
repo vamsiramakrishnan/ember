@@ -23,7 +23,7 @@ describe('agents/echo', () => {
   });
 
   it('instruction mentions paraphrasing rule', () => {
-    expect(ECHO_AGENT.systemInstruction).toContain('NEVER quote');
+    expect(ECHO_AGENT.systemInstruction).toContain('never quote it exactly');
   });
 
   it('instruction mentions skip option', () => {

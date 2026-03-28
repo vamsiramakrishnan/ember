@@ -17,7 +17,7 @@ describe('router-config', () => {
     });
 
     it('has a system instruction', () => {
-      expect(ROUTER_AGENT.systemInstruction).toContain('routing classifier');
+      expect(ROUTER_AGENT.systemInstruction).toContain('Classify which AI agents');
     });
   });
 

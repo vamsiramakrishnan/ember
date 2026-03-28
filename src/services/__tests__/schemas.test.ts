@@ -124,7 +124,7 @@ describe('routingSchema', () => {
   test('parses valid routing decision', () => {
     const data = {
       tutor: true, research: false, visualize: false,
-      illustrate: false, deepMemory: false, directive: false, reason: 'simple q',
+      illustrate: false, deepMemory: false, directive: false, graphExplore: false, reason: 'simple q',
     };
     expect(routingSchema.parse(data)).toEqual(data);
   });

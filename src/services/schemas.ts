@@ -28,7 +28,7 @@ export const tutorConnectionSchema = z.object({
 export const tutorDirectiveSchema = z.object({
   type: z.literal('tutor-directive'),
   content: z.string(),
-  action: z.string().optional(),
+  action: z.enum(['search', 'read', 'try', 'observe', 'compare']).optional(),
 });
 
 export const thinkerCardSchema = z.object({
@@ -41,12 +41,25 @@ export const thinkerCardSchema = z.object({
   }),
 });
 
+const conceptDiagramItemSchema: z.ZodType = z.object({
+  label: z.string(),
+  subLabel: z.string().optional(),
+  accent: z.enum(['sage', 'indigo', 'amber', 'margin']).optional(),
+  detail: z.string().optional(),
+  entityKind: z.enum(['concept', 'thinker', 'term']).optional(),
+  children: z.array(z.lazy(() => conceptDiagramItemSchema)).optional(),
+});
+
 export const conceptDiagramSchema = z.object({
   type: z.literal('concept-diagram'),
-  items: z.array(z.object({
-    label: z.string(),
-    subLabel: z.string().optional(),
-  })),
+  title: z.string().optional(),
+  items: z.array(conceptDiagramItemSchema),
+  edges: z.array(z.object({
+    from: z.number(),
+    to: z.number(),
+    label: z.string().optional(),
+    type: z.enum(['causes', 'enables', 'contrasts', 'extends', 'requires', 'bridges']).optional(),
+  })).optional(),
 });
 
 export const tutorResponseSchema = z.discriminatedUnion('type', [
@@ -118,9 +131,10 @@ export const echoResponseSchema = z.union([
 
 // ─── Reflection ──────────────────────────────────────────────
 
-export const reflectionResponseSchema = z.object({
-  content: z.string(),
-});
+export const reflectionResponseSchema = z.union([
+  z.object({ skip: z.literal(true) }),
+  z.object({ content: z.string() }),
+]);
 
 // ─── Router ──────────────────────────────────────────────────
 
@@ -131,6 +145,7 @@ export const routingSchema = z.object({
   illustrate: z.boolean(),
   deepMemory: z.boolean(),
   directive: z.boolean(),
+  graphExplore: z.boolean(),
   reason: z.string(),
 });
 

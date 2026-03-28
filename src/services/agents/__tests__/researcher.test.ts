@@ -31,6 +31,6 @@ describe('agents/researcher', () => {
   });
 
   it('instruction mentions genuine bridges', () => {
-    expect(RESEARCHER_AGENT.systemInstruction).toContain('genuine intellectual bridges');
+    expect(RESEARCHER_AGENT.systemInstruction).toContain('Genuine intellectual bridges');
   });
 });
