@@ -106,14 +106,17 @@ export function ConceptDiagram({
 
   const containerRef = useRef<HTMLDivElement>(null);
   const modalBodyRef = useRef<HTMLDivElement>(null);
-  const [containerWidth, setContainerWidth] = useState(640);
+  const [containerWidth, setContainerWidth] = useState(0);
   const [modalWidth, setModalWidth] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-    const measure = () => setContainerWidth(el.clientWidth || 640);
+    const measure = () => {
+      const w = el.clientWidth;
+      if (w > 0) setContainerWidth(w);
+    };
     measure();
     if (typeof ResizeObserver === 'undefined') return;
     const obs = new ResizeObserver(measure);
@@ -141,10 +144,11 @@ export function ConceptDiagram({
     items.some((n) => n.children && n.children.length > 0);
 
   // Compute layout at a generous internal width (never cramped)
-  const internalWidth = Math.max(containerWidth, items.length * 120, 600);
+  const internalWidth = containerWidth > 0
+    ? Math.max(containerWidth, items.length * 120, 600) : 600;
 
   const layoutResult = useMemo(() => {
-    if (isTreeWithChildren) return null;
+    if (isTreeWithChildren || containerWidth === 0) return null;
     const h = resolvedLayout === 'constellation'
       ? Math.min(internalWidth * 0.65, 520)
       : resolvedLayout === 'radial' || resolvedLayout === 'cycle'
@@ -297,7 +301,7 @@ export function ConceptDiagram({
           )}
         </div>
 
-        {renderDiagramContent(false)}
+        {containerWidth > 0 && renderDiagramContent(false)}
 
         {edges.length > 0 && edges.some((e) => e.label) && (
           <div className={styles.edgeLabels} aria-label="Relationships">
@@ -348,8 +352,9 @@ function EdgeLayer({ edgePaths, minWidth, minHeight }: {
   return (
     <svg
       className={styles.edgeSvg}
+      width={minWidth}
+      height={minHeight}
       viewBox={`0 0 ${minWidth} ${minHeight}`}
-      preserveAspectRatio="xMidYMid meet"
       aria-hidden="true"
     >
       <defs>
