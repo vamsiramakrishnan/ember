@@ -90,12 +90,12 @@ function computeZoomToFit(
     maxY = Math.max(maxY, pos.y + 40);
   }
 
-  const contentWidth = maxX - minX + 40; // 20px padding each side
-  const contentHeight = maxY - minY + 40;
+  const contentWidth = maxX - minX + 80; // 40px padding each side
+  const contentHeight = maxY - minY + 80;
   const scaleX = containerWidth / contentWidth;
   const scale = Math.min(scaleX, 1); // Never zoom in, only out
 
-  return { scale: Math.max(scale, 0.45), contentWidth, contentHeight };
+  return { scale: Math.max(scale, 0.35), contentWidth, contentHeight };
 }
 
 export function ConceptDiagram({
@@ -104,7 +104,9 @@ export function ConceptDiagram({
   if (items.length === 0) return null;
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const modalBodyRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(640);
+  const [modalWidth, setModalWidth] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
@@ -117,6 +119,20 @@ export function ConceptDiagram({
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
+
+  // Measure modal body width when modal opens
+  useEffect(() => {
+    if (!modalOpen) return;
+    const el = modalBodyRef.current;
+    if (!el) return;
+    const measure = () => setModalWidth(el.clientWidth || 0);
+    // Wait one frame for the modal to layout
+    requestAnimationFrame(measure);
+    if (typeof ResizeObserver === 'undefined') return;
+    const obs = new ResizeObserver(measure);
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [modalOpen]);
 
   const resolvedLayout = layoutProp ?? inferLayout(items, edges);
 
@@ -146,6 +162,30 @@ export function ConceptDiagram({
     return computeZoomToFit(layoutResult.positions, containerWidth, 160);
   }, [layoutResult, containerWidth]);
 
+  // Compute a separate layout for the modal at its own width
+  const modalInternalWidth = modalWidth > 0
+    ? Math.max(modalWidth, items.length * 120, 600) : internalWidth;
+
+  const modalLayoutResult = useMemo(() => {
+    if (!modalOpen || modalWidth === 0) return null;
+    if (isTreeWithChildren) return null;
+    const h = resolvedLayout === 'constellation'
+      ? Math.min(modalInternalWidth * 0.65, 520)
+      : resolvedLayout === 'radial' || resolvedLayout === 'cycle'
+        ? Math.min(modalInternalWidth * 0.7, 480)
+        : resolvedLayout === 'timeline'
+          ? items.length * 120 + 80
+          : resolvedLayout === 'pyramid'
+            ? (Math.ceil((-1 + Math.sqrt(1 + 8 * items.length)) / 2)) * 120 + 80
+            : Math.max(items.length * 80, 200);
+    return computeLayout(resolvedLayout, items, edges, modalInternalWidth, h);
+  }, [resolvedLayout, items, edges, modalInternalWidth, modalOpen, modalWidth, isTreeWithChildren]);
+
+  const modalZoomInfo = useMemo(() => {
+    if (!modalLayoutResult || modalWidth === 0) return null;
+    return computeZoomToFit(modalLayoutResult.positions, modalWidth, 160);
+  }, [modalLayoutResult, modalWidth]);
+
   const counts = useMemo(() => connectionCounts(items, edges), [items, edges]);
 
   const openModal = useCallback(() => setModalOpen(true), []);
@@ -160,7 +200,10 @@ export function ConceptDiagram({
   }, [modalOpen, closeModal]);
 
   const renderDiagramContent = (isModal: boolean) => {
-    const scale = isModal ? 1 : (zoomInfo?.scale ?? 1);
+    // In modal: use modal-specific layout if available, otherwise fall back
+    const activeLayout = isModal && modalLayoutResult ? modalLayoutResult : layoutResult;
+    const activeZoom = isModal ? modalZoomInfo : zoomInfo;
+    const scale = activeZoom?.scale ?? 1;
     const needsScale = scale < 0.95;
 
     return (
@@ -178,10 +221,10 @@ export function ConceptDiagram({
               />
             ))}
           </div>
-        ) : layoutResult ? (
+        ) : activeLayout ? (
           <div
             className={styles.canvasScaler}
-            style={needsScale && !isModal ? {
+            style={needsScale ? {
               transform: `scale(${scale})`,
               transformOrigin: 'top left',
               width: `${100 / scale}%`,
@@ -190,14 +233,14 @@ export function ConceptDiagram({
             <div
               className={styles.canvas}
               style={{
-                minHeight: layoutResult.minHeight,
-                minWidth: layoutResult.minWidth,
+                minHeight: activeLayout.minHeight,
+                minWidth: activeLayout.minWidth,
                 position: 'relative',
               }}
             >
-              <EdgeLayer edgePaths={layoutResult.edgePaths} minWidth={layoutResult.minWidth} minHeight={layoutResult.minHeight} />
+              <EdgeLayer edgePaths={activeLayout.edgePaths} minWidth={activeLayout.minWidth} minHeight={activeLayout.minHeight} />
               {items.map((node, i) => {
-                const pos = layoutResult.positions.get(i);
+                const pos = activeLayout.positions.get(i);
                 if (!pos) return null;
                 return (
                   <div
@@ -219,7 +262,7 @@ export function ConceptDiagram({
                 );
               })}
               {resolvedLayout === 'timeline' && (
-                <div className={styles.timelineSpine} style={{ height: layoutResult.minHeight - 80 }} />
+                <div className={styles.timelineSpine} style={{ height: activeLayout.minHeight - 80 }} />
               )}
             </div>
           </div>
@@ -280,7 +323,7 @@ export function ConceptDiagram({
                 ×
               </button>
             </div>
-            <div className={styles.modalBody}>
+            <div className={styles.modalBody} ref={modalBodyRef}>
               {renderDiagramContent(true)}
             </div>
           </div>
