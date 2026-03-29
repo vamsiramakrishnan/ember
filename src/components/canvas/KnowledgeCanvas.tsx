@@ -18,38 +18,49 @@ import { GraphFilters } from './GraphFilters';
 import type { SavedPosition } from '@/types/graph-canvas';
 import styles from './KnowledgeCanvas.module.css';
 
-/** was: fixed 900x520, now: measured from container, min 600x400 */
+/** Canvas sizing — scales with node count to prevent crowding.
+ * was: fixed 900x520, now: responsive + node-count-aware */
 const MIN_WIDTH = 600;
-const MIN_HEIGHT = 400;
+const MIN_HEIGHT = 500;
+const EXTRA_HEIGHT_PER_NODE = 28;
 
-export function KnowledgeCanvas() {
+interface KnowledgeCanvasProps {
+  /** Navigate to a notebook entry from a graph node (cross-mode). */
+  onNodeNavigate?: (entryId: string, label: string) => void;
+  /** External focus request (from cross-mode navigation into graph). */
+  focusNodeId?: string;
+}
+
+export function KnowledgeCanvas({ onNodeNavigate, focusNodeId }: KnowledgeCanvasProps = {}) {
   const { notebook } = useStudent();
   const notebookId = notebook?.id ?? null;
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 900, height: 520 });
 
+  const {
+    nodes, edges, allNodes, filters, toggleFilter,
+    focusId, setFocusId, hoverId, setHoverId,
+  } = useGraphCanvas();
+
   /* Responsive: measure container on mount and resize.
-   * was: hardcoded CANVAS_WIDTH/HEIGHT
-   * now: fills available space, minimum 600x400 */
+   * Scales height with node count to prevent crowding with many nodes. */
+  const nodeCount = nodes.length;
   useEffect(() => {
     const measure = () => {
       if (!containerRef.current) return;
       const rect = containerRef.current.getBoundingClientRect();
+      const baseHeight = Math.max(rect.width * 0.65, MIN_HEIGHT);
+      const nodeBonus = Math.max(0, nodeCount - 8) * EXTRA_HEIGHT_PER_NODE;
       setDimensions({
         width: Math.max(rect.width, MIN_WIDTH),
-        height: Math.max(Math.min(rect.width * 0.58, 640), MIN_HEIGHT),
+        height: Math.min(baseHeight + nodeBonus, 1200),
       });
     };
     measure();
     const obs = new ResizeObserver(measure);
     if (containerRef.current) obs.observe(containerRef.current);
     return () => obs.disconnect();
-  }, []);
-
-  const {
-    nodes, edges, allNodes, filters, toggleFilter,
-    focusId, setFocusId, hoverId, setHoverId,
-  } = useGraphCanvas();
+  }, [nodeCount]);
 
   const { layoutNodes, pinNode } = useForceLayout(nodes, edges, {
     width: dimensions.width, height: dimensions.height, enabled: true,
@@ -105,6 +116,20 @@ export function KnowledgeCanvas() {
   const onNodeHoverIn = useCallback((id: string) => setHoverId(id), [setHoverId]);
   const onNodeHoverOut = useCallback(() => setHoverId(null), [setHoverId]);
 
+  /** Navigate to the source entry for a graph node (cross-mode). */
+  const onNodeNav = useCallback((nodeId: string) => {
+    if (!onNodeNavigate) return;
+    const node = allNodes.find((n) => n.id === nodeId);
+    if (node) onNodeNavigate(nodeId, node.label);
+  }, [onNodeNavigate, allNodes]);
+
+  // Apply external focus (from cross-mode navigation into graph)
+  useEffect(() => {
+    if (focusNodeId && nodes.some((n) => n.id === focusNodeId)) {
+      setFocusId(focusNodeId);
+    }
+  }, [focusNodeId, nodes, setFocusId]);
+
   const activeId = focusId ?? hoverId;
   const activeSet = useMemo(() => {
     if (!activeId) return null;
@@ -149,6 +174,7 @@ export function KnowledgeCanvas() {
                 onMouseEnter={onNodeHoverIn}
                 onMouseLeave={onNodeHoverOut}
                 onClick={setFocusId}
+                onNavigate={onNodeNavigate ? onNodeNav : undefined}
               />
             );
           })}

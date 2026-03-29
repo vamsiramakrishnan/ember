@@ -47,5 +47,20 @@ export async function getStyleReferenceData(): Promise<string> {
   return fetchPromise;
 }
 
-/** Text description accompanying the palette reference. */
-export const STYLE_REFERENCE_NOTE = `[STYLE REFERENCE] The image above shows the EXACT color palette and drawing style you must use. Top row: paper tones (warm ivory, never white). Second row: ink tones from darkest to lightest — use these for all line work. Third row: the ONLY four accent colors allowed (sage green, blue-grey indigo, warm amber, terracotta). Fourth row: how accents appear as subtle background tints. Right side: cross-hatching texture sample — this is how all shading should be rendered. The thin lines show structural dividers. Match these exact colors and this hand-drawn cross-hatching style.`;
+/** Text description accompanying the palette reference.
+ *
+ * IMPORTANT: The note explicitly tells the model this is a STYLE GUIDE to
+ * learn from — not an image to reproduce, copy, or return as-is. Without
+ * this distinction, image models sometimes output the palette swatch itself
+ * instead of generating an original illustration in that style.
+ */
+export const STYLE_REFERENCE_NOTE = `[STYLE GUIDE — DO NOT REPRODUCE THIS IMAGE] The image above is a STYLE REFERENCE ONLY. Do NOT copy, reproduce, or return this image. Instead, learn the color palette and drawing technique from it, then apply that style to the illustration you create from the prompt below.
+
+How to read the style reference:
+- Top row: paper tones (warm ivory background — never stark white)
+- Second row: ink tones from darkest to lightest — use these for all line work
+- Third row: the ONLY four accent colors allowed (sage green, blue-grey indigo, warm amber, terracotta)
+- Fourth row: how accents appear as subtle background tints at low opacity
+- Right side: cross-hatching texture sample — this is how all shading should be rendered (parallel lines at varying densities, never solid fills)
+
+You must generate an ORIGINAL illustration for the prompt that follows, drawn in this style. The output should be a complete, original artwork — not the palette swatch.`;

@@ -81,15 +81,17 @@ export function Constellation() {
           ))}
         </nav>
         <Rule margin={spacing.sectionGap} />
-        {view === 'overview' && (
-          <ConstellationOverview concepts={concepts}
-            threads={threads} thinkers={thinkers} />
-        )}
-        {view === 'lexicon' && <ConstellationLexicon entries={lexicon} />}
-        {view === 'encounters' && (
-          <ConstellationEncounters encounters={encounters} />
-        )}
-        {view === 'library' && <ConstellationLibrary texts={library} />}
+        <div className={styles.viewContent} key={view}>
+          {view === 'overview' && (
+            <ConstellationOverview concepts={concepts}
+              threads={threads} thinkers={thinkers} />
+          )}
+          {view === 'lexicon' && <ConstellationLexicon entries={lexicon} />}
+          {view === 'encounters' && (
+            <ConstellationEncounters encounters={encounters} />
+          )}
+          {view === 'library' && <ConstellationLibrary texts={library} />}
+        </div>
         <div className={styles.spacer} />
       </div>
     </Column>

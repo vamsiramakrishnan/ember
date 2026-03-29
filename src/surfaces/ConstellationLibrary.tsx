@@ -9,7 +9,7 @@ import { useEntityNavigation } from '@/hooks/useEntityNavigation';
 import type { PrimaryText } from '@/types/lexicon';
 import styles from './ConstellationLibrary.module.css';
 
-function TextCard({ text }: { text: PrimaryText }) {
+function TextCard({ text, index = 0 }: { text: PrimaryText; index?: number }) {
   const { navigateTo } = useEntityNavigation();
 
   const handleAnnotationClick = () => {
@@ -23,7 +23,8 @@ function TextCard({ text }: { text: PrimaryText }) {
   };
 
   return (
-    <div className={`${styles.card} ${text.isCurrent ? styles.current : ''}`}>
+    <div className={`${styles.card} ${text.isCurrent ? styles.current : ''}`}
+      style={{ animationDelay: `${index * 0.1}s` }}>
       {text.coverUrl && (
         <img className={styles.cover} src={text.coverUrl}
           alt={`Cover of ${text.title}`} loading="lazy" />
@@ -66,8 +67,8 @@ export function ConstellationLibrary({ texts }: ConstellationLibraryProps) {
         Library
       </Text>
       <div className={styles.grid}>
-        {texts.map((text) => (
-          <TextCard key={text.title} text={text} />
+        {texts.map((text, i) => (
+          <TextCard key={text.title} text={text} index={i} />
         ))}
       </div>
     </section>

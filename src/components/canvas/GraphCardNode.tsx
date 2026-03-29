@@ -27,6 +27,8 @@ interface GraphCardNodeProps {
   onMouseEnter: (id: string) => void;
   onMouseLeave: () => void;
   onClick: (id: string) => void;
+  /** Navigate to this entity's source in the notebook (cross-mode). */
+  onNavigate?: (id: string) => void;
 }
 
 const ACCENT_CLASS: Record<string, string> = {
@@ -45,24 +47,31 @@ function subLabel(node: LayoutNode): string {
 }
 
 /** SVG mastery arc — subtle ring around concepts with mastery > 0.
- * was: no visual mastery on the card itself, now: 270-degree arc */
+ * was: no visual mastery on the card itself, now: 270-degree arc
+ * Enhanced: thicker stroke, semantic color by mastery level, subtle glow on high mastery */
 function MasteryArc({ mastery }: { mastery: number }) {
   if (mastery <= 0) return null;
   const r = 14;
   const circumference = 2 * Math.PI * r;
-  const arcLength = (mastery / 100) * circumference * 0.75; /* 75% of circle max */
+  const arcLength = (mastery / 100) * circumference * 0.75;
+  const color = mastery >= 80 ? 'var(--sage)' : mastery >= 50 ? 'var(--ink)' : 'var(--indigo)';
+  const opacity = mastery >= 80 ? 0.6 : 0.45;
   return (
     <svg className={styles.masteryArc} width="32" height="32" viewBox="0 0 32 32" aria-hidden="true">
-      <circle
-        cx="16" cy="16" r={r}
-        fill="none"
-        stroke="var(--sage)"
-        strokeWidth="1.5"
-        strokeDasharray={`${arcLength} ${circumference}`}
-        strokeDashoffset="0"
-        strokeLinecap="round"
-        opacity="0.4"
+      {/* Track ring — faint background */}
+      <circle cx="16" cy="16" r={r} fill="none"
+        stroke="var(--rule-light)" strokeWidth="2"
         transform="rotate(-135 16 16)"
+        strokeDasharray={`${circumference * 0.75} ${circumference * 0.25}`}
+      />
+      {/* Progress arc */}
+      <circle cx="16" cy="16" r={r} fill="none"
+        stroke={color} strokeWidth="2.5"
+        strokeDasharray={`${arcLength} ${circumference}`}
+        strokeDashoffset="0" strokeLinecap="round"
+        opacity={opacity}
+        transform="rotate(-135 16 16)"
+        style={{ transition: 'stroke-dasharray 1s ease' }}
       />
     </svg>
   );
@@ -70,7 +79,7 @@ function MasteryArc({ mastery }: { mastery: number }) {
 
 export function GraphCardNode({
   node, focused, dimmed, connectionCount, neighbors,
-  onMouseDown, onMouseEnter, onMouseLeave, onClick,
+  onMouseDown, onMouseEnter, onMouseLeave, onClick, onNavigate,
 }: GraphCardNodeProps) {
   const [expanded, setExpanded] = useState(false);
 
@@ -91,10 +100,8 @@ export function GraphCardNode({
   const accent = ACCENT_CLASS[node.kind] ?? '';
 
   /* Density scaling: cards with more connections are wider.
-   * was: fixed min-width 80px / max-width 160px
-   * now: base 90px + 8px per connection, capped at 200px
-   * reason: highly-connected concepts should draw more visual weight */
-  const densityWidth = Math.min(90 + connectionCount * 8, 200);
+   * Reduced max to prevent overlap on mobile. */
+  const densityWidth = Math.min(80 + connectionCount * 6, 160);
 
   const cls = [
     styles.card,
@@ -112,11 +119,13 @@ export function GraphCardNode({
         top: node.y,
         transform: 'translate(-50%, -50%)',
         minWidth: densityWidth,
+        animationDelay: `${Math.random() * 0.3}s`,
       }}
       role="button"
       tabIndex={0}
       aria-label={`${node.kind}: ${node.label}`}
       aria-expanded={expanded}
+      title={node.label.length > 28 ? node.label : undefined}
       onMouseDown={(e) => onMouseDown(node.id, e)}
       onMouseEnter={() => onMouseEnter(node.id)}
       onMouseLeave={onMouseLeave}
@@ -128,7 +137,7 @@ export function GraphCardNode({
           <MasteryArc mastery={node.mastery} />
         )}
         <span className={styles.label}>
-          {node.label.length > 28 ? node.label.slice(0, 26) + '\u2026' : node.label}
+          {node.label.length > 22 ? node.label.slice(0, 20) + '\u2026' : node.label}
         </span>
       </div>
       <span className={styles.sub}>{subLabel(node)}</span>
@@ -154,6 +163,15 @@ export function GraphCardNode({
             <p className={styles.neighbors}>
               {neighbors.map((n) => n.label).join(' · ')}
             </p>
+          )}
+          {onNavigate && (
+            <button
+              className={styles.navButton}
+              onClick={(e) => { e.stopPropagation(); onNavigate(node.id); }}
+              title="View in notebook"
+            >
+              ← view in notebook
+            </button>
           )}
         </div>
       )}

@@ -14,11 +14,16 @@ import { cardContent, cardAccent } from './canvas-helpers';
 import type { LiveEntry } from '@/types/entries';
 import styles from './NotebookCanvas.module.css';
 
-interface Props { sessionId: string | null; entries: LiveEntry[] }
+interface Props {
+  sessionId: string | null;
+  entries: LiveEntry[];
+  /** Cross-mode navigation: click a card to switch to linear + scroll to entry. */
+  onCardClick?: (entryId: string, label: string) => void;
+}
 
 const ARROW_STEP = 10;
 
-export function NotebookCanvas({ sessionId, entries }: Props) {
+export function NotebookCanvas({ sessionId, entries, onCardClick }: Props) {
   const { positions, connections, updatePosition } = useCanvasPositions(sessionId, entries);
   const { getLabel } = useMetaLabels(entries);
   const dragRef = useRef<{
@@ -39,18 +44,40 @@ export function NotebookCanvas({ sessionId, entries }: Props) {
 
   const endDrag = useCallback(() => { dragRef.current = null; }, []);
 
+  // Click-to-navigate: if user clicks without dragging, navigate to source entry.
+  // Track mousedown position; if mouseup is within 5px, treat as click not drag.
+  const clickStart = useRef<{ id: string; x: number; y: number } | null>(null);
+  const onClickEnd = useCallback((id: string, x: number, y: number) => {
+    if (!clickStart.current || clickStart.current.id !== id) return;
+    const dx = Math.abs(x - clickStart.current.x);
+    const dy = Math.abs(y - clickStart.current.y);
+    if (dx < 5 && dy < 5 && onCardClick) {
+      const entry = entries.find((e) => e.id === id);
+      const card = entry ? cardContent(entry) : null;
+      onCardClick(id, card?.label ?? 'entry');
+    }
+    clickStart.current = null;
+  }, [onCardClick, entries]);
+
   const onMouseDown = useCallback((id: string, e: React.MouseEvent) => {
     e.preventDefault();
+    clickStart.current = { id, x: e.clientX, y: e.clientY };
     startDrag(id, e.clientX, e.clientY);
     const onMove = (ev: MouseEvent) => moveDrag(ev.clientX, ev.clientY);
-    const onUp = () => { endDrag(); document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+    const onUp = (ev: MouseEvent) => {
+      onClickEnd(id, ev.clientX, ev.clientY);
+      endDrag();
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup', onUp);
-  }, [startDrag, moveDrag, endDrag]);
+  }, [startDrag, moveDrag, endDrag, onClickEnd]);
 
   const onTouchStart = useCallback((id: string, e: React.TouchEvent) => {
     const t = e.touches[0];
     if (!t) return;
+    clickStart.current = { id, x: t.clientX, y: t.clientY };
     startDrag(id, t.clientX, t.clientY);
     const onMove = (ev: TouchEvent) => {
       const touch = ev.touches[0];
@@ -58,10 +85,16 @@ export function NotebookCanvas({ sessionId, entries }: Props) {
       ev.preventDefault();
       moveDrag(touch.clientX, touch.clientY);
     };
-    const onEnd = () => { endDrag(); document.removeEventListener('touchmove', onMove); document.removeEventListener('touchend', onEnd); };
+    const onEnd = (ev: TouchEvent) => {
+      const touch = ev.changedTouches[0];
+      if (touch) onClickEnd(id, touch.clientX, touch.clientY);
+      endDrag();
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('touchend', onEnd);
+    };
     document.addEventListener('touchmove', onMove, { passive: false });
     document.addEventListener('touchend', onEnd);
-  }, [startDrag, moveDrag, endDrag]);
+  }, [startDrag, moveDrag, endDrag, onClickEnd]);
 
   const onKeyDown = useCallback((id: string, e: React.KeyboardEvent) => {
     const pos = positions.find((p) => p.id === id);

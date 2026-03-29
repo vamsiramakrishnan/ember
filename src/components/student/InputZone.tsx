@@ -1,13 +1,14 @@
 /** InputZone (7.4) — student's writing area. See: 06-component-inventory.md */
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { inferEntryType } from '@/hooks/useEntryInference';
+import { useMicrophoneInput } from '@/hooks/useMicrophoneInput';
 import { detectTrigger, replaceTrigger } from './trigger-detect';
 import { SketchInput } from './SketchInput';
 import { BlockInserter } from './BlockInserter';
 import { InputAffordances } from './InputAffordances';
 import { ChipPreviewBar } from './ChipPreviewBar';
 import { MathPreview } from '@/primitives/MathPreview';
-import type { StudentEntryType } from '@/types/entries';
+import type { StudentEntryType, NotebookEntry } from '@/types/entries';
 import styles from './InputZone.module.css';
 
 const typeLabels: Record<StudentEntryType, string> = {
@@ -28,17 +29,56 @@ interface InputZoneProps {
   disabled?: boolean;
   /** Whether the last tutor entry was a Socratic question. */
   afterQuestion?: boolean;
+  /** Voice Mode: callback to add entries from voice session function calls. */
+  onVoiceEntry?: (entry: NotebookEntry) => void;
+  /** Voice session hook — if provided, enables Voice Mode (long-press mic). */
+  voiceSession?: {
+    state: 'idle' | 'connecting' | 'active' | 'error';
+    error: string | null;
+    transcript: Array<{ role: 'user' | 'tutor'; text: string; timestamp: number; final: boolean }>;
+    isTutorSpeaking: boolean;
+    elapsed: number;
+    start: () => Promise<void>;
+    stop: () => void;
+  };
 }
 
 export function InputZone({
   onSubmit, onSubmitTyped, onSketchSubmit,
   onMentionTrigger, onSlashTrigger, onPopupClose, onPaste,
   insertText, onInsertConsumed, popupOpen, disabled, afterQuestion,
+  voiceSession,
 }: InputZoneProps) {
   const [value, setValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [sketchMode, setSketchMode] = useState(false);
   const [forcedType, setForcedType] = useState<StudentEntryType | null>(null);
+
+  // Microphone input: short press = dictation, long press = Voice Mode
+  const handleTranscript = useCallback((text: string) => {
+    setValue((prev) => prev ? `${prev} ${text}` : text);
+  }, []);
+  const mic = useMicrophoneInput(handleTranscript);
+
+  // Long-press detection for Voice Mode activation
+  const longPressTimer = useRef<ReturnType<typeof setTimeout>>();
+  const longPressTriggered = useRef(false);
+  const handleMicPointerDown = useCallback(() => {
+    longPressTriggered.current = false;
+    longPressTimer.current = setTimeout(() => {
+      longPressTriggered.current = true;
+      if (voiceSession && voiceSession.state === 'idle') {
+        void voiceSession.start();
+      }
+    }, 500);
+  }, [voiceSession]);
+  const handleMicPointerUp = useCallback(() => {
+    clearTimeout(longPressTimer.current);
+    if (!longPressTriggered.current) {
+      // Short press — toggle dictation
+      void mic.toggleRecording();
+    }
+  }, [mic]);
   /* Submission morph: brief color transition before clearing.
    * was: instant clear, now: 200ms color morph → clear
    * reason: smooths the most frequent interaction in the app (audit P9) */
@@ -151,10 +191,52 @@ export function InputZone({
           : inferredType === 'hypothesis' ? styles.typeIndicatorHypothesis
           : inferredType === 'scratch' ? styles.typeIndicatorScratch
           : styles.typeIndicator}>{displayType}</span>}
-        <button className={styles.sketchToggle} aria-label="Switch to sketch mode"
-          onClick={(e) => { e.stopPropagation(); setSketchMode(true); }}>sketch</button>
+        <div className={styles.bottomActions}>
+          <button className={styles.sketchToggle} aria-label="Switch to sketch mode"
+            onClick={(e) => { e.stopPropagation(); setSketchMode(true); }}>sketch</button>
+        </div>
       </div>
+
+      {/* Prominent mic button — positioned at the right edge of the input area.
+        * Tap = dictation, long-press (500ms) = Voice Mode. */}
+      <div className={styles.micArea}>
+        <button
+          className={`${styles.micButton} ${mic.state === 'recording' ? styles.micRecording : ''} ${mic.state === 'transcribing' ? styles.micTranscribing : ''} ${voiceSession && voiceSession.state !== 'idle' ? styles.micVoiceActive : ''}`}
+          aria-label={mic.state === 'recording' ? 'Stop recording' : mic.state === 'transcribing' ? 'Transcribing…' : voiceSession ? 'Tap to dictate, hold for voice mode' : 'Record audio'}
+          onPointerDown={(e) => { e.stopPropagation(); handleMicPointerDown(); }}
+          onPointerUp={(e) => { e.stopPropagation(); handleMicPointerUp(); }}
+          onPointerLeave={() => { clearTimeout(longPressTimer.current); }}
+          disabled={mic.state === 'transcribing' || disabled || (voiceSession?.state !== 'idle' && voiceSession?.state !== undefined)}
+        >
+          {mic.state === 'recording' ? (
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <rect x="4" y="4" width="12" height="12" rx="2" />
+            </svg>
+          ) : mic.state === 'transcribing' ? (
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true" className={styles.micSpinner}>
+              <circle cx="10" cy="10" r="7" strokeDasharray="28 16" />
+            </svg>
+          ) : (
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <rect x="7" y="2" width="6" height="10" rx="3" />
+              <path d="M4 10a6 6 0 0 0 12 0" fill="none" stroke="currentColor" strokeWidth="1.5" />
+              <line x1="10" y1="16" x2="10" y2="18" stroke="currentColor" strokeWidth="1.5" />
+              <line x1="7" y1="18" x2="13" y2="18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          )}
+        </button>
+        <span className={styles.micHint}>
+          {mic.state === 'recording' ? 'tap to stop'
+            : voiceSession ? 'hold for voice'
+            : 'tap to dictate'}
+        </span>
+      </div>
+      {mic.error && <p className={styles.micError}>{mic.error}</p>}
       <InputAffordances />
     </div>
   );
 }
+
+/** Standalone VoiceMode bar — render at the page level, not inside InputZone.
+ *  Re-exported here for convenience. */
+export { VoiceMode } from './VoiceMode';

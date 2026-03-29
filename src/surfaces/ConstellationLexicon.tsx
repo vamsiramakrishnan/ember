@@ -35,8 +35,8 @@ export function ConstellationLexicon({ entries }: ConstellationLexiconProps) {
         {entries.length} terms catalogued
       </Text>
       {entries.map((entry, i) => (
-        <div key={entry.term}>
-          <LexiconEntryRow entry={entry} />
+        <div key={entry.term} style={{ animationDelay: `${i * 0.05}s` }}>
+          <LexiconEntryRow entry={entry} index={i} />
           {i < entries.length - 1 && <Rule margin={20} />}
         </div>
       ))}

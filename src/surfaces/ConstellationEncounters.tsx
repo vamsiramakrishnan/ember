@@ -21,7 +21,7 @@ const statusLabels: Record<Encounter['status'], string> = {
   pending: 'Pending',
 };
 
-function EncounterRow({ encounter }: { encounter: Encounter }) {
+function EncounterRow({ encounter, index = 0 }: { encounter: Encounter; index?: number }) {
   const { navigateTo } = useEntityNavigation();
   const statusText = encounter.status === 'bridged' && encounter.bridgedTo
     ? `Bridged to ${encounter.bridgedTo}`
@@ -36,7 +36,7 @@ function EncounterRow({ encounter }: { encounter: Encounter }) {
   };
 
   return (
-    <div className={styles.row}>
+    <div className={styles.row} style={{ animationDelay: `${index * 0.04}s` }}>
       {/* Layer 2: ref — visible on hover */}
       <span className={styles.ref}>{encounter.ref}</span>
 
@@ -97,8 +97,8 @@ export function ConstellationEncounters({
         <span className={styles.headerCell}>Session</span>
         <span className={styles.headerCell}>Status</span>
       </div>
-      {encounters.map((encounter) => (
-        <EncounterRow key={encounter.ref} encounter={encounter} />
+      {encounters.map((encounter, i) => (
+        <EncounterRow key={encounter.ref} encounter={encounter} index={i} />
       ))}
     </section>
   );

@@ -54,6 +54,8 @@ export type ProgressCallback = (
   nodeId: string,
   status: 'pending' | 'active' | 'complete' | 'error',
   label: string,
+  /** Entries produced by this node (only on 'complete'). */
+  entries?: NotebookEntry[],
 ) => void;
 
 // ─── Topological sort ───────────────────────────────────────
@@ -162,11 +164,13 @@ export async function executeDAG(
       const promises = wave.nodes.map(async (node) => {
         onProgress?.(node.id, 'active', node.label);
         try {
-          // Only stream the root node
           const chunk = node.id === dag.rootId ? onChunk : undefined;
           const result = await dispatch(node, dag, results, chunk);
           results.set(node.id, result);
-          onProgress?.(node.id, result.success ? 'complete' : 'error', node.label);
+          onProgress?.(
+            node.id, result.success ? 'complete' : 'error', node.label,
+            result.success ? result.entries : undefined,
+          );
         } catch (err) {
           const error = err instanceof Error ? err.message : String(err);
           results.set(node.id, {
@@ -184,7 +188,10 @@ export async function executeDAG(
           const chunk = node.id === dag.rootId ? onChunk : undefined;
           const result = await dispatch(node, dag, results, chunk);
           results.set(node.id, result);
-          onProgress?.(node.id, result.success ? 'complete' : 'error', node.label);
+          onProgress?.(
+            node.id, result.success ? 'complete' : 'error', node.label,
+            result.success ? result.entries : undefined,
+          );
         } catch (err) {
           const error = err instanceof Error ? err.message : String(err);
           results.set(node.id, {

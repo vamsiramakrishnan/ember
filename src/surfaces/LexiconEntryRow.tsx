@@ -18,9 +18,9 @@ const levelColors: Record<MasteryLevel, string> = {
   exploring: colors.inkGhost,
 };
 
-interface Props { entry: LexiconEntry }
+interface Props { entry: LexiconEntry; index?: number }
 
-export function LexiconEntryRow({ entry }: Props) {
+export function LexiconEntryRow({ entry, index = 0 }: Props) {
   const { navigateTo } = useEntityNavigation();
   const [expanded, setExpanded] = useState(false);
   /* Dwell state: 400ms hover reveals etymology inline without full expansion.
@@ -54,6 +54,7 @@ export function LexiconEntryRow({ entry }: Props) {
   return (
     <div
       className={`${styles.entry} ${expanded ? styles.entryExpanded : ''}`}
+      style={{ animationDelay: `${index * 0.05}s` }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       data-term={entry.term}

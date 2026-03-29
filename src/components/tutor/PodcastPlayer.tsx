@@ -4,6 +4,10 @@
  * a collapsible transcript. Supports multi-segment playback: segments
  * play sequentially, auto-advancing as each completes.
  *
+ * Fixed: audio element is always mounted so ref is stable; playback
+ * resumes correctly when segments arrive after initial render; error
+ * and loading states prevent silent failures.
+ *
  * See: podcast-gen.ts for the generation pipeline.
  */
 import { useState, useRef, useCallback, useEffect } from 'react';
@@ -39,10 +43,28 @@ export function PodcastPlayer({
   const [currentTime, setCurrentTime] = useState(0);
   const [totalDuration, setTotalDuration] = useState(0);
   const [showTranscript, setShowTranscript] = useState(!hasAudio);
+  const [audioError, setAudioError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const currentUrl = playlist[segIndex] ?? '';
-  const { canvasRef, updateProgress, getProgressFromClick } =
+  // Track previous hasAudio to detect when audio first becomes available
+  const prevHasAudioRef = useRef(hasAudio);
+
+  // Clamp segIndex to valid range when playlist shrinks/changes
+  const safeSegIndex = Math.min(segIndex, Math.max(playlist.length - 1, 0));
+  const currentUrl = playlist[safeSegIndex] ?? '';
+  const { canvasRef, updateProgress, getProgressFromClick, redraw } =
     useWaveform(currentUrl || null);
+
+  // When audio first becomes available (transition from no-audio to has-audio),
+  // collapse transcript and reset state
+  useEffect(() => {
+    if (hasAudio && !prevHasAudioRef.current) {
+      setShowTranscript(false);
+      setAudioError(null);
+      setSegIndex(0);
+    }
+    prevHasAudioRef.current = hasAudio;
+  }, [hasAudio]);
 
   // Revoke blob URLs on unmount to prevent memory leaks
   useEffect(() => {
@@ -55,7 +77,8 @@ export function PodcastPlayer({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Auto-advance to next segment when current ends
+  // Attach audio event listeners. The audio element is always mounted,
+  // so audioRef.current is always available.
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -69,44 +92,95 @@ export function PodcastPlayer({
     const onMeta = () => {
       if (audio.duration && isFinite(audio.duration)) {
         setTotalDuration(audio.duration);
+        setLoading(false);
       }
     };
     const onEnd = () => {
-      if (segIndex < playlist.length - 1) {
+      if (safeSegIndex < playlist.length - 1) {
         setSegIndex((i) => i + 1);
       } else {
         setPlaying(false);
         updateProgress(0);
       }
     };
+    const onError = () => {
+      setLoading(false);
+      if (audio.src && audio.src !== window.location.href) {
+        setAudioError('Audio could not be loaded. The recording may have expired.');
+        setPlaying(false);
+      }
+    };
+    const onCanPlay = () => {
+      setLoading(false);
+      setAudioError(null);
+    };
 
     audio.addEventListener('timeupdate', onTime);
     audio.addEventListener('loadedmetadata', onMeta);
     audio.addEventListener('durationchange', onMeta);
     audio.addEventListener('ended', onEnd);
+    audio.addEventListener('error', onError);
+    audio.addEventListener('canplay', onCanPlay);
     return () => {
       audio.removeEventListener('timeupdate', onTime);
       audio.removeEventListener('loadedmetadata', onMeta);
       audio.removeEventListener('durationchange', onMeta);
       audio.removeEventListener('ended', onEnd);
+      audio.removeEventListener('error', onError);
+      audio.removeEventListener('canplay', onCanPlay);
     };
-  }, [updateProgress, segIndex, playlist.length]);
+  }, [updateProgress, safeSegIndex, playlist.length]);
 
-  // When segment changes, load + autoplay the new segment
+  // When segment changes or a new URL arrives, load the audio.
+  // This is the critical path: it must fire when currentUrl changes
+  // (including the first time audio becomes available).
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !currentUrl) return;
+
+    // Only reload if the source actually changed
+    if (audio.src === currentUrl) return;
+
+    setAudioError(null);
+    setLoading(true);
     audio.src = currentUrl;
     audio.load();
-    if (playing) void audio.play();
-  }, [segIndex, currentUrl]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (playing) {
+      void audio.play().catch(() => {
+        // Autoplay may be blocked by browser policy — user must click play
+        setPlaying(false);
+      });
+    }
+  }, [currentUrl, playing]);
 
   const toggle = useCallback(() => {
     const audio = audioRef.current;
-    if (!audio) return;
-    if (playing) { audio.pause(); } else { void audio.play(); }
-    setPlaying(!playing);
-  }, [playing]);
+    if (!audio || !currentUrl) return;
+
+    // Ensure src is set (handles race where toggle fires before load effect)
+    if (!audio.src || audio.src === window.location.href) {
+      audio.src = currentUrl;
+      audio.load();
+    }
+
+    if (playing) {
+      audio.pause();
+      setPlaying(false);
+    } else {
+      setAudioError(null);
+      setLoading(true);
+      void audio.play()
+        .then(() => { setPlaying(true); setLoading(false); })
+        .catch((err) => {
+          setLoading(false);
+          if (err instanceof DOMException && err.name === 'NotAllowedError') {
+            setAudioError('Tap play again — your browser blocked autoplay.');
+          } else {
+            setAudioError('Could not play audio.');
+          }
+        });
+    }
+  }, [playing, currentUrl]);
 
   const seek = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     const audio = audioRef.current;
@@ -116,16 +190,23 @@ export function PodcastPlayer({
     updateProgress(p);
   }, [getProgressFromClick, updateProgress]);
 
+  // Redraw waveform on resize
+  useEffect(() => {
+    window.addEventListener('resize', redraw);
+    return () => window.removeEventListener('resize', redraw);
+  }, [redraw]);
+
   const timeLabel = totalDuration > 0
     ? `${formatTime(currentTime)} / ${formatTime(totalDuration)}`
     : formatTime(currentTime);
 
   const segLabel = playlist.length > 1
-    ? ` · part ${segIndex + 1}/${playlist.length}` : '';
+    ? ` · part ${safeSegIndex + 1}/${playlist.length}` : '';
 
   return (
     <div className={styles.container}>
-      {hasAudio && <audio ref={audioRef} src={currentUrl} preload="metadata" />}
+      {/* Always mount audio element so ref is stable across re-renders */}
+      <audio ref={audioRef} preload="metadata" />
       <div className={styles.headerRow}>
         {coverUrl && (
           <img
@@ -145,11 +226,12 @@ export function PodcastPlayer({
 
       {hasAudio && <div className={styles.controls}>
         <button
-          className={styles.playButton}
+          className={`${styles.playButton} ${playing ? styles.playButtonActive : ''}`}
           onClick={toggle}
           aria-label={playing ? 'Pause' : 'Play'}
+          disabled={loading}
         >
-          {playing ? PauseIcon : PlayIcon}
+          {loading ? LoadingIcon : playing ? PauseIcon : PlayIcon}
         </button>
         <div className={styles.waveformWrap}>
           <canvas
@@ -168,6 +250,17 @@ export function PodcastPlayer({
         <span className={styles.time}>{timeLabel}</span>
       </div>}
 
+      {!hasAudio && (
+        <div className={styles.pendingRow}>
+          <span className={styles.pendingDot} />
+          <span className={styles.pendingLabel}>synthesizing audio…</span>
+        </div>
+      )}
+
+      {audioError && (
+        <p className={styles.error}>{audioError}</p>
+      )}
+
       <button
         className={styles.transcriptToggle}
         onClick={() => setShowTranscript(!showTranscript)}
@@ -182,14 +275,21 @@ export function PodcastPlayer({
 }
 
 const PlayIcon = (
-  <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true">
     <path d="M3 1.5v11l9-5.5z" />
   </svg>
 );
 
 const PauseIcon = (
-  <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true">
     <rect x="2.5" y="1.5" width="3" height="11" rx="0.5" />
     <rect x="8.5" y="1.5" width="3" height="11" rx="0.5" />
+  </svg>
+);
+
+const LoadingIcon = (
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor"
+    strokeWidth="1.5" aria-hidden="true" className={styles.spinner}>
+    <circle cx="7" cy="7" r="5" strokeDasharray="20 12" />
   </svg>
 );

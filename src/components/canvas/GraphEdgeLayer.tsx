@@ -101,19 +101,22 @@ export function GraphEdgeLayer({
 
         return (
           <g key={`${edge.from}-${edge.to}`} className={dimmed ? styles.dimmed : ''}>
+            {/* Invisible wider hit area for hover detection */}
+            <path d={d} fill="none" stroke="transparent" strokeWidth={12}
+              className={styles.edgeHitArea} />
             <path
               d={d}
               fill="none"
               stroke={highlighted ? colors.inkSoft : style.stroke}
-              strokeWidth={highlighted ? style.strokeWidth + 0.4 : style.strokeWidth}
+              strokeWidth={highlighted ? style.strokeWidth + 0.5 : style.strokeWidth}
               strokeDasharray={style.strokeDasharray}
               strokeOpacity={highlighted ? 0.9 : style.opacity}
               className={styles.edge}
             />
             {label && (highlighted || !hasActive) && (
               <text
-                x={labelX} y={labelY - 5}
-                className={styles.label}
+                x={labelX} y={labelY - 6}
+                className={`${styles.label} ${highlighted ? styles.labelHighlighted : ''}`}
               >
                 {label}
               </text>

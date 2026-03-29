@@ -11,7 +11,7 @@ import { micro } from './agents/config';
 import { askAgent } from './run-agent';
 import type { LiveEntry } from '@/types/entries';
 
-const STYLE = 'The drawing medium is fountain pen on aged ivory paper. All shading is built through careful cross-hatching — parallel lines at varying densities, never solid fills or smooth gradients. The ink is warm dark brown, not pure black. Accent colours (muted sage green, quiet indigo, warm amber) appear only where meaning demands them, applied as thin washes, never bold. No digital effects, no drop shadows, no glow, no neon, no flat vector art. The mood is the quiet warmth of a late-afternoon library. Match the exact colours shown in the style reference palette image.';
+const STYLE = 'The drawing medium is fountain pen on aged ivory paper. All shading is built through careful cross-hatching — parallel lines at varying densities, never solid fills or smooth gradients. The ink is warm dark brown, not pure black. Accent colours (muted sage green, quiet indigo, warm amber) appear only where meaning demands them, applied as thin washes, never bold. No digital effects, no drop shadows, no glow, no neon, no flat vector art. The mood is the quiet warmth of a late-afternoon library. Use the colours and cross-hatching technique from the style reference palette to guide your drawing — but create an entirely original illustration, never reproduce the palette swatch itself.';
 
 /** Does the query contain vague references or @mentions that need resolution? */
 function needsResolution(query: string): boolean {

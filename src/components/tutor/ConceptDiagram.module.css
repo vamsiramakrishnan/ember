@@ -2,6 +2,8 @@
  * ConceptDiagram (2.4) — layout-aware interactive concept map.
  * Supports: flow, tree, radial, pyramid, cycle, timeline,
  * constellation, and general graph layouts.
+ * Auto zoom-to-fit ensures all nodes visible without scrolling.
+ * Enlarge button opens a full-screen modal for exploration.
  */
 
 .container {
@@ -10,9 +12,16 @@
   margin-bottom: var(--diagram-gap);
   background: var(--material-card-stock);
   box-shadow: var(--depth-resting);
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+  overflow: hidden;
   animation: diagramReveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding: 0 4px;
 }
 
 .title {
@@ -21,8 +30,39 @@
   letter-spacing: 2px;
   text-transform: uppercase;
   color: var(--ink-faint);
-  margin: 0 0 16px;
-  padding: 0 4px;
+  margin: 0;
+}
+
+.enlargeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 2px;
+  border: 1px solid var(--rule-light);
+  background: var(--paper);
+  color: var(--ink-ghost);
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  flex-shrink: 0;
+}
+
+.enlargeButton:hover {
+  color: var(--ink-soft);
+  border-color: var(--rule);
+  background: var(--paper-warm);
+}
+
+.enlargeButton:focus-visible {
+  outline: 2px solid var(--margin);
+  outline-offset: 2px;
+}
+
+/* ─── Zoom-to-fit scaler ─── */
+
+.canvasScaler {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* ─── SVG-positioned canvas (all non-tree layouts) ─── */
@@ -113,10 +153,95 @@
   .container { animation: none; }
 }
 
+/* ─── Full-screen modal ─── */
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(44, 40, 37, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: overlayFade 0.25s ease both;
+}
+
+.modal {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  box-shadow: var(--depth-floating);
+  width: 100%;
+  max-width: 960px;
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  animation: modalEnter 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--rule-light);
+  flex-shrink: 0;
+}
+
+.modalTitle {
+  font-family: var(--font-system);
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 0;
+}
+
+.modalClose {
+  font-size: 20px;
+  color: var(--ink-faint);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+  transition: color 0.2s ease;
+}
+
+.modalClose:hover { color: var(--ink); }
+
+.modalBody {
+  flex: 1;
+  overflow: auto;
+  padding: 24px;
+  -webkit-overflow-scrolling: touch;
+}
+
+@keyframes overlayFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalEnter {
+  from { opacity: 0; transform: scale(0.97) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
 /* ─── Responsive ─── */
 
 @media (max-width: 500px) {
   .container {
-    overflow-x: scroll;
+    padding: 16px 12px;
   }
+  .modalOverlay { padding: 8px; }
+  .modal { max-height: calc(100vh - 16px); }
+  .modalBody { padding: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modalOverlay { animation: none; }
+  .modal { animation: none; }
+  .canvasScaler { transition: none; }
+  .enlargeButton { transition: none; }
 }

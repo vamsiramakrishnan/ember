@@ -26,14 +26,23 @@
   display: grid;
   grid-template-columns: 48px 120px 1fr 120px 90px;
   gap: 12px;
-  padding: 12px 0;
+  padding: 12px 4px;
   border-bottom: 1px solid var(--rule-light);
   align-items: start;
-  transition: background-color 0.2s ease;
+  border-radius: 2px;
+  opacity: 0;
+  animation: rowSlideIn 0.35s ease forwards;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .row:hover {
   background-color: var(--paper-warm);
+  box-shadow: 0 1px 3px rgba(44, 40, 37, 0.03);
+}
+
+@keyframes rowSlideIn {
+  from { opacity: 0; transform: translateY(3px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* Layer 2: detail columns — hidden at rest, visible on hover */
@@ -134,22 +143,40 @@
   color: var(--ink-ghost);
 }
 
-/* Layer 2: status badge */
+/* Layer 2: status badge — tinted backgrounds for better hierarchy */
 .status {
   font-family: var(--font-system);
   font-size: 9px;
   text-transform: uppercase;
   letter-spacing: 1px;
-  padding: 2px 6px;
+  padding: 3px 8px;
   border: 1px solid var(--rule);
+  border-radius: 2px;
   text-align: center;
   align-self: start;
+  transition: opacity 0.2s ease;
 }
 
-.active { color: var(--margin); border-color: var(--margin); }
-.dormant { color: var(--ink-faint); border-color: var(--rule); }
-.bridged { color: var(--ink); border-color: var(--ink); }
-.pending { color: var(--amber); border-color: var(--amber); }
+.active {
+  color: var(--margin);
+  border-color: var(--margin);
+  background: var(--margin-dim);
+}
+.dormant {
+  color: var(--ink-faint);
+  border-color: var(--rule);
+  background: transparent;
+}
+.bridged {
+  color: var(--sage);
+  border-color: var(--sage);
+  background: var(--sage-dim);
+}
+.pending {
+  color: var(--amber);
+  border-color: var(--amber);
+  background: var(--amber-dim);
+}
 
 /* On narrow screens, show everything (no hover on touch) */
 @media (max-width: 640px) {
@@ -159,5 +186,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .row, .hoverDetail, .ref, .thinkerName { transition: none; }
+  .row { transition: none; animation: none; opacity: 1; }
+  .hoverDetail, .ref, .thinkerName { transition: none; }
 }

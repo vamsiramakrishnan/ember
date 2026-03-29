@@ -117,7 +117,7 @@ async function editImage(
       role: 'user',
       parts: [
         { inlineData: { mimeType, data: imageData } },
-        { text: `Refine this illustration. Original concept: "${originalPrompt}"\n\nEdits needed:\n${editInstructions}\n\nKeep the same warm notebook style. Apply ONLY the requested changes.` },
+        { text: `The image above is an EXISTING illustration that needs refinement — edit it in place, do not start from scratch. Original concept: "${originalPrompt}"\n\nEdits needed:\n${editInstructions}\n\nKeep the same warm notebook style. Apply ONLY the requested changes. Return the refined version of this illustration.` },
       ],
     }]);
 

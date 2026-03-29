@@ -24,8 +24,10 @@
   border: 1px solid var(--rule-light);
   opacity: 0;
   transform: translateY(8px);
+  box-shadow: var(--depth-resting);
   transition: opacity 0.8s ease, transform 0.8s ease,
-              background-color 0.3s ease;
+              background-color 0.3s ease, box-shadow 0.3s ease,
+              border-color 0.3s ease;
 }
 
 .card.visible {
@@ -35,6 +37,15 @@
 
 .card:hover {
   background: var(--paper-warm);
+  box-shadow: var(--depth-lifted);
+  transform: translateY(-2px);
+  border-color: var(--rule);
+}
+
+/* Focus for keyboard navigation */
+.card:focus-visible {
+  outline: 2px solid var(--margin);
+  outline-offset: 2px;
 }
 
 .label {

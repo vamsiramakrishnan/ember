@@ -32,8 +32,11 @@ import type { usePopupState } from '@/hooks/usePopupState';
 import { isStudentEntry as isStudentType } from './entryTypeMeta';
 import { useEntryKeyboardNav } from '@/hooks/useEntryKeyboardNav';
 import { ResponsePlanPreview } from '@/components/tutor/ResponsePlanPreview';
+import { CrossNavBreadcrumb } from '@/components/peripheral/CrossNavBreadcrumb';
+import { VoiceMode } from '@/components/student/VoiceMode';
 import { NotebookEmptyState } from './NotebookEmptyState';
 import type { ResponsePlan } from '@/hooks/useResponseOrchestrator';
+import type { CrossNavState } from '@/hooks/useNotebookCrossNav';
 import styles from './Notebook.module.css';
 
 export interface NotebookContentProps {
@@ -53,12 +56,32 @@ export interface NotebookContentProps {
   handleSubmit: (text: string) => void;
   handleSubmitTyped: (text: string, type: string) => void;
   handleSketchSubmit: (dataUrl: string) => void;
+  /** Voice session state — renders the non-blocking voice bar at viewport bottom. */
+  voiceSession?: {
+    state: 'idle' | 'connecting' | 'active' | 'error';
+    error: string | null;
+    transcript: Array<{ role: 'user' | 'tutor'; text: string; timestamp: number; final: boolean }>;
+    isTutorSpeaking: boolean;
+    elapsed: number;
+    start: () => Promise<void>;
+    stop: () => void;
+    debugStatus?: string;
+  };
+  /** Cross-mode navigation state (graph↔linear↔canvas). */
+  crossNav?: {
+    navState: CrossNavState;
+    hasBreadcrumb: boolean;
+    goToEntry: (entryId: string, label: string) => void;
+    goToGraphNode: (nodeId: string, label: string) => void;
+    goBack: () => void;
+    dismissBreadcrumb: () => void;
+  };
 }
 
 export function NotebookContent({
   entries, pinnedEntries, past, current, sessionId, mode, setMode,
   marginalRef, contentDrop, popup, isThinking, responsePlans, bottomRef,
-  handleSubmit, handleSubmitTyped, handleSketchSubmit,
+  handleSubmit, handleSubmitTyped, handleSketchSubmit, voiceSession, crossNav,
 }: NotebookContentProps) {
   const { containerRef: kbNavRef, handleKeyDown: handleKbNav } = useEntryKeyboardNav();
   const wideViewport = useWideViewport();
@@ -79,7 +102,11 @@ export function NotebookContent({
     return [...groups.values()].filter((g) => g.length >= 2);
   }, [entries, clusters]);
 
+  const voiceActive = voiceSession && voiceSession.state !== 'idle';
+
   return (
+    <>
+    <div style={voiceActive ? { paddingBottom: 56 } : undefined}>
     <Column>
       {past.map((s) => <NotebookPastSession key={s.id} session={s} />)}
       {past.length > 0 && <SessionDivider />}
@@ -88,6 +115,14 @@ export function NotebookContent({
           timeOfDay={current.timeOfDay} topic={current.topic} />
       )}
       <NotebookModeToggle mode={mode} setMode={setMode} />
+      {crossNav?.hasBreadcrumb && (
+        <CrossNavBreadcrumb
+          sourceMode={crossNav.navState.sourceMode}
+          entityLabel={crossNav.navState.entityLabel}
+          onBack={crossNav.goBack}
+          onDismiss={crossNav.dismissBreadcrumb}
+        />
+      )}
       {pinnedEntries.length > 0 && (
         <div className={styles.pinZone} role="complementary" aria-label="Pinned threads">
           {pinnedEntries.map((pe) => (
@@ -164,15 +199,33 @@ export function NotebookContent({
               onPaste={contentDrop.handlePaste} insertText={popup.pendingInsert}
               onInsertConsumed={popup.handleInsertConsumed}
               popupOpen={popup.mentionQuery !== null || popup.slashQuery !== null}
-              disabled={isThinking} />
+              disabled={isThinking}
+              voiceSession={voiceSession} />
           </div>
           <div ref={bottomRef} />
         </>
       ) : mode === 'canvas' ? (
-        <NotebookCanvas sessionId={sessionId} entries={entries} />
+        <NotebookCanvas sessionId={sessionId} entries={entries}
+          onCardClick={crossNav?.goToEntry} />
       ) : (
-        <KnowledgeCanvas />
+        <KnowledgeCanvas
+          onNodeNavigate={crossNav?.goToEntry}
+          focusNodeId={crossNav?.navState.entityId ?? undefined} />
       )}
     </Column>
+    </div>
+    {/* Voice bar: fixed to viewport bottom, notebook remains interactive */}
+    {voiceSession && voiceSession.state !== 'idle' && (
+      <VoiceMode
+        state={voiceSession.state}
+        transcript={voiceSession.transcript}
+        isTutorSpeaking={voiceSession.isTutorSpeaking}
+        elapsed={voiceSession.elapsed}
+        error={voiceSession.error}
+        debugStatus={voiceSession.debugStatus}
+        onStop={voiceSession.stop}
+      />
+    )}
+    </>
   );
 }

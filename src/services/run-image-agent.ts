@@ -83,10 +83,12 @@ async function runImageViaProxy(
 
   // Image models don't support systemInstruction — prepend to prompt.
   // Include style reference note so proxy path also gets color guidance.
+  // The note explicitly tells the model the reference is a style guide to
+  // learn from — not an image to replicate or return as-is.
   const sysPrefix = agent.systemInstruction
     ? `${agent.systemInstruction}\n\n---\n\n`
     : '';
-  const prompt = `${sysPrefix}${STYLE_REFERENCE_NOTE}\n\n${userText}`;
+  const prompt = `${sysPrefix}${STYLE_REFERENCE_NOTE}\n\n---\n\nNow generate an ORIGINAL illustration for the following request:\n\n${userText}`;
 
   const result = await proxyImageGeneration({
     prompt,
@@ -105,6 +107,10 @@ async function runImageViaProxy(
  * Inject the Ember style reference palette as the first part of the first
  * user message. NB2 achieves much better style adherence when given a
  * visual example alongside text descriptions.
+ *
+ * The note explicitly tells the model this is a style guide to learn from,
+ * not an image to copy or return. A separator follows to clearly delineate
+ * the style reference from the actual illustration prompt.
  */
 async function injectStyleReference(messages: AgentMessage[]): Promise<AgentMessage[]> {
   const paletteData = await getStyleReferenceData();
@@ -115,6 +121,7 @@ async function injectStyleReference(messages: AgentMessage[]): Promise<AgentMess
       parts: [
         { inlineData: { mimeType: STYLE_REFERENCE_MIME, data: paletteData } },
         { text: STYLE_REFERENCE_NOTE },
+        { text: '---\n\nNow generate an ORIGINAL illustration for the following request:' },
         ...msg.parts,
       ],
     };

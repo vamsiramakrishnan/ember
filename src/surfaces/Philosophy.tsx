@@ -58,9 +58,9 @@ const principles: Principle[] = [
   },
 ];
 
-function PrincipleBlock({ principle }: { principle: Principle }) {
+function PrincipleBlock({ principle, index = 0 }: { principle: Principle; index?: number }) {
   return (
-    <div className={styles.principleBlock}>
+    <div className={styles.principleBlock} style={{ animationDelay: `${index * 0.08}s` }}>
       <div className={styles.numeralRow}>
         <span className={styles.numeral}>{principle.numeral}.</span>
         <Text variant="sectionHeader" as="h3">
@@ -91,8 +91,8 @@ export function Philosophy() {
           knew them deeply, and never moved on until understanding was
           real?
         </p>
-        {principles.map((p) => (
-          <PrincipleBlock key={p.numeral} principle={p} />
+        {principles.map((p, i) => (
+          <PrincipleBlock key={p.numeral} principle={p} index={i} />
         ))}
         <div className={styles.spacer} />
       </div>

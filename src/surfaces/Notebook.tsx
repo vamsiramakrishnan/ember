@@ -27,6 +27,9 @@ import type { ResponsePlan } from '@/hooks/useResponseOrchestrator';
 import { NotebookContent } from './NotebookContent';
 import { handleBranch, handleSelectionAction, handleFollowUp, deriveMarginalRef } from './notebook-handlers';
 import type { NotebookMode } from './NotebookModeToggle';
+import { useNotebookCrossNav } from '@/hooks/useNotebookCrossNav';
+import { useVoiceSession } from '@/hooks/useVoiceSession';
+import { useMasteryData } from '@/hooks/useMasteryData';
 import { trackEvent, traceSurfaceRender } from '@/observability';
 import type { NotebookEntry } from '@/types/entries';
 import type { Surface } from '@/layout/Navigation';
@@ -80,6 +83,52 @@ export function Notebook({ onNavigate }: NotebookProps) {
   });
   const { completeDirective } = useDirectiveCompletion({ patchEntry: patchEntryContent });
   const [mode, setMode] = useState<NotebookMode>('linear');
+  const crossNav = useNotebookCrossNav(mode, setMode);
+
+  // ─── Voice Mode (Gemini Live API) ────────────────────────
+  const { concepts, thinkers: metThinkers } = useMasteryData();
+  const voiceSession = useVoiceSession({
+    callbacks: {
+      onEntry: (entry) => { void addEntry(entry); },
+      onMasteryUpdate: (concept, level) => {
+        void checkAndUpdate(entriesRef.current);
+        trackEvent('voice-mastery', { concept, level });
+      },
+      onVocabAdd: (term, definition, _pronunciation, etymology) => {
+        // Vocab adds are handled by the constellation sync
+        void addEntry({ type: 'tutor-marginalia', content: `**${term}**: ${definition}${etymology ? ` (${etymology})` : ''}` });
+      },
+      onThinkerCard: () => {
+        // Thinker cards are created via onEntry
+      },
+    },
+    contextInput: {
+      profile: student ? {
+        name: student.name ?? 'Student',
+        masterySnapshot: concepts.slice(0, 8).map((c) => ({
+          concept: c.concept, level: c.level, percentage: c.percentage,
+        })),
+        vocabularyCount: 0, // Populated from lexicon
+        activeCuriosities: [],
+        totalMinutes: 0,
+      } : null,
+      notebook: notebook ? {
+        title: notebook.title,
+        description: notebook.description ?? '',
+        sessionNumber: current?.number ?? 1,
+        sessionTopic: current?.topic ?? '',
+        thinkersMet: metThinkers.map((t) => t.name).filter(Boolean),
+      } : null,
+      entries,
+      sessionTopic: current?.topic ?? notebook?.title ?? '',
+    },
+    toolContext: {
+      studentId: student?.id ?? '',
+      notebookId: notebook?.id ?? '',
+      sessionId: sessionId ?? undefined,
+    },
+  });
+
   const bottomRef = useRef<HTMLDivElement>(null);
   const marginalRef = useMemo(() => deriveMarginalRef(entries), [entries]);
 
@@ -163,6 +212,8 @@ export function Notebook({ onNavigate }: NotebookProps) {
         contentDrop={contentDrop} popup={popup} isThinking={isThinking}
         responsePlans={responsePlans} bottomRef={bottomRef}
         handleSubmit={onSubmit} handleSubmitTyped={onSubmitTyped} handleSketchSubmit={onSketchSubmit}
+        voiceSession={voiceSession}
+        crossNav={crossNav}
       />
     </NotebookProvider>
     </ChipProvider>

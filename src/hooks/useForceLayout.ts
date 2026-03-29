@@ -1,104 +1,56 @@
 /**
- * useForceLayout — force-directed layout for the knowledge graph.
- * was: uniform attraction (0.005) regardless of edge weight
- * now: attraction scales with edge.weight, kind-based repulsion modifiers
- * reason: stronger relationships should pull nodes closer; related concepts
- *         should cluster while different kinds maintain visual separation
+ * useForceLayout — d3-force-powered layout for the knowledge graph.
  *
- * Respects prefers-reduced-motion by snapping to final positions.
+ * Replaced hand-rolled physics with d3-force which provides:
+ * - Proper collision detection (prevents card overlap)
+ * - Configurable link distance based on edge weight
+ * - Many-body repulsion that scales correctly
+ * - Centering force that keeps the graph visible
+ *
+ * Respects prefers-reduced-motion by running simulation to completion
+ * synchronously instead of animating frame-by-frame.
  */
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import {
+  forceSimulation, forceLink, forceManyBody,
+  forceCenter, forceCollide, forceX, forceY,
+  type Simulation, type SimulationNodeDatum, type SimulationLinkDatum,
+} from 'd3-force';
 import type { CanvasNode, GraphEdge, LayoutNode } from '@/types/graph-canvas';
 
 interface ForceOptions { width: number; height: number; enabled: boolean }
 
-/* was: REPULSION=3000, ATTRACTION=0.005 (fixed)
- * now: ATTRACTION_BASE=0.003, scaled by edge.weight (0.003–0.012)
- * reason: weighted attraction creates meaningful clusters */
-const REPULSION = 3500;
-const ATTRACTION_BASE = 0.003;
-const ATTRACTION_WEIGHT_SCALE = 0.003;
-const DAMPING = 0.85;
-const MIN_VELOCITY = 0.1;
-const MAX_TICKS = 300;
+/** Collision radius — half-card-width plus margin. Prevents overlap. */
+const COLLISION_RADIUS = 65;
+/** How far apart linked nodes sit — shorter = tighter clusters. */
+const LINK_DISTANCE_BASE = 100;
+const LINK_DISTANCE_WEIGHT_SCALE = 40;
+/** Many-body strength: negative = repulsion. Stronger pushes nodes apart. */
+const CHARGE_STRENGTH = -400;
+/** How quickly the simulation cools. Higher = settles faster. */
+const ALPHA_DECAY = 0.015;
 
-/** Same-kind nodes repel less — they cluster gently.
- * was: uniform repulsion, now: 0.7x for same-kind pairs
- * reason: concepts should drift toward concepts, thinkers toward thinkers */
-const SAME_KIND_REPULSION_FACTOR = 0.7;
-
-function initLayout(nodes: CanvasNode[], width: number, height: number): LayoutNode[] {
-  const cx = width / 2;
-  const cy = height / 2;
-  const radius = Math.min(width, height) * 0.3;
-  return nodes.map((n, i) => {
-    const angle = (2 * Math.PI * i) / Math.max(nodes.length, 1);
-    return {
-      ...n,
-      x: cx + radius * Math.cos(angle),
-      y: cy + radius * Math.sin(angle),
-      vx: 0, vy: 0, pinned: false,
-    };
-  });
+interface D3Node extends SimulationNodeDatum {
+  id: string;
+  kind: string;
+  pinned: boolean;
+  /** Original CanvasNode data for pass-through to LayoutNode. */
+  data: CanvasNode;
 }
 
-function tick(nodes: LayoutNode[], edges: GraphEdge[], width: number, height: number) {
-  const cx = width / 2;
-  const cy = height / 2;
-
-  for (const node of nodes) {
-    if (node.pinned) continue;
-    let fx = 0;
-    let fy = 0;
-
-    // Repulsion from all other nodes
-    for (const other of nodes) {
-      if (other.id === node.id) continue;
-      const dx = node.x - other.x;
-      const dy = node.y - other.y;
-      const dist = Math.max(Math.sqrt(dx * dx + dy * dy), 1);
-      /* Same-kind repulsion is reduced so similar nodes cluster */
-      const kindFactor = node.kind === other.kind ? SAME_KIND_REPULSION_FACTOR : 1;
-      const force = (REPULSION * kindFactor) / (dist * dist);
-      fx += (dx / dist) * force;
-      fy += (dy / dist) * force;
-    }
-
-    // Attraction along edges — scaled by weight
-    for (const edge of edges) {
-      let other: LayoutNode | undefined;
-      if (edge.from === node.id) other = nodes.find((n) => n.id === edge.to);
-      else if (edge.to === node.id) other = nodes.find((n) => n.id === edge.from);
-      if (!other) continue;
-      const dx = other.x - node.x;
-      const dy = other.y - node.y;
-      /* was: fixed 0.005, now: base + weight contribution
-       * stronger edges pull nodes closer together */
-      const strength = ATTRACTION_BASE + edge.weight * ATTRACTION_WEIGHT_SCALE;
-      fx += dx * strength;
-      fy += dy * strength;
-    }
-
-    // Centering force
-    fx += (cx - node.x) * 0.001;
-    fy += (cy - node.y) * 0.001;
-
-    node.vx = (node.vx + fx) * DAMPING;
-    node.vy = (node.vy + fy) * DAMPING;
-  }
-
-  // Apply velocities and clamp
-  for (const node of nodes) {
-    if (node.pinned) continue;
-    node.x = Math.max(40, Math.min(width - 40, node.x + node.vx));
-    node.y = Math.max(40, Math.min(height - 40, node.y + node.vy));
-  }
+interface D3Link extends SimulationLinkDatum<D3Node> {
+  weight: number;
 }
 
-function isSettled(nodes: LayoutNode[]): boolean {
-  return nodes.every(
-    (n) => n.pinned || (Math.abs(n.vx) < MIN_VELOCITY && Math.abs(n.vy) < MIN_VELOCITY),
-  );
+function toLayoutNodes(d3nodes: D3Node[], width: number, height: number): LayoutNode[] {
+  return d3nodes.map((n) => ({
+    ...n.data,
+    x: Math.max(80, Math.min(width - 80, n.x ?? width / 2)),
+    y: Math.max(80, Math.min(height - 80, n.y ?? height / 2)),
+    vx: n.vx ?? 0,
+    vy: n.vy ?? 0,
+    pinned: n.pinned,
+  }));
 }
 
 export function useForceLayout(
@@ -108,68 +60,106 @@ export function useForceLayout(
 ) {
   const { width, height, enabled } = options;
   const [layoutNodes, setLayoutNodes] = useState<LayoutNode[]>([]);
-  const nodesRef = useRef(layoutNodes);
-  const tickCount = useRef(0);
-  const rafRef = useRef(0);
+  const simRef = useRef<Simulation<D3Node, D3Link> | null>(null);
 
-  // Stabilize node identity — only re-init when the set of IDs changes
-  const nodeKey = useMemo(() => nodes.map((n) => n.id).join(','), [nodes]);
-
-  // Re-initialize when node set changes
-  useEffect(() => {
-    const layout = initLayout(nodes, width, height);
-    // Preserve pinned positions from previous layout
-    for (const ln of layout) {
-      const prev = nodesRef.current.find((p) => p.id === ln.id);
-      if (prev?.pinned) { ln.x = prev.x; ln.y = prev.y; ln.pinned = true; }
-    }
-    nodesRef.current = layout;
-    tickCount.current = 0;
-    setLayoutNodes([...layout]);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nodeKey, width, height]);
-
-  // Keep edges in a ref to avoid unstable array reference in effect deps
-  const edgesRef = useRef(edges);
-  edgesRef.current = edges;
+  // Stabilize identity — only re-init when the set of IDs changes
+  const nodeKey = useMemo(() => nodes.map((n) => n.id).sort().join(','), [nodes]);
   const edgeKey = useMemo(() => edges.map((e) => `${e.from}-${e.to}`).join(','), [edges]);
 
-  // Animation loop
-  useEffect(() => {
-    if (!enabled || nodesRef.current.length === 0) return;
+  // Previous positions for continuity across re-inits
+  const prevPositions = useRef<Map<string, { x: number; y: number; pinned: boolean }>>(new Map());
 
-    const currentEdges = edgesRef.current;
-    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReduced) {
-      for (let i = 0; i < MAX_TICKS; i++) {
-        tick(nodesRef.current, currentEdges, width, height);
-        if (isSettled(nodesRef.current)) break;
-      }
-      setLayoutNodes([...nodesRef.current]);
+  useEffect(() => {
+    if (!enabled || nodes.length === 0) {
+      setLayoutNodes([]);
       return;
     }
 
-    const step = () => {
-      if (tickCount.current >= MAX_TICKS || isSettled(nodesRef.current)) return;
-      tick(nodesRef.current, edgesRef.current, width, height);
-      tickCount.current++;
-      setLayoutNodes([...nodesRef.current]);
-      rafRef.current = requestAnimationFrame(step);
-    };
-    rafRef.current = requestAnimationFrame(step);
+    // Stop any previous simulation
+    simRef.current?.stop();
 
-    return () => cancelAnimationFrame(rafRef.current);
+    // Create d3 nodes, preserving previous positions
+    const cx = width / 2;
+    const cy = height / 2;
+    const d3nodes: D3Node[] = nodes.map((n, i) => {
+      const prev = prevPositions.current.get(n.id);
+      const angle = (2 * Math.PI * i) / Math.max(nodes.length, 1);
+      const radius = Math.min(width, height) * 0.3;
+      return {
+        id: n.id,
+        kind: n.kind,
+        pinned: prev?.pinned ?? false,
+        data: n,
+        x: prev?.x ?? cx + radius * Math.cos(angle),
+        y: prev?.y ?? cy + radius * Math.sin(angle),
+        // Pin previously pinned nodes
+        ...(prev?.pinned ? { fx: prev.x, fy: prev.y } : {}),
+      };
+    });
+
+    // Create d3 links
+    const d3links: D3Link[] = edges
+      .filter((e) => d3nodes.some((n) => n.id === e.from) && d3nodes.some((n) => n.id === e.to))
+      .map((e) => ({
+        source: e.from,
+        target: e.to,
+        weight: e.weight,
+      }));
+
+    const sim = forceSimulation(d3nodes)
+      .alphaDecay(ALPHA_DECAY)
+      .force('link', forceLink<D3Node, D3Link>(d3links)
+        .id((d) => d.id)
+        .distance((d) => LINK_DISTANCE_BASE + (1 - d.weight) * LINK_DISTANCE_WEIGHT_SCALE)
+        .strength(0.4),
+      )
+      .force('charge', forceManyBody<D3Node>()
+        .strength(CHARGE_STRENGTH)
+        .distanceMax(400),
+      )
+      .force('center', forceCenter(cx, cy).strength(0.05))
+      .force('collision', forceCollide<D3Node>(COLLISION_RADIUS))
+      .force('x', forceX<D3Node>(cx).strength(0.02))
+      .force('y', forceY<D3Node>(cy).strength(0.02));
+
+    simRef.current = sim;
+
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (prefersReduced) {
+      // Run to completion synchronously
+      sim.stop();
+      for (let i = 0; i < 300; i++) {
+        sim.tick();
+        if (sim.alpha() < sim.alphaMin()) break;
+      }
+      const result = toLayoutNodes(d3nodes, width, height);
+      prevPositions.current = new Map(result.map((n) => [n.id, { x: n.x, y: n.y, pinned: n.pinned }]));
+      setLayoutNodes(result);
+    } else {
+      sim.on('tick', () => {
+        const result = toLayoutNodes(d3nodes, width, height);
+        prevPositions.current = new Map(result.map((n) => [n.id, { x: n.x, y: n.y, pinned: n.pinned }]));
+        setLayoutNodes(result);
+      });
+    }
+
+    return () => { sim.stop(); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, edgeKey, width, height]);
+  }, [nodeKey, edgeKey, width, height, enabled]);
 
   const pinNode = useCallback((id: string, x: number, y: number) => {
-    const node = nodesRef.current.find((n) => n.id === id);
-    if (node) {
-      node.x = x; node.y = y;
-      node.vx = 0; node.vy = 0;
-      node.pinned = true;
-      setLayoutNodes([...nodesRef.current]);
+    const sim = simRef.current;
+    if (!sim) return;
+    const d3node = sim.nodes().find((n) => n.id === id);
+    if (d3node) {
+      d3node.fx = x;
+      d3node.fy = y;
+      d3node.pinned = true;
+      // Reheat slightly so other nodes adjust
+      sim.alpha(0.1).restart();
     }
+    prevPositions.current.set(id, { x, y, pinned: true });
   }, []);
 
   return { layoutNodes, pinNode };
