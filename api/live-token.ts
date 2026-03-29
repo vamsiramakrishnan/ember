@@ -55,14 +55,16 @@ export default async function handler(req: Request): Promise<Response> {
       },
     });
 
+    // token.name should be "auth_tokens/xxxx" — the SDK's WebSocket code
+    // checks for this prefix to use the constrained endpoint.
     const tokenName = token.name;
-    console.info('[live-token] Token created:', tokenName ? `${tokenName.slice(0, 20)}...` : 'EMPTY');
+    console.info('[live-token] Token created. name:', tokenName?.slice(0, 40),
+      'keys:', Object.keys(token).join(','));
 
     if (!tokenName) {
-      // Token creation succeeded but returned no name — log the full response
-      console.error('[live-token] Empty token name. Full response:', JSON.stringify(token));
+      console.error('[live-token] Empty token. Full response:', JSON.stringify(token).slice(0, 500));
       return new Response(
-        JSON.stringify({ error: 'Token created but name is empty', debug: JSON.stringify(token) }),
+        JSON.stringify({ error: 'Token name is empty', raw: token }),
         { status: 502, headers: { 'Content-Type': 'application/json' } },
       );
     }

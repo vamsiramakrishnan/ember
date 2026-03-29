@@ -262,9 +262,15 @@ export function useVoiceSession({
         throw new Error(`Token request failed (${tokenRes.status}): ${errBody}`);
       }
       const tokenData = await tokenRes.json();
-      const token = tokenData.token;
-      if (!token) throw new Error(`No token in response. Got keys: ${Object.keys(tokenData).join(', ')}`);
-      console.info('[VoiceSession] Token received, length:', token.length);
+      const token = tokenData.token as string | undefined;
+      if (!token) throw new Error(`No token in response. Got: ${JSON.stringify(tokenData).slice(0, 300)}`);
+
+      // The SDK detects ephemeral tokens by checking apiKey.startsWith('auth_tokens/')
+      // If the token doesn't start with this prefix, the SDK uses the wrong WebSocket endpoint.
+      if (!token.startsWith('auth_tokens/')) {
+        console.warn('[VoiceSession] Token does not start with "auth_tokens/":', token.slice(0, 30));
+      }
+      console.info('[VoiceSession] Token received:', token.slice(0, 30) + '...');
 
       // Ephemeral tokens require v1alpha — the constrained WebSocket endpoint
       const client = new GoogleGenAI({
