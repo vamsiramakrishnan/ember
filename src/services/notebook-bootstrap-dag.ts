@@ -1,7 +1,7 @@
 /** Notebook Bootstrap DAG — builds and executes a multi-wave content DAG for new notebooks. */
 import type { IntentDAG, IntentNode } from './intent-dag';
 import type { NodeResult } from './dag-executor';
-import { executeDAG, collectEntries } from './dag-executor';
+import { executeDAG } from './dag-executor';
 import { dispatchNode } from './dag-dispatcher';
 import { isGeminiAvailable } from './gemini';
 import { bootstrapNotebook } from './notebook-bootstrap';
@@ -58,7 +58,13 @@ export function buildBootstrapDAG(title: string, question: string): IntentDAG {
   };
 }
 
-/** Execute a bootstrap DAG, calling onEntries as each node completes. */
+/** Execute a bootstrap DAG, calling onEntries progressively as each node completes.
+ *
+ * was: entries emitted in a batch after the entire DAG finishes
+ * now: entries emitted per-node as each completes, so the notebook
+ *      fills progressively while the student watches
+ * reason: the student should see content appearing as it's created,
+ *         not wait for everything to finish before seeing anything */
 export async function executeBootstrapDAG(
   dag: IntentDAG,
   notebookId: string,
@@ -69,27 +75,23 @@ export async function executeBootstrapDAG(
   // Initialize bootstrap progress UI
   startBootstrapProgress(dag.nodes.map((n) => ({ id: n.id, label: n.label })));
 
+  const allEntries: NotebookEntry[] = [];
+
   const dispatcher = (
     node: IntentNode, d: IntentDAG,
     prior: Map<string, NodeResult>,
   ) => dispatchNode(node, d, prior, undefined, notebookId);
 
-  const results = await executeDAG(dag, dispatcher, (nodeId, status, label) => {
+  await executeDAG(dag, dispatcher, (nodeId, status, label, entries) => {
     updateBootstrapNode(nodeId, status);
-    if (status === 'active' && onEntries) onEntries([], label);
-  });
 
-  // Note: reading-material, flashcard-deck, and exercise-set are already
-  // refined by their dedicated generators — no double-refinement needed.
-
-  // Emit entries per node as they become available
-  const allEntries = collectEntries(dag, results);
-  if (onEntries) {
-    for (const entry of allEntries) {
-      const label = 'content' in entry ? 'content ready' : entry.type;
-      onEntries([entry], label);
+    // Emit entries immediately as each node completes — this is what
+    // makes the notebook fill progressively instead of all-at-once.
+    if (status === 'complete' && entries && entries.length > 0 && onEntries) {
+      onEntries(entries, label);
+      allEntries.push(...entries);
     }
-  }
+  });
 
   // Signal bootstrap complete — triggers fade-out in the progress component
   finishBootstrapProgress();
