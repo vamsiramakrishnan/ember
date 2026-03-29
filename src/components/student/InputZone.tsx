@@ -192,33 +192,44 @@ export function InputZone({
           : inferredType === 'scratch' ? styles.typeIndicatorScratch
           : styles.typeIndicator}>{displayType}</span>}
         <div className={styles.bottomActions}>
-          <button
-            className={`${styles.micButton} ${mic.state === 'recording' ? styles.micRecording : ''} ${mic.state === 'transcribing' ? styles.micTranscribing : ''} ${voiceSession && voiceSession.state !== 'idle' ? styles.micVoiceActive : ''}`}
-            aria-label={mic.state === 'recording' ? 'Stop recording' : mic.state === 'transcribing' ? 'Transcribing…' : voiceSession ? 'Tap to dictate, hold for voice mode' : 'Record audio'}
-            onPointerDown={(e) => { e.stopPropagation(); handleMicPointerDown(); }}
-            onPointerUp={(e) => { e.stopPropagation(); handleMicPointerUp(); }}
-            onPointerLeave={() => { clearTimeout(longPressTimer.current); }}
-            disabled={mic.state === 'transcribing' || disabled || (voiceSession?.state !== 'idle' && voiceSession?.state !== undefined)}
-          >
-            {mic.state === 'recording' ? (
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true">
-                <rect x="3" y="3" width="8" height="8" rx="1" />
-              </svg>
-            ) : mic.state === 'transcribing' ? (
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true" className={styles.micSpinner}>
-                <circle cx="7" cy="7" r="5" strokeDasharray="20 12" />
-              </svg>
-            ) : (
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true">
-                <rect x="5" y="1" width="4" height="8" rx="2" />
-                <path d="M3 7a4 4 0 0 0 8 0" fill="none" stroke="currentColor" strokeWidth="1.2" />
-                <line x1="7" y1="11" x2="7" y2="13" stroke="currentColor" strokeWidth="1.2" />
-              </svg>
-            )}
-          </button>
           <button className={styles.sketchToggle} aria-label="Switch to sketch mode"
             onClick={(e) => { e.stopPropagation(); setSketchMode(true); }}>sketch</button>
         </div>
+      </div>
+
+      {/* Prominent mic button — positioned at the right edge of the input area.
+        * Tap = dictation, long-press (500ms) = Voice Mode. */}
+      <div className={styles.micArea}>
+        <button
+          className={`${styles.micButton} ${mic.state === 'recording' ? styles.micRecording : ''} ${mic.state === 'transcribing' ? styles.micTranscribing : ''} ${voiceSession && voiceSession.state !== 'idle' ? styles.micVoiceActive : ''}`}
+          aria-label={mic.state === 'recording' ? 'Stop recording' : mic.state === 'transcribing' ? 'Transcribing…' : voiceSession ? 'Tap to dictate, hold for voice mode' : 'Record audio'}
+          onPointerDown={(e) => { e.stopPropagation(); handleMicPointerDown(); }}
+          onPointerUp={(e) => { e.stopPropagation(); handleMicPointerUp(); }}
+          onPointerLeave={() => { clearTimeout(longPressTimer.current); }}
+          disabled={mic.state === 'transcribing' || disabled || (voiceSession?.state !== 'idle' && voiceSession?.state !== undefined)}
+        >
+          {mic.state === 'recording' ? (
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <rect x="4" y="4" width="12" height="12" rx="2" />
+            </svg>
+          ) : mic.state === 'transcribing' ? (
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true" className={styles.micSpinner}>
+              <circle cx="10" cy="10" r="7" strokeDasharray="28 16" />
+            </svg>
+          ) : (
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <rect x="7" y="2" width="6" height="10" rx="3" />
+              <path d="M4 10a6 6 0 0 0 12 0" fill="none" stroke="currentColor" strokeWidth="1.5" />
+              <line x1="10" y1="16" x2="10" y2="18" stroke="currentColor" strokeWidth="1.5" />
+              <line x1="7" y1="18" x2="13" y2="18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          )}
+        </button>
+        <span className={styles.micHint}>
+          {mic.state === 'recording' ? 'tap to stop'
+            : voiceSession ? 'hold for voice'
+            : 'tap to dictate'}
+        </span>
       </div>
       {mic.error && <p className={styles.micError}>{mic.error}</p>}
       <InputAffordances />

@@ -172,61 +172,108 @@
   color: var(--ink-faint);
 }
 
-/* ─── Microphone button ─── */
+/* ─── Microphone area — prominent, right-aligned ─── */
+
+.micArea {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
 
 .micButton {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  border: 1px solid var(--rule-light);
+  border: 1.5px solid var(--rule);
   background: var(--paper);
-  color: var(--ink-ghost);
+  color: var(--ink-faint);
   cursor: pointer;
-  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  box-shadow: var(--depth-resting);
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease,
+              box-shadow 0.2s ease, transform 0.15s ease;
+  /* Prevent text selection on long press */
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
 }
 
 .micButton:hover {
-  color: var(--ink-faint);
-  border-color: var(--rule);
+  color: var(--ink-soft);
+  border-color: var(--ink-ghost);
+  box-shadow: var(--depth-lifted);
+  transform: translateY(-1px);
+}
+
+.micButton:active {
+  transform: translateY(0);
+  box-shadow: var(--depth-pressed);
 }
 
 .micButton:focus-visible {
   outline: 2px solid var(--margin);
-  outline-offset: 2px;
+  outline-offset: 3px;
 }
 
 .micButton:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: default;
+  box-shadow: none;
 }
 
-/* Recording state — pulsing red ring */
+.micHint {
+  font-family: var(--font-system);
+  font-size: 8px;
+  font-weight: 300;
+  letter-spacing: 0.5px;
+  color: var(--ink-ghost);
+  white-space: nowrap;
+}
+
+/* Recording state — pulsing warm ring, larger shadow */
 .micRecording {
-  color: var(--margin);
+  color: var(--paper);
   border-color: var(--margin);
-  background: var(--margin-dim);
+  background: var(--margin);
+  box-shadow: 0 0 0 4px var(--margin-dim);
   animation: micPulse 1.2s ease-in-out infinite;
 }
 
-@keyframes micPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(184, 86, 79, 0.2); }
-  50% { box-shadow: 0 0 0 6px rgba(184, 86, 79, 0); }
+.micRecording:hover {
+  color: var(--paper);
+  background: var(--margin);
 }
 
-/* Voice Mode active state */
+@keyframes micPulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(184, 86, 79, 0.15); }
+  50% { box-shadow: 0 0 0 10px rgba(184, 86, 79, 0); }
+}
+
+/* Voice Mode active state — sage glow */
 .micVoiceActive {
-  color: var(--sage);
+  color: var(--paper);
   border-color: var(--sage);
-  background: var(--sage-dim);
+  background: var(--sage);
+  box-shadow: 0 0 0 4px var(--sage-dim);
+}
+
+.micVoiceActive:hover {
+  color: var(--paper);
+  background: var(--sage);
 }
 
 /* Transcribing state */
 .micTranscribing {
   color: var(--ink-faint);
   border-color: var(--rule);
+  background: var(--paper-warm);
 }
 
 .micSpinner {
@@ -247,6 +294,12 @@
   opacity: 0.7;
   margin: 4px 0 0;
   line-height: 1.4;
+}
+
+/* Mobile: slightly smaller but still prominent */
+@media (max-width: 480px) {
+  .micButton { width: 40px; height: 40px; }
+  .micHint { font-size: 7px; }
 }
 
 /* After Socratic question — echo the tutor's presence */
@@ -334,7 +387,8 @@
 @media (prefers-reduced-motion: reduce) {
   .hint, .affordances { transition: none; }
   .cursor { animation: none; opacity: 0.3; }
-  .sketchToggle, .micButton { transition: none; }
+  .sketchToggle { transition: none; }
+  .micButton { transition: none; box-shadow: var(--depth-resting); }
   .textareaSubmitting { transition: none; }
   .typeIndicator,
   .typeIndicatorQuestion,
