@@ -180,19 +180,26 @@ Output:
 /**
  * Quick check: does this input likely need DAG parsing?
  * Avoids a Flash Lite call for simple single-intent inputs.
+ *
+ * Compound triggers:
+ *   - Two or more known slash commands in the same text
+ *   - A slash command + natural language question
+ *   - A slash command + "and /" pattern
+ *   - Any output-only format verb (needs an implicit action)
  */
-/** Output format verbs — always compound when paired with another command. */
-const OUTPUT_VERBS = /\/(?:slides|doc|notes|brief)\b/g;
+const ALL_VERBS = /\/(?:research|explain|define|compare|connect|summarize|visualize|draw|timeline|teach|podcast|flashcards|exercise|quiz|slides|doc|notes|brief|delve|study|lesson|review|origins|illustrate|deepen)\b/g;
+const OUTPUT_ONLY = /\/(?:slides|doc|notes|brief)\b/;
 
 export function likelyCompound(text: string): boolean {
-  const actionSlashes = (text.match(/\/(?:draw|visualize|research|explain|summarize|quiz|timeline|connect|define|teach|podcast|flashcards|exercise|deepen)\b/g) ?? []).length;
-  const outputSlashes = (text.match(OUTPUT_VERBS) ?? []).length;
-  const totalSlashes = actionSlashes + outputSlashes;
-  // Any output verb makes it compound (it needs a prior action to format)
-  if (outputSlashes >= 1) return true;
-  if (totalSlashes >= 2) return true;
-  if (actionSlashes >= 1 && text.includes('?')) return true;
-  if (actionSlashes >= 1 && text.includes(' and /')) return true;
+  const matches = text.match(ALL_VERBS) ?? [];
+  // Any output-only format verb is compound (needs implicit action)
+  if (OUTPUT_ONLY.test(text)) return true;
+  // Two or more slash commands = compound
+  if (matches.length >= 2) return true;
+  // Single slash + question = compound (answer + execute)
+  if (matches.length >= 1 && text.includes('?')) return true;
+  // Explicit chaining pattern
+  if (matches.length >= 1 && text.includes(' and /')) return true;
   return false;
 }
 

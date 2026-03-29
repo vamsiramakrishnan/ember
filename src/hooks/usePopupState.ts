@@ -20,6 +20,8 @@ export function usePopupState(onNavigate?: (surface: Surface) => void) {
   const [slashQuery, setSlashQuery] = useState<string | null>(null);
   const [mentionResults, setMentionResults] = useState<Entity[]>([]);
   const [pendingInsert, setPendingInsert] = useState<string | null>(null);
+  /** Current input text — used for composition-aware popup ordering. */
+  const [inputText, setInputText] = useState('');
   const enrichingRef = useRef<Map<string, boolean>>(new Map());
 
   const handleMentionTrigger = useCallback((query: string) => {
@@ -28,9 +30,10 @@ export function usePopupState(onNavigate?: (surface: Surface) => void) {
     setMentionResults(search(query).slice(0, 8));
   }, [search]);
 
-  const handleSlashTrigger = useCallback((query: string) => {
+  const handleSlashTrigger = useCallback((query: string, fullText?: string) => {
     setSlashQuery(query);
     setMentionQuery(null);
+    if (fullText !== undefined) setInputText(fullText);
   }, []);
 
   const handlePopupClose = useCallback(() => {
@@ -107,6 +110,8 @@ export function usePopupState(onNavigate?: (surface: Surface) => void) {
     mentionResults,
     pendingInsert,
     activeSlashCommand,
+    /** Current input text — for composition-aware popup ordering. */
+    inputText,
     handleMentionTrigger,
     handleSlashTrigger,
     handlePopupClose,

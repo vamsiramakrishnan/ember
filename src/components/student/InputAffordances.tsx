@@ -1,6 +1,7 @@
 /**
  * InputAffordances — subtle hint row beneath the InputZone.
  * Shows available syntax shortcuts with warm, quiet styling.
+ * Includes composition hint for /action /format pattern.
  * Purely decorative — hidden from screen readers.
  */
 import styles from './InputZone.module.css';
@@ -9,6 +10,7 @@ const HINTS = [
   { key: '/', label: 'commands' },
   { key: '@', label: 'reference' },
   { key: '?', label: 'ask tutor' },
+  { key: '/→/', label: 'chain' },
 ];
 
 export function InputAffordances() {

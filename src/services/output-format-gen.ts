@@ -16,10 +16,13 @@ import { validateSlides } from './slide-validation';
 import { generateCoverArt } from './visual-generation';
 import type { NotebookEntry, LiveEntry, ReadingSlide } from '@/types/entries';
 
-/** Output format verb IDs — must match IntentNode action enum. */
+/** Output format verb IDs that this service handles (reformatting verbs). */
 export type OutputFormat = 'slides' | 'doc' | 'notes' | 'brief';
 
-/** Set of all output format verb IDs for quick membership checks. */
+/**
+ * Set of format verbs that this service handles (pure reformatting).
+ * Other format verbs (flashcards, podcast, etc.) have their own generators.
+ */
 export const OUTPUT_FORMAT_IDS = new Set<string>(['slides', 'doc', 'notes', 'brief']);
 
 /**
