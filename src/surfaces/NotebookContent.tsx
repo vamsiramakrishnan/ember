@@ -63,6 +63,7 @@ export interface NotebookContentProps {
     transcript: Array<{ role: 'user' | 'tutor'; text: string; timestamp: number; final: boolean }>;
     isTutorSpeaking: boolean;
     elapsed: number;
+    start: () => Promise<void>;
     stop: () => void;
   };
   /** Cross-mode navigation state (graph↔linear↔canvas). */
@@ -197,7 +198,8 @@ export function NotebookContent({
               onPaste={contentDrop.handlePaste} insertText={popup.pendingInsert}
               onInsertConsumed={popup.handleInsertConsumed}
               popupOpen={popup.mentionQuery !== null || popup.slashQuery !== null}
-              disabled={isThinking} />
+              disabled={isThinking}
+              voiceSession={voiceSession} />
           </div>
           <div ref={bottomRef} />
         </>
