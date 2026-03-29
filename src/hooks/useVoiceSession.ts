@@ -257,14 +257,26 @@ export function useVoiceSession({
       // 1. Get ephemeral token or use direct API key
       let client: GoogleGenAI;
       if (API_KEY) {
+        // Dev mode: direct API key, no ephemeral token needed
+        console.info('[VoiceSession] Using direct API key');
         client = new GoogleGenAI({ apiKey: API_KEY });
       } else if (isGeminiAvailable()) {
+        // Production: fetch ephemeral token from server, use v1alpha
+        console.info('[VoiceSession] Fetching ephemeral token...');
         const tokenRes = await fetch('/api/live-token', { method: 'POST' });
-        if (!tokenRes.ok) throw new Error('Failed to get ephemeral token');
+        if (!tokenRes.ok) {
+          const errBody = await tokenRes.text().catch(() => '');
+          throw new Error(`Token request failed (${tokenRes.status}): ${errBody}`);
+        }
         const tokenData = await tokenRes.json();
+        console.info('[VoiceSession] Token response:', JSON.stringify(tokenData).slice(0, 200));
         const token = tokenData.token;
-        if (!token) throw new Error('No token in response');
-        client = new GoogleGenAI({ apiKey: token });
+        if (!token) throw new Error(`No token in response. Got: ${JSON.stringify(tokenData).slice(0, 200)}`);
+        // Ephemeral tokens require v1alpha — the constrained WebSocket endpoint
+        client = new GoogleGenAI({
+          apiKey: token,
+          httpOptions: { apiVersion: 'v1alpha' },
+        });
       } else {
         throw new Error('No Gemini API key configured');
       }
@@ -302,6 +314,7 @@ export function useVoiceSession({
       // - Supports async NON_BLOCKING function calling (3.1 does not)
       // - Uses thinkingBudget (not thinkingLevel) — leave unset for default
       // - sendRealtimeInput for ALL real-time input (audio, video, text)
+      console.info('[VoiceSession] Connecting to', LIVE_MODEL, '...');
       const session = await client.live.connect({
         model: LIVE_MODEL,
         config: {

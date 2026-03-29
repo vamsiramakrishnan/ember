@@ -38,6 +38,7 @@ export default async function handler(req: Request): Promise<Response> {
       httpOptions: { apiVersion: 'v1alpha' },
     });
 
+    console.info('[live-token] Creating ephemeral token for', LIVE_MODEL);
     const token = await client.authTokens.create({
       config: {
         uses: 1,
@@ -54,7 +55,19 @@ export default async function handler(req: Request): Promise<Response> {
       },
     });
 
-    return new Response(JSON.stringify({ token: token.name }), {
+    const tokenName = token.name;
+    console.info('[live-token] Token created:', tokenName ? `${tokenName.slice(0, 20)}...` : 'EMPTY');
+
+    if (!tokenName) {
+      // Token creation succeeded but returned no name — log the full response
+      console.error('[live-token] Empty token name. Full response:', JSON.stringify(token));
+      return new Response(
+        JSON.stringify({ error: 'Token created but name is empty', debug: JSON.stringify(token) }),
+        { status: 502, headers: { 'Content-Type': 'application/json' } },
+      );
+    }
+
+    return new Response(JSON.stringify({ token: tokenName }), {
       headers: {
         'Content-Type': 'application/json',
         'Cache-Control': 'no-store',
