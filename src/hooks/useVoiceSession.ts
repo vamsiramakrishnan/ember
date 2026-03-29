@@ -15,7 +15,7 @@
  *   Gemini → WebSocket → PCM 24kHz → AudioContext → speakers
  */
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { GoogleGenAI, Modality, type LiveServerMessage } from '@google/genai';
+import { GoogleGenAI, Modality, ThinkingLevel, type LiveServerMessage } from '@google/genai';
 import { isGeminiAvailable } from '@/services/gemini';
 import type { NotebookEntry } from '@/types/entries';
 
@@ -242,6 +242,11 @@ export function useVoiceSession({
         '\nIMPORTANT: As you discuss ideas with the student, use the addNotebookEntry tool to record key points, insights, and explanations in their notebook. Use addVocabularyTerm when introducing technical terms. Use updateConceptMastery when the student demonstrates understanding.',
       ].join('');
 
+      // gemini-3.1-flash-live-preview config:
+      // - thinkingLevel (not thinkingBudget) — 'low' for good quality at conversational latency
+      // - sendRealtimeInput for ALL real-time input (audio, video, text)
+      // - sendClientContent ONLY for seeding initial context history (requires
+      //   initial_history_in_client_content in history_config)
       const session = await client.live.connect({
         model: LIVE_MODEL,
         config: {
@@ -250,6 +255,7 @@ export function useVoiceSession({
           tools: VOICE_TOOLS as never[],
           inputAudioTranscription: {},
           outputAudioTranscription: {},
+          thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
           // Session management: compression for long sessions, resumption for reconnects
           contextWindowCompression: { slidingWindow: {} },
           sessionResumption: { handle: resumeHandleRef.current ?? undefined },
