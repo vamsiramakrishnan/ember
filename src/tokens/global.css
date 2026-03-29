@@ -87,6 +87,19 @@ body {
   html { scroll-behavior: smooth; }
 }
 
+/* Cross-mode navigation highlight — applied globally by useNotebookCrossNav
+ * when navigating from graph/canvas to an entry in linear view. */
+.cross-nav-highlight {
+  animation: crossNavPulse 2.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes crossNavPulse {
+  0% { background: transparent; }
+  8% { background: var(--amber-dim); outline: 1px solid var(--amber-dim); outline-offset: 4px; }
+  40% { background: var(--amber-dim); outline: 1px solid var(--amber-dim); outline-offset: 4px; }
+  100% { background: transparent; outline: 1px solid transparent; outline-offset: 4px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -94,6 +107,10 @@ body {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+  .cross-nav-highlight {
+    background: var(--amber-dim);
+    animation: none;
   }
 }
 

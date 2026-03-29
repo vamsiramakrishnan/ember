@@ -24,7 +24,14 @@ const MIN_WIDTH = 600;
 const MIN_HEIGHT = 500;
 const EXTRA_HEIGHT_PER_NODE = 28;
 
-export function KnowledgeCanvas() {
+interface KnowledgeCanvasProps {
+  /** Navigate to a notebook entry from a graph node (cross-mode). */
+  onNodeNavigate?: (entryId: string, label: string) => void;
+  /** External focus request (from cross-mode navigation into graph). */
+  focusNodeId?: string;
+}
+
+export function KnowledgeCanvas({ onNodeNavigate, focusNodeId }: KnowledgeCanvasProps = {}) {
   const { notebook } = useStudent();
   const notebookId = notebook?.id ?? null;
   const containerRef = useRef<HTMLDivElement>(null);
@@ -109,6 +116,20 @@ export function KnowledgeCanvas() {
   const onNodeHoverIn = useCallback((id: string) => setHoverId(id), [setHoverId]);
   const onNodeHoverOut = useCallback(() => setHoverId(null), [setHoverId]);
 
+  /** Navigate to the source entry for a graph node (cross-mode). */
+  const onNodeNav = useCallback((nodeId: string) => {
+    if (!onNodeNavigate) return;
+    const node = allNodes.find((n) => n.id === nodeId);
+    if (node) onNodeNavigate(nodeId, node.label);
+  }, [onNodeNavigate, allNodes]);
+
+  // Apply external focus (from cross-mode navigation into graph)
+  useEffect(() => {
+    if (focusNodeId && nodes.some((n) => n.id === focusNodeId)) {
+      setFocusId(focusNodeId);
+    }
+  }, [focusNodeId, nodes, setFocusId]);
+
   const activeId = focusId ?? hoverId;
   const activeSet = useMemo(() => {
     if (!activeId) return null;
@@ -153,6 +174,7 @@ export function KnowledgeCanvas() {
                 onMouseEnter={onNodeHoverIn}
                 onMouseLeave={onNodeHoverOut}
                 onClick={setFocusId}
+                onNavigate={onNodeNavigate ? onNodeNav : undefined}
               />
             );
           })}

@@ -27,6 +27,8 @@ interface GraphCardNodeProps {
   onMouseEnter: (id: string) => void;
   onMouseLeave: () => void;
   onClick: (id: string) => void;
+  /** Navigate to this entity's source in the notebook (cross-mode). */
+  onNavigate?: (id: string) => void;
 }
 
 const ACCENT_CLASS: Record<string, string> = {
@@ -77,7 +79,7 @@ function MasteryArc({ mastery }: { mastery: number }) {
 
 export function GraphCardNode({
   node, focused, dimmed, connectionCount, neighbors,
-  onMouseDown, onMouseEnter, onMouseLeave, onClick,
+  onMouseDown, onMouseEnter, onMouseLeave, onClick, onNavigate,
 }: GraphCardNodeProps) {
   const [expanded, setExpanded] = useState(false);
 
@@ -161,6 +163,15 @@ export function GraphCardNode({
             <p className={styles.neighbors}>
               {neighbors.map((n) => n.label).join(' · ')}
             </p>
+          )}
+          {onNavigate && (
+            <button
+              className={styles.navButton}
+              onClick={(e) => { e.stopPropagation(); onNavigate(node.id); }}
+              title="View in notebook"
+            >
+              ← view in notebook
+            </button>
           )}
         </div>
       )}

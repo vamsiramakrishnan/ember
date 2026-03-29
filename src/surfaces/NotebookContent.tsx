@@ -32,8 +32,10 @@ import type { usePopupState } from '@/hooks/usePopupState';
 import { isStudentEntry as isStudentType } from './entryTypeMeta';
 import { useEntryKeyboardNav } from '@/hooks/useEntryKeyboardNav';
 import { ResponsePlanPreview } from '@/components/tutor/ResponsePlanPreview';
+import { CrossNavBreadcrumb } from '@/components/peripheral/CrossNavBreadcrumb';
 import { NotebookEmptyState } from './NotebookEmptyState';
 import type { ResponsePlan } from '@/hooks/useResponseOrchestrator';
+import type { CrossNavState } from '@/hooks/useNotebookCrossNav';
 import styles from './Notebook.module.css';
 
 export interface NotebookContentProps {
@@ -53,12 +55,21 @@ export interface NotebookContentProps {
   handleSubmit: (text: string) => void;
   handleSubmitTyped: (text: string, type: string) => void;
   handleSketchSubmit: (dataUrl: string) => void;
+  /** Cross-mode navigation state (graph↔linear↔canvas). */
+  crossNav?: {
+    navState: CrossNavState;
+    hasBreadcrumb: boolean;
+    goToEntry: (entryId: string, label: string) => void;
+    goToGraphNode: (nodeId: string, label: string) => void;
+    goBack: () => void;
+    dismissBreadcrumb: () => void;
+  };
 }
 
 export function NotebookContent({
   entries, pinnedEntries, past, current, sessionId, mode, setMode,
   marginalRef, contentDrop, popup, isThinking, responsePlans, bottomRef,
-  handleSubmit, handleSubmitTyped, handleSketchSubmit,
+  handleSubmit, handleSubmitTyped, handleSketchSubmit, crossNav,
 }: NotebookContentProps) {
   const { containerRef: kbNavRef, handleKeyDown: handleKbNav } = useEntryKeyboardNav();
   const wideViewport = useWideViewport();
@@ -88,6 +99,14 @@ export function NotebookContent({
           timeOfDay={current.timeOfDay} topic={current.topic} />
       )}
       <NotebookModeToggle mode={mode} setMode={setMode} />
+      {crossNav?.hasBreadcrumb && (
+        <CrossNavBreadcrumb
+          sourceMode={crossNav.navState.sourceMode}
+          entityLabel={crossNav.navState.entityLabel}
+          onBack={crossNav.goBack}
+          onDismiss={crossNav.dismissBreadcrumb}
+        />
+      )}
       {pinnedEntries.length > 0 && (
         <div className={styles.pinZone} role="complementary" aria-label="Pinned threads">
           {pinnedEntries.map((pe) => (
@@ -169,9 +188,12 @@ export function NotebookContent({
           <div ref={bottomRef} />
         </>
       ) : mode === 'canvas' ? (
-        <NotebookCanvas sessionId={sessionId} entries={entries} />
+        <NotebookCanvas sessionId={sessionId} entries={entries}
+          onCardClick={crossNav?.goToEntry} />
       ) : (
-        <KnowledgeCanvas />
+        <KnowledgeCanvas
+          onNodeNavigate={crossNav?.goToEntry}
+          focusNodeId={crossNav?.navState.entityId ?? undefined} />
       )}
     </Column>
   );

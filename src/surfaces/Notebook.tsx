@@ -27,6 +27,7 @@ import type { ResponsePlan } from '@/hooks/useResponseOrchestrator';
 import { NotebookContent } from './NotebookContent';
 import { handleBranch, handleSelectionAction, handleFollowUp, deriveMarginalRef } from './notebook-handlers';
 import type { NotebookMode } from './NotebookModeToggle';
+import { useNotebookCrossNav } from '@/hooks/useNotebookCrossNav';
 import { trackEvent, traceSurfaceRender } from '@/observability';
 import type { NotebookEntry } from '@/types/entries';
 import type { Surface } from '@/layout/Navigation';
@@ -80,6 +81,7 @@ export function Notebook({ onNavigate }: NotebookProps) {
   });
   const { completeDirective } = useDirectiveCompletion({ patchEntry: patchEntryContent });
   const [mode, setMode] = useState<NotebookMode>('linear');
+  const crossNav = useNotebookCrossNav(mode, setMode);
   const bottomRef = useRef<HTMLDivElement>(null);
   const marginalRef = useMemo(() => deriveMarginalRef(entries), [entries]);
 
@@ -163,6 +165,7 @@ export function Notebook({ onNavigate }: NotebookProps) {
         contentDrop={contentDrop} popup={popup} isThinking={isThinking}
         responsePlans={responsePlans} bottomRef={bottomRef}
         handleSubmit={onSubmit} handleSubmitTyped={onSubmitTyped} handleSketchSubmit={onSketchSubmit}
+        crossNav={crossNav}
       />
     </NotebookProvider>
     </ChipProvider>

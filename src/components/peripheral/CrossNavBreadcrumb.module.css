@@ -1,0 +1,78 @@
+/* CrossNavBreadcrumb — quiet return affordance after cross-mode navigation. */
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  margin-bottom: 12px;
+  background: var(--paper-warm);
+  border: 1px solid var(--rule-light);
+  border-radius: 2px;
+  animation: breadcrumbIn 0.3s ease both;
+}
+
+.backButton {
+  font-family: var(--font-system);
+  font-size: 10px;
+  font-weight: 300;
+  letter-spacing: 0.5px;
+  color: var(--ink-faint);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: color 0.2s ease;
+}
+
+.backButton:hover { color: var(--ink-soft); }
+
+.arrow {
+  font-size: 12px;
+  color: var(--margin);
+}
+
+.entityLabel {
+  font-family: var(--font-tutor);
+  font-size: 12px;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--ink-ghost);
+  margin-left: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px;
+}
+
+.dismiss {
+  font-size: 14px;
+  color: var(--ink-ghost);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+  transition: color 0.2s ease;
+}
+
+.dismiss:hover { color: var(--ink-faint); }
+
+@keyframes breadcrumbIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.backButton:focus-visible,
+.dismiss:focus-visible {
+  outline: 1.5px solid var(--margin);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .breadcrumb { animation: none; }
+  .backButton, .dismiss { transition: none; }
+}
