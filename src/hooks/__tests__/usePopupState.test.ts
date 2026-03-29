@@ -75,7 +75,7 @@ describe('usePopupState', () => {
 
   it('handles slash command selection', () => {
     const { result } = renderHook(() => usePopupState());
-    const cmd = { id: 'research', label: 'Research', hint: 'Research a topic', icon: '', accent: '', group: '' };
+    const cmd = { id: 'research', label: 'Research', hint: 'Research a topic', icon: '', accent: '', group: '', role: 'action' as const };
     act(() => { result.current.handleSlashSelect(cmd); });
     expect(result.current.pendingInsert).toBe('/Research ');
     expect(result.current.activeSlashCommand).toMatchObject({ id: 'research' });
@@ -83,7 +83,7 @@ describe('usePopupState', () => {
 
   it('consumeSlashCommand clears and returns', () => {
     const { result } = renderHook(() => usePopupState());
-    const cmd = { id: 'draw', label: 'Draw', hint: 'Draw', icon: '', accent: '', group: '' };
+    const cmd = { id: 'draw', label: 'Draw', hint: 'Draw', icon: '', accent: '', group: '', role: 'format' as const };
     act(() => { result.current.handleSlashSelect(cmd); });
 
     let consumed;
