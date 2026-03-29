@@ -20,6 +20,7 @@
  * See: 06-component-inventory.md, Family 2.
  */
 import { useMemo, useRef, useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import type { DiagramNode, DiagramEdge, DiagramLayout } from '@/types/entries';
 import { computeLayout, inferLayout } from './diagram-layout-engines';
 import type { EdgePathData } from './diagram-layout-engines';
@@ -313,8 +314,9 @@ export function ConceptDiagram({
         )}
       </div>
 
-      {/* Full-screen modal for enlarged view */}
-      {modalOpen && (
+      {/* Full-screen modal — portalled to document.body to escape
+          ancestor transforms (EntryReveal) that break position:fixed */}
+      {modalOpen && createPortal(
         <div className={styles.modalOverlay} onClick={closeModal}>
           <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
@@ -327,7 +329,8 @@ export function ConceptDiagram({
               {renderDiagramContent(true)}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );
