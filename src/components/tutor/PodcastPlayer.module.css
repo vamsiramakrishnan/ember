@@ -146,6 +146,71 @@
   overflow-y: auto;
 }
 
+/* ─── Loading spinner ─────────────────────────────────── */
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ─── Active play button ─────────────────────────────── */
+
+.playButtonActive {
+  border-color: var(--margin);
+  color: var(--margin);
+}
+
+.playButton:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* ─── Pending state (audio not yet synthesized) ──────── */
+
+.pendingRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 0;
+}
+
+.pendingDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ink-ghost);
+  animation: pendingPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes pendingPulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.8; }
+}
+
+.pendingLabel {
+  font-family: var(--font-system);
+  font-size: 10px;
+  font-weight: 300;
+  letter-spacing: 1px;
+  color: var(--ink-faint);
+}
+
+/* ─── Error state ────────────────────────────────────── */
+
+.error {
+  font-family: var(--font-system);
+  font-size: 10px;
+  font-weight: 300;
+  color: var(--margin);
+  opacity: 0.7;
+  margin: 8px 0;
+  line-height: 1.4;
+}
+
 /* ─── Reduced motion ───────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
@@ -153,4 +218,6 @@
   .transcriptToggle {
     transition: none;
   }
+  .spinner { animation: none; }
+  .pendingDot { animation: none; opacity: 0.5; }
 }
