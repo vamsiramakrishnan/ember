@@ -9,6 +9,7 @@ import { isGeminiAvailable } from '@/services/gemini';
 import { streamOrchestrate } from '@/services/orchestrator';
 import { runBackgroundTasks } from '@/services/background-task-runner';
 import { updateWorkingMemory } from '@/services/working-memory';
+import { enqueueTask, PRIORITY } from '@/services/task-queue';
 import {
   recordTutorTurn, setTutorActivity,
   filterByComposition, addRelation,
@@ -89,7 +90,14 @@ export function useGeminiTutor({
             setTutorActivity(false, false);
             activeRef.current = false;
             void runBackgroundTasks(text, [], student.id, notebook.id, current?.topic ?? '', entriesRef.current, notebook.title);
-            void updateWorkingMemory(notebook.id, entriesRef.current);
+            enqueueTask({
+              key: `working-memory:${notebook.id}:${Date.now()}`,
+              label: 'compressing session',
+              priority: PRIORITY.HIGH,
+              timeoutMs: 15_000,
+              group: 'post-response',
+              run: async () => { await updateWorkingMemory(notebook.id, entriesRef.current); },
+            });
             return;
           }
           // DAG returned null (not compound) — fall through to normal path
@@ -134,13 +142,34 @@ export function useGeminiTutor({
         setTutorActivity(false, false);
 
         if (!signal.aborted) {
-          for (const action of result.deferredActions) executeDeferredAction(action, student.id, notebook.id);
+          // Deferred actions (graph writes, lexicon adds) → P0 via queue
+          for (const action of result.deferredActions) {
+            enqueueTask({
+              key: `deferred:${action.type}:${Date.now()}`,
+              label: `deferred ${action.type}`,
+              priority: PRIORITY.CRITICAL,
+              retries: 1,
+              timeoutMs: 10_000,
+              group: 'post-response',
+              run: async () => { executeDeferredAction(action, student.id, notebook.id); },
+            });
+          }
+
+          // Background tasks (mastery, extraction, annotations) → queued by priority
           void runBackgroundTasks(
             studentEntry.content, result.entries, student.id, notebook.id,
             current?.topic ?? '', entriesRef.current, notebook.title,
           );
-          // Compress session context into working memory (fire-and-forget)
-          void updateWorkingMemory(notebook.id, entriesRef.current);
+
+          // Working memory compression → P1 via queue
+          enqueueTask({
+            key: `working-memory:${notebook.id}:${Date.now()}`,
+            label: 'compressing session',
+            priority: PRIORITY.HIGH,
+            timeoutMs: 15_000,
+            group: 'post-response',
+            run: async () => { await updateWorkingMemory(notebook.id, entriesRef.current); },
+          });
         }
       } catch (err) {
         if ((err as Error)?.name !== 'AbortError') console.error('[Ember] Gemini tutor error:', err);
