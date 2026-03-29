@@ -21,6 +21,7 @@ interface VoiceModeProps {
   isTutorSpeaking: boolean;
   elapsed: number;
   error: string | null;
+  debugStatus?: string;
   onStop: () => void;
 }
 
@@ -31,7 +32,7 @@ function formatElapsed(seconds: number): string {
 }
 
 export function VoiceMode({
-  state, transcript, isTutorSpeaking, elapsed, error, onStop,
+  state, transcript, isTutorSpeaking, elapsed, error, debugStatus, onStop,
 }: VoiceModeProps) {
   const [expanded, setExpanded] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -89,8 +90,10 @@ export function VoiceMode({
         {/* Status dot */}
         <div className={`${styles.statusDot} ${statusClass}`} />
 
-        {/* Status label */}
-        <span className={styles.statusLabel}>{statusText}</span>
+        {/* Status — shows debug info during connection, normal status after */}
+        <span className={styles.statusLabel}>
+          {debugStatus || statusText}
+        </span>
 
         {/* Waveform — compact, 12 bars */}
         <div className={styles.waveform}>

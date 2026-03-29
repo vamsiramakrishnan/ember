@@ -65,6 +65,8 @@ export function useVoiceSession({
   const [transcript, setTranscript] = useState<TranscriptLine[]>([]);
   const [isTutorSpeaking, setIsTutorSpeaking] = useState(false);
   const [elapsed, setElapsed] = useState(0);
+  /** Debug status visible in the UI — tracks every connection step. */
+  const [debugStatus, setDebugStatus] = useState('');
 
   const wsRef = useRef<WebSocket | null>(null);
   const playbackCtxRef = useRef<AudioContext | null>(null);
@@ -210,7 +212,7 @@ export function useVoiceSession({
 
     try {
       // 1. Fetch ephemeral token
-      console.info('[VoiceSession] Fetching ephemeral token...');
+      setDebugStatus('fetching token…');
       const tokenRes = await fetch('/api/live-token', { method: 'POST' });
       if (!tokenRes.ok) {
         const errBody = await tokenRes.text().catch(() => '');
@@ -219,15 +221,17 @@ export function useVoiceSession({
       const tokenData = await tokenRes.json();
       const token = tokenData.token as string | undefined;
       if (!token) throw new Error(`No token: ${JSON.stringify(tokenData).slice(0, 300)}`);
-      console.info('[VoiceSession] Token:', token.slice(0, 30) + '...');
+      setDebugStatus(`token ok: ${token.slice(0, 20)}…`);
 
       // 2. Get microphone
+      setDebugStatus('requesting mic…');
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: { echoCancellation: true, noiseSuppression: true },
       });
       streamRef.current = stream;
+      setDebugStatus('mic granted');
 
-      // 3. AudioContexts — capture at device rate, playback at default
+      // 3. AudioContexts
       const captureCtx = new AudioContext();
       captureCtxRef.current = captureCtx;
       if (captureCtx.state === 'suspended') await captureCtx.resume();
@@ -235,13 +239,11 @@ export function useVoiceSession({
       const playbackCtx = new AudioContext();
       playbackCtxRef.current = playbackCtx;
       if (playbackCtx.state === 'suspended') await playbackCtx.resume();
+      setDebugStatus(`audio ctx: capture=${captureCtx.sampleRate} playback=${playbackCtx.sampleRate}`);
 
-      console.info('[VoiceSession] Capture rate:', captureCtx.sampleRate, 'Playback rate:', playbackCtx.sampleRate);
-
-      // 4. Open RAW WEBSOCKET to Gemini Live API
-      //    Token is NOT URL-encoded — canonical example passes it as-is
+      // 4. Open RAW WEBSOCKET
+      setDebugStatus('opening websocket…');
       const wsUrl = `${WS_BASE}?access_token=${token}`;
-      console.info('[VoiceSession] Opening WebSocket...');
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
@@ -258,7 +260,7 @@ export function useVoiceSession({
 
       ws.onopen = () => {
         clearTimeout(connectTimeout);
-        console.info('[VoiceSession] WebSocket connected, readyState:', ws.readyState);
+        setDebugStatus('ws connected, sending setup…');
 
         // 5. Send setup message (first message must be config)
         const fullInstruction = buildVoiceSystemInstruction(contextInput);
@@ -317,10 +319,11 @@ export function useVoiceSession({
 
         // Setup complete — start streaming audio
         if (msg.setupComplete) {
-          console.info('[VoiceSession] Setup complete, starting audio');
+          setDebugStatus('setup complete! starting mic capture…');
           setState('active');
           startAudioCapture(ws, captureCtx, stream);
           timerRef.current = setInterval(() => setElapsed((e) => e + 1), 1000);
+          setTimeout(() => setDebugStatus(''), 3000); // Clear after 3s
         }
 
         // Server content — audio, transcriptions, interruptions
@@ -423,24 +426,21 @@ export function useVoiceSession({
         }
       };
 
-      ws.onerror = (event) => {
+      ws.onerror = () => {
         clearTimeout(connectTimeout);
-        console.error('[VoiceSession] WebSocket error. readyState:', ws.readyState, 'event:', event);
-        // On mobile browsers, WebSocket errors are opaque (no detail in the event).
-        // The most common causes: invalid token, network blocked, or CORS/CSP issue.
-        setError('Connection failed — check network and try again');
+        setDebugStatus('ws error');
+        setError('WebSocket failed — tap to retry');
         setState('error');
       };
 
       ws.onclose = (event) => {
         clearTimeout(connectTimeout);
-        console.info('[VoiceSession] WebSocket closed. code:', event.code, 'reason:', event.reason, 'wasClean:', event.wasClean);
-        // Code 1000 = normal close. Anything else is an error.
         if (event.code !== 1000 && stateRef.current !== 'idle') {
-          const reason = event.reason || `Connection closed (code ${event.code})`;
-          setError(reason);
+          setDebugStatus(`ws closed: code=${event.code}`);
+          setError(event.reason || `Closed (${event.code})`);
           setState('error');
         } else {
+          setDebugStatus('');
           setState('idle');
         }
       };
@@ -536,7 +536,7 @@ export function useVoiceSession({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { state, error, transcript, isTutorSpeaking, elapsed, start, stop };
+  return { state, error, transcript, isTutorSpeaking, elapsed, start, stop, debugStatus };
 }
 
 // ─── Audio utilities ────────────────────────────────────────

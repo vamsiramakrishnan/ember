@@ -65,6 +65,7 @@ export interface NotebookContentProps {
     elapsed: number;
     start: () => Promise<void>;
     stop: () => void;
+    debugStatus?: string;
   };
   /** Cross-mode navigation state (graph↔linear↔canvas). */
   crossNav?: {
@@ -221,6 +222,7 @@ export function NotebookContent({
         isTutorSpeaking={voiceSession.isTutorSpeaking}
         elapsed={voiceSession.elapsed}
         error={voiceSession.error}
+        debugStatus={voiceSession.debugStatus}
         onStop={voiceSession.stop}
       />
     )}
