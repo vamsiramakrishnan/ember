@@ -216,6 +216,13 @@
   50% { box-shadow: 0 0 0 6px rgba(184, 86, 79, 0); }
 }
 
+/* Voice Mode active state */
+.micVoiceActive {
+  color: var(--sage);
+  border-color: var(--sage);
+  background: var(--sage-dim);
+}
+
 /* Transcribing state */
 .micTranscribing {
   color: var(--ink-faint);

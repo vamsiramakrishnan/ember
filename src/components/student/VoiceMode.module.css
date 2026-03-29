@@ -1,0 +1,274 @@
+/**
+ * VoiceMode — warm overlay for bidirectional voice conversation.
+ * Feels like the notebook's page lifted slightly, with a quiet
+ * conversation happening in the space beneath.
+ */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(44, 40, 37, 0.3);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 16px;
+  animation: overlayIn 0.3s ease both;
+}
+
+.panel {
+  width: 100%;
+  max-width: 640px;
+  max-height: 80vh;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  box-shadow: var(--depth-floating);
+  display: flex;
+  flex-direction: column;
+  animation: panelSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  overflow: hidden;
+}
+
+/* ─── Header ─── */
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--rule-light);
+  flex-shrink: 0;
+}
+
+.statusRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+}
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ink-ghost);
+  transition: background 0.3s ease;
+}
+
+.listening {
+  background: var(--sage);
+  animation: dotPulse 1.6s ease-in-out infinite;
+}
+
+.speaking {
+  background: var(--margin);
+  animation: dotPulse 0.8s ease-in-out infinite;
+}
+
+.connecting {
+  background: var(--amber);
+  animation: dotPulse 1s ease-in-out infinite;
+}
+
+@keyframes dotPulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.3); }
+}
+
+.statusLabel {
+  font-family: var(--font-system);
+  font-size: 10px;
+  font-weight: 300;
+  letter-spacing: 1px;
+  color: var(--ink-faint);
+  text-transform: lowercase;
+}
+
+.timer {
+  font-family: var(--font-system);
+  font-size: 10px;
+  font-weight: 300;
+  color: var(--ink-ghost);
+  letter-spacing: 0.5px;
+}
+
+.endButton {
+  font-family: var(--font-system);
+  font-size: 10px;
+  font-weight: 300;
+  letter-spacing: 1px;
+  color: var(--margin);
+  background: none;
+  border: 1px solid var(--margin-dim);
+  border-radius: 2px;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.endButton:hover {
+  background: var(--margin-dim);
+  border-color: var(--margin);
+}
+
+.endButton:focus-visible {
+  outline: 2px solid var(--margin);
+  outline-offset: 2px;
+}
+
+/* ─── Waveform ─── */
+
+.waveform {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 16px 20px;
+  min-height: 40px;
+}
+
+.bar {
+  width: 2px;
+  height: 3px;
+  background: var(--ink-ghost);
+  border-radius: 1px;
+  transition: height 0.15s ease, background 0.3s ease;
+}
+
+.barActive {
+  background: var(--margin);
+  animation: barBounce 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes barBounce {
+  from { transform: scaleY(0.6); }
+  to { transform: scaleY(1); }
+}
+
+/* ─── Transcript ─── */
+
+.transcript {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 200px;
+  max-height: 50vh;
+  -webkit-overflow-scrolling: touch;
+}
+
+.empty {
+  font-family: var(--font-tutor);
+  font-size: 14px;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--ink-ghost);
+  text-align: center;
+  padding: 40px 0;
+  margin: 0;
+}
+
+.userLine {
+  align-self: flex-start;
+  max-width: 85%;
+}
+
+.tutorLine {
+  align-self: flex-end;
+  max-width: 85%;
+  text-align: right;
+}
+
+.lineRole {
+  font-family: var(--font-system);
+  font-size: 8px;
+  font-weight: 300;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--ink-ghost);
+  display: block;
+  margin-bottom: 2px;
+}
+
+.tutorLine .lineRole {
+  color: var(--margin);
+  opacity: 0.5;
+}
+
+.userLine .lineText {
+  font-family: var(--font-student);
+  font-size: 15px;
+  color: var(--ink);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.tutorLine .lineText {
+  font-family: var(--font-tutor);
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--ink-soft);
+  line-height: 1.6;
+  margin: 0;
+  font-style: italic;
+}
+
+/* ─── Error ─── */
+
+.error {
+  font-family: var(--font-system);
+  font-size: 10px;
+  color: var(--margin);
+  opacity: 0.7;
+  padding: 0 20px;
+  margin: 0;
+}
+
+/* ─── Hint ─── */
+
+.hint {
+  font-family: var(--font-system);
+  font-size: 9px;
+  font-weight: 300;
+  letter-spacing: 0.5px;
+  color: var(--ink-ghost);
+  text-align: center;
+  padding: 8px 20px 16px;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+/* ─── Animations ─── */
+
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes panelSlideUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Reduced motion ─── */
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay { animation: none; }
+  .panel { animation: none; }
+  .statusDot { animation: none; }
+  .bar { transition: none; }
+  .barActive { animation: none; }
+  .endButton { transition: none; }
+}
+
+/* ─── Mobile ─── */
+
+@media (max-width: 640px) {
+  .overlay { padding: 0; }
+  .panel { max-height: 90vh; border-radius: 12px 12px 0 0; }
+  .transcript { min-height: 160px; }
+}
