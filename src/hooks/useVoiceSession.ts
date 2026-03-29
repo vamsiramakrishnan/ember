@@ -21,7 +21,6 @@ import {
   FunctionResponseScheduling,
   type LiveServerMessage,
 } from '@google/genai';
-import { isGeminiAvailable } from '@/services/gemini';
 import { executeTool, type ToolContext } from '@/services/tool-executor';
 import {
   buildVoiceSystemInstruction, VOICE_TOOL_DECLARATIONS,
@@ -67,7 +66,6 @@ interface UseVoiceSessionOptions {
 
 /** Gemini 2.5 Flash with native audio — supports async NON_BLOCKING function calling. */
 const LIVE_MODEL = 'gemini-2.5-flash-native-audio-preview-12-2025';
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
 
 // ─── Hook ───────────────────────────────────────────────────
 
@@ -254,32 +252,25 @@ export function useVoiceSession({
     setElapsed(0);
 
     try {
-      // 1. Get ephemeral token or use direct API key
-      let client: GoogleGenAI;
-      if (API_KEY) {
-        // Dev mode: direct API key, no ephemeral token needed
-        console.info('[VoiceSession] Using direct API key');
-        client = new GoogleGenAI({ apiKey: API_KEY });
-      } else if (isGeminiAvailable()) {
-        // Production: fetch ephemeral token from server, use v1alpha
-        console.info('[VoiceSession] Fetching ephemeral token...');
-        const tokenRes = await fetch('/api/live-token', { method: 'POST' });
-        if (!tokenRes.ok) {
-          const errBody = await tokenRes.text().catch(() => '');
-          throw new Error(`Token request failed (${tokenRes.status}): ${errBody}`);
-        }
-        const tokenData = await tokenRes.json();
-        console.info('[VoiceSession] Token response:', JSON.stringify(tokenData).slice(0, 200));
-        const token = tokenData.token;
-        if (!token) throw new Error(`No token in response. Got: ${JSON.stringify(tokenData).slice(0, 200)}`);
-        // Ephemeral tokens require v1alpha — the constrained WebSocket endpoint
-        client = new GoogleGenAI({
-          apiKey: token,
-          httpOptions: { apiVersion: 'v1alpha' },
-        });
-      } else {
-        throw new Error('No Gemini API key configured');
+      // 1. Fetch ephemeral token from server — the ONLY auth path.
+      //    The API key never leaves the server. The browser gets a short-lived
+      //    token scoped to the Live API model and constrained config.
+      console.info('[VoiceSession] Fetching ephemeral token...');
+      const tokenRes = await fetch('/api/live-token', { method: 'POST' });
+      if (!tokenRes.ok) {
+        const errBody = await tokenRes.text().catch(() => '');
+        throw new Error(`Token request failed (${tokenRes.status}): ${errBody}`);
       }
+      const tokenData = await tokenRes.json();
+      const token = tokenData.token;
+      if (!token) throw new Error(`No token in response. Got keys: ${Object.keys(tokenData).join(', ')}`);
+      console.info('[VoiceSession] Token received, length:', token.length);
+
+      // Ephemeral tokens require v1alpha — the constrained WebSocket endpoint
+      const client = new GoogleGenAI({
+        apiKey: token,
+        httpOptions: { apiVersion: 'v1alpha' },
+      });
 
       // 2. Get microphone access
       const stream = await navigator.mediaDevices.getUserMedia({
