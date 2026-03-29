@@ -84,22 +84,27 @@ export function useVoiceSession({
   const sessionRef = useRef<any>(null);
   /** Session resumption handle — stored from sessionResumptionUpdate messages. */
   const resumeHandleRef = useRef<string | null>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
+
+  // ─── Audio playback (separate context at native rate for output) ───
+  const playbackCtxRef = useRef<AudioContext | null>(null);
+  const captureCtxRef = useRef<AudioContext | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const processorRef = useRef<ScriptProcessorNode | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval>>();
   const callbacksRef = useRef(callbacks);
   callbacksRef.current = callbacks;
 
-  // Audio playback queue
+  // Audio playback queue — sequential chunk playback
   const playbackQueue = useRef<ArrayBuffer[]>([]);
   const isPlaying = useRef(false);
+  const currentSourceRef = useRef<AudioBufferSourceNode | null>(null);
 
-  /** Play queued PCM audio chunks through AudioContext. */
+  /** Play queued PCM 24kHz audio chunks through the playback AudioContext. */
   const playNextChunk = useCallback(() => {
-    const ctx = audioContextRef.current;
+    const ctx = playbackCtxRef.current;
     if (!ctx || playbackQueue.current.length === 0) {
       isPlaying.current = false;
+      currentSourceRef.current = null;
       setIsTutorSpeaking(false);
       return;
     }
@@ -108,12 +113,20 @@ export function useVoiceSession({
 
     const pcmData = playbackQueue.current.shift()!;
     const float32 = pcm16ToFloat32(pcmData);
+    // Output is 24kHz PCM — create buffer at that rate regardless of context rate.
+    // The AudioContext will resample to its own rate (typically 48kHz) for the speakers.
     const buffer = ctx.createBuffer(1, float32.length, 24000);
     buffer.getChannelData(0).set(float32);
     const source = ctx.createBufferSource();
     source.buffer = buffer;
     source.connect(ctx.destination);
-    source.onended = playNextChunk;
+    source.onended = () => {
+      if (currentSourceRef.current === source) {
+        currentSourceRef.current = null;
+      }
+      playNextChunk();
+    };
+    currentSourceRef.current = source;
     source.start();
   }, []);
 
@@ -127,10 +140,14 @@ export function useVoiceSession({
     if (!isPlaying.current) playNextChunk();
   }, [playNextChunk]);
 
-  /** Clear audio playback (on interruption). */
+  /** Clear audio playback (on interruption). Stop current source immediately. */
   const clearPlayback = useCallback(() => {
     playbackQueue.current = [];
     isPlaying.current = false;
+    try {
+      currentSourceRef.current?.stop();
+    } catch { /* already stopped */ }
+    currentSourceRef.current = null;
     setIsTutorSpeaking(false);
   }, []);
 
@@ -258,9 +275,15 @@ export function useVoiceSession({
       });
       streamRef.current = stream;
 
-      // 3. Set up AudioContext for both capture and playback
-      const audioCtx = new AudioContext({ sampleRate: 16000 });
-      audioContextRef.current = audioCtx;
+      // 3. Set up SEPARATE AudioContexts:
+      //    - captureCtx at 16kHz for mic → PCM conversion (matches Gemini input format)
+      //    - playbackCtx at default rate (48kHz) for speaker output (resamples 24kHz PCM)
+      //    Using one context for both caused the 24kHz output to be resampled to 16kHz = garbled audio.
+      const captureCtx = new AudioContext({ sampleRate: 16000 });
+      captureCtxRef.current = captureCtx;
+
+      const playbackCtx = new AudioContext(); // Default: 48kHz on most devices
+      playbackCtxRef.current = playbackCtx;
 
       // 4. Build system instruction from student context
       const fullInstruction = buildVoiceSystemInstruction(contextInput);
@@ -431,18 +454,20 @@ export function useVoiceSession({
 
       sessionRef.current = session as typeof sessionRef.current;
 
-      // 5. Stream mic audio to the session
-      const source = audioCtx.createMediaStreamSource(stream);
-      const processor = audioCtx.createScriptProcessor(4096, 1, 1);
+      // 5. Stream mic audio via capture context (16kHz).
+      //    ScriptProcessorNode is deprecated but works cross-browser.
+      //    Connected to a silent GainNode instead of destination to prevent
+      //    mic audio echoing through the speakers.
+      const micSource = captureCtx.createMediaStreamSource(stream);
+      const processor = captureCtx.createScriptProcessor(4096, 1, 1);
       processorRef.current = processor;
 
       processor.onaudioprocess = (e) => {
         const inputData = e.inputBuffer.getChannelData(0);
-        // Convert Float32 → Int16 PCM
         const pcm = float32ToPcm16(inputData);
         const base64 = arrayBufferToBase64(pcm.buffer as ArrayBuffer);
         try {
-          (session as { sendRealtimeInput: (d: unknown) => void }).sendRealtimeInput({
+          session.sendRealtimeInput({
             audio: { data: base64, mimeType: 'audio/pcm;rate=16000' },
           });
         } catch {
@@ -450,8 +475,13 @@ export function useVoiceSession({
         }
       };
 
-      source.connect(processor);
-      processor.connect(audioCtx.destination); // Required for processing to work
+      micSource.connect(processor);
+      // Connect to a silent gain node (not destination) so the processor fires
+      // without playing mic audio through speakers. This prevents echo/feedback.
+      const silentDest = captureCtx.createGain();
+      silentDest.gain.value = 0;
+      silentDest.connect(captureCtx.destination);
+      processor.connect(silentDest);
 
       // 6. Start elapsed timer
       timerRef.current = setInterval(() => {
@@ -477,15 +507,16 @@ export function useVoiceSession({
     if (timerRef.current) clearInterval(timerRef.current);
     processorRef.current?.disconnect();
     streamRef.current?.getTracks().forEach((t) => t.stop());
-    audioContextRef.current?.close().catch(() => {});
+    captureCtxRef.current?.close().catch(() => {});
     clearPlayback();
+    playbackCtxRef.current?.close().catch(() => {});
     try {
-      // Flush any cached audio before closing the session
       sessionRef.current?.sendRealtimeInput?.({ audioStreamEnd: true });
       sessionRef.current?.close?.();
     } catch { /* ignore */ }
     streamRef.current = null;
-    audioContextRef.current = null;
+    captureCtxRef.current = null;
+    playbackCtxRef.current = null;
     processorRef.current = null;
   }
 
