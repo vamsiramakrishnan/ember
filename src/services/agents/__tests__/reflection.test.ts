@@ -23,8 +23,8 @@ describe('agents/reflection', () => {
   });
 
   it('instruction emphasizes recognition not summary', () => {
-    expect(REFLECTION_AGENT.systemInstruction).toContain('NOT a summary');
-    expect(REFLECTION_AGENT.systemInstruction).toContain('IS a recognition');
+    expect(REFLECTION_AGENT.systemInstruction).toContain('not summarized');
+    expect(REFLECTION_AGENT.systemInstruction).toContain('Name the pattern');
   });
 
   it('instruction forbids praise words', () => {

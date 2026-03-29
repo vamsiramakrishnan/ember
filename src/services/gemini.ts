@@ -1,17 +1,14 @@
 /**
  * Gemini API client — core service for AI-powered tutor responses.
- * Supports: text generation, Google Search grounding, URL context,
- * and code execution tools.
+ * Uses the Interactions API for text generation with typed SSE streaming.
  *
  * Supports dual-mode: direct SDK (dev) or server proxy (production).
+ * The proxy path still uses the legacy generateContent format.
  */
 import { GoogleGenAI } from '@google/genai';
-import {
-  buildToolsArray,
-  buildConfig,
-  collectStreamChunks,
-  streamWithCallback,
-} from './gemini-helpers';
+import type { Interactions } from '@google/genai';
+import { buildToolsArray } from './gemini-helpers';
+import { convertToolsToInteractions, extractDeltaText, isCompleteEvent } from './gemini-interactions';
 import { useProxy, proxyTextGeneration, proxyTextGenerationStream } from './proxy-client';
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
@@ -48,6 +45,8 @@ export interface GeminiTextOptions {
   useUrlContext?: boolean;
   useCodeExecution?: boolean;
   model?: string;
+  /** Chain to a previous interaction for server-side state. */
+  previousInteractionId?: string;
 }
 
 /** Require a valid client or throw. */
@@ -57,38 +56,70 @@ function requireClient(): GoogleGenAI {
   return client;
 }
 
-/** Internal: start a streaming content generation request. */
-function startStream(
-  client: GoogleGenAI,
-  contents: Array<{ role: string; parts: Array<{ text: string }> }>,
-  opts?: Omit<GeminiTextOptions, 'prompt'>,
-) {
-  const tools = buildToolsArray(opts);
-  const config = buildConfig(opts, tools);
-  return client.models.generateContentStream({
-    model: opts?.model ?? MODELS.text,
-    config,
-    contents,
-  });
+/** Build Interactions API tools from boolean flags. */
+function buildInteractionTools(
+  opts?: Pick<GeminiTextOptions, 'useSearch' | 'useUrlContext' | 'useCodeExecution'>,
+): Interactions.Tool[] {
+  const legacy = buildToolsArray(opts);
+  return convertToolsToInteractions(legacy);
 }
 
-/** Build contents array from a single prompt string. */
+/** Build contents array from a single prompt string (for proxy path). */
 function promptContents(prompt: string) {
   return [{ role: 'user' as const, parts: [{ text: prompt }] }];
 }
 
-/** Build contents array from a message history. */
+/** Build contents array from a message history (for proxy path). */
 function historyContents(
   messages: Array<{ role: 'user' | 'model'; text: string }>,
 ) {
   return messages.map((m) => ({ role: m.role, parts: [{ text: m.text }] }));
 }
 
-/** Generate text using Gemini. Returns the full response text. */
+// ─── Interactions API streaming helpers ─────────────────────────
+
+/** Collect all text from a streaming interaction. */
+async function collectInteractionStream(
+  stream: AsyncIterable<Interactions.InteractionSSEEvent>,
+): Promise<{ text: string; interactionId: string }> {
+  const chunks: string[] = [];
+  let interactionId = '';
+  for await (const event of stream) {
+    const text = extractDeltaText(event);
+    if (text) chunks.push(text);
+    if (isCompleteEvent(event)) {
+      interactionId = event.interaction.id;
+    }
+  }
+  return { text: chunks.join(''), interactionId };
+}
+
+/** Stream text from an interaction, calling onChunk for each piece. */
+async function streamInteractionWithCallback(
+  stream: AsyncIterable<Interactions.InteractionSSEEvent>,
+  onChunk: (chunk: string, accumulated: string) => void,
+): Promise<{ text: string; interactionId: string }> {
+  let accumulated = '';
+  let interactionId = '';
+  for await (const event of stream) {
+    const text = extractDeltaText(event);
+    if (text) {
+      accumulated += text;
+      onChunk(text, accumulated);
+    }
+    if (isCompleteEvent(event)) {
+      interactionId = event.interaction.id;
+    }
+  }
+  return { text: accumulated, interactionId };
+}
+
+// ─── Public API ─────────────────────────────────────────────────
+
+/** Generate text using the Interactions API. Returns the full response text. */
 export async function generateText(
   options: GeminiTextOptions,
 ): Promise<string> {
-  // Proxy path
   if (useProxy()) {
     return proxyTextGeneration({
       messages: promptContents(options.prompt),
@@ -97,19 +128,26 @@ export async function generateText(
     });
   }
 
-  const response = await startStream(
-    requireClient(), promptContents(options.prompt), options,
-  );
-  return collectStreamChunks(response);
+  const client = requireClient();
+  const tools = buildInteractionTools(options);
+  const stream = await client.interactions.create({
+    model: options.model ?? MODELS.text,
+    input: options.prompt,
+    system_instruction: options.systemInstruction,
+    tools: tools.length > 0 ? tools : undefined,
+    previous_interaction_id: options.previousInteractionId,
+    stream: true,
+  });
+  const result = await collectInteractionStream(stream);
+  return result.text;
 }
 
-/** Stream text using Gemini. Yields chunks via callback. */
+/** Stream text using the Interactions API. Yields chunks via callback. */
 export async function generateTextStream(
   options: GeminiTextOptions & {
     onChunk: (chunk: string, accumulated: string) => void;
   },
 ): Promise<string> {
-  // Proxy path
   if (useProxy()) {
     return proxyTextGenerationStream({
       messages: promptContents(options.prompt),
@@ -118,10 +156,18 @@ export async function generateTextStream(
     }, options.onChunk);
   }
 
-  const response = await startStream(
-    requireClient(), promptContents(options.prompt), options,
-  );
-  return streamWithCallback(response, options.onChunk);
+  const client = requireClient();
+  const tools = buildInteractionTools(options);
+  const stream = await client.interactions.create({
+    model: options.model ?? MODELS.text,
+    input: options.prompt,
+    system_instruction: options.systemInstruction,
+    tools: tools.length > 0 ? tools : undefined,
+    previous_interaction_id: options.previousInteractionId,
+    stream: true,
+  });
+  const result = await streamInteractionWithCallback(stream, options.onChunk);
+  return result.text;
 }
 
 /** Generate text with conversation history. Collects all chunks. */
@@ -129,7 +175,6 @@ export async function generateTextWithHistory(
   messages: Array<{ role: 'user' | 'model'; text: string }>,
   options?: Omit<GeminiTextOptions, 'prompt'>,
 ): Promise<string> {
-  // Proxy path
   if (useProxy()) {
     return proxyTextGeneration({
       messages: historyContents(messages),
@@ -138,10 +183,25 @@ export async function generateTextWithHistory(
     });
   }
 
-  const response = await startStream(
-    requireClient(), historyContents(messages), options,
-  );
-  return collectStreamChunks(response);
+  const client = requireClient();
+  const tools = buildInteractionTools(options);
+
+  // Build Turn-based input from message history for Interactions API
+  const turns: Interactions.Turn[] = messages.map((m) => ({
+    role: m.role === 'model' ? 'model' : 'user',
+    parts: [{ type: 'text' as const, text: m.text }],
+  }));
+
+  const stream = await client.interactions.create({
+    model: options?.model ?? MODELS.text,
+    input: turns,
+    system_instruction: options?.systemInstruction,
+    tools: tools.length > 0 ? tools : undefined,
+    previous_interaction_id: options?.previousInteractionId,
+    stream: true,
+  });
+  const result = await collectInteractionStream(stream);
+  return result.text;
 }
 
 /** Stream text with conversation history. Yields chunks via callback. */
@@ -151,7 +211,6 @@ export async function generateTextStreamWithHistory(
     onChunk?: (chunk: string, accumulated: string) => void;
   },
 ): Promise<string> {
-  // Proxy path
   if (useProxy()) {
     const onChunk = options?.onChunk;
     if (onChunk) {
@@ -168,10 +227,28 @@ export async function generateTextStreamWithHistory(
     });
   }
 
-  const response = await startStream(
-    requireClient(), historyContents(messages), options,
-  );
+  const client = requireClient();
+  const tools = buildInteractionTools(options);
+
+  const turns: Interactions.Turn[] = messages.map((m) => ({
+    role: m.role === 'model' ? 'model' : 'user',
+    parts: [{ type: 'text' as const, text: m.text }],
+  }));
+
+  const stream = await client.interactions.create({
+    model: options?.model ?? MODELS.text,
+    input: turns,
+    system_instruction: options?.systemInstruction,
+    tools: tools.length > 0 ? tools : undefined,
+    previous_interaction_id: options?.previousInteractionId,
+    stream: true,
+  });
+
   const onChunk = options?.onChunk;
-  if (onChunk) return streamWithCallback(response, onChunk);
-  return collectStreamChunks(response);
+  if (onChunk) {
+    const result = await streamInteractionWithCallback(stream, onChunk);
+    return result.text;
+  }
+  const result = await collectInteractionStream(stream);
+  return result.text;
 }

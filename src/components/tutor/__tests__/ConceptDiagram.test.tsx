@@ -1,13 +1,10 @@
 import { describe, test, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
-vi.mock('../ConceptDiagramNode', () => ({
-  ConceptDiagramNode: ({ node }: { node: { label: string } }) => (
-    <div data-testid="diagram-node">{node.label}</div>
+vi.mock('../DiagramCard', () => ({
+  DiagramCard: ({ node }: { node: { label: string } }) => (
+    <div data-testid="diagram-card">{node.label}</div>
   ),
-}));
-vi.mock('../GraphEdges', () => ({
-  GraphEdges: () => <svg data-testid="graph-edges" />,
 }));
 
 import { ConceptDiagram } from '../ConceptDiagram';
@@ -47,10 +44,10 @@ describe('ConceptDiagram', () => {
     expect(screen.getByRole('figure')).toHaveAttribute('aria-label', 'Concept diagram');
   });
 
-  test('renders graph layout when edges provided', () => {
-    const edges = [{ from: 0, to: 1, type: 'causes' as const }];
-    render(<ConceptDiagram items={items} edges={edges} />);
-    expect(screen.getByTestId('graph-edges')).toBeInTheDocument();
+  test('passes layout via data attribute', () => {
+    render(<ConceptDiagram items={items} layout="pyramid" />);
+    const figure = screen.getByRole('figure');
+    expect(figure).toHaveAttribute('data-layout', 'pyramid');
   });
 
   test('renders tree layout when nodes have children', () => {
@@ -59,5 +56,16 @@ describe('ConceptDiagram', () => {
     ];
     render(<ConceptDiagram items={treeItems} />);
     expect(screen.getByText('Root')).toBeInTheDocument();
+  });
+
+  test('infers flow layout for ≤5 nodes without edges', () => {
+    render(<ConceptDiagram items={items} />);
+    expect(screen.getByRole('figure')).toHaveAttribute('data-layout', 'flow');
+  });
+
+  test('infers graph layout when edges provided', () => {
+    const edges = [{ from: 0, to: 1, type: 'causes' as const }];
+    render(<ConceptDiagram items={items} edges={edges} />);
+    expect(screen.getByRole('figure')).toHaveAttribute('data-layout', 'graph');
   });
 });

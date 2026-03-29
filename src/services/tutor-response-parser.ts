@@ -69,7 +69,21 @@ function mapToEntry(parsed: Record<string, unknown>): NotebookEntry | null {
         ? parseDiagramEdges(parsed.edges as Record<string, unknown>[])
         : undefined,
       title: typeof parsed.title === 'string' ? parsed.title : undefined,
+      layout: validLayout(parsed.layout),
     };
+  }
+  // System types that may appear in responses
+  if (type === 'silence') {
+    return {
+      type: 'silence',
+      text: typeof parsed.text === 'string' ? parsed.text : undefined,
+    };
+  }
+  if (type === 'tutor-reflection' && typeof parsed.content === 'string') {
+    return { type: 'tutor-reflection', content: parsed.content };
+  }
+  if (type === 'bridge-suggestion' && typeof parsed.content === 'string') {
+    return { type: 'bridge-suggestion', content: parsed.content };
   }
   // Fallback: if it has content, treat as marginalia
   if (typeof parsed.content === 'string') {
@@ -143,6 +157,13 @@ const ACCENTS = new Set(['sage', 'indigo', 'amber', 'margin']);
 function validAccent(v: unknown): 'sage' | 'indigo' | 'amber' | 'margin' | undefined {
   return typeof v === 'string' && ACCENTS.has(v)
     ? v as 'sage' | 'indigo' | 'amber' | 'margin'
+    : undefined;
+}
+
+const LAYOUTS = new Set(['flow', 'tree', 'radial', 'pyramid', 'cycle', 'timeline', 'constellation', 'graph']);
+function validLayout(v: unknown): import('@/types/entries').DiagramLayout | undefined {
+  return typeof v === 'string' && LAYOUTS.has(v)
+    ? v as import('@/types/entries').DiagramLayout
     : undefined;
 }
 

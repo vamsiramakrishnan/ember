@@ -1,13 +1,13 @@
 /**
  * Tests for gemini.ts — core Gemini client, availability checks,
- * and text generation functions.
+ * and text generation functions via the Interactions API.
  */
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('@google/genai', () => ({
   GoogleGenAI: vi.fn().mockImplementation(() => ({
-    models: {
-      generateContentStream: vi.fn(),
+    interactions: {
+      create: vi.fn(),
     },
   })),
 }));
@@ -23,6 +23,12 @@ vi.mock('../gemini-helpers', () => ({
   buildConfig: vi.fn(() => ({})),
   collectStreamChunks: vi.fn(async () => 'collected text'),
   streamWithCallback: vi.fn(async () => 'streamed text'),
+}));
+
+vi.mock('../gemini-interactions', () => ({
+  convertToolsToInteractions: vi.fn(() => []),
+  extractDeltaText: vi.fn(() => null),
+  isCompleteEvent: vi.fn(() => false),
 }));
 
 describe('gemini', () => {
@@ -47,7 +53,6 @@ describe('gemini', () => {
 
   test('getGeminiClient returns null when no API key', async () => {
     const { getGeminiClient } = await import('../gemini');
-    // In test env, VITE_GEMINI_API_KEY is not set
     const client = getGeminiClient();
     expect(client).toBeNull();
   });

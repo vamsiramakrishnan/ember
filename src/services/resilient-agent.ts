@@ -32,7 +32,7 @@ function fallbackFor(primary: string): string {
 }
 
 const GRACEFUL_FALLBACK: AgentTextResult = {
-  text: '{"type": "silence", "text": "The tutor is taking a moment to reflect..."}',
+  text: '{"type": "tutor-marginalia", "content": "The tutor is taking a moment to reflect."}',
   citations: [],
 };
 

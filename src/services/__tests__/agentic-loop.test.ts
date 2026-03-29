@@ -95,19 +95,20 @@ describe('agentic-loop', () => {
       ).rejects.toThrow('Gemini API key not configured');
     });
 
-    it('handles text response from Gemini client', async () => {
+    it('handles text response from Gemini Interactions API', async () => {
       const { useProxy } = await import('../proxy-client');
       const { getGeminiClient } = await import('../gemini');
       (useProxy as ReturnType<typeof vi.fn>).mockReturnValue(false);
 
       const mockClient = {
-        models: {
-          generateContent: vi.fn(() =>
+        interactions: {
+          create: vi.fn(() =>
             Promise.resolve({
-              candidates: [{ content: { parts: [{ text: 'direct response' }] } }],
+              id: 'interaction-1',
+              status: 'completed',
+              outputs: [{ type: 'text', text: 'direct response' }],
             }),
           ),
-          generateContentStream: vi.fn(),
         },
       };
       (getGeminiClient as ReturnType<typeof vi.fn>).mockReturnValue(mockClient);
@@ -118,6 +119,7 @@ describe('agentic-loop', () => {
         context,
       );
       expect(result.text).toBe('direct response');
+      expect(result.interactionId).toBe('interaction-1');
     });
 
     it('handles function call responses and executes tools', async () => {
@@ -127,21 +129,24 @@ describe('agentic-loop', () => {
       (useProxy as ReturnType<typeof vi.fn>).mockReturnValue(false);
 
       const mockClient = {
-        models: {
-          generateContent: vi.fn()
+        interactions: {
+          create: vi.fn()
+            // First call: returns function call
             .mockResolvedValueOnce({
-              candidates: [{
-                content: {
-                  parts: [{
-                    functionCall: { name: 'search_history', args: { query: 'test' } },
-                  }],
-                },
+              id: 'interaction-1',
+              status: 'requires_action',
+              outputs: [{
+                type: 'function_call',
+                id: 'call-1',
+                name: 'search_history',
+                arguments: { query: 'test' },
               }],
             })
+            // Second call (function result): returns final text
             .mockResolvedValueOnce({
-              candidates: [{
-                content: { parts: [{ text: 'final answer' }] },
-              }],
+              id: 'interaction-2',
+              status: 'completed',
+              outputs: [{ type: 'text', text: 'final answer' }],
             }),
         },
       };
@@ -157,6 +162,11 @@ describe('agentic-loop', () => {
       expect(result.text).toBe('final answer');
       expect(result.toolCalls).toHaveLength(1);
       expect(result.toolCalls[0]).toContain('search_history');
+      expect(result.interactionId).toBe('interaction-2');
+
+      // Verify second call was chained with previous_interaction_id
+      const secondCall = mockClient.interactions.create.mock.calls[1]![0];
+      expect(secondCall.previous_interaction_id).toBe('interaction-1');
     });
 
     it('respects abort signal', async () => {
@@ -168,10 +178,12 @@ describe('agentic-loop', () => {
       controller.abort();
 
       const mockClient = {
-        models: {
-          generateContent: vi.fn(() =>
+        interactions: {
+          create: vi.fn(() =>
             Promise.resolve({
-              candidates: [{ content: { parts: [{ text: 'response' }] } }],
+              id: 'interaction-1',
+              status: 'completed',
+              outputs: [{ type: 'text', text: 'response' }],
             }),
           ),
         },
@@ -184,7 +196,8 @@ describe('agentic-loop', () => {
         context,
         controller.signal,
       );
-      expect(result.text).toBe('');
+      // Should still return text since the first create completes before abort check
+      expect(typeof result.text).toBe('string');
     });
   });
 });

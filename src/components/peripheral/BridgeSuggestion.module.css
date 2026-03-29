@@ -1,10 +1,15 @@
+/* BridgeSuggestion (5.4) — A sticky note adhered to the page.
+ * Sage-tinted, slightly translucent, asymmetric shadow that falls
+ * bottom-right (light is top-left). Feels physically attached. */
+
 .suggestion {
-  background: var(--sage-dim);
-  border-radius: 2px;
-  padding: 16px 20px;
-  margin-top: 8px;
-  margin-bottom: 20px;
+  background: var(--material-sticky-note);
   border-left: 2px solid var(--sage);
+  border-radius: 1px 3px 3px 1px;
+  padding: 14px 18px;
+  margin-top: 4px;
+  margin-bottom: var(--entry-gap);
+  box-shadow: var(--depth-adhered);
 }
 
 .text {
@@ -16,6 +21,12 @@
   line-height: 1.72;
   margin: 0;
   letter-spacing: 0;
+}
+
+@media (max-width: 800px) {
+  .suggestion {
+    padding: 12px 14px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

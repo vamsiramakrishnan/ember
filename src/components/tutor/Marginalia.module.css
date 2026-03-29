@@ -1,8 +1,7 @@
-/* Marginalia (2.1) — Tutor's prose response, annotation in the margin.
- * Spec: CSS grid 3px 1fr, 16px gap. Cormorant Garamond 17.5px Regular,
- * margin colour, 1.75 line-height. 3px rule at 35% opacity.
- * Never first in session. Never longer than student's preceding entry.
- */
+/* Marginalia (2.1) — Tutor's prose annotation in the margin.
+ * Written ON the page, not floating above it. The left rule and
+ * terracotta ink are the only depth signals. No background, no shadow.
+ * The tutor wrote this in the margin with a different pen. */
 
 .container {
   display: grid;
@@ -16,7 +15,7 @@
 .rule {
   width: var(--margin-rule-width);
   background-color: var(--margin);
-  opacity: 0.35;
+  opacity: 0.3;
   border-radius: 1px;
   min-height: 24px;
 }
@@ -30,16 +29,20 @@
   letter-spacing: 0;
 }
 
-.prose {
-  margin: 0;
-}
+.prose { margin: 0; }
 
 @keyframes marginFadeIn {
   from { opacity: 0; transform: translateY(7px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
+@media (max-width: 500px) {
+  .text {
+    font-size: 16.5px;
+    line-height: 1.68;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .container { animation: none; }
-  .rule { opacity: 0.35; }
 }

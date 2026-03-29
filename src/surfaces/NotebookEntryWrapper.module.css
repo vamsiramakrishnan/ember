@@ -1,14 +1,17 @@
 /* NotebookEntryWrapper — interactive shell around every entry.
- * Three zones: handle (left), content (center), actions (right).
- * Everything hidden until hover/touch. */
+ * Three zones: handle (left gutter), content (center), actions (right gutter).
+ * Everything hidden until hover/touch — the notebook is clean at rest. */
 
 .wrapper {
   position: relative;
   padding: 4px 0;
   border-radius: 2px;
-  transition: background 0.15s ease;
-  /* Scroll margin for deep-link navigation — accounts for header + breathing room */
+  transition: background 0.2s ease;
   scroll-margin-top: 80px;
+}
+
+@media (max-width: 800px) {
+  .wrapper { padding: 2px 0; }
 }
 
 .wrapper:hover,
@@ -18,9 +21,7 @@
 
 /* ─── Drag states ─────────────────────────────────── */
 
-.dragging {
-  opacity: 0.4;
-}
+.dragging { opacity: 0.4; }
 
 .dragOver {
   border-top: 2px solid var(--margin);
@@ -37,20 +38,26 @@
   text-decoration-thickness: 1px;
 }
 
-/* ─── Left: drag handle + type indicator ──────────── */
+/* ─── Left: type tag + drag handle ────────────────── */
+/* The type tag is positioned above the content as a
+ * tiny, quiet label — like a pencil annotation in
+ * the margin of a notebook. The drag grip sits to its
+ * left. Both fade in on hover. */
 
 .handle {
   position: absolute;
-  left: -56px;
-  top: 6px;
+  left: 0;
+  top: -2px;
   display: flex;
   align-items: center;
   gap: 4px;
   opacity: 0;
-  transition: opacity 0.15s ease;
+  transition: opacity 0.2s ease;
   cursor: grab;
   user-select: none;
-  min-height: 32px;
+  z-index: 2;
+  transform: translateY(-100%);
+  pointer-events: none;
 }
 
 .handle:active { cursor: grabbing; }
@@ -58,50 +65,48 @@
 .wrapper:hover .handle,
 .touched .handle {
   opacity: 1;
+  pointer-events: auto;
 }
 
-/* Show entry meta on hover — from EntryMeta.module.css */
+/* Show entry meta on hover */
 .wrapper:hover [class*="EntryMeta_meta"],
 .touched [class*="EntryMeta_meta"] {
   opacity: 1;
 }
 
 .grip {
-  font-size: 12px;
-  color: var(--ink-faint);
+  font-size: 10px;
+  color: var(--ink-ghost);
   letter-spacing: -1px;
   line-height: 1;
 }
 
 .typeTag {
   font-family: var(--font-system);
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 400;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: var(--ink-faint);
+  color: var(--ink-ghost);
   white-space: nowrap;
+  line-height: 1;
 }
 
 .typeTagTinted {
   composes: typeTag;
   color: var(--margin);
+  opacity: 0.5;
 }
 
 /* ─── Content ─────────────────────────────────────── */
 
 .content {
   min-width: 0;
-  /* Suppress Chrome's native text selection mini-menu inside entries.
-   * Our SelectionToolbar provides richer actions. The native context
-   * menu (right-click) still works — we only suppress the selection
-   * action bar that Chrome shows on text select. */
   -webkit-user-select: text;
   user-select: text;
 }
 
 /* ─── Layer 2: follow-up trigger reveal ───────────── */
-/* Hidden at rest. Visible when the entry is hovered.  */
 
 .followUpZone {
   opacity: 0;
@@ -126,18 +131,22 @@
 
 .actions {
   position: absolute;
-  top: 4px;
-  right: -44px;
+  top: -2px;
+  right: 0;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 2px;
   opacity: 0;
   transition: opacity 0.15s ease;
+  transform: translateY(-100%);
+  z-index: 2;
+  pointer-events: none;
 }
 
 .wrapper:hover .actions,
 .touched .actions {
   opacity: 1;
+  pointer-events: auto;
 }
 
 .action {
@@ -158,25 +167,17 @@
 
 @media (max-width: 800px) {
   .handle {
-    position: static;
-    opacity: 0.6;
-    margin-right: 8px;
-    flex-shrink: 0;
+    left: 0;
+    top: -1px;
   }
 
-  .wrapper:hover .handle,
-  .touched .handle { opacity: 1; }
+  .grip { display: none; }
 
   .actions {
-    position: static;
-    flex-direction: row;
-    opacity: 0.6;
-    margin-top: 4px;
-    margin-left: var(--text-indent);
+    top: -1px;
+    right: 0;
+    gap: 4px;
   }
-
-  .wrapper:hover .actions,
-  .touched .actions { opacity: 1; }
 }
 
 /* ─── Keyboard navigation focus ──────────────────── */
@@ -188,7 +189,6 @@
 }
 
 /* ─── Navigation highlight ────────────────────────── */
-/* Deep-link target: brief warm glow when navigated to */
 
 .highlighted {
   animation: highlightPulse 2.5s cubic-bezier(0.16, 1, 0.3, 1) both;

@@ -1,22 +1,41 @@
-/** Agentic Loop — runs a Gemini agent with function calling.
- * Streams directly from the first call on the final turn (no re-streaming).
- * Respects agent.maxTurns and detects stuck loops. */
+/**
+ * Agentic Loop — runs a Gemini agent with function calling
+ * via the Interactions API.
+ *
+ * Uses previous_interaction_id to chain iterations instead of
+ * re-sending the full message history on every turn. The server
+ * retains prior context; each iteration sends only the new
+ * function results.
+ *
+ * Respects agent.maxTurns and detects stuck loops.
+ */
 import { getGeminiClient } from './gemini';
 import { useProxy } from './proxy-client';
 import { runTextAgent, runTextAgentStreaming } from './run-agent';
 import { AGENT_TOOL_DECLARATIONS } from './agent-tools';
 import { GRAPH_TOOL_DECLARATIONS } from './graph-tools';
+import {
+  convertToolsToInteractions,
+  toInteractionsThinkingLevel,
+  extractText,
+  extractFunctionCalls,
+  buildFunctionResult,
+} from './gemini-interactions';
 import { executeTool, extractDeferredActions } from './tool-executor';
 import type { DeferredAction } from './tool-executor';
 import type { GraphDeferredAction } from './graph-tools';
 import type { AgentConfig } from './agents';
 import type { AgentMessage } from './run-agent';
+import type { Interactions } from '@google/genai';
+
 const DEFAULT_MAX_ITERATIONS = 8;
 
 export interface AgenticResult {
   text: string;
   toolCalls: string[];
   deferredActions: Array<DeferredAction | GraphDeferredAction>;
+  /** Interaction ID for session chaining. */
+  interactionId?: string;
 }
 
 export interface LoopContext {
@@ -24,110 +43,136 @@ export interface LoopContext {
   notebookId: string;
 }
 
-type FunctionCallPart = {
-  functionCall: { name: string; args: Record<string, unknown> };
-};
-
 type StreamCb = (chunk: string, accumulated: string) => void;
 
-/** Fallback: re-stream when the final turn had no text (rare edge case). */
-async function _streamFallback(
-  client: ReturnType<typeof getGeminiClient> & object,
-  model: string, config: Record<string, unknown>,
-  contents: AgentMessage[], cb: StreamCb,
-): Promise<string> {
-  const stream = await client.models.generateContentStream({ model, config, contents });
-  let acc = '';
-  for await (const chunk of stream) {
-    for (const p of chunk.candidates?.[0]?.content?.parts ?? []) {
-      if ('text' in p && p.text) { acc += p.text; cb(p.text, acc); }
-    }
-  }
-  return acc;
+/** Convert AgentMessage[] to Interactions Turn[] for the initial request. */
+function toInitialTurns(messages: AgentMessage[]): Interactions.Turn[] {
+  return messages.map((msg) => ({
+    role: msg.role === 'model' ? 'model' as const : 'user' as const,
+    parts: msg.parts
+      .filter((p) => p.text)
+      .map((p) => ({ type: 'text' as const, text: p.text ?? '' })),
+  }));
 }
 
-/** Shared loop. When onFinalText is provided, emits text from the final turn. */
+/**
+ * Core agentic loop using the Interactions API.
+ *
+ * Flow:
+ * 1. Send initial messages → get Interaction
+ * 2. If function_calls in outputs → execute tools → send results via
+ *    a new interaction chained with previous_interaction_id → repeat
+ * 3. If text in outputs → done
+ */
 async function _runLoop(
-  agent: AgentConfig, messages: AgentMessage[],
-  context: LoopContext, onFinalText?: StreamCb,
+  agent: AgentConfig,
+  messages: AgentMessage[],
+  context: LoopContext,
+  onFinalText?: StreamCb,
   signal?: AbortSignal,
 ): Promise<AgenticResult> {
   const client = getGeminiClient();
   if (!client) throw new Error('Gemini API key not configured');
-  const tools = [...agent.tools, ...AGENT_TOOL_DECLARATIONS, ...GRAPH_TOOL_DECLARATIONS];
-  const config: Record<string, unknown> = {
-    thinkingConfig: { thinkingLevel: agent.thinkingLevel },
-    systemInstruction: agent.systemInstruction, tools,
-  };
+
+  const allLegacyTools = [
+    ...agent.tools,
+    ...AGENT_TOOL_DECLARATIONS as unknown as import('@google/genai').Tool[],
+    ...GRAPH_TOOL_DECLARATIONS as unknown as import('@google/genai').Tool[],
+  ];
+  const tools = convertToolsToInteractions(allLegacyTools);
+
   const toolCalls: string[] = [];
   const deferredActions: Array<DeferredAction | GraphDeferredAction> = [];
-  let currentMessages = [...messages];
   const maxIter = agent.maxTurns ?? DEFAULT_MAX_ITERATIONS;
   const lastToolResults = new Map<string, string>();
 
+  // Shared config for all iterations
+  const baseParams = {
+    model: agent.model,
+    system_instruction: agent.systemInstruction,
+    tools: tools.length > 0 ? tools : undefined,
+    generation_config: {
+      thinking_level: toInteractionsThinkingLevel(agent.thinkingLevel),
+    },
+    stream: false as const,
+  };
+
+  // First call: send the full conversation
+  let interaction = await client.interactions.create({
+    ...baseParams,
+    input: toInitialTurns(messages),
+  });
+
   for (let iter = 0; iter < maxIter; iter++) {
     if (signal?.aborted) break;
-    const response = await client.models.generateContent({
-      model: agent.model, config, contents: currentMessages,
-    });
-    const parts = response.candidates?.[0]?.content?.parts;
-    if (!parts) break;
 
-    const fnCalls = parts.filter(
-      (p): p is FunctionCallPart => 'functionCall' in p && Boolean(p.functionCall),
-    );
+    const fnCalls = extractFunctionCalls(interaction);
 
+    // No function calls → we have the final text response
     if (fnCalls.length === 0) {
-      const text = parts
-        .filter((p): p is { text: string } => 'text' in p && Boolean(p.text))
-        .map((p) => p.text).join('');
-      if (onFinalText && text) {
-        onFinalText(text, text); // Emit already-received text — no re-stream
-      } else if (onFinalText && !text) {
-        const fallback = await _streamFallback(
-          client, agent.model, config, currentMessages, onFinalText,
-        );
-        return { text: fallback, toolCalls, deferredActions };
-      }
-      return { text, toolCalls, deferredActions };
+      const text = extractText(interaction);
+      if (onFinalText && text) onFinalText(text, text);
+      return {
+        text,
+        toolCalls,
+        deferredActions,
+        interactionId: interaction.id,
+      };
     }
 
-    for (const part of fnCalls) {
-      const { name, args } = part.functionCall;
-      toolCalls.push(`${name}(${JSON.stringify(args)})`);
-      const deferred = extractDeferredActions(name, args);
+    // Record function calls and extract deferred actions
+    for (const fc of fnCalls) {
+      toolCalls.push(`${fc.name}(${JSON.stringify(fc.arguments)})`);
+      const deferred = extractDeferredActions(fc.name, fc.arguments);
       if (deferred) deferredActions.push(deferred);
     }
+
+    // Execute all tools in parallel
     const results = await Promise.all(
-      fnCalls.map((p) => executeTool(p.functionCall.name, p.functionCall.args, context)),
+      fnCalls.map((fc) =>
+        executeTool(fc.name, fc.arguments, context),
+      ),
     );
     if (signal?.aborted) break;
 
-    // Loop detection: break if every tool returned same result as prior iteration
+    // Stuck-loop detection: break if every tool returned same result
     let stuckCount = 0;
     for (let i = 0; i < fnCalls.length; i++) {
-      const name = fnCalls[i]!.functionCall.name;
+      const name = fnCalls[i]!.name;
       const resultStr = JSON.stringify(results[i]);
       if (lastToolResults.get(name) === resultStr) stuckCount++;
       lastToolResults.set(name, resultStr);
     }
     if (stuckCount === fnCalls.length) break;
 
-    const fnResponses = fnCalls.map((part, i) => ({
-      functionResponse: { name: part.functionCall.name, response: { result: results[i]! } },
-    }));
-    currentMessages = [
-      ...currentMessages,
-      { role: 'model' as const, parts: fnCalls },
-      { role: 'user' as const, parts: fnResponses },
-    ];
+    // Build function results and chain to previous interaction
+    const fnResults = fnCalls.map((fc, i) =>
+      buildFunctionResult(fc.id, fc.name, results[i]!),
+    );
+
+    interaction = await client.interactions.create({
+      ...baseParams,
+      input: fnResults as unknown as Interactions.FunctionResultContent,
+      previous_interaction_id: interaction.id,
+    });
   }
-  return { text: '', toolCalls, deferredActions };
+
+  // Exhausted iterations — return whatever we have
+  const text = extractText(interaction);
+  if (onFinalText && text) onFinalText(text, text);
+  return {
+    text,
+    toolCalls,
+    deferredActions,
+    interactionId: interaction.id,
+  };
 }
 
 /** Run an agent with function calling tools (non-streaming). */
 export async function runAgenticLoop(
-  agent: AgentConfig, messages: AgentMessage[], context: LoopContext,
+  agent: AgentConfig,
+  messages: AgentMessage[],
+  context: LoopContext,
   signal?: AbortSignal,
 ): Promise<AgenticResult> {
   if (!getGeminiClient() && useProxy()) {
@@ -137,10 +182,12 @@ export async function runAgenticLoop(
   return _runLoop(agent, messages, context, undefined, signal);
 }
 
-/** Run an agent with function calling, streaming the final text. */
+/** Run an agent with function calling, emitting final text via callback. */
 export async function runAgenticLoopStreaming(
-  agent: AgentConfig, messages: AgentMessage[],
-  context: LoopContext, onChunk: StreamCb,
+  agent: AgentConfig,
+  messages: AgentMessage[],
+  context: LoopContext,
+  onChunk: StreamCb,
   signal?: AbortSignal,
 ): Promise<AgenticResult> {
   if (!getGeminiClient() && useProxy()) {

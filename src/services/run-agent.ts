@@ -1,10 +1,18 @@
 /**
  * runAgent — unified execution for any Gemini agent.
+ * Uses the Interactions API for typed SSE streaming.
  * Supports structured output (Zod schema → responseJsonSchema)
  * and grounding metadata extraction (Google Search citations).
  */
 import { getGeminiClient } from './gemini';
 import { useProxy, proxyTextGeneration, proxyTextGenerationStream } from './proxy-client';
+import {
+  convertToolsToInteractions,
+  toInteractionsThinkingLevel,
+  extractDeltaText,
+  isCompleteEvent,
+} from './gemini-interactions';
+import type { Interactions } from '@google/genai';
 import { toJSONSchema } from 'zod';
 import type { AgentConfig } from './agents';
 export { runImageAgent } from './run-image-agent';
@@ -31,6 +39,8 @@ export interface AgentTextResult {
   text: string;
   /** Citations from Google Search grounding, if any. */
   citations: GroundingCitation[];
+  /** Interaction ID for chaining subsequent interactions. */
+  interactionId?: string;
 }
 
 export interface AgentImageResult {
@@ -38,8 +48,47 @@ export interface AgentImageResult {
   text: string;
 }
 
+/** Convert AgentMessage[] to Interactions Turn[] format. */
+function toInteractionTurns(messages: AgentMessage[]): Interactions.Turn[] {
+  return messages.map((msg) => {
+    const parts: Interactions.Content[] = [];
+    for (const p of msg.parts) {
+      if (p.text) {
+        parts.push({ type: 'text', text: p.text });
+      }
+    }
+    return {
+      role: msg.role === 'model' ? 'model' as const : 'user' as const,
+      parts,
+    };
+  });
+}
+
+/** Extract citations from Interactions API annotations. */
+function extractCitationsFromAnnotations(
+  event: Interactions.InteractionSSEEvent,
+  citations: GroundingCitation[],
+): void {
+  if (event.event_type !== 'content.delta') return;
+  const delta = (event as Interactions.ContentDelta).delta;
+  if (delta.type !== 'text' || !delta.annotations) return;
+
+  for (const ann of delta.annotations) {
+    if ('url' in ann && ann.url) {
+      const exists = citations.some((c) => c.url === ann.url);
+      if (!exists) {
+        citations.push({
+          title: ('title' in ann ? ann.title : '') as string ?? '',
+          url: ann.url,
+        });
+      }
+    }
+  }
+}
+
 /**
- * Run a text-only agent. Supports structured output via Zod schema.
+ * Run a text-only agent via the Interactions API.
+ * Supports structured output via Zod schema.
  * Extracts Google Search grounding citations when available.
  */
 export async function runTextAgent(
@@ -66,63 +115,45 @@ export async function runTextAgent(
   const client = getGeminiClient();
   if (!client) throw new Error('Gemini API key not configured');
 
-  // GenerateContentConfig doesn't expose thinkingConfig in SDK types;
-  // use a plain object that the SDK accepts at runtime.
-  const config: Record<string, unknown> = {
-    thinkingConfig: { thinkingLevel: agent.thinkingLevel },
-    systemInstruction: agent.systemInstruction,
+  const tools = convertToolsToInteractions(agent.tools);
+  const params: Interactions.CreateModelInteractionParamsStreaming = {
+    model: agent.model,
+    input: toInteractionTurns(messages),
+    system_instruction: agent.systemInstruction,
+    tools: tools.length > 0 ? tools : undefined,
+    generation_config: {
+      thinking_level: toInteractionsThinkingLevel(agent.thinkingLevel),
+    },
+    stream: true,
   };
 
-  if (agent.tools.length > 0) {
-    config.tools = agent.tools;
-  }
-
-  // Structured output: Zod schema → JSON schema (Zod v4 built-in)
   if (agent.responseSchema) {
-    config.responseMimeType = 'application/json';
-    config.responseSchema = toJSONSchema(agent.responseSchema);
+    params.response_mime_type = 'application/json';
+    params.response_format = toJSONSchema(agent.responseSchema);
   }
 
-  const response = await client.models.generateContentStream({
-    model: agent.model,
-    config,
-    contents: messages,
-  });
+  const stream = await client.interactions.create(params);
 
   const chunks: string[] = [];
   const citations: GroundingCitation[] = [];
+  let interactionId = '';
 
-  for await (const chunk of response) {
+  for await (const event of stream) {
     if (signal?.aborted) break;
-    const candidate = chunk.candidates?.[0];
-    const parts = candidate?.content?.parts;
-    if (parts) {
-      for (const part of parts) {
-        if ('text' in part && part.text) chunks.push(part.text);
-      }
-    }
-
-    // Extract grounding metadata (Google Search citations)
-    const grounding = candidate?.groundingMetadata as Record<string, unknown> | undefined;
-    if (grounding?.groundingChunks) {
-      const gChunks = grounding.groundingChunks as Array<Record<string, unknown>>;
-      for (const gc of gChunks) {
-        const web = gc.web as { uri?: string; title?: string } | undefined;
-        if (web?.uri) {
-          const exists = citations.some((c) => c.url === web.uri);
-          if (!exists) {
-            citations.push({ title: web.title ?? '', url: web.uri ?? '' });
-          }
-        }
-      }
+    const text = extractDeltaText(event);
+    if (text) chunks.push(text);
+    extractCitationsFromAnnotations(event, citations);
+    if (isCompleteEvent(event)) {
+      interactionId = event.interaction.id;
     }
   }
 
-  return { text: chunks.join(''), citations };
+  return { text: chunks.join(''), citations, interactionId };
 }
 
 /**
- * Run a text agent with streaming. Yields chunks via onChunk callback.
+ * Run a text agent with streaming via the Interactions API.
+ * Yields chunks via onChunk callback.
  * Extracts grounding citations on completion.
  */
 export async function runTextAgentStreaming(
@@ -150,46 +181,43 @@ export async function runTextAgentStreaming(
   const client = getGeminiClient();
   if (!client) throw new Error('Gemini API key not configured');
 
-  // GenerateContentConfig doesn't expose thinkingConfig in SDK types;
-  // use a plain object that the SDK accepts at runtime.
-  const config: Record<string, unknown> = {
-    thinkingConfig: { thinkingLevel: agent.thinkingLevel },
-    systemInstruction: agent.systemInstruction,
+  const tools = convertToolsToInteractions(agent.tools);
+  const params: Interactions.CreateModelInteractionParamsStreaming = {
+    model: agent.model,
+    input: toInteractionTurns(messages),
+    system_instruction: agent.systemInstruction,
+    tools: tools.length > 0 ? tools : undefined,
+    generation_config: {
+      thinking_level: toInteractionsThinkingLevel(agent.thinkingLevel),
+    },
+    stream: true,
   };
-  if (agent.tools.length > 0) config.tools = agent.tools;
 
-  const response = await client.models.generateContentStream({
-    model: agent.model, config, contents: messages,
-  });
+  if (agent.responseSchema) {
+    params.response_mime_type = 'application/json';
+    params.response_format = toJSONSchema(agent.responseSchema);
+  }
+
+  const stream = await client.interactions.create(params);
 
   let accumulated = '';
   const citations: GroundingCitation[] = [];
+  let interactionId = '';
 
-  for await (const chunk of response) {
+  for await (const event of stream) {
     if (signal?.aborted) break;
-    const candidate = chunk.candidates?.[0];
-    const parts = candidate?.content?.parts;
-    if (parts) {
-      for (const part of parts) {
-        if ('text' in part && part.text) {
-          accumulated += part.text;
-          onChunk(part.text, accumulated);
-        }
-      }
+    const text = extractDeltaText(event);
+    if (text) {
+      accumulated += text;
+      onChunk(text, accumulated);
     }
-    const grounding = candidate?.groundingMetadata as Record<string, unknown> | undefined;
-    if (grounding?.groundingChunks) {
-      const gChunks = grounding.groundingChunks as Array<Record<string, unknown>>;
-      for (const gc of gChunks) {
-        const web = gc.web as { uri?: string; title?: string } | undefined;
-        if (web?.uri && !citations.some((c) => c.url === web.uri)) {
-          citations.push({ title: web.title ?? '', url: web.uri ?? '' });
-        }
-      }
+    extractCitationsFromAnnotations(event, citations);
+    if (isCompleteEvent(event)) {
+      interactionId = event.interaction.id;
     }
   }
 
-  return { text: accumulated, citations };
+  return { text: accumulated, citations, interactionId };
 }
 
 /** Convenience: run a text agent with a single user prompt. */

@@ -99,6 +99,7 @@ export function NotebookEntryRenderer({ entry, onDirectiveComplete, onPatchEntry
           items={entry.items}
           edges={entry.edges}
           title={entry.title}
+          layout={entry.layout}
           onNodeClick={handleNodeClick}
         />
       );

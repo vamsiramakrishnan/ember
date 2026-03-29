@@ -45,6 +45,22 @@ export interface DiagramEdge {
   weight?: number;
 }
 
+/**
+ * Diagram layout — the tutor's pedagogical choice for how to arrange nodes.
+ * Each layout is an SVG positioning algorithm applied to the same DiagramNode[] data.
+ * The layout communicates the structural argument: a pyramid says "foundation matters,"
+ * a cycle says "self-reinforcing," a flow says "sequential causation."
+ */
+export type DiagramLayout =
+  | 'flow'           // A → B → C → D (process, cause chain, algorithm steps)
+  | 'tree'           // top-down hierarchy (classification, taxonomy, org chart)
+  | 'radial'         // center node with radiating connections (concept map, spider)
+  | 'pyramid'        // layered foundation-to-peak (priority, abstraction levels)
+  | 'cycle'          // circular loop (feedback, iterative process, seasons)
+  | 'timeline'       // temporal sequence with date anchors (historical progression)
+  | 'constellation'  // force-directed mini-canvas (complex webs, exploration)
+  | 'graph';         // general typed-edge graph (default fallback)
+
 export interface Thinker {
   name: string;
   dates: string;
@@ -173,7 +189,7 @@ export type NotebookEntry =
   | { type: 'tutor-marginalia'; content: string }
   | { type: 'tutor-question'; content: string }
   | { type: 'tutor-connection'; content: string; emphasisEnd: number }
-  | { type: 'concept-diagram'; items: DiagramNode[]; edges?: DiagramEdge[]; title?: string }
+  | { type: 'concept-diagram'; items: DiagramNode[]; edges?: DiagramEdge[]; title?: string; layout?: DiagramLayout }
   | { type: 'thinker-card'; thinker: Thinker }
 
   // ─── Rich content blocks ────────────────────────────────────

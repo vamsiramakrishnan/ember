@@ -6,6 +6,7 @@
 import { colors } from './colors';
 import { spacing } from './spacing';
 import { motion } from './motion';
+import { depth, material } from './depth';
 
 export function getTokenCSS(): string {
   return `:root {
@@ -75,5 +76,34 @@ export function getTokenCSS(): string {
   /* Surface transitions */
   --surface-fade-duration: ${motion.surfaceFadeDuration};
   --surface-fade-ease: ${motion.surfaceFadeEase};
+
+  /* Depth — physical notebook layering */
+  --depth-none: ${depth.none};
+  --depth-pressed: ${depth.pressed};
+  --depth-adhered: ${depth.adhered};
+  --depth-resting: ${depth.resting};
+  --depth-lifted: ${depth.lifted};
+  --depth-floating: ${depth.floating};
+
+  /* Material — only for physical objects on the page */
+  --material-page: ${material.page};
+  --material-worn: ${material.worn};
+  --material-sticky-note: ${material.stickyNote};
+  --material-index-card: ${material.indexCard};
+  --material-card-stock: ${material.cardStock};
+  --material-clipping: ${material.clipping};
+}
+
+/* Tighter vertical rhythm on narrow screens */
+@media (max-width: 800px) {
+  :root {
+    --entry-gap: 12px;
+    --scratch-bottom: 8px;
+    --diagram-gap: 18px;
+    --section-gap: 24px;
+    --silence-gap: 32px;
+    --column-padding: 18px;
+    --margin-rule-gap: 12px;
+  }
 }`;
 }

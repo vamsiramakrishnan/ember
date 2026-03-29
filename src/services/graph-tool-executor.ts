@@ -21,6 +21,10 @@ import {
   execLinkEntities,
   execNeighborhood,
 } from '@/services/graph-tool-impls-extended';
+import {
+  execComposeVisual,
+  execMergeVisualDelta,
+} from '@/services/visual-compose-tools';
 import { toolError } from './tool-result';
 import { withRetry } from './retry';
 
@@ -65,6 +69,10 @@ async function executeGraphToolInner(
       return execLinkEntities(args, ctx);
     case 'get_entity_neighborhood':
       return execNeighborhood(args);
+    case 'compose_visual':
+      return execComposeVisual(args, ctx);
+    case 'merge_visual_delta':
+      return execMergeVisualDelta(args);
     default:
       return toolError(name, `Unknown graph tool: ${name}`);
   }

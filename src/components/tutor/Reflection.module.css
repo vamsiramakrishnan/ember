@@ -1,12 +1,14 @@
-/* Reflection — session synthesis. More spacious than marginalia. */
+/* Reflection — session synthesis, written on the page.
+ * Centred, quiet, like a pencil note someone left at the
+ * bottom of a journal page. No material, no depth. */
 
 .container {
-  padding: 24px 0;
-  margin: 16px 0;
+  padding: 12px 0;
+  margin: 4px 0 var(--entry-gap);
 }
 
 .rule {
-  width: 40%;
+  width: 32%;
   height: 1px;
   background: var(--rule);
   margin: 0 auto;
@@ -21,6 +23,18 @@
   line-height: 1.8;
   text-align: center;
   letter-spacing: 0;
-  margin: 16px 0;
-  padding: 0 32px;
+  margin: 10px 0;
+  padding: 0 24px;
+}
+
+@media (max-width: 800px) {
+  .container {
+    padding: 8px 0;
+    margin: 2px 0 var(--entry-gap);
+  }
+  .text {
+    font-size: 14px;
+    margin: 6px 0;
+    padding: 0 16px;
+  }
 }

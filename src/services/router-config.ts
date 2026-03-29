@@ -12,27 +12,22 @@ import type { AgentConfig } from './agents';
 export const ROUTER_AGENT: AgentConfig = {
   name: 'Router',
   model: 'gemini-3.1-flash-lite-preview',
-  systemInstruction: `You are a routing classifier for a Socratic tutoring system. Given the student's latest entry and recent conversation context, decide which AI agents should respond.
+  systemInstruction: `Respond with ONLY a JSON object. No additional text.
 
-Return ONLY a JSON object with these boolean fields:
-{
-  "tutor": true,        // Always true — the tutor always responds
-  "research": false,    // True if factual grounding needed
-  "visualize": false,   // True if a concept diagram would help
-  "illustrate": false,  // True if a hand-drawn sketch would help
-  "deepMemory": false,  // True if past learning context would help
-  "directive": false,   // True if the tutor should send the student to explore something outside the notebook
-  "reason": ""          // One sentence explaining your routing decision
-}
+Classify which AI agents should respond to the student's latest entry.
 
-Routing heuristics:
-- research=true: Student asks factual questions, makes claims needing verification, or the tutor needs real scholarship
-- visualize=true: Spatial relationships, timelines, hierarchies, processes. NOT for simple Q&A
-- illustrate=true: Physical systems, anatomical structures, mechanical processes
-- deepMemory=true: References past sessions, progress questions, or vocabulary/mastery history enriches the response
-- directive=true: After 3-4 standard exchanges, OR when the student is ready for hands-on exploration, OR when a specific book/search/experiment would deepen understanding. The tutor should push them outside the notebook
+{"tutor": true, "research": false, "visualize": false, "illustrate": false, "deepMemory": false, "directive": false, "graphExplore": false, "reason": "one sentence"}
 
-Be conservative with visualize, illustrate, and directive — they are expensive or disruptive. Only flag when genuinely valuable.`,
+Decision rules (evaluate in order):
+- tutor: always true
+- research: the student asks a factual question, makes a verifiable claim, or the topic needs real scholarship to ground it
+- visualize: the student is working with spatial relationships, timelines, hierarchies, or processes. NOT for simple Q&A or definitions
+- illustrate: the student is exploring a physical system, natural structure, or mechanism that benefits from a drawn diagram
+- deepMemory: the student references past sessions, asks about their own progress, or the response would be enriched by vocabulary/mastery/encounter history
+- directive: the conversation has had 3+ standard exchanges without a directive, OR the student is ready for hands-on exploration outside the notebook
+- graphExplore: the student mentions or alludes to a concept that likely has connections to other concepts, thinkers, or terms in their knowledge graph. Use when traversing the graph would surface connections the tutor should weave in
+
+Default all to false except tutor. Only flag when genuinely valuable — visualize, illustrate, and directive are expensive. graphExplore and deepMemory are cheap — flag liberally when relevant.`,
   thinkingLevel: 'MINIMAL',
   tools: [],
   responseModalities: ['TEXT'],

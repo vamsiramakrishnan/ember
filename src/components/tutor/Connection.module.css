@@ -1,7 +1,6 @@
 /* Connection (2.3) — Tutor drawing lines between student's interests.
- * Spec: Identical to marginalia visually, but first sentence Medium (500).
- * Must reference student's history. Opens sessions or introduces new threads.
- */
+ * Written ON the page, like marginalia. First sentence is bolder.
+ * No background, no shadow — the ink colour is the depth signal. */
 
 .container {
   display: grid;
@@ -15,7 +14,7 @@
 .rule {
   width: var(--margin-rule-width);
   background-color: var(--margin);
-  opacity: 0.35;
+  opacity: 0.3;
   border-radius: 1px;
   min-height: 24px;
 }
@@ -30,7 +29,6 @@
   margin: 0;
 }
 
-/* Spec: first sentence Cormorant Garamond Medium (500) */
 .emphasis {
   font-weight: 500;
 }
@@ -42,5 +40,4 @@
 
 @media (prefers-reduced-motion: reduce) {
   .container { animation: none; }
-  .rule { opacity: 0.35; }
 }
