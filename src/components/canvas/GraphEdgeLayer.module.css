@@ -1,4 +1,5 @@
-/* GraphEdgeLayer — organic bezier edges for knowledge graph */
+/* GraphEdgeLayer — organic bezier edges for knowledge graph.
+ * Enhanced: larger labels, hover zones, semantic styling. */
 
 .svg {
   position: absolute;
@@ -10,22 +11,38 @@
 }
 
 .edge {
-  transition: stroke 0.4s ease, stroke-width 0.4s ease;
+  transition: stroke 0.4s ease, stroke-width 0.4s ease, stroke-opacity 0.4s ease;
+}
+
+/* Invisible hit area for edge hover — widens the clickable zone */
+.edgeHitArea {
+  pointer-events: stroke;
+  cursor: pointer;
 }
 
 .label {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 8px;
+  font-family: var(--font-system);
+  font-size: 10px;
   font-weight: 300;
   font-style: italic;
-  fill: var(--ink-ghost);
+  fill: var(--ink-faint);
   text-anchor: middle;
-  letter-spacing: 0.3px;
-  transition: fill 0.3s ease;
+  letter-spacing: 0.5px;
+  transition: fill 0.3s ease, opacity 0.3s ease;
+  paint-order: stroke;
+  stroke: var(--paper);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+
+/* Highlighted edge label is more prominent */
+.labelHighlighted {
+  fill: var(--ink-soft);
+  font-weight: 400;
 }
 
 .dimmed {
-  opacity: 0.15;
+  opacity: 0.12;
   transition: opacity 0.4s ease;
 }
 

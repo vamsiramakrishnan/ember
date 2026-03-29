@@ -39,12 +39,33 @@
 
 .tabInactive:hover {
   color: var(--ink-soft);
+  border-bottom-color: var(--rule);
 }
 
 .tabActive {
   composes: tab;
   color: var(--ink);
   border-bottom: 1.5px solid var(--ink);
+}
+
+/* Subtle dot indicator above active tab label */
+.tabActive::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--ink);
+  opacity: 0;
+  animation: dotReveal 0.4s ease 0.15s forwards;
+}
+
+@keyframes dotReveal {
+  from { opacity: 0; transform: translateX(-50%) scale(0); }
+  to { opacity: 0.5; transform: translateX(-50%) scale(1); }
 }
 
 /* ─── Mobile: tighter nav ────────────────────────── */

@@ -16,6 +16,13 @@
 
 .principleBlock {
   margin-bottom: 36px;
+  opacity: 0;
+  animation: principleReveal 0.6s ease forwards;
+}
+
+@keyframes principleReveal {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .numeralRow {
@@ -57,4 +64,8 @@
 
 .spacer {
   height: 96px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .principleBlock { animation: none; opacity: 1; }
 }

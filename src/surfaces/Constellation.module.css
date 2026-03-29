@@ -2,6 +2,16 @@
   margin-top: var(--session-header-top);
 }
 
+/* ─── Sub-view transition wrapper ─── */
+.viewContent {
+  animation: viewFadeIn 0.35s ease both;
+}
+
+@keyframes viewFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .headerRow {
   display: flex;
   align-items: flex-start;
@@ -69,6 +79,7 @@
 
 .subTab:hover {
   color: var(--ink-soft);
+  background: var(--paper-warm);
 }
 
 .subTabActive {
@@ -77,9 +88,47 @@
   font-weight: 500;
 }
 
+/* Tag hover and chip-like styling */
+.tag {
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.tag:hover {
+  background-color: var(--paper-warm);
+  border-color: var(--rule);
+}
+
+/* ─── Empty state ─── */
+.emptyState {
+  text-align: center;
+  padding: 64px 24px;
+}
+
+.emptyLabel {
+  font-family: var(--font-tutor);
+  font-size: 17px;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--ink-ghost);
+  line-height: 1.6;
+  margin: 0 0 8px;
+}
+
+.emptyHint {
+  font-family: var(--font-system);
+  font-size: 10px;
+  color: var(--ink-ghost);
+  letter-spacing: 1px;
+  opacity: 0.6;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .subTab,
   .subTabActive {
     transition: none;
   }
+  .viewContent {
+    animation: none;
+  }
+  .tag { transition: none; }
 }

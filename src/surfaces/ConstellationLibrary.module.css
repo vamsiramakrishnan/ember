@@ -1,8 +1,9 @@
-/* ConstellationLibrary — primary text cards */
+/* ConstellationLibrary — primary text cards.
+ * Enhanced: depth system, entrance animation, hover elevation. */
 .grid {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
 }
 
 .cover {
@@ -13,19 +14,35 @@
   margin: -20px -20px 16px;
   width: calc(100% + 40px);
   filter: sepia(10%) saturate(80%);
+  transition: filter 0.3s ease;
+}
+
+.card:hover .cover {
+  filter: sepia(5%) saturate(90%);
 }
 
 .card {
   padding: 20px;
   border: 1px solid var(--rule-light);
   border-radius: 2px;
-  background-color: transparent;
-  transition: background-color 0.2s ease;
+  background: var(--paper);
+  box-shadow: var(--depth-resting);
   overflow: hidden;
+  opacity: 0;
+  animation: cardEntrance 0.5s ease forwards;
+  transition: background-color 0.2s ease, box-shadow 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
 }
 
 .card:hover {
   background-color: var(--paper-warm);
+  box-shadow: var(--depth-lifted);
+  transform: translateY(-1px);
+  border-color: var(--rule);
+}
+
+@keyframes cardEntrance {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .current {
@@ -101,4 +118,11 @@
   outline: 1.5px solid var(--margin);
   outline-offset: 2px;
   border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card { animation: none; opacity: 1; transition: none; box-shadow: var(--depth-resting); }
+  .card:hover { transform: none; }
+  .cover { transition: none; }
+  .annotations { transition: none; }
 }
