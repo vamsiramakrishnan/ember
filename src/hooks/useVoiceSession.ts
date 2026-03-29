@@ -271,19 +271,29 @@ export function useVoiceSession({
 
       // 2. Get microphone access
       const stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 16000 },
+        audio: { echoCancellation: true, noiseSuppression: true },
       });
       streamRef.current = stream;
 
-      // 3. Set up SEPARATE AudioContexts:
-      //    - captureCtx at 16kHz for mic → PCM conversion (matches Gemini input format)
-      //    - playbackCtx at default rate (48kHz) for speaker output (resamples 24kHz PCM)
-      //    Using one context for both caused the 24kHz output to be resampled to 16kHz = garbled audio.
-      const captureCtx = new AudioContext({ sampleRate: 16000 });
-      captureCtxRef.current = captureCtx;
+      // Log actual mic sample rate (getUserMedia sampleRate constraint is often ignored)
+      const micTrack = stream.getAudioTracks()[0];
+      const micSettings = micTrack?.getSettings();
+      console.info('[VoiceSession] Mic sample rate:', micSettings?.sampleRate ?? 'unknown');
 
-      const playbackCtx = new AudioContext(); // Default: 48kHz on most devices
+      // 3. AudioContexts — capture at DEVICE rate, playback at default.
+      //    We do NOT force 16kHz on the AudioContext because many devices ignore it
+      //    and silently create at 48kHz. Instead we capture at the device rate and
+      //    downsample to 16kHz PCM before sending to Gemini.
+      const captureCtx = new AudioContext();
+      captureCtxRef.current = captureCtx;
+      // Resume immediately — browsers suspend AudioContext until user gesture.
+      // start() is called from a pointer event (long-press), which IS a gesture.
+      if (captureCtx.state === 'suspended') await captureCtx.resume();
+      console.info('[VoiceSession] Capture ctx rate:', captureCtx.sampleRate, 'state:', captureCtx.state);
+
+      const playbackCtx = new AudioContext();
       playbackCtxRef.current = playbackCtx;
+      if (playbackCtx.state === 'suspended') await playbackCtx.resume();
 
       // 4. Build system instruction from student context
       const fullInstruction = buildVoiceSystemInstruction(contextInput);
@@ -322,9 +332,21 @@ export function useVoiceSession({
         },
         callbacks: {
           onopen: () => {
+            console.info('[VoiceSession] WebSocket connected to', LIVE_MODEL);
             setState('active');
           },
           onmessage: (message: LiveServerMessage) => {
+            // Diagnostic: log message types received
+            const msgTypes: string[] = [];
+            if (message.serverContent) msgTypes.push('serverContent');
+            if (message.toolCall) msgTypes.push('toolCall');
+            if (message.setupComplete) msgTypes.push('setupComplete');
+            if (message.goAway) msgTypes.push('goAway');
+            if (message.sessionResumptionUpdate) msgTypes.push('sessionResumption');
+            if (msgTypes.length > 0) {
+              console.debug('[VoiceSession] Received:', msgTypes.join(', '));
+            }
+
             const content = message.serverContent;
             const tc = message.toolCall;
 
@@ -454,18 +476,45 @@ export function useVoiceSession({
 
       sessionRef.current = session as typeof sessionRef.current;
 
-      // 5. Stream mic audio via capture context (16kHz).
+      // 5. Stream mic audio to Gemini.
+      //    Capture at device rate → downsample to 16kHz → send as PCM.
       //    ScriptProcessorNode is deprecated but works cross-browser.
-      //    Connected to a silent GainNode instead of destination to prevent
-      //    mic audio echoing through the speakers.
       const micSource = captureCtx.createMediaStreamSource(stream);
       const processor = captureCtx.createScriptProcessor(4096, 1, 1);
       processorRef.current = processor;
 
+      const captureRate = captureCtx.sampleRate;
+      const targetRate = 16000;
+      let sendCount = 0;
+
       processor.onaudioprocess = (e) => {
         const inputData = e.inputBuffer.getChannelData(0);
-        const pcm = float32ToPcm16(inputData);
+
+        // Downsample from device rate (typically 48kHz) to 16kHz
+        let samples: Float32Array;
+        if (Math.abs(captureRate - targetRate) < 100) {
+          // Already at ~16kHz, use directly
+          samples = inputData;
+        } else {
+          // Downsample by taking every Nth sample
+          const ratio = captureRate / targetRate;
+          const outLen = Math.floor(inputData.length / ratio);
+          samples = new Float32Array(outLen);
+          for (let i = 0; i < outLen; i++) {
+            samples[i] = inputData[Math.floor(i * ratio)]!;
+          }
+        }
+
+        const pcm = float32ToPcm16(samples);
         const base64 = arrayBufferToBase64(pcm.buffer as ArrayBuffer);
+
+        // Diagnostic: log first few sends to verify data is flowing
+        if (sendCount < 3) {
+          const nonZero = Array.from(pcm).some((v) => v !== 0);
+          console.info(`[VoiceSession] Audio chunk #${sendCount}: ${pcm.length} samples, hasData=${nonZero}`);
+        }
+        sendCount++;
+
         try {
           session.sendRealtimeInput({
             audio: { data: base64, mimeType: 'audio/pcm;rate=16000' },
@@ -476,12 +525,13 @@ export function useVoiceSession({
       };
 
       micSource.connect(processor);
-      // Connect to a silent gain node (not destination) so the processor fires
-      // without playing mic audio through speakers. This prevents echo/feedback.
+      // Silent destination — processor fires but mic audio doesn't play through speakers
       const silentDest = captureCtx.createGain();
       silentDest.gain.value = 0;
       silentDest.connect(captureCtx.destination);
       processor.connect(silentDest);
+
+      console.info('[VoiceSession] Audio pipeline ready, streaming mic at', targetRate, 'Hz');
 
       // 6. Start elapsed timer
       timerRef.current = setInterval(() => {
