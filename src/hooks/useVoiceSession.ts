@@ -239,17 +239,17 @@ export function useVoiceSession({
       console.info('[VoiceSession] Capture rate:', captureCtx.sampleRate, 'Playback rate:', playbackCtx.sampleRate);
 
       // 4. Open RAW WEBSOCKET to Gemini Live API
-      //    Token must be URI-encoded because it contains '/' (auth_tokens/xxx)
-      const wsUrl = `${WS_BASE}?access_token=${encodeURIComponent(token)}`;
-      console.info('[VoiceSession] Opening WebSocket to:', wsUrl.slice(0, 120) + '...');
+      //    Token is NOT URL-encoded — canonical example passes it as-is
+      const wsUrl = `${WS_BASE}?access_token=${token}`;
+      console.info('[VoiceSession] Opening WebSocket...');
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
-      // Set a connection timeout — if WebSocket doesn't open in 10s, fail explicitly
+      // Connection timeout
       const connectTimeout = setTimeout(() => {
         if (ws.readyState !== WebSocket.OPEN) {
-          console.error('[VoiceSession] WebSocket connection timeout (10s)');
-          setError('Connection timeout — WebSocket failed to open');
+          console.error('[VoiceSession] Connection timeout (10s)');
+          setError('Connection timeout');
           setState('error');
           ws.close();
           cleanup();
@@ -296,12 +296,22 @@ export function useVoiceSession({
         console.info('[VoiceSession] Setup message sent');
       };
 
-      ws.onmessage = (event) => {
+      ws.onmessage = async (event) => {
+        // Mobile browsers may deliver WebSocket messages as Blob, not string
+        let rawData: string;
+        if (event.data instanceof Blob) {
+          rawData = await event.data.text();
+        } else if (event.data instanceof ArrayBuffer) {
+          rawData = new TextDecoder().decode(event.data);
+        } else {
+          rawData = event.data as string;
+        }
+
         let msg: Record<string, unknown>;
         try {
-          msg = JSON.parse(event.data as string);
+          msg = JSON.parse(rawData);
         } catch {
-          console.warn('[VoiceSession] Non-JSON message:', event.data);
+          console.warn('[VoiceSession] Non-JSON message:', rawData?.slice(0, 100));
           return;
         }
 

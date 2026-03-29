@@ -38,20 +38,16 @@ export default async function handler(req: Request): Promise<Response> {
       httpOptions: { apiVersion: 'v1alpha' },
     });
 
-    console.info('[live-token] Creating ephemeral token for', LIVE_MODEL);
+    // Create unconstrained ephemeral token — matching the canonical example
+    // from google-gemini/gemini-live-api-examples. The setup message in the
+    // WebSocket controls the model/config, not the token constraints.
+    console.info('[live-token] Creating ephemeral token');
     const token = await client.authTokens.create({
       config: {
         uses: 1,
         expireTime: new Date(Date.now() + 30 * 60_000).toISOString(),
         newSessionExpireTime: new Date(Date.now() + 60_000).toISOString(),
         httpOptions: { apiVersion: 'v1alpha' },
-        liveConnectConstraints: {
-          model: `models/${LIVE_MODEL}`,
-          config: {
-            sessionResumption: {},
-            responseModalities: ['AUDIO'],
-          },
-        },
       },
     });
 
