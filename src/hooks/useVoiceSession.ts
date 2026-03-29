@@ -82,13 +82,21 @@ export function useVoiceSession({
   const isPlaying = useRef(false);
   const currentSourceRef = useRef<AudioBufferSourceNode | null>(null);
 
-  /** Play queued PCM 24kHz audio chunks. */
+  /** Play queued PCM 24kHz audio chunks.
+   *  When queue empties, keep isPlaying=true for 300ms (echo cooldown)
+   *  to prevent residual speaker audio from triggering VAD. */
   const playNextChunk = useCallback(() => {
     const ctx = playbackCtxRef.current;
     if (!ctx || playbackQueue.current.length === 0) {
-      isPlaying.current = false;
+      // Echo cooldown: keep mic gated for 300ms after last chunk
+      // so residual speaker sound doesn't trigger self-interruption
+      setTimeout(() => {
+        if (playbackQueue.current.length === 0) {
+          isPlaying.current = false;
+          setIsTutorSpeaking(false);
+        }
+      }, 300);
       currentSourceRef.current = null;
-      setIsTutorSpeaking(false);
       return;
     }
     isPlaying.current = true;
@@ -454,7 +462,10 @@ export function useVoiceSession({
     }
   }, [contextInput, enqueueAudio, clearPlayback, handleToolCall, wsSend]);
 
-  /** Start mic capture and stream to WebSocket. */
+  /** Start mic capture and stream to WebSocket.
+   *  Implements software echo gate: mic audio is NOT sent while the tutor
+   *  is speaking, preventing the speaker output from being picked up by
+   *  the mic and triggering VAD self-interruption. */
   function startAudioCapture(ws: WebSocket, captureCtx: AudioContext, stream: MediaStream) {
     const micSource = captureCtx.createMediaStreamSource(stream);
     const processor = captureCtx.createScriptProcessor(4096, 1, 1);
@@ -467,6 +478,19 @@ export function useVoiceSession({
     processor.onaudioprocess = (e) => {
       if (ws.readyState !== WebSocket.OPEN) return;
       const inputData = e.inputBuffer.getChannelData(0);
+
+      // Echo gate with voice break-through:
+      // While tutor is speaking, only send mic audio if it's loud enough
+      // to be the user's voice (not just speaker echo leaking into mic).
+      // RMS threshold of 0.08 ≈ someone speaking at normal volume near the mic.
+      // Echo from speakers is typically 0.01-0.04 RMS.
+      if (isPlaying.current) {
+        let rms = 0;
+        for (let i = 0; i < inputData.length; i++) rms += inputData[i]! * inputData[i]!;
+        rms = Math.sqrt(rms / inputData.length);
+        if (rms < 0.08) return; // Below threshold — likely echo, skip
+        // Above threshold — user is speaking loudly, let it through to interrupt
+      }
 
       // Downsample from device rate to 16kHz
       let samples: Float32Array;
