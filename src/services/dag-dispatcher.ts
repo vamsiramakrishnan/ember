@@ -11,6 +11,7 @@ import { generateReadingMaterial } from './reading-material-gen';
 import { generateFlashcards } from './flashcard-gen';
 import { generateExercises } from './exercise-gen';
 import { resolveCommandContext } from './command-context';
+import { isOutputFormat, generateOutputFormat } from './output-format-gen';
 import { setActivityDetail } from '@/state';
 import { buildContext } from './dag-context';
 import { buildPrompt } from './dag-prompts';
@@ -27,6 +28,9 @@ const ACTIVITY_LABELS: Record<string, string> = {
   summarize: 'summarizing…', timeline: 'building timeline…',
   teach: 'creating reading deck…', podcast: 'producing audio…',
   deepen: 'enriching content…', silence: '',
+  // Output format verbs
+  slides: 'formatting as slides…', doc: 'formatting as document…',
+  notes: 'condensing into notes…', brief: 'writing brief…',
 };
 
 // ─── Rich content generators ─────────────────────────────────
@@ -51,6 +55,7 @@ const STEP_MAP: Record<string, string> = {
   connect: 'thinking', flashcards: 'thinking', exercise: 'thinking',
   quiz: 'thinking', summarize: 'thinking', timeline: 'visualizing',
   teach: 'thinking', podcast: 'thinking', deepen: 'thinking', silence: 'reflecting',
+  slides: 'enriching', doc: 'enriching', notes: 'enriching', brief: 'enriching',
 };
 
 const ANALYTICAL = new Set([
@@ -83,6 +88,11 @@ export async function dispatchNode(
   });
 
   return traceAgentDispatch(`dag.${node.action}`, TUTOR_AGENT.model, async () => {
+    // Output format verbs → reformat prior node results
+    if (isOutputFormat(node.action)) {
+      return dispatchOutputFormat(node, priorResults);
+    }
+
     // Illustrate → image agent
     if (node.action === 'illustrate') {
       return dispatchIllustrate(node, context);
@@ -97,6 +107,27 @@ export async function dispatchNode(
     // Default → TUTOR_AGENT
     return dispatchTutor(node, buildPrompt(node, context), onChunk);
   });
+}
+
+async function dispatchOutputFormat(
+  node: IntentNode, priorResults: Map<string, NodeResult>,
+): Promise<NodeResult> {
+  try {
+    // Collect entries from all dependency nodes
+    const priorEntries: NotebookEntry[] = [];
+    for (const depId of node.dependsOn) {
+      const dep = priorResults.get(depId);
+      if (dep?.success) priorEntries.push(...dep.entries);
+    }
+
+    const format = node.action as import('./output-format-gen').OutputFormat;
+    const entry = await generateOutputFormat(format, node.content, priorEntries);
+    if (entry) return { nodeId: node.id, entries: [entry], success: true };
+    return { nodeId: node.id, entries: [], success: false,
+      error: `${node.action} formatting returned null` };
+  } catch (err) {
+    return failResult(node, err);
+  }
 }
 
 async function dispatchIllustrate(node: IntentNode, ctx: string): Promise<NodeResult> {

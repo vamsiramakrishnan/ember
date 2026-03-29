@@ -10,6 +10,7 @@ import { generateFlashcards } from '@/services/flashcard-gen';
 import { generateExercises } from '@/services/exercise-gen';
 import { addToLibrary, extractTermsFromMaterial } from '@/services/teaching-integration';
 import { generatePodcast } from '@/services/podcast-gen';
+import { generateOutputFormatFromText, type OutputFormat } from '@/services/output-format-gen';
 import { indexTeachingContent } from './useTeachingIndexer';
 import { resolveCommandContext, type ContextTier } from '@/services/command-context';
 import {
@@ -35,6 +36,7 @@ const COMMAND_TIERS: Record<string, ContextTier> = {
   draw: 1, visualize: 1, timeline: 1, summarize: 1, connect: 2, explain: 2, define: 2,
   research: 2, teach: 2, flashcards: 2, exercise: 2, quiz: 2, podcast: 2,
   delve: 2, study: 2, lesson: 2, review: 2, compare: 2, origins: 2, illustrate: 2,
+  slides: 2, doc: 2, notes: 2, brief: 2,
 };
 
 /** Step label → TutorActivityStep mapping for slash commands. */
@@ -45,6 +47,10 @@ const SLASH_STEP_MAP: Record<string, 'enriching' | 'visualizing' | 'illustrating
   'sketching': 'illustrating',
   'researching': 'researching',
   'recording podcast': 'enriching',
+  'formatting as slides': 'enriching',
+  'formatting as document': 'enriching',
+  'condensing into notes': 'enriching',
+  'writing brief': 'enriching',
 };
 
 async function withProcessing(
@@ -167,6 +173,15 @@ export function useSlashCommandRouter({
         };
         await wf[command.id]!(q, ctxBlock, deps);
         return true;
+      }
+      case 'slides': case 'doc': case 'notes': case 'brief': {
+        const label = command.id === 'slides' ? 'formatting as slides'
+          : command.id === 'doc' ? 'formatting as document'
+          : command.id === 'notes' ? 'condensing into notes'
+          : 'writing brief';
+        return wp(label, () =>
+          generateOutputFormatFromText(command.id as OutputFormat, q, entriesRef.current, ctxBlock || undefined),
+        ).then(() => true);
       }
       default: return false;
     }

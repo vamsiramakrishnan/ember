@@ -20,7 +20,7 @@ interface InputZoneProps {
   onSubmitTyped?: (content: string, type: StudentEntryType) => void;
   onSketchSubmit?: (dataUrl: string) => void;
   onMentionTrigger?: (query: string) => void;
-  onSlashTrigger?: (query: string) => void;
+  onSlashTrigger?: (query: string, fullText?: string) => void;
   onPopupClose?: () => void;
   onPaste?: (e: React.ClipboardEvent) => void;
   insertText?: string | null;
@@ -132,7 +132,7 @@ export function InputZone({
     }
     if (trigger.type === 'slash') {
       triggerPos.current = trigger.position;
-      onSlashTrigger?.(trigger.query); return;
+      onSlashTrigger?.(trigger.query, text); return;
     }
     triggerPos.current = -1;
     onPopupClose?.();

@@ -9,10 +9,10 @@
  *   Hover: background deepens, hint fades in via CSS (no layout shift)
  *   Active: pulsing border while the command is being executed
  *
- * The icon, colour, and label adapt to the command's semantic group:
- *   explore: indigo (inquiry)
- *   create: sage (growth)
- *   reflect: amber (connection)
+ * Verb roles drive the accent:
+ *   action (investigate): indigo
+ *   format: sage
+ *   workflow: margin
  */
 import styles from './SlashChip.module.css';
 
@@ -26,42 +26,49 @@ export interface SlashChipProps {
 interface CommandMeta {
   icon: string;
   hint: string;
-  group: 'explore' | 'create' | 'reflect' | 'workflow';
+  role: 'action' | 'format' | 'workflow';
 }
 
 const COMMAND_META: Record<string, CommandMeta> = {
-  explain: { icon: '◇', hint: 'unpack in depth', group: 'explore' },
-  research: { icon: '◈', hint: 'search and synthesize', group: 'explore' },
-  define: { icon: '≡', hint: 'add to lexicon', group: 'explore' },
-  visualize: { icon: '◉', hint: 'map as diagram', group: 'create' },
-  draw: { icon: '✎', hint: 'sketch by hand', group: 'create' },
-  timeline: { icon: '→', hint: 'trace through time', group: 'create' },
-  connect: { icon: '⟷', hint: 'bridge ideas', group: 'create' },
-  teach: { icon: '▣', hint: 'walk through', group: 'create' },
-  podcast: { icon: '♪', hint: 'discuss aloud', group: 'create' },
-  flashcards: { icon: '▤', hint: 'drill with cards', group: 'reflect' },
-  exercise: { icon: '△', hint: 'guided practice', group: 'reflect' },
-  quiz: { icon: '?', hint: 'test yourself', group: 'reflect' },
-  summarize: { icon: '≡', hint: 'distill key ideas', group: 'reflect' },
-  delve: { icon: '◆', hint: 'research → explain → map', group: 'workflow' },
-  study: { icon: '◎', hint: 'cards → practice → test', group: 'workflow' },
-  lesson: { icon: '▸', hint: 'teach → practice → test', group: 'workflow' },
-  review: { icon: '↻', hint: 'summarize → cards', group: 'workflow' },
-  compare: { icon: '⇌', hint: 'contrast → connect → map', group: 'workflow' },
-  origins: { icon: '⊙', hint: 'timeline → research → teach', group: 'workflow' },
-  illustrate: { icon: '◐', hint: 'explain → sketch → define', group: 'workflow' },
+  // Action verbs (investigate)
+  research: { icon: '◈', hint: 'search and synthesize', role: 'action' },
+  explain: { icon: '◇', hint: 'unpack in depth', role: 'action' },
+  define: { icon: '≡', hint: 'add to lexicon', role: 'action' },
+  compare: { icon: '⇌', hint: 'contrast two ideas', role: 'action' },
+  connect: { icon: '⟷', hint: 'bridge ideas', role: 'action' },
+  summarize: { icon: '≡', hint: 'distill key ideas', role: 'action' },
+  // Format verbs
+  slides: { icon: '▦', hint: 'slide deck', role: 'format' },
+  doc: { icon: '▧', hint: 'document', role: 'format' },
+  notes: { icon: '▪', hint: 'concise notes', role: 'format' },
+  brief: { icon: '▫', hint: 'one-page summary', role: 'format' },
+  flashcards: { icon: '▤', hint: 'drill with cards', role: 'format' },
+  quiz: { icon: '?', hint: 'test yourself', role: 'format' },
+  exercise: { icon: '△', hint: 'guided practice', role: 'format' },
+  podcast: { icon: '♪', hint: 'discuss aloud', role: 'format' },
+  visualize: { icon: '◉', hint: 'concept diagram', role: 'format' },
+  draw: { icon: '✎', hint: 'sketch by hand', role: 'format' },
+  timeline: { icon: '→', hint: 'trace through time', role: 'format' },
+  teach: { icon: '▣', hint: 'reading material', role: 'format' },
+  // Workflow presets
+  delve: { icon: '◆', hint: 'research → explain → map', role: 'workflow' },
+  study: { icon: '◎', hint: 'teach → cards → quiz', role: 'workflow' },
+  lesson: { icon: '▸', hint: 'research → slides → quiz', role: 'workflow' },
+  review: { icon: '↻', hint: 'summarize → cards', role: 'workflow' },
+  origins: { icon: '⊙', hint: 'timeline → research → teach', role: 'workflow' },
+  illustrate: { icon: '◐', hint: 'explain → sketch → define', role: 'workflow' },
+  deepen: { icon: '⊕', hint: 'enrich with depth', role: 'workflow' },
 };
 
-const GROUP_ACCENT: Record<string, string> = {
-  explore: styles.accentIndigo ?? '',
-  create: styles.accentSage ?? '',
-  reflect: styles.accentAmber ?? '',
+const ROLE_ACCENT: Record<string, string> = {
+  action: styles.accentIndigo ?? '',
+  format: styles.accentSage ?? '',
   workflow: styles.accentMargin ?? '',
 };
 
 export function SlashChip({ command, active, onClick }: SlashChipProps) {
-  const meta = COMMAND_META[command] ?? { icon: '/', hint: command, group: 'explore' };
-  const accent = GROUP_ACCENT[meta.group] ?? '';
+  const meta = COMMAND_META[command] ?? { icon: '/', hint: command, role: 'action' };
+  const accent = ROLE_ACCENT[meta.role] ?? '';
 
   const cls = [
     styles.chip,

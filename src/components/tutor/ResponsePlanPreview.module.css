@@ -47,6 +47,14 @@
   white-space: nowrap;
 }
 
+/* ─── Connector arrow between completed steps ──── */
+.connector {
+  font-size: 8px;
+  color: var(--sage);
+  opacity: 0.4;
+  margin-left: 4px;
+}
+
 /* ─── States ──────────────────────────────── */
 
 .pending {

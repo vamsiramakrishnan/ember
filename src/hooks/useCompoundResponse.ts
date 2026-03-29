@@ -26,6 +26,7 @@ import { setActivityDetail, recordTutorTurn, filterByComposition, addRelation } 
 import { parseTutorResponse } from '@/services/tutor-response-parser';
 import { TUTOR_AGENT } from '@/services/agents';
 import { runTextAgent, runTextAgentStreaming } from '@/services/run-agent';
+import { isOutputFormat, generateOutputFormat } from '@/services/output-format-gen';
 import { inferTutorMode, extractTopics } from './tutor-helpers';
 import { resolveCommandContext } from '@/services/command-context';
 import type { NotebookEntry, LiveEntry } from '@/types/entries';
@@ -88,6 +89,32 @@ async function executeNode(
   if (node.action === 'silence') {
     refs.patchEntryContent(streamingId, { type: 'silence', text: undefined });
     return { nodeId: node.id, entries: [{ type: 'silence' }], success: true };
+  }
+
+  // Output format verbs: collect prior entries and reformat
+  if (isOutputFormat(node.action)) {
+    try {
+      const priorEntries: NotebookEntry[] = [];
+      for (const depId of node.dependsOn) {
+        const dep = priorResults.get(depId);
+        if (dep?.success) priorEntries.push(...dep.entries);
+      }
+      const format = node.action as import('@/services/output-format-gen').OutputFormat;
+      setActivityDetail({
+        step: 'enriching' as 'thinking',
+        label: `formatting as ${node.action}…`,
+      });
+      const entry = await generateOutputFormat(format, node.content, priorEntries);
+      const accepted = entry ?? { type: 'tutor-marginalia' as const, content: `_Could not format as ${node.action}._` };
+      refs.patchEntryContent(streamingId, accepted);
+      return { nodeId: node.id, entries: [accepted], success: !!entry };
+    } catch (err) {
+      if (signal.aborted) return { nodeId: node.id, entries: [], success: false, error: 'aborted' };
+      refs.patchEntryContent(streamingId, {
+        type: 'tutor-marginalia', content: `_Could not format as ${node.action}._`,
+      });
+      return { nodeId: node.id, entries: [], success: false, error: String(err) };
+    }
   }
 
   const basePrompt = buildNodePrompt(node, dag, priorResults);

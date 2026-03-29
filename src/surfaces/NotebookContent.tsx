@@ -186,7 +186,8 @@ export function NotebookContent({
             )}
             {popup.slashQuery !== null && (
               <SlashCommandPopup query={popup.slashQuery}
-                onSelect={(c) => popup.handleSlashSelect(c)} onClose={popup.handlePopupClose} />
+                onSelect={(c) => popup.handleSlashSelect(c)} onClose={popup.handlePopupClose}
+                currentText={popup.inputText} />
             )}
             {responsePlans && responsePlans.length > 0 && <ResponsePlanPreview plans={responsePlans} />}
             <BootstrapProgress />

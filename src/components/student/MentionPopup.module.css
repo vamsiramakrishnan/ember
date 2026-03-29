@@ -147,6 +147,16 @@
   letter-spacing: 0.3px;
 }
 
+/* ─── Expand hint (workflow step count) ──────────── */
+.expandHint {
+  font-family: var(--font-mono, 'IBM Plex Mono', monospace);
+  font-size: 9px;
+  color: var(--ink-ghost);
+  flex-shrink: 0;
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+}
+
 /* ─── Empty state ────────────────────────────────── */
 .empty {
   padding: 16px 14px;
