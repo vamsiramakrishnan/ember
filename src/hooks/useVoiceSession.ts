@@ -18,11 +18,16 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import {
   GoogleGenAI, Modality,
   StartSensitivity, EndSensitivity,
-  Behavior, FunctionResponseScheduling,
+  FunctionResponseScheduling,
   type LiveServerMessage,
 } from '@google/genai';
 import { isGeminiAvailable } from '@/services/gemini';
-import type { NotebookEntry } from '@/types/entries';
+import { executeTool, type ToolContext } from '@/services/tool-executor';
+import {
+  buildVoiceSystemInstruction, VOICE_TOOL_DECLARATIONS,
+  type VoiceContextInput,
+} from '@/services/voice-session-context';
+import type { NotebookEntry, DiagramNode, DiagramEdge } from '@/types/entries';
 
 // ─── Types ──────────────────────────────────────────────────
 
@@ -43,16 +48,19 @@ export interface VoiceSessionCallbacks {
   /** Called when a function call creates a notebook entry. */
   onEntry: (entry: NotebookEntry) => void;
   /** Called when mastery should be updated. */
-  onMasteryUpdate?: (concept: string, level: string) => void;
+  onMasteryUpdate?: (concept: string, level: string, reason?: string) => void;
   /** Called when a vocab term should be added. */
-  onVocabAdd?: (term: string, definition: string, etymology?: string) => void;
+  onVocabAdd?: (term: string, definition: string, pronunciation?: string, etymology?: string) => void;
+  /** Called when a thinker card should be added. */
+  onThinkerCard?: (name: string, dates?: string, tradition?: string, gift?: string, bridge?: string) => void;
 }
 
 interface UseVoiceSessionOptions {
   callbacks: VoiceSessionCallbacks;
-  systemInstruction: string;
-  sessionTopic: string;
-  notebookContext: string;
+  /** Pre-assembled context for the system instruction. */
+  contextInput: VoiceContextInput;
+  /** Tool execution context (studentId, notebookId, sessionId). */
+  toolContext: ToolContext;
 }
 
 // ─── Constants ──────────────────────────────────────────────
@@ -61,67 +69,10 @@ interface UseVoiceSessionOptions {
 const LIVE_MODEL = 'gemini-2.5-flash-native-audio-preview-12-2025';
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
 
-/** Tool declarations for the Live API session.
- *  All tools are NON_BLOCKING — the model continues speaking while
- *  the function executes. Tool responses use SILENT scheduling so
- *  the model absorbs the result without interrupting its flow.
- *
- *  This is only supported on Gemini 2.5 Flash (not 3.1 Flash Live). */
-const VOICE_TOOLS: Array<Record<string, unknown>> = [
-  {
-    functionDeclarations: [
-      {
-        name: 'addNotebookEntry',
-        description: 'Add a prose entry, tutor note, or concept to the student notebook. Use this to record key points, insights, and explanations as the conversation progresses. Call this frequently to keep the notebook up to date.',
-        behavior: Behavior.NON_BLOCKING,
-        parameters: {
-          type: 'OBJECT',
-          properties: {
-            entryType: {
-              type: 'STRING',
-              enum: ['prose', 'tutor-marginalia', 'tutor-question', 'tutor-connection'],
-              description: 'The type of notebook entry',
-            },
-            content: { type: 'STRING', description: 'The text content of the entry' },
-          },
-          required: ['entryType', 'content'],
-        },
-      },
-      {
-        name: 'addVocabularyTerm',
-        description: 'Add a new term to the student lexicon when you introduce or define technical vocabulary.',
-        behavior: Behavior.NON_BLOCKING,
-        parameters: {
-          type: 'OBJECT',
-          properties: {
-            term: { type: 'STRING' },
-            definition: { type: 'STRING' },
-            etymology: { type: 'STRING', description: 'Optional word origin' },
-          },
-          required: ['term', 'definition'],
-        },
-      },
-      {
-        name: 'updateConceptMastery',
-        description: 'Update the student mastery level for a concept based on their demonstrated understanding.',
-        behavior: Behavior.NON_BLOCKING,
-        parameters: {
-          type: 'OBJECT',
-          properties: {
-            concept: { type: 'STRING' },
-            level: { type: 'STRING', enum: ['exploring', 'developing', 'strong', 'mastered'] },
-          },
-          required: ['concept', 'level'],
-        },
-      },
-    ],
-  },
-];
-
 // ─── Hook ───────────────────────────────────────────────────
 
 export function useVoiceSession({
-  callbacks, systemInstruction, sessionTopic, notebookContext,
+  callbacks, contextInput, toolContext,
 }: UseVoiceSessionOptions) {
   const [state, setState] = useState<VoiceSessionState>('idle');
   const [error, setError] = useState<string | null>(null);
@@ -183,32 +134,96 @@ export function useVoiceSession({
     setIsTutorSpeaking(false);
   }, []);
 
-  /** Handle function calls from the Live API. */
-  const handleToolCall = useCallback((
+  /** Handle function calls from the Live API.
+   *  Creation tools → local callbacks (instant).
+   *  Discovery tools → tool executor (async, returns data). */
+  const toolContextRef = useRef(toolContext);
+  toolContextRef.current = toolContext;
+
+  const handleToolCall = useCallback(async (
     functionCall: { name: string; args: Record<string, unknown> },
-  ) => {
+  ): Promise<Record<string, unknown>> => {
     const { name, args } = functionCall;
     const cbs = callbacksRef.current;
+    const ctx = toolContextRef.current;
 
     switch (name) {
+      // ── Creation tools (local, instant) ──
       case 'addNotebookEntry': {
         const entryType = (args.entryType as string) ?? 'tutor-marginalia';
         const content = (args.content as string) ?? '';
         cbs.onEntry({ type: entryType as NotebookEntry['type'], content } as NotebookEntry);
         return { success: true };
       }
+      case 'addConceptDiagram': {
+        const nodes = (args.nodes as DiagramNode[]) ?? [];
+        const edges = (args.edges as DiagramEdge[]) ?? [];
+        cbs.onEntry({
+          type: 'concept-diagram',
+          items: nodes.map((n, i) => ({ ...n, entityId: `voice-node-${i}` })),
+          edges,
+          title: (args.title as string) ?? undefined,
+        } as NotebookEntry);
+        return { success: true };
+      }
+      case 'addThinkerCard': {
+        cbs.onThinkerCard?.(
+          args.name as string, args.dates as string | undefined,
+          args.tradition as string | undefined, args.gift as string | undefined,
+          args.bridge as string | undefined,
+        );
+        // Also create a thinker-card entry
+        cbs.onEntry({
+          type: 'thinker-card',
+          thinker: {
+            name: args.name as string,
+            dates: (args.dates as string) ?? '',
+            gift: (args.gift as string) ?? '',
+            bridge: (args.bridge as string) ?? '',
+          },
+        } as NotebookEntry);
+        return { success: true };
+      }
       case 'addVocabularyTerm': {
         cbs.onVocabAdd?.(
-          args.term as string,
-          args.definition as string,
+          args.term as string, args.definition as string,
+          args.pronunciation as string | undefined,
           args.etymology as string | undefined,
         );
         return { success: true };
       }
       case 'updateConceptMastery': {
-        cbs.onMasteryUpdate?.(args.concept as string, args.level as string);
+        cbs.onMasteryUpdate?.(
+          args.concept as string, args.level as string,
+          args.reason as string | undefined,
+        );
         return { success: true };
       }
+
+      // ── Discovery tools (async, use tool executor) ──
+      case 'searchHistory':
+      case 'lookupConcept':
+      case 'lookupThinker':
+      case 'lookupTerm':
+      case 'getConnections':
+      case 'discoverGaps': {
+        // Map voice tool names to executor tool names
+        const toolNameMap: Record<string, string> = {
+          searchHistory: 'search_history',
+          lookupConcept: 'lookup_concept',
+          lookupThinker: 'lookup_thinker',
+          lookupTerm: 'lookup_term',
+          getConnections: 'get_connections',
+          discoverGaps: 'discover_gaps',
+        };
+        try {
+          const result = await executeTool(toolNameMap[name] ?? name, args, ctx);
+          return { result };
+        } catch (err) {
+          return { error: err instanceof Error ? err.message : 'Tool failed' };
+        }
+      }
+
       default:
         return { error: `Unknown tool: ${name}` };
     }
@@ -247,13 +262,8 @@ export function useVoiceSession({
       const audioCtx = new AudioContext({ sampleRate: 16000 });
       audioContextRef.current = audioCtx;
 
-      // 4. Connect to Gemini Live API
-      const fullInstruction = [
-        systemInstruction,
-        `\nCurrent topic: ${sessionTopic}`,
-        notebookContext ? `\nNotebook context:\n${notebookContext}` : '',
-        '\nIMPORTANT: As you discuss ideas with the student, use the addNotebookEntry tool to record key points, insights, and explanations in their notebook. Use addVocabularyTerm when introducing technical terms. Use updateConceptMastery when the student demonstrates understanding.',
-      ].join('');
+      // 4. Build system instruction from student context
+      const fullInstruction = buildVoiceSystemInstruction(contextInput);
 
       // gemini-2.5-flash-native-audio config:
       // - Supports async NON_BLOCKING function calling (3.1 does not)
@@ -264,7 +274,7 @@ export function useVoiceSession({
         config: {
           responseModalities: [Modality.AUDIO],
           systemInstruction: { parts: [{ text: fullInstruction }] },
-          tools: VOICE_TOOLS as never[],
+          tools: VOICE_TOOL_DECLARATIONS as never[],
           inputAudioTranscription: {},
           outputAudioTranscription: {},
           // No thinkingConfig — leave at default for 2.5 Flash
@@ -358,25 +368,41 @@ export function useVoiceSession({
             }
 
             // Async NON_BLOCKING function calling — model continues speaking
-            // while we execute the tool. Response uses SILENT scheduling so
-            // the model absorbs the result without interrupting its flow.
-            // The notebook fills silently as the conversation proceeds.
+            // while we execute the tool. SILENT scheduling = model absorbs
+            // results without interrupting conversation flow.
             if (tc?.functionCalls) {
               for (const call of tc.functionCalls) {
-                const result = handleToolCall({
-                  name: call.name ?? '',
-                  args: (call.args ?? {}) as Record<string, unknown>,
-                });
-                session.sendToolResponse({
-                  functionResponses: [{
-                    id: call.id,
-                    name: call.name ?? '',
-                    response: {
-                      ...result,
-                      scheduling: FunctionResponseScheduling.SILENT,
-                    },
-                  }],
-                });
+                // Fire-and-forget: execute async, send response when ready
+                void (async () => {
+                  try {
+                    const result = await handleToolCall({
+                      name: call.name ?? '',
+                      args: (call.args ?? {}) as Record<string, unknown>,
+                    });
+                    session.sendToolResponse({
+                      functionResponses: [{
+                        id: call.id,
+                        name: call.name ?? '',
+                        response: {
+                          ...result,
+                          scheduling: FunctionResponseScheduling.SILENT,
+                        },
+                      }],
+                    });
+                  } catch (err) {
+                    console.warn('[VoiceSession] Tool error:', call.name, err);
+                    session.sendToolResponse({
+                      functionResponses: [{
+                        id: call.id,
+                        name: call.name ?? '',
+                        response: {
+                          error: 'Tool execution failed',
+                          scheduling: FunctionResponseScheduling.SILENT,
+                        },
+                      }],
+                    });
+                  }
+                })();
               }
             }
 
@@ -438,7 +464,7 @@ export function useVoiceSession({
       setState('error');
       cleanup();
     }
-  }, [systemInstruction, sessionTopic, notebookContext, enqueueAudio, clearPlayback, handleToolCall]);
+  }, [contextInput, enqueueAudio, clearPlayback, handleToolCall]);
 
   /** Stop the voice session. */
   const stop = useCallback(() => {
