@@ -98,10 +98,8 @@ export function GraphCardNode({
   const accent = ACCENT_CLASS[node.kind] ?? '';
 
   /* Density scaling: cards with more connections are wider.
-   * was: fixed min-width 80px / max-width 160px
-   * now: base 90px + 8px per connection, capped at 200px
-   * reason: highly-connected concepts should draw more visual weight */
-  const densityWidth = Math.min(90 + connectionCount * 8, 200);
+   * Reduced max to prevent overlap on mobile. */
+  const densityWidth = Math.min(80 + connectionCount * 6, 160);
 
   const cls = [
     styles.card,
@@ -137,7 +135,7 @@ export function GraphCardNode({
           <MasteryArc mastery={node.mastery} />
         )}
         <span className={styles.label}>
-          {node.label.length > 28 ? node.label.slice(0, 26) + '\u2026' : node.label}
+          {node.label.length > 22 ? node.label.slice(0, 20) + '\u2026' : node.label}
         </span>
       </div>
       <span className={styles.sub}>{subLabel(node)}</span>

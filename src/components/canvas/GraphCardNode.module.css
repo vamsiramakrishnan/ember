@@ -5,12 +5,12 @@
 
 .card {
   position: absolute;
-  padding: 10px 16px;
+  padding: 8px 12px;
   border: 1px solid var(--rule);
   border-radius: 2px;
   background: var(--paper);
   background: var(--material-card-stock);
-  max-width: 200px;
+  max-width: 170px;
   cursor: grab;
   user-select: none;
   touch-action: none;
@@ -73,25 +73,30 @@
   display: block;
 }
 
-/* Typography */
+/* Typography — prevent word-break hyphenation that makes labels unreadable */
 .label {
   font-family: var(--font-tutor);
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--ink);
   line-height: 1.3;
   display: block;
   text-rendering: optimizeLegibility;
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: none;
+  -webkit-hyphens: none;
 }
 
 .sub {
   font-family: var(--font-system);
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 300;
   color: var(--ink-faint);
   letter-spacing: 0.5px;
-  margin-top: 3px;
+  margin-top: 2px;
   display: block;
+  white-space: nowrap;
 }
 
 /* ─── Inline expansion content ─── */
@@ -180,6 +185,17 @@
 
 /* Tooltip for truncated labels */
 .card[title] { position: absolute; }
+
+/* Mobile: tighter cards */
+@media (max-width: 640px) {
+  .card {
+    padding: 6px 10px;
+    max-width: 140px;
+  }
+  .label { font-size: 12px; }
+  .sub { font-size: 7px; }
+  .expanded { max-width: 220px; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   .card { animation: none; opacity: 1; transition: none; box-shadow: var(--depth-resting); }
