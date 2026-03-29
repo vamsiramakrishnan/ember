@@ -12,12 +12,14 @@
  * - constellation: force-directed mini-canvas
  * - graph: general typed-edge graph (default)
  *
- * All layouts render through DiagramCard for consistent visual treatment
- * (mastery arcs, density scaling, entity linking, expand/collapse).
+ * Auto zoom-to-fit: measures the bounding box of positioned nodes
+ * and scales the canvas so all nodes are visible without scrolling.
+ * Enlarge modal: users can open the diagram in a full-screen overlay
+ * with native scroll for exploration.
  *
  * See: 06-component-inventory.md, Family 2.
  */
-import { useMemo, useRef, useState, useEffect } from 'react';
+import { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import type { DiagramNode, DiagramEdge, DiagramLayout } from '@/types/entries';
 import { computeLayout, inferLayout } from './diagram-layout-engines';
 import type { EdgePathData } from './diagram-layout-engines';
@@ -72,6 +74,30 @@ function connectionCounts(
   return counts;
 }
 
+/** Compute a CSS scale to fit content within the container. */
+function computeZoomToFit(
+  positions: Map<number, { x: number; y: number }>,
+  containerWidth: number,
+  cardWidth: number,
+): { scale: number; contentWidth: number; contentHeight: number } {
+  if (positions.size === 0) return { scale: 1, contentWidth: containerWidth, contentHeight: 200 };
+
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (const pos of positions.values()) {
+    minX = Math.min(minX, pos.x - cardWidth / 2);
+    maxX = Math.max(maxX, pos.x + cardWidth / 2);
+    minY = Math.min(minY, pos.y - 40);
+    maxY = Math.max(maxY, pos.y + 40);
+  }
+
+  const contentWidth = maxX - minX + 40; // 20px padding each side
+  const contentHeight = maxY - minY + 40;
+  const scaleX = containerWidth / contentWidth;
+  const scale = Math.min(scaleX, 1); // Never zoom in, only out
+
+  return { scale: Math.max(scale, 0.45), contentWidth, contentHeight };
+}
+
 export function ConceptDiagram({
   items, edges = [], title, layout: layoutProp, onNodeClick,
 }: ConceptDiagramProps) {
@@ -79,6 +105,7 @@ export function ConceptDiagram({
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(640);
+  const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -93,106 +120,173 @@ export function ConceptDiagram({
 
   const resolvedLayout = layoutProp ?? inferLayout(items, edges);
 
-  // For tree layout with children, delegate to recursive DiagramCard rendering
   const isTreeWithChildren = resolvedLayout === 'tree' &&
     items.some((n) => n.children && n.children.length > 0);
 
+  // Compute layout at a generous internal width (never cramped)
+  const internalWidth = Math.max(containerWidth, items.length * 120, 600);
+
   const layoutResult = useMemo(() => {
-    if (isTreeWithChildren) return null; // Tree with children uses CSS, not SVG positioning
+    if (isTreeWithChildren) return null;
     const h = resolvedLayout === 'constellation'
-      ? Math.min(containerWidth * 0.65, 480)
+      ? Math.min(internalWidth * 0.65, 520)
       : resolvedLayout === 'radial' || resolvedLayout === 'cycle'
-        ? Math.min(containerWidth * 0.7, 440)
+        ? Math.min(internalWidth * 0.7, 480)
         : resolvedLayout === 'timeline'
           ? items.length * 120 + 80
           : resolvedLayout === 'pyramid'
             ? (Math.ceil((-1 + Math.sqrt(1 + 8 * items.length)) / 2)) * 120 + 80
-            : 160;
-    return computeLayout(resolvedLayout, items, edges, containerWidth, h);
-  }, [resolvedLayout, items, edges, containerWidth, isTreeWithChildren]);
+            : Math.max(items.length * 80, 200);
+    return computeLayout(resolvedLayout, items, edges, internalWidth, h);
+  }, [resolvedLayout, items, edges, internalWidth, isTreeWithChildren]);
+
+  // Auto zoom-to-fit: scale the diagram so all nodes fit without scrolling
+  const zoomInfo = useMemo(() => {
+    if (!layoutResult) return null;
+    return computeZoomToFit(layoutResult.positions, containerWidth, 160);
+  }, [layoutResult, containerWidth]);
 
   const counts = useMemo(() => connectionCounts(items, edges), [items, edges]);
 
-  return (
-    <div
-      className={styles.container}
-      ref={containerRef}
-      role="figure"
-      aria-label={title ?? 'Concept diagram'}
-      data-layout={resolvedLayout}
-    >
-      {title && <p className={styles.title}>{title}</p>}
+  const openModal = useCallback(() => setModalOpen(true), []);
+  const closeModal = useCallback(() => setModalOpen(false), []);
 
-      {isTreeWithChildren ? (
-        <div className={styles.tree}>
-          {items.map((node, i) => (
-            <DiagramCard
-              key={node.entityId ?? i}
-              node={node}
-              depth={0}
-              connectionCount={counts.get(i) ?? 0}
-              onNodeClick={onNodeClick}
-              renderChildren
-            />
-          ))}
-        </div>
-      ) : layoutResult ? (
-        <div
-          className={styles.canvas}
-          style={{
-            minHeight: layoutResult.minHeight,
-            position: 'relative',
-          }}
-        >
-          {/* SVG edge layer */}
-          <EdgeLayer edgePaths={layoutResult.edgePaths} minWidth={layoutResult.minWidth} minHeight={layoutResult.minHeight} />
+  // Close modal on Escape
+  useEffect(() => {
+    if (!modalOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') closeModal(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [modalOpen, closeModal]);
 
-          {/* Positioned nodes */}
-          {items.map((node, i) => {
-            const pos = layoutResult.positions.get(i);
-            if (!pos) return null;
-            return (
-              <div
+  const renderDiagramContent = (isModal: boolean) => {
+    const scale = isModal ? 1 : (zoomInfo?.scale ?? 1);
+    const needsScale = scale < 0.95;
+
+    return (
+      <>
+        {isTreeWithChildren ? (
+          <div className={styles.tree}>
+            {items.map((node, i) => (
+              <DiagramCard
                 key={node.entityId ?? i}
-                className={styles.positionedNode}
-                style={{
-                  left: pos.x,
-                  top: pos.y,
-                  transform: 'translate(-50%, -50%)',
-                }}
-              >
-                <DiagramCard
-                  node={node}
-                  connectionCount={counts.get(i) ?? 0}
-                  onNodeClick={onNodeClick}
-                  renderChildren={false}
-                />
-              </div>
-            );
-          })}
+                node={node}
+                depth={0}
+                connectionCount={counts.get(i) ?? 0}
+                onNodeClick={onNodeClick}
+                renderChildren
+              />
+            ))}
+          </div>
+        ) : layoutResult ? (
+          <div
+            className={styles.canvasScaler}
+            style={needsScale && !isModal ? {
+              transform: `scale(${scale})`,
+              transformOrigin: 'top left',
+              width: `${100 / scale}%`,
+            } : undefined}
+          >
+            <div
+              className={styles.canvas}
+              style={{
+                minHeight: layoutResult.minHeight,
+                minWidth: layoutResult.minWidth,
+                position: 'relative',
+              }}
+            >
+              <EdgeLayer edgePaths={layoutResult.edgePaths} minWidth={layoutResult.minWidth} minHeight={layoutResult.minHeight} />
+              {items.map((node, i) => {
+                const pos = layoutResult.positions.get(i);
+                if (!pos) return null;
+                return (
+                  <div
+                    key={node.entityId ?? i}
+                    className={styles.positionedNode}
+                    style={{
+                      left: pos.x,
+                      top: pos.y,
+                      transform: 'translate(-50%, -50%)',
+                    }}
+                  >
+                    <DiagramCard
+                      node={node}
+                      connectionCount={counts.get(i) ?? 0}
+                      onNodeClick={onNodeClick}
+                      renderChildren={false}
+                    />
+                  </div>
+                );
+              })}
+              {resolvedLayout === 'timeline' && (
+                <div className={styles.timelineSpine} style={{ height: layoutResult.minHeight - 80 }} />
+              )}
+            </div>
+          </div>
+        ) : null}
+      </>
+    );
+  };
 
-          {/* Timeline spine indicator */}
-          {resolvedLayout === 'timeline' && (
-            <div className={styles.timelineSpine} style={{ height: layoutResult.minHeight - 80 }} />
+  return (
+    <>
+      <div
+        className={styles.container}
+        ref={containerRef}
+        role="figure"
+        aria-label={title ?? 'Concept diagram'}
+        data-layout={resolvedLayout}
+      >
+        <div className={styles.headerRow}>
+          {title && <p className={styles.title}>{title}</p>}
+          {!isTreeWithChildren && items.length > 2 && (
+            <button
+              className={styles.enlargeButton}
+              onClick={openModal}
+              aria-label="Enlarge diagram"
+              title="View full size"
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.2" aria-hidden="true">
+                <path d="M8.5 1.5h4v4M5.5 12.5h-4v-4M12.5 1.5l-4 4M1.5 12.5l4-4" />
+              </svg>
+            </button>
           )}
         </div>
-      ) : null}
 
-      {/* Edge labels — accessible text representation */}
-      {edges.length > 0 && edges.some((e) => e.label) && (
-        <div className={styles.edgeLabels} aria-label="Relationships">
-          {edges.filter((e) => e.label).map((edge, i) => (
-            <span key={i} className={styles.edgeLabel}>
-              {items[edge.from]?.label ?? ''}
-              <span className={styles.edgeType}>
-                {edge.label ?? edge.type ?? '→'}
+        {renderDiagramContent(false)}
+
+        {edges.length > 0 && edges.some((e) => e.label) && (
+          <div className={styles.edgeLabels} aria-label="Relationships">
+            {edges.filter((e) => e.label).map((edge, i) => (
+              <span key={i} className={styles.edgeLabel}>
+                {items[edge.from]?.label ?? ''}
+                <span className={styles.edgeType}>
+                  {edge.label ?? edge.type ?? '→'}
+                </span>
+                {items[edge.to]?.label ?? ''}
               </span>
-              {items[edge.to]?.label ?? ''}
-            </span>
-          ))}
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Full-screen modal for enlarged view */}
+      {modalOpen && (
+        <div className={styles.modalOverlay} onClick={closeModal}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              {title && <p className={styles.modalTitle}>{title}</p>}
+              <button className={styles.modalClose} onClick={closeModal} aria-label="Close">
+                ×
+              </button>
+            </div>
+            <div className={styles.modalBody}>
+              {renderDiagramContent(true)}
+            </div>
+          </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
 
