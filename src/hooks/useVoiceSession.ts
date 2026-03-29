@@ -15,7 +15,11 @@
  *   Gemini → WebSocket → PCM 24kHz → AudioContext → speakers
  */
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { GoogleGenAI, Modality, ThinkingLevel, type LiveServerMessage } from '@google/genai';
+import {
+  GoogleGenAI, Modality, ThinkingLevel,
+  StartSensitivity, EndSensitivity,
+  type LiveServerMessage,
+} from '@google/genai';
 import { isGeminiAvailable } from '@/services/gemini';
 import type { NotebookEntry } from '@/types/entries';
 
@@ -243,10 +247,11 @@ export function useVoiceSession({
       ].join('');
 
       // gemini-3.1-flash-live-preview config:
-      // - thinkingLevel (not thinkingBudget) — 'low' for good quality at conversational latency
+      // - thinkingLevel (not thinkingBudget) — LOW for good quality at conversational latency
+      // - includeThoughts: true — receive thought summaries for richer tutor reasoning
       // - sendRealtimeInput for ALL real-time input (audio, video, text)
-      // - sendClientContent ONLY for seeding initial context history (requires
-      //   initial_history_in_client_content in history_config)
+      // - sendClientContent ONLY for seeding initial context history
+      // - affectiveDialog and proactiveAudio NOT supported on 3.1 Flash Live
       const session = await client.live.connect({
         model: LIVE_MODEL,
         config: {
@@ -255,7 +260,22 @@ export function useVoiceSession({
           tools: VOICE_TOOLS as never[],
           inputAudioTranscription: {},
           outputAudioTranscription: {},
-          thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
+          thinkingConfig: {
+            thinkingLevel: ThinkingLevel.LOW,
+            includeThoughts: true,
+          },
+          // VAD: auto-detect speech with tuned sensitivity for tutoring
+          // LOW start sensitivity = fewer false triggers from background noise
+          // LOW end sensitivity = waits longer for student to finish thinking
+          realtimeInputConfig: {
+            automaticActivityDetection: {
+              disabled: false,
+              startOfSpeechSensitivity: StartSensitivity.START_SENSITIVITY_LOW,
+              endOfSpeechSensitivity: EndSensitivity.END_SENSITIVITY_LOW,
+              prefixPaddingMs: 20,
+              silenceDurationMs: 500, // 500ms — give student time to think between phrases
+            },
+          },
           // Session management: compression for long sessions, resumption for reconnects
           contextWindowCompression: { slidingWindow: {} },
           sessionResumption: { handle: resumeHandleRef.current ?? undefined },
@@ -415,7 +435,7 @@ export function useVoiceSession({
     setState('idle');
   }, []);
 
-  /** Clean up all resources. */
+  /** Clean up all resources. Send audioStreamEnd to flush cached audio before closing. */
   function cleanup() {
     if (timerRef.current) clearInterval(timerRef.current);
     processorRef.current?.disconnect();
@@ -423,7 +443,9 @@ export function useVoiceSession({
     audioContextRef.current?.close().catch(() => {});
     clearPlayback();
     try {
-      (sessionRef.current as { close?: () => void })?.close?.();
+      // Flush any cached audio before closing the session
+      sessionRef.current?.sendRealtimeInput?.({ audioStreamEnd: true });
+      sessionRef.current?.close?.();
     } catch { /* ignore */ }
     streamRef.current = null;
     audioContextRef.current = null;
