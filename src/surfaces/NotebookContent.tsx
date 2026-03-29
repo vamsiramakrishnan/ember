@@ -33,6 +33,7 @@ import { isStudentEntry as isStudentType } from './entryTypeMeta';
 import { useEntryKeyboardNav } from '@/hooks/useEntryKeyboardNav';
 import { ResponsePlanPreview } from '@/components/tutor/ResponsePlanPreview';
 import { CrossNavBreadcrumb } from '@/components/peripheral/CrossNavBreadcrumb';
+import { VoiceMode } from '@/components/student/VoiceMode';
 import { NotebookEmptyState } from './NotebookEmptyState';
 import type { ResponsePlan } from '@/hooks/useResponseOrchestrator';
 import type { CrossNavState } from '@/hooks/useNotebookCrossNav';
@@ -55,6 +56,15 @@ export interface NotebookContentProps {
   handleSubmit: (text: string) => void;
   handleSubmitTyped: (text: string, type: string) => void;
   handleSketchSubmit: (dataUrl: string) => void;
+  /** Voice session state — renders the non-blocking voice bar at viewport bottom. */
+  voiceSession?: {
+    state: 'idle' | 'connecting' | 'active' | 'error';
+    error: string | null;
+    transcript: Array<{ role: 'user' | 'tutor'; text: string; timestamp: number; final: boolean }>;
+    isTutorSpeaking: boolean;
+    elapsed: number;
+    stop: () => void;
+  };
   /** Cross-mode navigation state (graph↔linear↔canvas). */
   crossNav?: {
     navState: CrossNavState;
@@ -69,7 +79,7 @@ export interface NotebookContentProps {
 export function NotebookContent({
   entries, pinnedEntries, past, current, sessionId, mode, setMode,
   marginalRef, contentDrop, popup, isThinking, responsePlans, bottomRef,
-  handleSubmit, handleSubmitTyped, handleSketchSubmit, crossNav,
+  handleSubmit, handleSubmitTyped, handleSketchSubmit, voiceSession, crossNav,
 }: NotebookContentProps) {
   const { containerRef: kbNavRef, handleKeyDown: handleKbNav } = useEntryKeyboardNav();
   const wideViewport = useWideViewport();
@@ -90,7 +100,11 @@ export function NotebookContent({
     return [...groups.values()].filter((g) => g.length >= 2);
   }, [entries, clusters]);
 
+  const voiceActive = voiceSession && voiceSession.state !== 'idle';
+
   return (
+    <>
+    <div style={voiceActive ? { paddingBottom: 56 } : undefined}>
     <Column>
       {past.map((s) => <NotebookPastSession key={s.id} session={s} />)}
       {past.length > 0 && <SessionDivider />}
@@ -196,5 +210,18 @@ export function NotebookContent({
           focusNodeId={crossNav?.navState.entityId ?? undefined} />
       )}
     </Column>
+    </div>
+    {/* Voice bar: fixed to viewport bottom, notebook remains interactive */}
+    {voiceSession && voiceSession.state !== 'idle' && (
+      <VoiceMode
+        state={voiceSession.state}
+        transcript={voiceSession.transcript}
+        isTutorSpeaking={voiceSession.isTutorSpeaking}
+        elapsed={voiceSession.elapsed}
+        error={voiceSession.error}
+        onStop={voiceSession.stop}
+      />
+    )}
+    </>
   );
 }

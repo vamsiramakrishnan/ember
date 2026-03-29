@@ -1,14 +1,17 @@
 /**
- * VoiceMode — bidirectional voice interface overlay.
+ * VoiceMode — non-blocking voice bar + expandable transcript.
  *
- * A warm modal that rises from the InputZone when activated.
- * Shows live transcripts, a waveform indicator, and session timer.
- * The notebook remains visible (dimmed) behind it, filling with
- * entries as the tutor calls addNotebookEntry during conversation.
+ * Redesigned: the old modal overlay blocked the notebook. The new design
+ * is a compact bottom bar (like a music player) that lets the student
+ * browse the notebook, constellation, and graph while talking.
  *
- * See: useVoiceSession for the Live API connection.
+ * Two states:
+ * - Collapsed: thin bar with status dot, waveform, timer, end button
+ * - Expanded: bar + scrollable transcript drawer (tap bar to toggle)
+ *
+ * The notebook remains fully interactive underneath.
  */
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import type { TranscriptLine, VoiceSessionState } from '@/hooks/useVoiceSession';
 import styles from './VoiceMode.module.css';
 
@@ -30,82 +33,94 @@ function formatElapsed(seconds: number): string {
 export function VoiceMode({
   state, transcript, isTutorSpeaking, elapsed, error, onStop,
 }: VoiceModeProps) {
+  const [expanded, setExpanded] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll transcript to bottom
+  // Auto-scroll transcript to bottom when expanded
   useEffect(() => {
+    if (!expanded) return;
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
-  }, [transcript]);
+  }, [transcript, expanded]);
 
   if (state === 'idle') return null;
 
-  return (
-    <div className={styles.overlay}>
-      <div className={styles.panel}>
-        {/* Header: status + timer + end button */}
-        <div className={styles.header}>
-          <div className={styles.statusRow}>
-            <div className={`${styles.statusDot} ${
-              state === 'active' ? (isTutorSpeaking ? styles.speaking : styles.listening)
-              : state === 'connecting' ? styles.connecting
-              : ''
-            }`} />
-            <span className={styles.statusLabel}>
-              {state === 'connecting' ? 'connecting…'
-                : isTutorSpeaking ? 'tutor speaking'
-                : 'listening'}
-            </span>
-          </div>
-          <span className={styles.timer}>{formatElapsed(elapsed)}</span>
-          <button className={styles.endButton} onClick={onStop}>
-            end session
-          </button>
-        </div>
+  const statusClass = state === 'active'
+    ? (isTutorSpeaking ? styles.speaking : styles.listening)
+    : state === 'connecting' ? styles.connecting
+    : '';
 
-        {/* Waveform visualizer */}
+  const statusText = state === 'connecting' ? 'connecting'
+    : isTutorSpeaking ? 'speaking' : 'listening';
+
+  return (
+    <div className={`${styles.container} ${expanded ? styles.expanded : ''}`}>
+      {/* Expandable transcript drawer */}
+      {expanded && (
+        <div className={styles.drawer}>
+          <div className={styles.transcript} ref={scrollRef}>
+            {transcript.length === 0 && state === 'active' && (
+              <p className={styles.empty}>
+                Start speaking — your conversation will appear here.
+              </p>
+            )}
+            {transcript.map((line, i) => (
+              <div
+                key={i}
+                className={line.role === 'user' ? styles.userLine : styles.tutorLine}
+              >
+                <span className={styles.lineRole}>
+                  {line.role === 'user' ? 'you' : 'tutor'}
+                </span>
+                <p className={styles.lineText}>{line.text}</p>
+              </div>
+            ))}
+          </div>
+          {error && <p className={styles.error}>{error}</p>}
+        </div>
+      )}
+
+      {/* Compact voice bar — always visible */}
+      <div className={styles.bar} onClick={() => setExpanded(!expanded)} role="button" tabIndex={0}
+        onKeyDown={(e) => { if (e.key === 'Enter') setExpanded(!expanded); }}
+        aria-label={expanded ? 'Collapse transcript' : 'Expand transcript'}
+        aria-expanded={expanded}
+      >
+        {/* Status dot */}
+        <div className={`${styles.statusDot} ${statusClass}`} />
+
+        {/* Status label */}
+        <span className={styles.statusLabel}>{statusText}</span>
+
+        {/* Waveform — compact, 12 bars */}
         <div className={styles.waveform}>
-          {Array.from({ length: 24 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <div
               key={i}
-              className={`${styles.bar} ${isTutorSpeaking ? styles.barActive : ''}`}
+              className={`${styles.waveBar} ${isTutorSpeaking ? styles.waveBarActive : ''}`}
               style={{
-                animationDelay: `${i * 0.05}s`,
+                animationDelay: `${i * 0.06}s`,
                 height: isTutorSpeaking
-                  ? `${12 + Math.sin(i * 0.7) * 8 + Math.random() * 6}px`
-                  : '3px',
+                  ? `${8 + Math.sin(i * 0.8) * 5 + Math.random() * 3}px`
+                  : '2px',
               }}
             />
           ))}
         </div>
 
-        {/* Live transcript */}
-        <div className={styles.transcript} ref={scrollRef}>
-          {transcript.length === 0 && state === 'active' && (
-            <p className={styles.empty}>
-              Start speaking — your conversation will appear here.
-            </p>
-          )}
-          {transcript.map((line, i) => (
-            <div
-              key={i}
-              className={line.role === 'user' ? styles.userLine : styles.tutorLine}
-            >
-              <span className={styles.lineRole}>
-                {line.role === 'user' ? 'you' : 'tutor'}
-              </span>
-              <p className={styles.lineText}>{line.text}</p>
-            </div>
-          ))}
-        </div>
+        {/* Timer */}
+        <span className={styles.timer}>{formatElapsed(elapsed)}</span>
 
-        {/* Error message */}
-        {error && <p className={styles.error}>{error}</p>}
+        {/* Expand/collapse chevron */}
+        <span className={`${styles.chevron} ${expanded ? styles.chevronUp : ''}`}>
+          ▾
+        </span>
 
-        {/* Quiet hint */}
-        <p className={styles.hint}>
-          Your notebook is being updated as you talk. Speak naturally — interrupt anytime.
-        </p>
+        {/* End button */}
+        <button className={styles.endButton} onClick={(e) => { e.stopPropagation(); onStop(); }}
+          aria-label="End voice session">
+          end
+        </button>
       </div>
     </div>
   );

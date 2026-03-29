@@ -4,7 +4,6 @@ import { inferEntryType } from '@/hooks/useEntryInference';
 import { useMicrophoneInput } from '@/hooks/useMicrophoneInput';
 import { detectTrigger, replaceTrigger } from './trigger-detect';
 import { SketchInput } from './SketchInput';
-import { VoiceMode } from './VoiceMode';
 import { BlockInserter } from './BlockInserter';
 import { InputAffordances } from './InputAffordances';
 import { ChipPreviewBar } from './ChipPreviewBar';
@@ -223,16 +222,10 @@ export function InputZone({
       </div>
       {mic.error && <p className={styles.micError}>{mic.error}</p>}
       <InputAffordances />
-      {voiceSession && voiceSession.state !== 'idle' && (
-        <VoiceMode
-          state={voiceSession.state}
-          transcript={voiceSession.transcript}
-          isTutorSpeaking={voiceSession.isTutorSpeaking}
-          elapsed={voiceSession.elapsed}
-          error={voiceSession.error}
-          onStop={voiceSession.stop}
-        />
-      )}
     </div>
   );
 }
+
+/** Standalone VoiceMode bar — render at the page level, not inside InputZone.
+ *  Re-exported here for convenience. */
+export { VoiceMode } from './VoiceMode';
