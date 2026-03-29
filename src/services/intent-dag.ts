@@ -50,6 +50,11 @@ export const intentNodeSchema = z.object({
     'podcast',        // Audio discussion
     'deepen',         // Enrich existing content with images, detail, depth
     'silence',        // Wait for the student
+    // ─── Output format verbs (depend on a prior action) ──────
+    'slides',         // Format prior result as a slide deck
+    'doc',            // Format prior result as a document
+    'notes',          // Format prior result as concise notes
+    'brief',          // Format prior result as a one-page summary
   ]),
   /** The text content / question / argument for this action. */
   content: z.string(),
@@ -103,6 +108,8 @@ Rules:
 9. For /connect: the root should be "connect" if connecting IS the primary intent.
 10. Strip @mention syntax from content — use the entity name directly.
 11. When resolving implicit references, expand "this"/"that" into the actual concept from spatial context. Put the resolved concept in the node's content field.
+12. OUTPUT FORMAT VERBS: /slides, /doc, /notes, /brief are output format modifiers. They ALWAYS depend on a prior content-producing action. When combined with another /command (e.g., "/research X /slides"), the format verb becomes a downstream node that depends on the content node. When used standalone (e.g., "/slides about X"), treat as "teach" → "slides" chain.
+13. Output verb nodes carry the same content/topic as the node they depend on — they reformat, not regenerate.
 
 Examples:
 
@@ -140,6 +147,30 @@ Output:
   "rootId": "n0",
   "isCompound": true,
   "summary": "Student wants research on harmonic series history, then flashcards"
+}
+
+Input: "/research quantum computing /slides"
+Output:
+{
+  "nodes": [
+    { "id": "n0", "action": "research", "content": "quantum computing", "entities": [], "dependsOn": [], "parallel": false, "label": "researching" },
+    { "id": "n1", "action": "slides", "content": "quantum computing", "entities": [], "dependsOn": ["n0"], "parallel": false, "label": "formatting as slides" }
+  ],
+  "rootId": "n0",
+  "isCompound": true,
+  "summary": "Student wants research on quantum computing, presented as a slide deck"
+}
+
+Input: "/slides about the French Revolution"
+Output:
+{
+  "nodes": [
+    { "id": "n0", "action": "teach", "content": "the French Revolution", "entities": [], "dependsOn": [], "parallel": false, "label": "preparing material" },
+    { "id": "n1", "action": "slides", "content": "the French Revolution", "entities": [], "dependsOn": ["n0"], "parallel": false, "label": "formatting as slides" }
+  ],
+  "rootId": "n0",
+  "isCompound": true,
+  "summary": "Student wants a slide deck about the French Revolution"
 }`,
   intentDagSchema,
 );
@@ -150,11 +181,18 @@ Output:
  * Quick check: does this input likely need DAG parsing?
  * Avoids a Flash Lite call for simple single-intent inputs.
  */
+/** Output format verbs — always compound when paired with another command. */
+const OUTPUT_VERBS = /\/(?:slides|doc|notes|brief)\b/g;
+
 export function likelyCompound(text: string): boolean {
-  const slashCount = (text.match(/\/(?:draw|visualize|research|explain|summarize|quiz|timeline|connect|define|teach|podcast|flashcards|exercise)\b/g) ?? []).length;
-  if (slashCount >= 2) return true;
-  if (slashCount >= 1 && text.includes('?')) return true;
-  if (slashCount >= 1 && text.includes(' and /')) return true;
+  const actionSlashes = (text.match(/\/(?:draw|visualize|research|explain|summarize|quiz|timeline|connect|define|teach|podcast|flashcards|exercise|deepen)\b/g) ?? []).length;
+  const outputSlashes = (text.match(OUTPUT_VERBS) ?? []).length;
+  const totalSlashes = actionSlashes + outputSlashes;
+  // Any output verb makes it compound (it needs a prior action to format)
+  if (outputSlashes >= 1) return true;
+  if (totalSlashes >= 2) return true;
+  if (actionSlashes >= 1 && text.includes('?')) return true;
+  if (actionSlashes >= 1 && text.includes(' and /')) return true;
   return false;
 }
 

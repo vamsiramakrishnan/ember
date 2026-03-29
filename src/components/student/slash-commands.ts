@@ -39,10 +39,18 @@ export const COMMANDS: SlashCommand[] = [
   { id: 'compare', label: 'compare', hint: 'contrast two ideas side by side', icon: '⇌', accent: s(styles.iconMargin), group: 'workflow' },
   { id: 'origins', label: 'origins', hint: 'trace the intellectual history', icon: '⊙', accent: s(styles.iconMargin), group: 'workflow' },
   { id: 'illustrate', label: 'illustrate', hint: 'explain, sketch, then define', icon: '◐', accent: s(styles.iconMargin), group: 'workflow' },
+  /* ── output (paper): format verbs — standalone or combined ── */
+  { id: 'slides', label: 'slides', hint: 'present as a slide deck', icon: '▦', accent: s(styles.iconSage), group: 'output' },
+  { id: 'doc', label: 'doc', hint: 'export as a document', icon: '▧', accent: s(styles.iconSage), group: 'output' },
+  { id: 'notes', label: 'notes', hint: 'distill into concise notes', icon: '▪', accent: s(styles.iconSage), group: 'output' },
+  { id: 'brief', label: 'brief', hint: 'one-page executive summary', icon: '▫', accent: s(styles.iconSage), group: 'output' },
 ];
 
+/** IDs of output-format verbs — used to detect compound commands. */
+export const OUTPUT_VERB_IDS = new Set(['slides', 'doc', 'notes', 'brief']);
+
 export const GROUP_LABELS: Record<string, string> = {
-  explore: 'explore', create: 'create', reflect: 'reflect', workflow: 'workflow',
+  explore: 'explore', create: 'create', reflect: 'reflect', workflow: 'workflow', output: 'output',
 };
 
 /** Pipe-separated list for regex matching in InputPreview. */

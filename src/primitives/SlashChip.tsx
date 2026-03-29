@@ -26,7 +26,7 @@ export interface SlashChipProps {
 interface CommandMeta {
   icon: string;
   hint: string;
-  group: 'explore' | 'create' | 'reflect' | 'workflow';
+  group: 'explore' | 'create' | 'reflect' | 'workflow' | 'output';
 }
 
 const COMMAND_META: Record<string, CommandMeta> = {
@@ -50,6 +50,11 @@ const COMMAND_META: Record<string, CommandMeta> = {
   compare: { icon: '⇌', hint: 'contrast → connect → map', group: 'workflow' },
   origins: { icon: '⊙', hint: 'timeline → research → teach', group: 'workflow' },
   illustrate: { icon: '◐', hint: 'explain → sketch → define', group: 'workflow' },
+  // Output format verbs — combinable with action commands
+  slides: { icon: '▦', hint: 'present as slides', group: 'output' },
+  doc: { icon: '▧', hint: 'export as document', group: 'output' },
+  notes: { icon: '▪', hint: 'concise notes', group: 'output' },
+  brief: { icon: '▫', hint: 'one-page summary', group: 'output' },
 };
 
 const GROUP_ACCENT: Record<string, string> = {
@@ -57,6 +62,7 @@ const GROUP_ACCENT: Record<string, string> = {
   create: styles.accentSage ?? '',
   reflect: styles.accentAmber ?? '',
   workflow: styles.accentMargin ?? '',
+  output: styles.accentSage ?? '',
 };
 
 export function SlashChip({ command, active, onClick }: SlashChipProps) {
