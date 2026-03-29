@@ -16,8 +16,9 @@
  */
 import { useState, useRef, useCallback, useEffect } from 'react';
 import {
-  GoogleGenAI, Modality, ThinkingLevel,
+  GoogleGenAI, Modality,
   StartSensitivity, EndSensitivity,
+  Behavior, FunctionResponseScheduling,
   type LiveServerMessage,
 } from '@google/genai';
 import { isGeminiAvailable } from '@/services/gemini';
@@ -56,17 +57,23 @@ interface UseVoiceSessionOptions {
 
 // ─── Constants ──────────────────────────────────────────────
 
-const LIVE_MODEL = 'gemini-3.1-flash-live-preview';
+/** Gemini 2.5 Flash with native audio — supports async NON_BLOCKING function calling. */
+const LIVE_MODEL = 'gemini-2.5-flash-native-audio-preview-12-2025';
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
 
 /** Tool declarations for the Live API session.
- *  Typed loosely to match the Live API's tool format. */
+ *  All tools are NON_BLOCKING — the model continues speaking while
+ *  the function executes. Tool responses use SILENT scheduling so
+ *  the model absorbs the result without interrupting its flow.
+ *
+ *  This is only supported on Gemini 2.5 Flash (not 3.1 Flash Live). */
 const VOICE_TOOLS: Array<Record<string, unknown>> = [
   {
     functionDeclarations: [
       {
         name: 'addNotebookEntry',
-        description: 'Add a prose entry, tutor note, or concept to the student notebook. Use this to record key points, insights, and explanations as the conversation progresses.',
+        description: 'Add a prose entry, tutor note, or concept to the student notebook. Use this to record key points, insights, and explanations as the conversation progresses. Call this frequently to keep the notebook up to date.',
+        behavior: Behavior.NON_BLOCKING,
         parameters: {
           type: 'OBJECT',
           properties: {
@@ -83,6 +90,7 @@ const VOICE_TOOLS: Array<Record<string, unknown>> = [
       {
         name: 'addVocabularyTerm',
         description: 'Add a new term to the student lexicon when you introduce or define technical vocabulary.',
+        behavior: Behavior.NON_BLOCKING,
         parameters: {
           type: 'OBJECT',
           properties: {
@@ -96,6 +104,7 @@ const VOICE_TOOLS: Array<Record<string, unknown>> = [
       {
         name: 'updateConceptMastery',
         description: 'Update the student mastery level for a concept based on their demonstrated understanding.',
+        behavior: Behavior.NON_BLOCKING,
         parameters: {
           type: 'OBJECT',
           properties: {
@@ -246,12 +255,10 @@ export function useVoiceSession({
         '\nIMPORTANT: As you discuss ideas with the student, use the addNotebookEntry tool to record key points, insights, and explanations in their notebook. Use addVocabularyTerm when introducing technical terms. Use updateConceptMastery when the student demonstrates understanding.',
       ].join('');
 
-      // gemini-3.1-flash-live-preview config:
-      // - thinkingLevel (not thinkingBudget) — LOW for good quality at conversational latency
-      // - includeThoughts: true — receive thought summaries for richer tutor reasoning
+      // gemini-2.5-flash-native-audio config:
+      // - Supports async NON_BLOCKING function calling (3.1 does not)
+      // - Uses thinkingBudget (not thinkingLevel) — leave unset for default
       // - sendRealtimeInput for ALL real-time input (audio, video, text)
-      // - sendClientContent ONLY for seeding initial context history
-      // - affectiveDialog and proactiveAudio NOT supported on 3.1 Flash Live
       const session = await client.live.connect({
         model: LIVE_MODEL,
         config: {
@@ -260,23 +267,18 @@ export function useVoiceSession({
           tools: VOICE_TOOLS as never[],
           inputAudioTranscription: {},
           outputAudioTranscription: {},
-          thinkingConfig: {
-            thinkingLevel: ThinkingLevel.LOW,
-            includeThoughts: true,
-          },
+          // No thinkingConfig — leave at default for 2.5 Flash
           // VAD: auto-detect speech with tuned sensitivity for tutoring
-          // LOW start sensitivity = fewer false triggers from background noise
-          // LOW end sensitivity = waits longer for student to finish thinking
           realtimeInputConfig: {
             automaticActivityDetection: {
               disabled: false,
               startOfSpeechSensitivity: StartSensitivity.START_SENSITIVITY_LOW,
               endOfSpeechSensitivity: EndSensitivity.END_SENSITIVITY_LOW,
               prefixPaddingMs: 20,
-              silenceDurationMs: 500, // 500ms — give student time to think between phrases
+              silenceDurationMs: 500,
             },
           },
-          // Session management: compression for long sessions, resumption for reconnects
+          // Session management
           contextWindowCompression: { slidingWindow: {} },
           sessionResumption: { handle: resumeHandleRef.current ?? undefined },
           speechConfig: {
@@ -355,17 +357,26 @@ export function useVoiceSession({
               }
             }
 
-            // Function calling — synchronous tool use
+            // Async NON_BLOCKING function calling — model continues speaking
+            // while we execute the tool. Response uses SILENT scheduling so
+            // the model absorbs the result without interrupting its flow.
+            // The notebook fills silently as the conversation proceeds.
             if (tc?.functionCalls) {
-              const responses = tc.functionCalls.map((call) => ({
-                id: call.id,
-                response: handleToolCall({
+              for (const call of tc.functionCalls) {
+                const result = handleToolCall({
                   name: call.name ?? '',
                   args: (call.args ?? {}) as Record<string, unknown>,
-                }),
-              }));
-              if (session && responses.length > 0) {
-                session.sendToolResponse({ functionResponses: responses });
+                });
+                session.sendToolResponse({
+                  functionResponses: [{
+                    id: call.id,
+                    name: call.name ?? '',
+                    response: {
+                      ...result,
+                      scheduling: FunctionResponseScheduling.SILENT,
+                    },
+                  }],
+                });
               }
             }
 

@@ -16,7 +16,8 @@ import { GoogleGenAI } from '@google/genai';
 
 export const config = { runtime: 'edge' };
 
-const LIVE_MODEL = 'gemini-3.1-flash-live-preview';
+/** Gemini 2.5 Flash with native audio — supports async NON_BLOCKING function calling. */
+const LIVE_MODEL = 'gemini-2.5-flash-native-audio-preview-12-2025';
 
 export default async function handler(req: Request): Promise<Response> {
   if (req.method !== 'POST') {
