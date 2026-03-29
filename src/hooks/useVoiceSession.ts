@@ -59,6 +59,8 @@ export function useVoiceSession({
   callbacks, contextInput, toolContext,
 }: UseVoiceSessionOptions) {
   const [state, setState] = useState<VoiceSessionState>('idle');
+  const stateRef = useRef(state);
+  stateRef.current = state;
   const [error, setError] = useState<string | null>(null);
   const [transcript, setTranscript] = useState<TranscriptLine[]>([]);
   const [isTutorSpeaking, setIsTutorSpeaking] = useState(false);
@@ -237,15 +239,26 @@ export function useVoiceSession({
       console.info('[VoiceSession] Capture rate:', captureCtx.sampleRate, 'Playback rate:', playbackCtx.sampleRate);
 
       // 4. Open RAW WEBSOCKET to Gemini Live API
-      //    Following the canonical ephemeral token example:
-      //    wss://...v1alpha...BidiGenerateContentConstrained?access_token=TOKEN
-      const wsUrl = `${WS_BASE}?access_token=${token}`;
-      console.info('[VoiceSession] Opening WebSocket...');
+      //    Token must be URI-encoded because it contains '/' (auth_tokens/xxx)
+      const wsUrl = `${WS_BASE}?access_token=${encodeURIComponent(token)}`;
+      console.info('[VoiceSession] Opening WebSocket to:', wsUrl.slice(0, 120) + '...');
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
+      // Set a connection timeout — if WebSocket doesn't open in 10s, fail explicitly
+      const connectTimeout = setTimeout(() => {
+        if (ws.readyState !== WebSocket.OPEN) {
+          console.error('[VoiceSession] WebSocket connection timeout (10s)');
+          setError('Connection timeout — WebSocket failed to open');
+          setState('error');
+          ws.close();
+          cleanup();
+        }
+      }, 10000);
+
       ws.onopen = () => {
-        console.info('[VoiceSession] WebSocket connected');
+        clearTimeout(connectTimeout);
+        console.info('[VoiceSession] WebSocket connected, readyState:', ws.readyState);
 
         // 5. Send setup message (first message must be config)
         const fullInstruction = buildVoiceSystemInstruction(contextInput);
@@ -401,14 +414,25 @@ export function useVoiceSession({
       };
 
       ws.onerror = (event) => {
-        console.error('[VoiceSession] WebSocket error:', event);
-        setError('WebSocket connection error');
+        clearTimeout(connectTimeout);
+        console.error('[VoiceSession] WebSocket error. readyState:', ws.readyState, 'event:', event);
+        // On mobile browsers, WebSocket errors are opaque (no detail in the event).
+        // The most common causes: invalid token, network blocked, or CORS/CSP issue.
+        setError('Connection failed — check network and try again');
         setState('error');
       };
 
       ws.onclose = (event) => {
-        console.info('[VoiceSession] WebSocket closed:', event.code, event.reason);
-        setState('idle');
+        clearTimeout(connectTimeout);
+        console.info('[VoiceSession] WebSocket closed. code:', event.code, 'reason:', event.reason, 'wasClean:', event.wasClean);
+        // Code 1000 = normal close. Anything else is an error.
+        if (event.code !== 1000 && stateRef.current !== 'idle') {
+          const reason = event.reason || `Connection closed (code ${event.code})`;
+          setError(reason);
+          setState('error');
+        } else {
+          setState('idle');
+        }
       };
 
     } catch (err) {
@@ -458,7 +482,7 @@ export function useVoiceSession({
 
       ws.send(JSON.stringify({
         realtimeInput: {
-          audio: { data: base64, mimeType: 'audio/pcm;rate=16000' },
+          audio: { data: base64, mimeType: 'audio/pcm' },
         },
       }));
     };
