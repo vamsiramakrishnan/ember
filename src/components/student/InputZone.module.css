@@ -140,6 +140,20 @@
   font-style: italic;
 }
 
+/* Bottom row: type indicator + action buttons */
+.bottomRow {
+  display: flex;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.bottomActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
 .sketchToggle {
   font-family: var(--font-system);
   font-size: 9px;
@@ -151,12 +165,81 @@
   border: none;
   cursor: pointer;
   padding: 2px 0;
-  margin-left: auto;
   transition: color 0.2s ease;
 }
 
 .sketchToggle:hover {
   color: var(--ink-faint);
+}
+
+/* ─── Microphone button ─── */
+
+.micButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--rule-light);
+  background: var(--paper);
+  color: var(--ink-ghost);
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.micButton:hover {
+  color: var(--ink-faint);
+  border-color: var(--rule);
+}
+
+.micButton:focus-visible {
+  outline: 2px solid var(--margin);
+  outline-offset: 2px;
+}
+
+.micButton:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Recording state — pulsing red ring */
+.micRecording {
+  color: var(--margin);
+  border-color: var(--margin);
+  background: var(--margin-dim);
+  animation: micPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes micPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(184, 86, 79, 0.2); }
+  50% { box-shadow: 0 0 0 6px rgba(184, 86, 79, 0); }
+}
+
+/* Transcribing state */
+.micTranscribing {
+  color: var(--ink-faint);
+  border-color: var(--rule);
+}
+
+.micSpinner {
+  animation: micSpin 1s linear infinite;
+}
+
+@keyframes micSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Mic error message */
+.micError {
+  font-family: var(--font-system);
+  font-size: 10px;
+  font-weight: 300;
+  color: var(--margin);
+  opacity: 0.7;
+  margin: 4px 0 0;
+  line-height: 1.4;
 }
 
 /* After Socratic question — echo the tutor's presence */
@@ -244,10 +327,12 @@
 @media (prefers-reduced-motion: reduce) {
   .hint, .affordances { transition: none; }
   .cursor { animation: none; opacity: 0.3; }
-  .sketchToggle { transition: none; }
+  .sketchToggle, .micButton { transition: none; }
   .textareaSubmitting { transition: none; }
   .typeIndicator,
   .typeIndicatorQuestion,
   .typeIndicatorHypothesis,
   .typeIndicatorScratch { animation: none; }
+  .micRecording { animation: none; box-shadow: 0 0 0 3px rgba(184, 86, 79, 0.15); }
+  .micSpinner { animation: none; }
 }

@@ -1,6 +1,7 @@
 /** InputZone (7.4) — student's writing area. See: 06-component-inventory.md */
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { inferEntryType } from '@/hooks/useEntryInference';
+import { useMicrophoneInput } from '@/hooks/useMicrophoneInput';
 import { detectTrigger, replaceTrigger } from './trigger-detect';
 import { SketchInput } from './SketchInput';
 import { BlockInserter } from './BlockInserter';
@@ -39,6 +40,12 @@ export function InputZone({
   const [isFocused, setIsFocused] = useState(false);
   const [sketchMode, setSketchMode] = useState(false);
   const [forcedType, setForcedType] = useState<StudentEntryType | null>(null);
+
+  // Microphone input: transcribe audio to text and append to textarea
+  const handleTranscript = useCallback((text: string) => {
+    setValue((prev) => prev ? `${prev} ${text}` : text);
+  }, []);
+  const mic = useMicrophoneInput(handleTranscript);
   /* Submission morph: brief color transition before clearing.
    * was: instant clear, now: 200ms color morph → clear
    * reason: smooths the most frequent interaction in the app (audit P9) */
@@ -151,9 +158,34 @@ export function InputZone({
           : inferredType === 'hypothesis' ? styles.typeIndicatorHypothesis
           : inferredType === 'scratch' ? styles.typeIndicatorScratch
           : styles.typeIndicator}>{displayType}</span>}
-        <button className={styles.sketchToggle} aria-label="Switch to sketch mode"
-          onClick={(e) => { e.stopPropagation(); setSketchMode(true); }}>sketch</button>
+        <div className={styles.bottomActions}>
+          <button
+            className={`${styles.micButton} ${mic.state === 'recording' ? styles.micRecording : ''} ${mic.state === 'transcribing' ? styles.micTranscribing : ''}`}
+            aria-label={mic.state === 'recording' ? 'Stop recording' : mic.state === 'transcribing' ? 'Transcribing…' : 'Record audio'}
+            onClick={(e) => { e.stopPropagation(); void mic.toggleRecording(); }}
+            disabled={mic.state === 'transcribing' || disabled}
+          >
+            {mic.state === 'recording' ? (
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true">
+                <rect x="3" y="3" width="8" height="8" rx="1" />
+              </svg>
+            ) : mic.state === 'transcribing' ? (
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true" className={styles.micSpinner}>
+                <circle cx="7" cy="7" r="5" strokeDasharray="20 12" />
+              </svg>
+            ) : (
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true">
+                <rect x="5" y="1" width="4" height="8" rx="2" />
+                <path d="M3 7a4 4 0 0 0 8 0" fill="none" stroke="currentColor" strokeWidth="1.2" />
+                <line x1="7" y1="11" x2="7" y2="13" stroke="currentColor" strokeWidth="1.2" />
+              </svg>
+            )}
+          </button>
+          <button className={styles.sketchToggle} aria-label="Switch to sketch mode"
+            onClick={(e) => { e.stopPropagation(); setSketchMode(true); }}>sketch</button>
+        </div>
       </div>
+      {mic.error && <p className={styles.micError}>{mic.error}</p>}
       <InputAffordances />
     </div>
   );
