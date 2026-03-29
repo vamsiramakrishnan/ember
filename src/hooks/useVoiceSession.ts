@@ -118,6 +118,8 @@ export function useVoiceSession({
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sessionRef = useRef<any>(null);
+  /** Session resumption handle — stored from sessionResumptionUpdate messages. */
+  const resumeHandleRef = useRef<string | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const processorRef = useRef<ScriptProcessorNode | null>(null);
@@ -215,7 +217,7 @@ export function useVoiceSession({
         const tokenRes = await fetch('/api/live-token', { method: 'POST' });
         if (!tokenRes.ok) throw new Error('Failed to get ephemeral token');
         const tokenData = await tokenRes.json();
-        const token = tokenData.ephemeralToken?.token;
+        const token = tokenData.token;
         if (!token) throw new Error('No token in response');
         client = new GoogleGenAI({ apiKey: token });
       } else {
@@ -248,6 +250,9 @@ export function useVoiceSession({
           tools: VOICE_TOOLS as never[],
           inputAudioTranscription: {},
           outputAudioTranscription: {},
+          // Session management: compression for long sessions, resumption for reconnects
+          contextWindowCompression: { slidingWindow: {} },
+          sessionResumption: { handle: resumeHandleRef.current ?? undefined },
           speechConfig: {
             voiceConfig: {
               prebuiltVoiceConfig: { voiceName: 'Kore' },
@@ -336,6 +341,19 @@ export function useVoiceSession({
               if (session && responses.length > 0) {
                 session.sendToolResponse({ functionResponses: responses });
               }
+            }
+
+            // Session resumption — store handle for reconnects
+            if (message.sessionResumptionUpdate?.resumable) {
+              const newHandle = (message.sessionResumptionUpdate as { newHandle?: string }).newHandle;
+              if (newHandle) resumeHandleRef.current = newHandle;
+            }
+
+            // GoAway — server about to disconnect, auto-reconnect with resumption
+            if (message.goAway) {
+              console.info('[VoiceSession] GoAway received, will reconnect');
+              // The onclose handler will fire; we could auto-resume here
+              // For now, just log — the user can restart if needed
             }
           },
           onerror: (err: unknown) => {

@@ -2,12 +2,17 @@
  * /api/live-token — Vercel Edge Function that mints ephemeral tokens
  * for the Gemini Live API.
  *
- * Ephemeral tokens allow the browser to open a WebSocket directly to
- * Gemini without exposing the API key. Tokens are short-lived (2 min)
- * and scoped to the Live API model.
+ * Uses the authTokens.create() SDK method (v1alpha) to create tokens
+ * with liveConnectConstraints that lock down model, modality, and config.
+ *
+ * Token lifecycle:
+ * - expireTime: 30 min — how long the token can send messages
+ * - newSessionExpireTime: 1 min — how long it can open NEW sessions
+ * - uses: 1 — one session per token (resumption reconnects are free)
  *
  * See: https://ai.google.dev/gemini-api/docs/live-api/ephemeral-tokens
  */
+import { GoogleGenAI } from '@google/genai';
 
 export const config = { runtime: 'edge' };
 
@@ -27,34 +32,28 @@ export default async function handler(req: Request): Promise<Response> {
   }
 
   try {
-    // Mint an ephemeral token via the Gemini API
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${LIVE_MODEL}:generateEphemeralToken`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': apiKey,
-        },
-        body: JSON.stringify({
-          ephemeralToken: {
-            expireTime: new Date(Date.now() + 2 * 60 * 1000).toISOString(),
+    const client = new GoogleGenAI({
+      apiKey,
+      httpOptions: { apiVersion: 'v1alpha' },
+    });
+
+    const token = await client.authTokens.create({
+      config: {
+        uses: 1,
+        expireTime: new Date(Date.now() + 30 * 60_000).toISOString(),
+        newSessionExpireTime: new Date(Date.now() + 60_000).toISOString(),
+        httpOptions: { apiVersion: 'v1alpha' },
+        liveConnectConstraints: {
+          model: `models/${LIVE_MODEL}`,
+          config: {
+            sessionResumption: {},
+            responseModalities: ['AUDIO'],
           },
-        }),
+        },
       },
-    );
+    });
 
-    if (!response.ok) {
-      const text = await response.text();
-      console.error('[live-token] Gemini error:', response.status, text);
-      return new Response(
-        JSON.stringify({ error: `Token generation failed: ${response.status}` }),
-        { status: 502, headers: { 'Content-Type': 'application/json' } },
-      );
-    }
-
-    const data = await response.json();
-    return new Response(JSON.stringify(data), {
+    return new Response(JSON.stringify({ token: token.name }), {
       headers: {
         'Content-Type': 'application/json',
         'Cache-Control': 'no-store',
