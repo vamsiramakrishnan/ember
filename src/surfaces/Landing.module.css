@@ -1,15 +1,29 @@
 /* Landing — the scroll-driven introduction. Overall layout only.
- * Section-specific styles live in their own modules. */
+ * Enhanced: richer student cards with depth, warm form interactions,
+ * refined footer, fixed hardcoded font references to use CSS vars. */
 
 .landing {
   min-height: 100vh;
 }
 
-/* Footer — the quiet closing, now with two columns.
- * was: single centered line, now: richer layout with links */
+/* ─── Footer ─── */
+
 .footer {
-  padding: 48px 24px 56px;
+  padding: 56px 24px 64px;
   border-top: 1px solid var(--rule-light);
+  position: relative;
+}
+
+/* Warm fade above the footer */
+.footer::before {
+  content: '';
+  position: absolute;
+  top: -20px;
+  left: 10%;
+  right: 10%;
+  height: 20px;
+  background: linear-gradient(to bottom, transparent, rgba(221, 214, 204, 0.25));
+  pointer-events: none;
 }
 
 .footerInner {
@@ -83,7 +97,7 @@
   border-bottom-color: var(--rule);
 }
 
-/* ─── Shared styles used by LandingStudentList ─── */
+/* ─── Student selection (LandingStudentList) ─── */
 
 .section {
   width: 100%;
@@ -92,7 +106,7 @@
 }
 
 .sectionLabel {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-system);
   font-size: 10px;
   font-weight: 400;
   letter-spacing: 2px;
@@ -104,19 +118,20 @@
 .studentList {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .studentCard {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 16px 20px;
-  background: transparent;
+  padding: 18px 22px;
+  background: var(--paper);
   border: 1px solid var(--rule);
   border-radius: 2px;
   cursor: pointer;
-  transition: border-color 0.3s ease, background 0.3s ease;
+  box-shadow: var(--depth-adhered);
+  transition: border-color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
   text-align: left;
   width: 100%;
 }
@@ -124,26 +139,34 @@
 .studentCard:hover {
   border-color: var(--ink-ghost);
   background: var(--paper-warm);
+  box-shadow: var(--depth-resting);
+  transform: translateY(-1px);
+}
+
+.studentCard:focus-visible {
+  outline: 2px solid var(--margin);
+  outline-offset: 2px;
 }
 
 .avatar {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 2px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-tutor);
   font-size: 18px;
   font-weight: 400;
   color: var(--paper);
   flex-shrink: 0;
+  box-shadow: var(--depth-adhered);
 }
 
 .studentInfo { flex: 1; min-width: 0; }
 
 .studentName {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-tutor);
   font-size: 18px;
   font-weight: 400;
   color: var(--ink);
@@ -151,9 +174,10 @@
 }
 
 .studentMeta {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-system);
   font-size: 11px;
   color: var(--ink-ghost);
+  margin-top: 2px;
 }
 
 .newStudentButton {
@@ -161,40 +185,45 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 14px 20px;
+  padding: 16px 22px;
   background: transparent;
   border: 1px dashed var(--rule);
   border-radius: 2px;
   cursor: pointer;
   width: 100%;
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-student);
   font-size: 15px;
   color: var(--ink-faint);
-  transition: border-color 0.3s ease, color 0.3s ease;
+  transition: border-color 0.3s ease, color 0.3s ease, background 0.3s ease;
 }
 
 .newStudentButton:hover {
   border-color: var(--ink-ghost);
   color: var(--ink-soft);
+  background: var(--paper-warm);
 }
+
+/* ─── New student form ─── */
 
 .form {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 20px;
+  gap: 14px;
+  padding: 22px;
   border: 1px solid var(--rule);
   border-radius: 2px;
+  background: var(--paper);
+  box-shadow: var(--depth-adhered);
 }
 
 .input {
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-student);
   font-size: 18px;
   color: var(--ink);
   background: transparent;
   border: none;
   border-bottom: 1px solid var(--rule);
-  padding: 8px 0;
+  padding: 10px 0;
   outline: none;
   width: 100%;
   transition: border-color 0.3s ease;
@@ -207,23 +236,27 @@
   display: flex;
   gap: 12px;
   justify-content: flex-end;
+  margin-top: 4px;
 }
 
 .formButton {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-system);
   font-size: 11px;
   letter-spacing: 1px;
   text-transform: uppercase;
-  padding: 8px 16px;
+  padding: 10px 18px;
   border: 1px solid var(--rule);
   border-radius: 2px;
   background: transparent;
   color: var(--ink-soft);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
 }
 
-.formButton:hover { border-color: var(--ink-ghost); color: var(--ink); }
+.formButton:hover {
+  border-color: var(--ink-ghost);
+  color: var(--ink);
+}
 
 .formButtonPrimary {
   composes: formButton;
@@ -232,4 +265,16 @@
   border-color: var(--ink);
 }
 
-.formButtonPrimary:hover { background: var(--ink-soft); }
+.formButtonPrimary:hover {
+  background: var(--ink-soft);
+  border-color: var(--ink-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .studentCard { transition: none; }
+  .studentCard:hover { transform: none; }
+  .newStudentButton { transition: none; }
+  .formButton { transition: none; }
+  .input { transition: none; }
+  .footerLink { transition: none; }
+}

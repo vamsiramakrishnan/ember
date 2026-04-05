@@ -64,8 +64,7 @@ The following are never used in Ember:
 - Pure white (`#FFFFFF`) — this is a screen colour, not a paper colour
 - Pure black (`#000000`) — this is a pixel colour, not an ink colour
 - Any blue above 60% saturation — this is a notification colour
-- Any gradient — paper does not gradient
-- Any shadow deeper than `0 1px 3px rgba(0,0,0,0.04)` — paper does not float
+- Grey shadows (`rgba(0,0,0,...)`) — shadows must use warm brown (`rgba(44,40,37,...)`)
 - Any colour from the standard "tech product" palette: electric blue, vibrant purple, neon green, hot pink
 
 ---
@@ -200,11 +199,37 @@ Design principles and body content beneath a heading are indented 38px from the 
 
 ## Material qualities
 
-### Texture
+### Physical depth
 
-Ember's surfaces are flat. There are no box shadows, no elevation layers, no card-like surfaces floating above backgrounds. The metaphor is a page on a desk — a single plane. The only depth comes from the contrast between ink and paper.
+A desk is not flat. A notebook has things placed on it — index cards, printed diagrams, clippings, sticky notes. Ember's depth system models this physical layering with warm, directional shadows that feel like a reading lamp casting light from the top-left.
 
-If a surface must be distinguished (the question block, the mastery suggestion), it is done through a background tint so subtle it barely registers consciously. The tint values are 7–10% opacity of the accent colour. This creates the sense of a faint watercolour wash, not of a coloured card.
+The depth hierarchy has five levels:
+
+| Level | Shadow | Usage |
+|---|---|---|
+| `none` | No shadow | Text on the page. Student prose, tutor marginalia, connections. |
+| `pressed` | `inset 0 1px 3px rgba(44,40,37,0.04)` | Worn into the page. Socratic questions — read so many times the paper is slightly foxed. |
+| `adhered` | Three-layer, asymmetric, subtle | Sticky notes, clippings taped to the page. Bridge suggestions. |
+| `resting` | Three-layer, contact + form + ambient | Cards and printouts placed on the desk. Concept diagrams, thinker cards at rest. |
+| `lifted` | Three-layer, spread and softened | Picking up a card. Hover state for interactive physical objects. |
+| `floating` | Three-layer, deep ambient | Modals and lightboxes. Held up to the lamp. |
+
+Shadow colour is always warm brown (`rgba(44,40,37,...)`) — never grey. This keeps even elevated elements feeling like part of the desk rather than part of a screen.
+
+### Material backgrounds
+
+Physical objects on the notebook have material texture, implemented as subtle gradient backgrounds that suggest paper stock weight:
+
+| Material | Treatment | Usage |
+|---|---|---|
+| `page` | Transparent | Text written on the page. Most elements. |
+| `worn` | `rgba(184,86,79,0.04)` | Where a question has been re-read many times. Foxed paper. |
+| `stickyNote` | Sage gradient, 5–8% opacity | Bridge suggestions. Taped to the margin. |
+| `indexCard` | Warm cream gradient, 60–90% opacity | Thinker cards. Heavy card stock feel, slight tilt. |
+| `cardStock` | Warm white gradient, 50–85% opacity | Concept diagrams. Clean printed surface. |
+| `clipping` | `rgba(246,241,234,0.95)` | Glossy clippings. Slightly cooler surface. |
+
+Background tints for non-physical elements (the question block, the mastery suggestion) use 7–10% opacity of the accent colour. This creates the sense of a faint watercolour wash.
 
 ### Ambient texture
 
@@ -220,7 +245,7 @@ Constraints:
 
 ### Borders and rules
 
-Borders in Ember are always 1px, in `rule` or `rule-light` colour. They exist to separate, not to contain. Nothing has a visible box drawn around it.
+Borders in Ember are always 1px, in `rule` or `rule-light` colour. They exist to separate, not to contain. Physical objects (cards, diagrams) may have 1px borders alongside their shadows to suggest paper edges.
 
 The tutor's margin rule is 3px wide and 35% opacity — thicker than a border, because it is a semantic marker (this is the tutor's voice), not a structural element.
 

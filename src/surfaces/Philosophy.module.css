@@ -1,42 +1,69 @@
+/* Philosophy — Surface 3: The Star Chart.
+ * Enhanced: richer principle blocks with warm rule separators,
+ * better numeral treatment, refined provenance, reading warmth. */
+
 .container {
   margin-top: var(--session-header-top);
-  position: relative; /* was: static, now: relative, reason: anchor for starfield layer */
+  position: relative;
 }
 
 .question {
   font-family: var(--font-tutor);
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 300;
   font-style: italic;
   color: var(--ink-soft);
   line-height: 1.8;
-  letter-spacing: -0.1px;
+  letter-spacing: -0.2px;
   max-width: 540px;
+  margin-bottom: 8px;
 }
 
+/* ─── Principle blocks ─── */
+
 .principleBlock {
-  margin-bottom: 36px;
+  margin-bottom: 0;
+  padding: 32px 0;
+  border-bottom: 1px solid var(--rule-light);
   opacity: 0;
   animation: principleReveal 0.6s ease forwards;
+  position: relative;
+}
+
+.principleBlock:last-of-type {
+  border-bottom: none;
 }
 
 @keyframes principleReveal {
-  from { opacity: 0; transform: translateY(6px); }
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 .numeralRow {
   display: flex;
-  gap: 14px;
+  gap: 16px;
   align-items: baseline;
 }
 
+/* Roman numeral — large, ghostly, with warm serif */
 .numeral {
   font-family: var(--font-tutor);
-  font-size: 22px;
+  font-size: 26px;
   font-weight: 300;
   color: var(--ink-ghost);
-  min-width: 24px;
+  min-width: 28px;
+  line-height: 1.2;
+  opacity: 0.7;
+}
+
+/* Principle title — strong but warm */
+.numeralRow h3 {
+  font-family: var(--font-tutor);
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: -0.2px;
+  line-height: 1.4;
 }
 
 .body {
@@ -44,11 +71,12 @@
   font-size: 16px;
   font-weight: 400;
   color: var(--ink-soft);
-  line-height: 1.78;
+  line-height: 1.80;
   letter-spacing: 0.005em;
   padding-left: var(--content-indent);
-  margin-top: 14px;
-  margin-bottom: 10px;
+  margin-top: 16px;
+  margin-bottom: 12px;
+  max-width: 560px;
 }
 
 .provenance {
@@ -60,10 +88,17 @@
   padding-left: var(--content-indent);
   margin: 0;
   font-style: italic;
+  opacity: 0.7;
 }
 
 .spacer {
   height: 96px;
+}
+
+@media (max-width: 640px) {
+  .question { font-size: 20px; }
+  .numeral { font-size: 22px; }
+  .principleBlock { padding: 24px 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {

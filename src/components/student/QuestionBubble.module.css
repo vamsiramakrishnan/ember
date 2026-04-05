@@ -1,3 +1,7 @@
+/* QuestionBubble (1.5) — A question the student asks the tutor.
+ * Spec: Crimson Pro Italic 17px, ink, ? glyph in ink-faint 6px left.
+ * Enhanced: better glyph sizing, hover warmth on glyph. */
+
 .bubble {
   font-family: var(--font-student);
   font-size: 17px;
@@ -20,4 +24,22 @@
   font-weight: 400;
   color: var(--ink-faint);
   line-height: 1;
+  top: 4px;
+  transition: color 0.3s ease;
+}
+
+.bubble:hover .glyph {
+  color: var(--margin);
+}
+
+@media (max-width: 500px) {
+  .bubble {
+    font-size: 16px;
+    line-height: 1.68;
+  }
+  .glyph { font-size: 13px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glyph { transition: none; }
 }

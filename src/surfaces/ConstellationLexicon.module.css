@@ -1,17 +1,14 @@
-/* ConstellationLexicon — incremental reveal vocabulary entries.
- *
- * Layer 0: term + definition (always visible)
- * Layer 1: mastery bar (always visible, quiet)
- * Layer 3: etymology + cross-refs (expanded on click)
- */
+/* ConstellationLexicon — incremental reveal vocabulary.
+ * Enhanced: richer entry interactions, better mastery bar,
+ * warm dwell bloom, refined detail panel. */
 
 /* Staggered entrance animation for lexicon entries */
 .entry {
   margin-bottom: 0;
-  padding: 20px 4px;
+  padding: 22px 8px;
   border-bottom: 1px solid var(--rule-light);
   cursor: pointer;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
+  transition: background-color 0.25s ease, border-color 0.25s ease, padding-left 0.25s ease;
   opacity: 0;
   animation: entrySlideIn 0.4s ease forwards;
   border-radius: 2px;
@@ -19,15 +16,18 @@
 
 .entry:hover {
   background-color: var(--paper-warm);
+  padding-left: 12px;
 }
 
 .entryExpanded {
   background-color: var(--paper-warm);
   border-color: var(--rule);
+  padding-left: 12px;
+  box-shadow: var(--depth-pressed);
 }
 
 @keyframes entrySlideIn {
-  from { opacity: 0; transform: translateY(4px); }
+  from { opacity: 0; transform: translateY(5px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -43,6 +43,7 @@
   font-size: 10px;
   color: var(--ink-ghost);
   letter-spacing: 1px;
+  min-width: 20px;
 }
 
 /* Clickable — navigates to first appearance in notebook */
@@ -59,10 +60,13 @@
   padding: 0;
   cursor: pointer;
   border-bottom: 1px solid transparent;
-  transition: border-bottom-color 0.2s ease;
+  transition: border-bottom-color 0.2s ease, color 0.2s ease;
 }
 
-.term:hover { border-bottom-color: var(--rule); }
+.term:hover {
+  border-bottom-color: var(--margin);
+  color: var(--ink);
+}
 
 .term:focus-visible {
   outline: 1.5px solid var(--margin);
@@ -84,10 +88,10 @@
   color: var(--ink-ghost);
   margin-left: auto;
   opacity: 0;
-  transition: opacity 0.15s ease;
+  transition: opacity 0.2s ease;
 }
 
-.entry:hover .expandHint { opacity: 1; }
+.entry:hover .expandHint { opacity: 0.8; }
 
 .definition {
   font-family: var(--font-student);
@@ -99,7 +103,7 @@
   max-width: 520px;
 }
 
-/* Layer 1: mastery bar — always visible, quiet */
+/* Mastery bar — 2px thin, sage fill */
 .masteryRow {
   display: flex;
   align-items: center;
@@ -116,7 +120,7 @@
 
 .fill {
   height: 100%;
-  background-color: var(--sage);
+  background: linear-gradient(to right, var(--sage), rgba(107, 143, 113, 0.7));
   transition: var(--mastery-transition);
   border-radius: 1px;
 }
@@ -129,9 +133,7 @@
   text-align: right;
 }
 
-/* ─── Dwell bloom: lightweight etymology preview on 400ms hover ─── */
-/* was: absent, now: inline bloom with 300ms height/opacity animation
- * reason: the Lexicon's signature interaction — etymology on dwell (audit P8) */
+/* ─── Dwell bloom: etymology preview on 400ms hover ─── */
 
 .dwellBloom {
   margin-top: 10px;
@@ -152,15 +154,15 @@
   to { opacity: 1; max-height: 80px; }
 }
 
-/* ─── Layer 3: expanded detail ───────────────────── */
+/* ─── Layer 3: expanded detail panel ─── */
 
 .detail {
-  margin-top: 16px;
-  padding-top: 12px;
+  margin-top: 18px;
+  padding-top: 14px;
   border-top: 1px solid var(--rule-light);
   display: flex;
-  gap: 24px;
-  animation: detailReveal 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+  gap: 28px;
+  animation: detailReveal 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .etymology { flex: 1; }
@@ -173,7 +175,7 @@
   text-transform: uppercase;
   letter-spacing: 2px;
   display: block;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .etymologyText {
@@ -200,10 +202,13 @@
   border-left: none;
   border-right: none;
   padding: 0;
-  transition: border-bottom-color 0.2s ease;
+  transition: border-bottom-color 0.2s ease, color 0.2s ease;
 }
 
-.refLink:hover { border-bottom-color: var(--margin); }
+.refLink:hover {
+  border-bottom-color: var(--margin);
+  color: var(--ink);
+}
 
 .refLink:focus-visible {
   outline: 1.5px solid var(--margin);
@@ -212,8 +217,13 @@
 }
 
 @keyframes detailReveal {
-  from { opacity: 0; transform: translateY(-4px); }
+  from { opacity: 0; transform: translateY(-5px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 640px) {
+  .detail { flex-direction: column; gap: 16px; }
+  .entry:hover { padding-left: 8px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -221,4 +231,6 @@
   .expandHint { transition: none; }
   .detail { animation: none; }
   .dwellBloom { animation: none; }
+  .term { transition: none; }
+  .refLink { transition: none; }
 }

@@ -1,7 +1,6 @@
 /* ProseEntry (1.1) — Student's paragraph. The loudest voice on the page.
  * Spec: Crimson Pro 18px Regular, ink, 1.80 line-height, 19px left indent,
- * 20px bottom margin. No character limit. Permanent upon submission.
- */
+ * 20px bottom margin. Enhanced: better responsive scale, selection warmth. */
 
 .entry {
   font-family: var(--font-student);
@@ -15,9 +14,21 @@
   margin-top: 0;
 }
 
-@media (max-width: 500px) {
+/* Selection highlight — warm amber, not cold blue */
+.entry::selection {
+  background: var(--selection-highlight);
+}
+
+@media (max-width: 767px) {
   .entry {
     font-size: 17px;
-    line-height: 1.72;
+    line-height: 1.76;
+  }
+}
+
+@media (max-width: 479px) {
+  .entry {
+    font-size: 16px;
+    line-height: 1.74;
   }
 }

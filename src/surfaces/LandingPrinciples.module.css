@@ -1,7 +1,9 @@
-/* LandingPrinciples — quiet statements, margin-note style. */
+/* LandingPrinciples — quiet statements, margin-note style.
+ * Enhanced: fixed hardcoded fonts to CSS vars, richer margin label,
+ * better spacing and transitions. */
 
 .section {
-  padding: 48px 24px 80px;
+  padding: 56px 24px 88px;
   border-top: 1px solid var(--rule-light);
 }
 
@@ -10,13 +12,13 @@
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 48px;
+  gap: 52px;
 }
 
 .principle {
   opacity: 0;
-  transform: translateY(8px);
-  transition: opacity 0.8s ease, transform 0.8s ease;
+  transform: translateY(10px);
+  transition: opacity 0.9s ease, transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .principle.visible {
@@ -24,28 +26,29 @@
   transform: translateY(0);
 }
 
+/* Margin-note style label — tutor's voice with warm left rule */
 .marginLabel {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-tutor);
   font-size: 15px;
   font-weight: 400;
   font-style: italic;
   color: var(--margin);
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   padding-left: 16px;
   border-left: 2px solid var(--margin);
-  opacity: 0.7;
+  opacity: 0.75;
+  line-height: 1.5;
 }
 
 .body {
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-student);
   font-size: 16px;
   font-weight: 400;
   color: var(--ink-soft);
-  line-height: 1.75;
+  line-height: 1.78;
   margin: 0;
 }
 
-/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .principle {
     opacity: 1;

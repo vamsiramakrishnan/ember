@@ -8,14 +8,35 @@
   position: relative;
   background-color: var(--paper);
   /* Reading-lamp warmth — subtle pool of warm light from above,
-   * as if an angled desk lamp casts its glow across the top of the page */
+   * as if an angled desk lamp casts its glow across the top of the page.
+   * Layered: lamp glow + subtle warm vignette at edges */
   background-image:
     radial-gradient(
       ellipse 70% 40% at 50% 0%,
       var(--paper-warm) 0%,
       transparent 60%
+    ),
+    radial-gradient(
+      ellipse 120% 80% at 50% 100%,
+      rgba(237, 230, 219, 0.3) 0%,
+      transparent 50%
     );
   background-attachment: fixed;
+}
+
+/* Subtle paper grain — generated via CSS noise pattern.
+ * Barely visible, adds the tactile quality of real paper. */
+.shell::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image:
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-size: 256px 256px;
+  mix-blend-mode: multiply;
 }
 
 /* Ambient texture layer — generated per session topic, rendered at ~4% opacity.
@@ -40,5 +61,17 @@
     max-width: 1600px;
     margin-left: auto;
     margin-right: auto;
+    /* Subtle book-spine shadow on widescreens */
+    box-shadow:
+      -1px 0 0 var(--rule-light),
+      1px 0 0 var(--rule-light),
+      -8px 0 40px rgba(44, 40, 37, 0.03),
+      8px 0 40px rgba(44, 40, 37, 0.03);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambientLayer {
+    transition: none;
   }
 }

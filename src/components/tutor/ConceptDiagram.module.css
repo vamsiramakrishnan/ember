@@ -1,9 +1,9 @@
 /**
  * ConceptDiagram (2.4) — layout-aware interactive concept map.
- * Supports: flow, tree, radial, pyramid, cycle, timeline,
- * constellation, and general graph layouts.
- * Auto zoom-to-fit ensures all nodes visible without scrolling.
- * Enlarge button opens a full-screen modal for exploration.
+ * A printed card stock placed on the notebook — resting shadow,
+ * clean surface, warm white gradient.
+ * Enhanced: richer border treatment, better modal backdrop,
+ * refined timeline spine, warmer edge labels.
  */
 
 .container {
@@ -11,9 +11,28 @@
   padding: 24px 20px;
   margin-bottom: var(--diagram-gap);
   background: var(--material-card-stock);
+  border: 1px solid rgba(221, 214, 204, 0.3);
   box-shadow: var(--depth-resting);
   overflow: hidden;
-  animation: diagramReveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: diagramReveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  position: relative;
+}
+
+/* Subtle warm edge along the top — the lamp catching the card edge */
+.container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent 5%,
+    rgba(196, 154, 60, 0.08) 30%,
+    rgba(196, 154, 60, 0.08) 70%,
+    transparent 95%
+  );
 }
 
 .headerRow {
@@ -44,7 +63,7 @@
   background: var(--paper);
   color: var(--ink-ghost);
   cursor: pointer;
-  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
   flex-shrink: 0;
 }
 
@@ -52,6 +71,7 @@
   color: var(--ink-soft);
   border-color: var(--rule);
   background: var(--paper-warm);
+  box-shadow: var(--depth-adhered);
 }
 
 .enlargeButton:focus-visible {
@@ -83,8 +103,6 @@
   left: 0;
   pointer-events: none;
   z-index: 0;
-  /* No width/height override — uses explicit pixel dimensions from props
-     so SVG coordinates stay aligned with HTML card positions */
 }
 
 .edgeSvgLabel {
@@ -103,14 +121,19 @@
   padding: 0 4px;
 }
 
-/* ─── Timeline spine ─── */
+/* ─── Timeline spine — warm, tapered ─── */
 
 .timelineSpine {
   position: absolute;
   left: 50%;
   top: 40px;
   width: 1px;
-  background: var(--rule);
+  background: linear-gradient(
+    to bottom,
+    var(--rule-light),
+    var(--rule),
+    var(--rule-light)
+  );
   transform: translateX(-50%);
   z-index: 0;
 }
@@ -121,7 +144,8 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 8px 0 0;
+  padding: 10px 0 0;
+  margin-top: 4px;
   border-top: 1px solid var(--rule-light);
 }
 
@@ -145,12 +169,8 @@
 /* ─── Animations ─── */
 
 @keyframes diagramReveal {
-  from { opacity: 0; transform: translateY(6px); }
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .container { animation: none; }
 }
 
 /* ─── Full-screen modal ─── */
@@ -159,12 +179,14 @@
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: rgba(44, 40, 37, 0.4);
+  background: rgba(44, 40, 37, 0.45);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px;
-  animation: overlayFade 0.25s ease both;
+  animation: overlayFade 0.3s ease both;
 }
 
 .modal {
@@ -177,7 +199,7 @@
   max-height: calc(100vh - 48px);
   display: flex;
   flex-direction: column;
-  animation: modalEnter 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: modalEnter 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .modalHeader {
@@ -207,16 +229,19 @@
   padding: 4px 8px;
   line-height: 1;
   transition: color 0.2s ease;
+  border-radius: 2px;
 }
 
-.modalClose:hover { color: var(--ink); }
+.modalClose:hover {
+  color: var(--ink);
+  background: var(--paper-warm);
+}
 
 .modalBody {
   flex: 1;
   overflow: auto;
   padding: 24px;
   -webkit-overflow-scrolling: touch;
-  /* Ensure diagram content doesn't clip before zoom-to-fit kicks in */
   min-height: 0;
 }
 
@@ -226,16 +251,14 @@
 }
 
 @keyframes modalEnter {
-  from { opacity: 0; transform: scale(0.97) translateY(8px); }
+  from { opacity: 0; transform: scale(0.96) translateY(10px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 /* ─── Responsive ─── */
 
 @media (max-width: 500px) {
-  .container {
-    padding: 16px 12px;
-  }
+  .container { padding: 16px 12px; }
   .modalOverlay { padding: 4px; }
   .modal { max-height: calc(100vh - 8px); max-width: 100%; }
   .modalBody { padding: 12px; }
@@ -243,8 +266,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .modalOverlay { animation: none; }
+  .container { animation: none; }
+  .modalOverlay { animation: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
   .modal { animation: none; }
   .canvasScaler { transition: none; }
   .enlargeButton { transition: none; }
+  .modalClose { transition: none; }
 }

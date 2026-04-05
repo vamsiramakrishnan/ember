@@ -1,7 +1,7 @@
 /* Marginalia (2.1) — Tutor's prose annotation in the margin.
  * Written ON the page, not floating above it. The left rule and
  * terracotta ink are the only depth signals. No background, no shadow.
- * The tutor wrote this in the margin with a different pen. */
+ * Enhanced: richer rule treatment, better reveal animation, refined spacing. */
 
 .container {
   display: grid;
@@ -9,15 +9,29 @@
   gap: var(--margin-rule-gap);
   margin-bottom: var(--entry-gap);
   padding-top: 2px;
-  animation: marginFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: marginFadeIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+/* The margin rule — 3px, terracotta at 35%.
+ * Rounded ends and a subtle gradient give it the warmth of a hand-drawn stroke. */
 .rule {
   width: var(--margin-rule-width);
-  background-color: var(--margin);
-  opacity: 0.3;
-  border-radius: 1px;
+  background: linear-gradient(
+    to bottom,
+    rgba(184, 86, 79, 0.35) 0%,
+    rgba(184, 86, 79, 0.25) 100%
+  );
+  border-radius: 2px;
   min-height: 24px;
+  transition: opacity 0.4s ease;
+}
+
+.container:hover .rule {
+  background: linear-gradient(
+    to bottom,
+    rgba(184, 86, 79, 0.45) 0%,
+    rgba(184, 86, 79, 0.3) 100%
+  );
 }
 
 .text {
@@ -32,8 +46,14 @@
 .prose { margin: 0; }
 
 @keyframes marginFadeIn {
-  from { opacity: 0; transform: translateY(7px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @media (max-width: 500px) {
@@ -45,4 +65,5 @@
 
 @media (prefers-reduced-motion: reduce) {
   .container { animation: none; }
+  .rule { transition: none; }
 }

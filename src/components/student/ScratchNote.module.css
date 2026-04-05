@@ -1,3 +1,6 @@
+/* ScratchNote (1.2) — Half-formed idea. Cognitive scribble.
+ * Enhanced: better glyph positioning, cluster awareness, hover warmth. */
+
 .note {
   font-family: var(--font-student);
   font-size: 15px;
@@ -9,6 +12,11 @@
   margin-bottom: var(--scratch-bottom);
   margin-top: 0;
   position: relative;
+  transition: color 0.3s ease;
+}
+
+.note:hover {
+  color: var(--ink);
 }
 
 /* · glyph positioned 8px to the left of the note text (spec: 1.2) */
@@ -16,4 +24,24 @@
   position: absolute;
   left: 11px; /* textIndent(19) - 8 = 11px from container edge */
   color: var(--ink-ghost);
+  font-size: 18px;
+  line-height: 1;
+  top: 1px;
+  transition: color 0.3s ease;
+}
+
+.note:hover .glyph {
+  color: var(--ink-faint);
+}
+
+@media (max-width: 500px) {
+  .note {
+    font-size: 14px;
+    line-height: 1.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .note { transition: none; }
+  .glyph { transition: none; }
 }

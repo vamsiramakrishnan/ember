@@ -1,11 +1,7 @@
 /* SilenceMarker (2.6) — Active waiting state.
- * Spec: ~120px vertical space. 48px padding above/below.
- * Rule: 1px, 36px tall, centred. Cursor: 1px wide, 22px tall,
- * ink 30% opacity, 1.2s fade. Text: Cormorant Garamond Italic
- * 15px ink-ghost, 0.5px letter-spacing.
- *
- * "The notebook is open. The room is quiet."
- */
+ * The most spacious element. ~120px vertical space.
+ * Enhanced: subtle breathing on the rule, warmer cursor,
+ * text that feels like it was whispered. */
 
 .container {
   padding: var(--silence-gap) 0;
@@ -13,29 +9,60 @@
   flex-direction: column;
   align-items: center;
   gap: 16px;
+  position: relative;
+}
+
+/* Subtle radial warmth around the silence — the lamp pools here */
+.container::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 200px;
+  height: 100px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(196, 154, 60, 0.02) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
 }
 
 .text {
   font-family: var(--font-tutor);
   font-size: 15px;
   font-style: italic;
-  font-weight: 400;
+  font-weight: 300;
   color: var(--ink-ghost);
   letter-spacing: 0.5px;
   text-align: center;
   margin: 0;
   max-width: 320px;
   line-height: 1.6;
+  opacity: 0.8;
 }
 
-/* Vertical rule: 1px wide, 36px tall per spec */
+/* Vertical rule: 1px wide, 36px tall — the spine of silence */
 .verticalRule {
   width: 1px;
   height: 36px;
-  background-color: var(--rule);
+  background: linear-gradient(
+    to bottom,
+    var(--rule-light),
+    var(--rule),
+    var(--rule-light)
+  );
+  animation: ruleBreathe 4s ease-in-out infinite;
 }
 
-/* Blinking cursor: 1px wide, 22px tall, ink 30% opacity per spec */
+@keyframes ruleBreathe {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* Blinking cursor: 1px wide, 22px tall, ink 30% opacity.
+ * Gentler than a standard cursor — a candle flame. */
 .cursor {
   width: 1px;
   height: 22px;
@@ -47,5 +74,12 @@
   .cursor {
     animation: none;
     opacity: 0.3;
+  }
+  .verticalRule {
+    animation: none;
+    opacity: 0.8;
+  }
+  .container::before {
+    display: none;
   }
 }
