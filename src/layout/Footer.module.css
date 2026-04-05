@@ -1,19 +1,31 @@
 /* Footer — nearly invisible. Present, not demanding.
- * Like the small light on a well-designed device.
- */
+ * Enhanced: refined divider, warm sync states, subtle breathing. */
 
 .footer {
-  padding-bottom: 56px;
+  padding-bottom: 64px;
   padding-top: 48px;
   border-top: 1px solid var(--rule-light);
-  margin-top: 32px;
+  margin-top: 40px;
+  position: relative;
+}
+
+/* Subtle warm gradient above the footer rule — paper thinning */
+.footer::before {
+  content: '';
+  position: absolute;
+  top: -24px;
+  left: 10%;
+  right: 10%;
+  height: 24px;
+  background: linear-gradient(to bottom, transparent, rgba(221, 214, 204, 0.3));
+  pointer-events: none;
 }
 
 .row {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .text {
@@ -25,19 +37,30 @@
   text-align: center;
   text-transform: lowercase;
   margin: 0;
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
-/* The quiet sync indicator — 5px dot */
+/* The quiet sync indicator — 5px dot with warm state colours */
 .syncDot {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  opacity: 0.4;
-  transition: background-color 1.5s ease, opacity 1.5s ease;
+  opacity: 0.5;
+  transition: background-color 1.5s ease, opacity 1.5s ease, box-shadow 1.5s ease;
   flex-shrink: 0;
 }
 
+/* Syncing state — subtle amber pulse */
+.syncDot[data-state="syncing"] {
+  animation: syncPulse 2s ease-in-out infinite;
+}
+
+@keyframes syncPulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.7; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .syncDot { transition: none; }
+  .syncDot { transition: none; animation: none; }
+  .footer::before { display: none; }
 }

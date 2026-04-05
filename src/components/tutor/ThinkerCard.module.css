@@ -1,29 +1,34 @@
-/* ThinkerCard (2.5) — incremental reveal introduction.
- *
- * Layer 0: monogram + name + dates (always visible)
- * Layer 3: Gift + Bridge (expanded on click)
- */
+/* ThinkerCard (2.5) — An index card placed on the notebook.
+ * Physical: warm cream gradient, subtle tilt, resting shadow.
+ * Enhanced: richer portrait ring, better expand animation,
+ * warm hover glow, refined section labels. */
 
 .container {
-  padding: 20px 22px;
+  padding: 22px 24px;
   cursor: pointer;
   background: var(--material-index-card);
+  border: 1px solid rgba(221, 214, 204, 0.4);
   border-radius: 2px;
   box-shadow: var(--depth-resting);
   transform: rotate(-0.3deg);
   transform-origin: top left;
-  transition: box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  animation: cardReveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transition:
+    box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.4s ease;
+  animation: cardReveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .container:hover {
   box-shadow: var(--depth-lifted);
   transform: rotate(0deg) translateY(-2px);
+  border-color: rgba(184, 86, 79, 0.12);
 }
 
 .expanded {
   box-shadow: var(--depth-lifted);
   transform: rotate(0deg);
+  border-color: rgba(184, 86, 79, 0.12);
 }
 
 .containerBordered {
@@ -37,33 +42,40 @@
   gap: 16px;
 }
 
+/* Portrait — warm sepia treatment, subtle ring */
 .portrait {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  border: 1px solid var(--rule);
+  border: 1.5px solid var(--rule);
   object-fit: cover;
   flex-shrink: 0;
-  transition: border-color 0.2s ease;
-  filter: sepia(10%) saturate(80%);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  filter: sepia(12%) saturate(75%);
 }
 
 .container:hover .portrait {
   border-color: var(--margin);
+  box-shadow: 0 0 0 3px rgba(184, 86, 79, 0.06);
 }
 
+/* Monogram fallback — elegant circle with tutor's initials */
 .monogram {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  background: var(--paper-deep);
-  border: 2px solid var(--paper);
-  box-shadow: 0 1px 3px rgba(44, 40, 37, 0.08);
+  background: linear-gradient(
+    160deg,
+    var(--paper-warm) 0%,
+    var(--paper-deep) 100%
+  );
+  border: 1.5px solid var(--rule);
+  box-shadow: var(--depth-adhered);
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-tutor);
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 500;
   color: var(--margin);
   flex-shrink: 0;
@@ -72,23 +84,23 @@
 }
 
 .monogramLoading {
-  animation: portraitPulse 1.5s ease-in-out infinite;
+  animation: portraitPulse 1.8s ease-in-out infinite;
 }
 
 .container:hover .monogram {
-  border-color: var(--paper);
-  box-shadow: 0 2px 6px rgba(44, 40, 37, 0.1);
+  border-color: rgba(184, 86, 79, 0.2);
+  box-shadow: 0 0 0 3px rgba(184, 86, 79, 0.06);
 }
 
 @keyframes portraitPulse {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  50% { opacity: 0.45; }
 }
 
 .identity {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 }
 
 .name {
@@ -109,32 +121,35 @@
   letter-spacing: 0;
 }
 
-/* Expand hint — ghost quiet, visible on hover */
+/* Expand hint — ghost quiet, fades in on hover */
 .expandHint {
   font-family: var(--font-system);
-  font-size: 11px;
+  font-size: 10px;
   color: var(--ink-ghost);
   margin-left: auto;
   opacity: 0;
-  transition: opacity 0.15s ease;
+  transition: opacity 0.2s ease;
+  letter-spacing: 0.5px;
 }
 
-.container:hover .expandHint { opacity: 1; }
+.container:hover .expandHint { opacity: 0.8; }
 
-/* Layer 3: body revealed on click */
+/* Layer 3: body revealed on click — slides in from above */
 .body {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding-left: 60px;
-  margin-top: 16px;
-  animation: bodyReveal 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+  gap: 14px;
+  padding-left: 64px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--rule-light);
+  animation: bodyReveal 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .section {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
 }
 
 .sectionLabel {
@@ -144,7 +159,7 @@
   color: var(--margin);
   letter-spacing: 2px;
   text-transform: uppercase;
-  opacity: 0.7;
+  opacity: 0.65;
 }
 
 .gift {
@@ -152,7 +167,7 @@
   font-size: 15px;
   font-weight: 400;
   color: var(--ink-soft);
-  line-height: 1.70;
+  line-height: 1.72;
   max-width: 480px;
   margin: 0;
 }
@@ -167,22 +182,27 @@
 }
 
 @keyframes cardReveal {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: rotate(-0.3deg) translateY(10px); }
+  to { opacity: 1; transform: rotate(-0.3deg) translateY(0); }
 }
 
 @keyframes bodyReveal {
-  from { opacity: 0; transform: translateY(-4px); }
+  from { opacity: 0; transform: translateY(-6px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 @media (max-width: 500px) {
+  .container { padding: 18px 20px; }
+  .portrait, .monogram { width: 40px; height: 40px; }
+  .monogram { font-size: 15px; }
+  .name { font-size: 20px; }
   .body { padding-left: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .container { animation: none; transition: none; transform: none; }
   .container:hover { transform: none; }
-  .monogram, .expandHint { transition: none; }
+  .portrait, .monogram, .expandHint { transition: none; }
   .body { animation: none; }
+  .monogramLoading { animation: none; }
 }

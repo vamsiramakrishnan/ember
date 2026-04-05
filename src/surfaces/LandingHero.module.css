@@ -1,7 +1,6 @@
 /* LandingHero — split layout: tagline left, notebook demo right.
- * was: centered title only
- * now: two-column hero with live notebook preview
- * reason: show what Ember is from the first screen */
+ * Enhanced: richer frame treatment, better title typography,
+ * warmer transitions, refined scroll hint. */
 
 .hero {
   min-height: 100vh;
@@ -11,14 +10,14 @@
   justify-content: center;
   padding: 80px 24px 48px;
   position: relative;
-  gap: 48px;
+  gap: 56px;
 }
 
 /* On wide screens: two-column split */
 @media (min-width: 860px) {
   .hero {
     flex-direction: row;
-    gap: 64px;
+    gap: 72px;
     padding: 48px 48px;
     max-width: 1120px;
     margin: 0 auto;
@@ -30,8 +29,8 @@
 .content {
   flex: 0 1 420px;
   opacity: 0;
-  transform: translateY(12px);
-  transition: opacity 1.2s ease, transform 1.2s ease;
+  transform: translateY(16px);
+  transition: opacity 1.4s ease, transform 1.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .content.revealed {
@@ -47,22 +46,24 @@
   text-transform: uppercase;
   color: var(--ink-ghost);
   display: block;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
+  opacity: 0.7;
 }
 
 .title {
   font-family: var(--font-tutor);
-  font-size: 42px;
+  font-size: 44px;
   font-weight: 300;
   color: var(--ink);
-  line-height: 1.15;
-  letter-spacing: -0.3px;
-  margin: 0 0 20px;
+  line-height: 1.12;
+  letter-spacing: -0.5px;
+  margin: 0 0 22px;
 }
 
 .titleEmphasis {
   font-style: italic;
   font-family: var(--font-tutor);
+  color: var(--ink);
 }
 
 .tagline {
@@ -70,17 +71,18 @@
   font-size: 17px;
   font-weight: 400;
   color: var(--ink-faint);
-  line-height: 1.7;
+  line-height: 1.75;
   max-width: 380px;
 }
 
 /* Blinking cursor — like a patient mind waiting */
 .cursor {
   width: 1px;
-  height: 20px;
+  height: 22px;
   background: var(--margin);
-  margin-top: 28px;
+  margin-top: 32px;
   animation: emberCursorBlink 1.2s ease infinite;
+  opacity: 0.4;
 }
 
 /* ─── Right column: notebook frame ─── */
@@ -88,8 +90,8 @@
 .frameWrap {
   flex: 0 1 560px;
   opacity: 0;
-  transform: translateY(16px) perspective(1200px) rotateX(4deg) rotateY(-2deg);
-  transition: opacity 1.4s ease 0.3s, transform 1.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s;
+  transform: translateY(20px) perspective(1200px) rotateX(4deg) rotateY(-2deg);
+  transition: opacity 1.6s ease 0.3s, transform 1.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s;
 }
 
 .frameWrap.frameRevealed {
@@ -103,7 +105,7 @@
   overflow: hidden;
   background: var(--paper-warm);
   box-shadow: var(--depth-resting);
-  transition: box-shadow 0.6s ease;
+  transition: box-shadow 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .frameWrap.frameRevealed .frame {
@@ -114,7 +116,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 10px 14px;
+  padding: 11px 14px;
   border-bottom: 1px solid var(--rule-light);
   background: var(--paper);
 }
@@ -133,23 +135,24 @@
   font-style: italic;
   color: var(--ink-faint);
   margin-left: auto;
+  opacity: 0.7;
 }
 
 .viewport {
-  min-height: 360px;
-  padding: 28px 32px 24px;
+  min-height: 380px;
+  padding: 32px 36px 28px;
   overflow: hidden;
 }
 
-/* ─── Scroll hint ─── */
+/* ─── Scroll hint — refined pulse ─── */
 
 .scrollHint {
   position: absolute;
-  bottom: 40px;
+  bottom: 48px;
   left: 50%;
   transform: translateX(-50%);
   opacity: 0;
-  transition: opacity 1.2s ease 0.8s;
+  transition: opacity 1.4s ease 1.2s;
 }
 
 .scrollHint.hintRevealed {
@@ -159,35 +162,37 @@
 .scrollLine {
   display: block;
   width: 1px;
-  height: 40px;
+  height: 44px;
   background: linear-gradient(to bottom, var(--ink-ghost) 0%, transparent 100%);
-  animation: scrollPulse 2.4s ease infinite;
+  animation: scrollPulse 3s ease infinite;
 }
 
 @keyframes scrollPulse {
-  0%, 100% { opacity: 0.3; transform: translateY(0); }
-  50% { opacity: 0.6; transform: translateY(6px); }
+  0%, 100% { opacity: 0.2; transform: translateY(0); }
+  50% { opacity: 0.5; transform: translateY(8px); }
 }
 
 /* ─── Reduced motion ─── */
 @media (prefers-reduced-motion: reduce) {
   .content { opacity: 1; transform: none; transition: none; }
   .frameWrap { opacity: 1; transform: none; transition: none; }
+  .frame { transition: none; }
   .cursor { animation: none; opacity: 0.3; }
   .scrollHint { opacity: 1; transition: none; }
-  .scrollLine { animation: none; opacity: 0.4; }
+  .scrollLine { animation: none; opacity: 0.3; }
 }
 
-/* ─── Mobile: stack vertically, smaller title ─── */
+/* ─── Mobile ─── */
 @media (max-width: 860px) {
   .content { text-align: center; flex: none; }
   .tagline { margin: 0 auto; }
-  .cursor { margin: 28px auto 0; }
+  .cursor { margin: 32px auto 0; }
   .frameWrap { flex: none; width: 100%; max-width: 560px; }
 }
 
 @media (max-width: 640px) {
-  .title { font-size: 32px; }
+  .hero { padding: 64px 24px 40px; gap: 40px; }
+  .title { font-size: 32px; letter-spacing: -0.3px; }
   .tagline { font-size: 16px; }
-  .viewport { min-height: 320px; padding: 20px 16px 16px; }
+  .viewport { min-height: 320px; padding: 24px 20px 20px; }
 }

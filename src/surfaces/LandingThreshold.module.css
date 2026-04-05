@@ -1,10 +1,11 @@
-/* LandingThreshold — the door to the notebook. */
+/* LandingThreshold — the door to the notebook.
+ * Enhanced: richer OAuth buttons, warm divider, better transitions. */
 
 .threshold {
-  padding: 64px 24px 80px;
+  padding: 72px 24px 88px;
   opacity: 0;
-  transform: translateY(8px);
-  transition: opacity 0.8s ease, transform 0.8s ease;
+  transform: translateY(10px);
+  transition: opacity 0.9s ease, transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .threshold.visible {
@@ -21,32 +22,32 @@
   width: 40px;
   height: 1px;
   background: var(--rule);
-  margin: 0 auto 48px;
+  margin: 0 auto 52px;
 }
 
 .label {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-system);
   font-size: 10px;
   font-weight: 400;
   letter-spacing: 2px;
   text-transform: uppercase;
   color: var(--ink-ghost);
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .oauthSection {
-  margin-bottom: 40px;
+  margin-bottom: 44px;
 }
 
 .oauthGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-bottom: 24px;
+  gap: 10px;
+  margin-bottom: 28px;
 }
 
 .oauthButton {
-  padding: 14px 18px;
+  padding: 16px 20px;
   background: var(--paper);
   border: 1px solid var(--rule);
   border-radius: 2px;
@@ -56,8 +57,12 @@
   letter-spacing: 0.5px;
   color: var(--ink-soft);
   box-shadow: var(--depth-resting);
-  transition: border-color 0.3s ease, color 0.3s ease,
-              background 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+  transition:
+    border-color 0.3s ease,
+    color 0.3s ease,
+    background 0.3s ease,
+    box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.25s ease;
   text-align: center;
 }
 
@@ -87,21 +92,22 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .dividerLine {
   flex: 1;
   height: 1px;
-  background: var(--rule);
+  background: linear-gradient(to right, transparent, var(--rule), transparent);
 }
 
 .dividerText {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-system);
   font-size: 10px;
   color: var(--ink-ghost);
   letter-spacing: 1px;
   white-space: nowrap;
+  opacity: 0.6;
 }
 
 /* Reduced motion */
@@ -111,4 +117,6 @@
     transform: none;
     transition: none;
   }
+  .oauthButton { transition: none; }
+  .oauthButton:hover { transform: none; }
 }

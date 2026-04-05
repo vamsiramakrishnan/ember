@@ -1,13 +1,31 @@
 /* Navigation — Three text labels on a thin ruled line.
- * Spec: Cormorant Garamond 14px, tab transitions 0.3s ease.
- * Border: 1px rule-light. Active: ink colour, 1.5px underline.
- */
+ * Enhanced: richer active state, warm hover glow, better visual weight.
+ * Spec: Cormorant Garamond 14px, tab transitions 0.3s ease. */
 
 .nav {
   display: flex;
-  gap: 32px;
+  gap: 36px;
   border-bottom: 1px solid var(--rule-light);
   padding-bottom: 14px;
+  position: relative;
+}
+
+/* Subtle warm glow under nav on hover — the lamp catches the edge */
+.nav::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background: linear-gradient(to bottom, rgba(184, 86, 79, 0.02), transparent);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+.nav:hover::after {
+  opacity: 1;
 }
 
 .tab {
@@ -17,7 +35,7 @@
   letter-spacing: 0.3px;
   background: none;
   border: none;
-  padding: 0 0 13px 0;
+  padding: 4px 2px 13px 2px;
   cursor: pointer;
   transition: color 0.3s ease, border-color 0.3s ease;
   margin-bottom: -15px;
@@ -34,7 +52,7 @@
 .tabInactive {
   composes: tab;
   color: var(--ink-faint);
-  border-bottom: 1.5px solid transparent;
+  border-bottom: 2px solid transparent;
 }
 
 .tabInactive:hover {
@@ -45,41 +63,55 @@
 .tabActive {
   composes: tab;
   color: var(--ink);
-  border-bottom: 1.5px solid var(--ink);
+  font-weight: 500;
+  border-bottom: 2px solid var(--ink);
 }
 
-/* Subtle dot indicator above active tab label */
+/* Subtle dot indicator above active tab — the lamp's reflection */
 .tabActive::before {
   content: '';
   position: absolute;
-  top: -6px;
+  top: -4px;
   left: 50%;
   transform: translateX(-50%);
   width: 3px;
   height: 3px;
   border-radius: 50%;
-  background: var(--ink);
+  background: var(--margin);
   opacity: 0;
-  animation: dotReveal 0.4s ease 0.15s forwards;
+  animation: dotReveal 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
+}
+
+/* Warm underline glow on active tab */
+.tabActive::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: -4px;
+  right: -4px;
+  height: 6px;
+  background: radial-gradient(ellipse at center, rgba(44, 40, 37, 0.04) 0%, transparent 70%);
+  pointer-events: none;
 }
 
 @keyframes dotReveal {
   from { opacity: 0; transform: translateX(-50%) scale(0); }
-  to { opacity: 0.5; transform: translateX(-50%) scale(1); }
+  to { opacity: 0.45; transform: translateX(-50%) scale(1); }
 }
 
 /* ─── Mobile: tighter nav ────────────────────────── */
 @media (max-width: 640px) {
-  .nav { gap: 20px; padding-bottom: 10px; }
+  .nav { gap: 24px; padding-bottom: 10px; }
   .tab { font-size: 13px; padding-bottom: 9px; margin-bottom: -11px; }
 }
 
-/* Extra-narrow: minimal gap */
 @media (max-width: 375px) {
-  .nav { gap: 16px; padding-bottom: 8px; }
+  .nav { gap: 18px; padding-bottom: 8px; }
   .tab { font-size: 12px; padding-bottom: 7px; margin-bottom: -9px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .tab { transition: none; }
+  .tabActive::before { animation: none; opacity: 0.45; }
+  .nav::after { transition: none; }
 }

@@ -1,20 +1,21 @@
 /* ConstellationLibrary — primary text cards.
- * Enhanced: depth system, entrance animation, hover elevation. */
+ * Enhanced: richer card material, better cover treatment,
+ * warm current-focus glow, refined annotations link. */
+
 .grid {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
 }
 
 .cover {
-  width: 100%;
-  height: 120px;
+  width: calc(100% + 44px);
+  height: 140px;
   object-fit: cover;
   border-radius: 2px 2px 0 0;
-  margin: -20px -20px 16px;
-  width: calc(100% + 40px);
-  filter: sepia(10%) saturate(80%);
-  transition: filter 0.3s ease;
+  margin: -22px -22px 16px;
+  filter: sepia(12%) saturate(75%);
+  transition: filter 0.4s ease;
 }
 
 .card:hover .cover {
@@ -22,32 +23,46 @@
 }
 
 .card {
-  padding: 20px;
+  padding: 22px;
   border: 1px solid var(--rule-light);
   border-radius: 2px;
   background: var(--paper);
   box-shadow: var(--depth-resting);
   overflow: hidden;
   opacity: 0;
-  animation: cardEntrance 0.5s ease forwards;
-  transition: background-color 0.2s ease, box-shadow 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
+  animation: cardEntrance 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transition:
+    background-color 0.25s ease,
+    box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.25s ease;
 }
 
 .card:hover {
   background-color: var(--paper-warm);
   box-shadow: var(--depth-lifted);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
   border-color: var(--rule);
 }
 
 @keyframes cardEntrance {
-  from { opacity: 0; transform: translateY(6px); }
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* Current focus ��� warm margin border with subtle glow */
 .current {
   border-left: 3px solid var(--margin);
-  padding-left: 17px;
+  padding-left: 19px;
+  box-shadow:
+    var(--depth-resting),
+    inset 4px 0 12px -4px rgba(184, 86, 79, 0.05);
+}
+
+.current:hover {
+  box-shadow:
+    var(--depth-lifted),
+    inset 4px 0 12px -4px rgba(184, 86, 79, 0.08);
 }
 
 .currentLabel {
@@ -57,7 +72,7 @@
   letter-spacing: 2px;
   color: var(--margin);
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .title {
@@ -76,7 +91,7 @@
   color: var(--ink-faint);
   letter-spacing: 1px;
   display: block;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .quote {
@@ -85,10 +100,12 @@
   font-style: italic;
   color: var(--ink-soft);
   line-height: 1.7;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
+  border-left: 1px solid var(--rule-light);
+  padding-left: 12px;
 }
 
-/* Clickable when count > 0 — navigates to notebook to see annotations */
+/* Annotations link — clickable when count > 0 */
 .annotations {
   font-family: var(--font-system);
   font-size: 10px;
@@ -111,13 +128,22 @@
 
 .annotations:disabled {
   cursor: default;
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
 .annotations:focus-visible {
   outline: 1.5px solid var(--margin);
   outline-offset: 2px;
   border-radius: 2px;
+}
+
+@media (max-width: 500px) {
+  .card { padding: 18px; }
+  .cover {
+    width: calc(100% + 36px);
+    margin: -18px -18px 14px;
+    height: 100px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

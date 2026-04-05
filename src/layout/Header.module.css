@@ -1,7 +1,8 @@
-/* Header — warm, unhurried. The top of the page before the notebook. */
+/* Header — warm, unhurried. The top of the page before the notebook.
+ * Enhanced: richer logo treatment, refined breadcrumb, better spacing. */
 
 .header {
-  padding-top: 36px;
+  padding-top: 40px;
   padding-bottom: 0;
 }
 
@@ -9,8 +10,8 @@
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  margin-bottom: 28px;
-  gap: 12px;
+  margin-bottom: 32px;
+  gap: 16px;
 }
 
 .breadcrumb {
@@ -22,7 +23,7 @@
 
 .logo {
   font-family: var(--font-tutor);
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 300;
   font-style: italic;
   color: var(--ink);
@@ -34,19 +35,21 @@
   border: none;
   cursor: pointer;
   padding: 0;
-  transition: color 0.3s ease;
+  transition: color 0.4s ease, letter-spacing 0.4s ease;
 }
 
 .logo:hover {
   color: var(--margin);
+  letter-spacing: -0.2px;
 }
 
 .separator {
   font-family: var(--font-tutor);
   font-size: 18px;
   color: var(--ink-ghost);
-  margin: 0 10px;
+  margin: 0 12px;
   user-select: none;
+  opacity: 0.5;
 }
 
 .notebookName {
@@ -62,26 +65,28 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 200px;
+  max-width: 220px;
 }
 
 .logo:focus-visible {
   outline: 2px solid var(--margin);
-  outline-offset: 2px;
+  outline-offset: 4px;
+  border-radius: 2px;
 }
 
 .notebookName:hover { color: var(--ink-soft); }
 .notebookName:focus-visible {
   outline: 2px solid var(--margin);
-  outline-offset: 2px;
+  outline-offset: 4px;
+  border-radius: 2px;
 }
 
 /* ─── Mobile: compact header ─────────────────────── */
 @media (max-width: 640px) {
-  .header { padding-top: 20px; }
-  .row { margin-bottom: 16px; }
-  .logo { font-size: 19px; }
-  .separator { margin: 0 6px; font-size: 15px; }
+  .header { padding-top: 24px; }
+  .row { margin-bottom: 20px; gap: 12px; }
+  .logo { font-size: 20px; }
+  .separator { margin: 0 8px; font-size: 15px; }
   .notebookName { font-size: 14px; max-width: 140px; }
 }
 
@@ -90,13 +95,13 @@
   .separator { display: none; }
 }
 
-/* Extra-narrow: tighter top padding */
 @media (max-width: 375px) {
   .header { padding-top: 16px; }
-  .row { margin-bottom: 12px; }
+  .row { margin-bottom: 14px; }
   .logo { font-size: 18px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .logo { transition: none; }
   .notebookName { transition: none; }
 }

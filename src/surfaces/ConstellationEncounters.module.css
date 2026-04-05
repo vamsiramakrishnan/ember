@@ -1,14 +1,12 @@
 /* ConstellationEncounters — incremental reveal ledger.
- *
- * Layer 0: thinker name + core idea (always visible)
- * Layer 2 (hover): ref, session, date, status fade in
- */
+ * Enhanced: richer row interactions, better portrait ring,
+ * warm hover treatment, refined status badges. */
 
 .header {
   display: grid;
   grid-template-columns: 48px 120px 1fr 120px 90px;
   gap: 12px;
-  padding: 8px 0;
+  padding: 10px 0;
   border-bottom: 1px solid var(--ink);
   margin-bottom: 4px;
 }
@@ -26,64 +24,69 @@
   display: grid;
   grid-template-columns: 48px 120px 1fr 120px 90px;
   gap: 12px;
-  padding: 12px 4px;
+  padding: 14px 8px;
   border-bottom: 1px solid var(--rule-light);
   align-items: start;
   border-radius: 2px;
   opacity: 0;
-  animation: rowSlideIn 0.35s ease forwards;
-  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  animation: rowSlideIn 0.4s ease forwards;
+  transition: background-color 0.25s ease, padding-left 0.25s ease;
 }
 
 .row:hover {
   background-color: var(--paper-warm);
-  box-shadow: 0 1px 3px rgba(44, 40, 37, 0.03);
+  padding-left: 12px;
 }
 
 @keyframes rowSlideIn {
-  from { opacity: 0; transform: translateY(3px); }
+  from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 /* Layer 2: detail columns — hidden at rest, visible on hover */
 .hoverDetail {
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.25s ease;
 }
 
 .row:hover .hoverDetail {
   opacity: 1;
 }
 
-/* The ref column is also Layer 2 */
 .ref {
   font-family: var(--font-system);
   font-size: 11px;
   color: var(--ink-ghost);
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.25s ease;
 }
 
 .row:hover .ref {
   opacity: 1;
 }
 
-/* Layer 0: always visible */
+/* Portrait — warm ring on hover */
 .portrait {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  border: 1px solid var(--rule-light);
+  border: 1.5px solid var(--rule-light);
   object-fit: cover;
   flex-shrink: 0;
   filter: sepia(10%) saturate(80%);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.row:hover .portrait {
+  border-color: var(--margin);
+  box-shadow: 0 0 0 2px rgba(184, 86, 79, 0.06);
 }
 
 .thinkerCol {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .thinkerName {
@@ -101,7 +104,7 @@
   transition: border-bottom-color 0.2s ease;
 }
 
-.thinkerName:hover { border-bottom-color: var(--rule); }
+.thinkerName:hover { border-bottom-color: var(--margin); }
 
 .thinkerName:focus-visible {
   outline: 1.5px solid var(--margin);
@@ -143,13 +146,13 @@
   color: var(--ink-ghost);
 }
 
-/* Layer 2: status badge — tinted backgrounds for better hierarchy */
+/* Status badge — refined with subtle depth */
 .status {
   font-family: var(--font-system);
   font-size: 9px;
   text-transform: uppercase;
   letter-spacing: 1px;
-  padding: 3px 8px;
+  padding: 3px 10px;
   border: 1px solid var(--rule);
   border-radius: 2px;
   text-align: center;
@@ -159,7 +162,7 @@
 
 .active {
   color: var(--margin);
-  border-color: var(--margin);
+  border-color: rgba(184, 86, 79, 0.3);
   background: var(--margin-dim);
 }
 .dormant {
@@ -169,23 +172,30 @@
 }
 .bridged {
   color: var(--sage);
-  border-color: var(--sage);
+  border-color: rgba(107, 143, 113, 0.3);
   background: var(--sage-dim);
 }
 .pending {
   color: var(--amber);
-  border-color: var(--amber);
+  border-color: rgba(196, 154, 60, 0.3);
   background: var(--amber-dim);
 }
 
-/* On narrow screens, show everything (no hover on touch) */
+/* Narrow screens: show everything (no hover on touch) */
 @media (max-width: 640px) {
   .header { display: none; }
-  .row { display: flex; flex-direction: column; gap: 4px; }
+  .row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 16px 8px;
+  }
+  .row:hover { padding-left: 8px; }
   .hoverDetail, .ref { opacity: 1; }
+  .portrait { width: 36px; height: 36px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .row { transition: none; animation: none; opacity: 1; }
-  .hoverDetail, .ref, .thinkerName { transition: none; }
+  .hoverDetail, .ref, .thinkerName, .portrait { transition: none; }
 }

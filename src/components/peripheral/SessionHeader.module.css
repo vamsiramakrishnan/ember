@@ -1,12 +1,28 @@
 /* SessionHeader (5.1) — Date/topic notation top of session.
- * Spec: Line 1: IBM Plex Mono 11px Light 300 ink-faint, 1.5px letter-spacing uppercase.
- * Line 2: Cormorant Garamond 28px Light 300 ink, -0.3px letter-spacing.
- * Top margin 40px, bottom margin 40px.
- */
+ * Enhanced: richer meta treatment, subtle rule beneath, warm title. */
 
 .header {
   margin-top: var(--session-header-top);
   margin-bottom: var(--session-header-bottom);
+  position: relative;
+}
+
+/* Subtle warm rule beneath the header */
+.header::after {
+  content: '';
+  position: absolute;
+  bottom: -20px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    var(--rule-light) 0%,
+    var(--rule) 30%,
+    var(--rule) 70%,
+    var(--rule-light) 100%
+  );
+  opacity: 0.5;
 }
 
 .meta {
@@ -17,9 +33,10 @@
   letter-spacing: 1.5px;
   text-transform: uppercase;
   margin-bottom: 14px;
+  opacity: 0.8;
 }
 
-/* Spec: 28px Light, NOT italic. Italic is for thinker names. */
+/* Spec: 28px Light, NOT italic. Title should feel like a chapter heading. */
 .title {
   font-family: var(--font-tutor);
   font-size: 28px;
@@ -28,4 +45,12 @@
   letter-spacing: -0.3px;
   line-height: 1.3;
   margin: 0;
+}
+
+@media (max-width: 640px) {
+  .title { font-size: 24px; }
+}
+
+@media (max-width: 479px) {
+  .title { font-size: 22px; }
 }

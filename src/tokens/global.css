@@ -1,4 +1,6 @@
-/* Ember global styles — material, resets, reduced-motion */
+/* Ember global styles — material, resets, reduced-motion.
+ * Enhanced: better markdown rendering, richer scrollbar,
+ * refined focus states, improved typographic controls. */
 
 /* Font loading handled by public/index.html <link> tag.
  * font-display: block ensures no fallback to system fonts.
@@ -14,15 +16,12 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  /* was: 'kern' 1, 'liga' 1
-   * now: added 'onum' 1 — oldstyle (hanging) numerals for book-quality text
-   * reason: Cormorant Garamond and Crimson Pro have beautiful oldstyle figures */
+  /* Oldstyle numerals for book-quality text.
+   * Cormorant Garamond and Crimson Pro have beautiful oldstyle figures. */
   font-feature-settings: 'kern' 1, 'liga' 1, 'onum' 1;
 }
 
-/* Disable oldstyle numerals on monospace/system text where lining figures matter.
- * was: onum inherited from html, now: lnum on monospace elements
- * reason: IBM Plex Mono needs aligned lining figures for metadata, mastery values */
+/* Lining numerals on monospace — aligned figures for metadata, mastery values. */
 code, kbd, samp, pre {
   font-feature-settings: 'kern' 1, 'liga' 1, 'onum' 0;
   font-variant-numeric: lining-nums;
@@ -38,18 +37,12 @@ body {
   font-weight: 400;
   min-height: 100vh;
   line-height: 1.80;
-  /* Typographic refinements for book-quality prose.
-   * was: absent, now: hanging-punctuation + hyphens
-   * reason: quotation marks should hang into margins; long words should hyphenate */
   hanging-punctuation: first last;
   hyphens: auto;
   -webkit-hyphens: auto;
 }
 
-/* Selection: warm amber tint — the reading lamp's glow.
- * was: var(--margin-dim) at 7% opacity — nearly invisible
- * now: var(--selection-highlight) amber at 22% — visible but warm
- * reason: text selection is a functional control, needs to be readable */
+/* Selection: warm amber tint — visible but warm. */
 ::selection {
   background-color: var(--selection-highlight);
   color: inherit;
@@ -59,36 +52,105 @@ body {
   color: inherit;
 }
 
-/* Focus rings: warm, not blue. Margin colour. */
+/* Focus rings: warm margin colour, consistent offset. */
 :focus-visible {
   outline: 1.5px solid var(--margin);
   outline-offset: 3px;
   border-radius: 2px;
 }
 
-/* Scrollbar: thin, warm, unobtrusive.
- * was: OS default (thick, grey, cold), now: 4px warm ink at 15%
- * reason: the most frequent interaction surface shouldn't break the material illusion */
+/* ─── Scrollbar: thin, warm, unobtrusive ─── */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(44, 40, 37, 0.15) transparent; /* ink at 15% on transparent */
+  scrollbar-color: rgba(44, 40, 37, 0.12) transparent;
 }
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgba(44, 40, 37, 0.15); /* was: OS default, now: ink at 15% */
+  background: rgba(44, 40, 37, 0.12);
   border-radius: 2px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(44, 40, 37, 0.28); /* slightly more visible on hover */
+  background: rgba(44, 40, 37, 0.25);
 }
 
 @media (prefers-reduced-motion: no-preference) {
   html { scroll-behavior: smooth; }
 }
 
-/* Cross-mode navigation highlight — applied globally by useNotebookCrossNav
- * when navigating from graph/canvas to an entry in linear view. */
+/* ─── Rendered Markdown — the tutor's and student's formatted prose ─── */
+
+/* Bold: Medium weight, never heavier. */
+strong, b { font-weight: 500; }
+
+/* Inline code: IBM Plex Mono on paper-deep background. */
+:not(pre) > code {
+  font-family: var(--font-system);
+  font-size: 0.88em;
+  font-weight: 400;
+  color: var(--ink-soft);
+  background: var(--paper-deep);
+  padding: 2px 5px;
+  border-radius: 2px;
+}
+
+/* Code blocks: IBM Plex Mono on paper-warm background. */
+pre {
+  font-family: var(--font-system);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--ink);
+  background: var(--paper-warm);
+  padding: 12px 16px;
+  border-radius: 2px;
+  overflow-x: auto;
+  line-height: 1.5;
+}
+
+/* Blockquotes: quiet left border, faint text. */
+blockquote {
+  margin: 0;
+  padding-left: 16px;
+  border-left: 1px solid var(--rule);
+  color: var(--ink-faint);
+  font-style: italic;
+}
+
+/* Links: margin colour, quiet underline. */
+a {
+  color: var(--margin);
+  text-decoration: none;
+  border-bottom: 1px solid var(--margin-dim);
+  transition: border-bottom-color 0.2s ease;
+}
+
+a:hover {
+  border-bottom-color: var(--margin);
+}
+
+/* Horizontal rules in markdown. */
+hr {
+  border: none;
+  height: 1px;
+  background-color: var(--rule);
+  width: 60%;
+  margin: 24px auto;
+}
+
+/* Lists: custom bullet, ink-ghost. */
+ul { list-style: none; padding-left: 0; }
+ul > li {
+  position: relative;
+  padding-left: 16px;
+}
+ul > li::before {
+  content: '·';
+  position: absolute;
+  left: 0;
+  color: var(--ink-ghost);
+}
+
+/* ─── Cross-mode navigation highlight ─── */
 .cross-nav-highlight {
   animation: crossNavPulse 2.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
@@ -100,6 +162,7 @@ body {
   100% { background: transparent; outline: 1px solid transparent; outline-offset: 4px; }
 }
 
+/* ─── Reduced motion ─── */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -112,7 +175,10 @@ body {
     background: var(--amber-dim);
     animation: none;
   }
+  a { transition: none; }
 }
+
+/* ─── Global keyframes ─── */
 
 /* Cursor blink: 1.2s, opacity fades between 0.3 and 0 per spec */
 @keyframes emberCursorBlink {

@@ -1,7 +1,6 @@
 /* HypothesisMarker (1.3) — Student's guess/prediction.
- * Pinned to the page. The indigo tint and left border are the
- * depth signal — like the student underlined it and drew a
- * bracket in the margin. No outer shadow. */
+ * Pinned to the page. Indigo tint + left border at 40% opacity.
+ * Enhanced: pressed depth, inner glow, proper 2px radius. */
 
 .marker {
   font-family: var(--font-student);
@@ -12,8 +11,34 @@
   letter-spacing: 0;
   margin-left: var(--text-indent);
   margin-bottom: var(--entry-gap);
-  border-left: 2px solid var(--indigo);
-  padding: 10px 16px 10px 14px;
+  border-left: 2px solid rgba(91, 107, 138, 0.40);
+  padding: 12px 18px 12px 14px;
   background: var(--indigo-dim);
-  border-radius: 1px;
+  border-radius: 2px;
+  box-shadow: var(--depth-pressed);
+  position: relative;
+}
+
+/* Subtle inner glow along the left border */
+.marker::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 20px;
+  background: linear-gradient(
+    to right,
+    rgba(91, 107, 138, 0.04) 0%,
+    transparent 100%
+  );
+  pointer-events: none;
+  border-radius: 2px 0 0 2px;
+}
+
+@media (max-width: 500px) {
+  .marker {
+    font-size: 17px;
+    padding: 10px 14px 10px 12px;
+  }
 }
